@@ -1,0 +1,72 @@
+{
+  "pageTitle": "لوحة تحكم الموظفين",
+  "loadingMessage": "جاري تحميل بيانات لوحة التحكم...",
+  "welcomeMessage": "مرحباً، {{name}}",
+  "lastUpdated": "آخر تحديث: {{time}}",
+  "refreshBtn": "تحديث",
+  "refreshingBtn": "جارٍ التحديث...",
+  "dataLoadError": "فشل في تحميل بيانات لوحة التحكم من الخادم. تحقق من الاتصال أو تسجيل الدخول.",
+  "unnamedSport": "رياضة غير مسماة",
+  "untitledTask": "مهمة بدون عنوان",
+  "system": "النظام",
+  "stats": {
+    "totalMembers": "إجمالي الأعضاء",
+    "activeMembers": "الأعضاء النشطون",
+    "totalSports": "الأنشطة الرياضية",
+    "sportsRevenue": "الإيرادات الرياضية",
+    "tasksList": "قائمة المهام",
+    "membershipPlans": "خطط العضوية",
+    "auditLogsToday": "سجل التدقيق (اليوم)",
+    "myPrivileges": "صلاحياتي",
+    "connectedToServer": "متصل بالخادم",
+    "noAccess": "لا توجد صلاحية",
+    "pendingApprovals": "{{count}} بانتظار الموافقة",
+    "activeAndPending": "{{active}} نشط | {{pending}} معلق",
+    "avgSportFee": "متوسط رسوم الرياضة: {{fee}}",
+    "pendingActions": "{{count}} إجراء معلق",
+    "activePlans": "{{count}} خطة نشطة",
+    "totalLogs": "إجمالي السجلات: {{count}}",
+    "visibleModules": "{{count}} وحدات ظاهرة"
+  },
+  "charts": {
+    "memberDistribution": "توزيع حالات الأعضاء",
+    "noMemberData": "لا توجد بيانات أعضاء متاحة.",
+    "noMemberAccess": "ليس لديك إمكانية الوصول إلى تحليلات الأعضاء.",
+    "topSports": "أكثر الرياضات تسجيلاً",
+    "noSportsData": "لا توجد بيانات تسجيل رياضي متاحة.",
+    "noSportsAccess": "ليس لديك إمكانية الوصول إلى تحليلات الرياضات."
+  },
+  "alerts": {
+    "title": "تنبيهات الاشتراكات",
+    "needsAttention": "{{count}} تنبيه يحتاج متابعة",
+    "viewAll": "عرض الكل",
+    "overdue": "متأخر {{days}} يوم",
+    "dueIn": "فاضل {{days}} يوم",
+    "moreAlerts": "+{{count}} تنبيهات أخرى",
+    "allValid": "✅ جميع الاشتراكات سارية"
+  },
+  "status": {
+    "approved": "مقبول",
+    "rejected": "مرفوض",
+    "pending": "معلق",
+    "active": "نشط",
+    "other": "أخرى"
+  },
+  "tables": {
+    "recentTasksTitle": "المهام الأخيرة",
+    "noTasksAccess": "قائمة المهام غير متاحة لدورك.",
+    "noTasksFound": "لم يتم العثور على مهام.",
+    "recentSportsTitle": "الرياضات الأخيرة",
+    "noSportsAccess": "قائمة الرياضات غير متاحة لدورك.",
+    "noSportsFound": "لم يتم العثور على رياضات.",
+    "columns": {
+      "taskName": "المهمة",
+      "status": "الحالة",
+      "createdBy": "تم الإنشاء بواسطة",
+      "createdAt": "تم الإنشاء في",
+      "sportName": "الرياضة",
+      "members": "الأعضاء",
+      "price": "السعر"
+    }
+  }
+}

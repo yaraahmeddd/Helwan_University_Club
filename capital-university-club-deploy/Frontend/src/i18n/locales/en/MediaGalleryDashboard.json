@@ -1,0 +1,79 @@
+{
+  "hero": {
+    "title": "Media and Events Gallery",
+    "subtitle": "Explore the beautiful moments and events at Helwan University Club through photos and videos"
+  },
+  "filters": {
+    "all": "All",
+    "photos": "Photos",
+    "videos": "Videos",
+    "activities": "Activities",
+    "promotions": "Promotions",
+    "events": "Events",
+    "ads": "Advertisements",
+    "news": "News",
+    "maintenance": "Maintenance"
+  },
+  "categories": {
+    "photos": "Photos",
+    "video": "Video",
+    "activities": "Activities",
+    "promotions": "Promotion",
+    "events": "Event",
+    "ads": "Ad",
+    "news": "News",
+    "maintenance": "Maintenance"
+  },
+  "cards": {
+    "photoCount": "{{count}} photos"
+  },
+  "slider": {
+    "imageLabel": "Image {{index}}"
+  },
+  "createModal": {
+    "editTitle": "Edit Post",
+    "createTitle": "Add New Media",
+    "titleLabel": "Title *",
+    "titlePlaceholder": "Post title...",
+    "categoryLabel": "Category *",
+    "descLabel": "Description",
+    "descPlaceholder": "Detailed description...",
+    "videoUrlLabel": "Video URL",
+    "uploadLabel": "Upload Attachments",
+    "clickToSelect": "Click to select images",
+    "supportedFormats": "PNG, JPG, WEBP up to 10MB",
+    "youtubePlaceholder": "YouTube or Vimeo link...",
+    "or": "OR",
+    "selected": "Selected: {{name}}",
+    "uploadDirect": "Upload video directly from device",
+    "updateBtn": "Update Data",
+    "savePublishBtn": "Save and Publish",
+    "cancel": "Cancel"
+  },
+  "errors": {
+    "titleRequired": "Title is required",
+    "imageRequired": "At least one image must be uploaded",
+    "videoRequired": "A video file or URL is required",
+    "saveFailed": "Failed to save post"
+  },
+  "postPage": {
+    "back": "Back",
+    "notFoundTitle": "Post Not Found",
+    "notFoundDesc": "We could not find this post.",
+    "loading": "Loading post...",
+    "details": "Post Details",
+    "publishedAt": "Published on: {{date}}",
+    "hqPhotos": "Includes {{count}} high quality photos",
+    "noDescription": "No description available for this post."
+  },
+  "main": {
+    "addNew": "Add New Media",
+    "loading": "Loading gallery...",
+    "albumsSection": "Albums and Activities",
+    "videosSection": "Video Library",
+    "emptyTitle": "Gallery is currently empty",
+    "emptyDesc": "No media found in this category. You can click the add button to start filling the gallery.",
+    "deleteConfirm": "Are you sure you want to permanently delete this post?",
+    "deleteFailed": "Failed to delete post"
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "common": {
+    "assign": "Assign",
+    "back": "Back",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "save": "Save",
+    "saving": "Saving...",
+    "unexpectedError": "Unexpected error occurred"
+  },
+  "header": {
+    "title": "Assign Sports",
+    "subtitle": "Active members only - page {{page}} of {{totalPages}} ({{count}} members)",
+    "refresh": "Refresh"
+  },
+  "tabs": {
+    "members": "Club Members",
+    "teamMembers": "Players"
+  },
+  "toolbar": {
+    "searchPlaceholder": "Search by name or national ID...",
+    "results": "{{count}} results"
+  },
+  "pagination": {
+    "previous": "Previous page",
+    "next": "Next page"
+  },
+  "table": {
+    "loading": "Loading active members...",
+    "emptyTitle": "No active members",
+    "emptySearch": "No matching results for \"{{search}}\"",
+    "emptyDescription": "No active members were found",
+    "name": "Name",
+    "status": "Status",
+    "sports": "Sports",
+    "actions": "Actions"
+  },
+  "status": {
+    "active": "Active"
+  },
+  "actions": {
+    "editSports": "Edit Sports",
+    "assignTeam": "Assign Team"
+  },
+  "sportsModal": {
+    "title": "Assign Sports",
+    "titleWithMember": "Assign Sports - {{member}}",
+    "description": "Choose the sports you want to assign. Changes are applied when you press Save.",
+    "maxSports": "Maximum {{max}} sports per member",
+    "searchPlaceholder": "Search for a sport...",
+    "added": "Added",
+    "selectTeamPlaceholder": "Choose team",
+    "selectedCount": "{{count}} / {{max}} sports selected",
+    "tabs": {
+      "all": "All sports",
+      "subscribed": "Subscribed ({{count}})",
+      "unsubscribed": "Not subscribed"
+    },
+    "empty": {
+      "subscribed": "There are no subscribed sports yet",
+      "unsubscribed": "All sports are already subscribed",
+      "all": "No matching sports"
+    }
+  },
+  "assignTeamModal": {
+    "titleStepSport": "Assign Team - Choose Sport",
+    "titleStepTeam": "Assign Team - Choose Team",
+    "member": "Member: {{member}}",
+    "noSports": "No sports available",
+    "sportsBreadcrumb": "Sports",
+    "loadingTeams": "Loading teams...",
+    "noTeams": "No teams for this sport",
+    "participants": "{{count}} participants",
+    "assigning": "Assigning..."
+  },
+  "toasts": {
+    "loadSportsFailed": {
+      "title": "Warning",
+      "description": "Failed to load sports list"
+    },
+    "loadMembersFailed": {
+      "title": "Error",
+      "description": "Failed to load members list"
+    },
+    "editOpened": {
+      "title": "Edit Sports",
+      "description": "Opened sports editor for {{member}}"
+    },
+    "sportRemoved": {
+      "title": "Removed",
+      "description": "Unselected \"{{sport}}\""
+    },
+    "sportAdded": {
+      "title": "Added",
+      "description": "Selected \"{{sport}}\""
+    },
+    "maxSports": {
+      "title": "Maximum limit",
+      "description": "You cannot add more than {{max}} sports per member"
+    },
+    "validationError": {
+      "title": "Validation error",
+      "description": "Selected sports count ({{count}}) exceeds the maximum ({{max}})"
+    },
+    "selectTeam": {
+      "title": "Please choose a team",
+      "description": "Choose a team for each sport before saving"
+    },
+    "partialSave": {
+      "title": "Partially saved",
+      "description": "Saved with {{count}} error: {{error}}"
+    },
+    "saveSuccess": {
+      "title": "Saved",
+      "description": "Sports were updated for {{member}} successfully"
+    },
+    "saveFailed": {
+      "title": "Error",
+      "description": "Failed to save changes, please try again"
+    },
+    "assignTeamSuccess": {
+      "title": "Assigned",
+      "description": "{{member}} was assigned to team \"{{team}}\" successfully"
+    },
+    "assignTeamFailed": {
+      "title": "Assignment failed"
+    }
+  },
+  "errors": {
+    "removeSport": "Failed to remove sport {{id}}",
+    "addSport": "Failed to add sport {{id}}"
+  }
+}

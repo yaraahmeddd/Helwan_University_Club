@@ -1,0 +1,152 @@
+{
+  "header": {
+    "title": "إدارة الفروع",
+    "totalBranches": "إجمالي الفروع المسجلة",
+    "addBranch": "إضافة فرع"
+  },
+  "toolbar": {
+    "searchPlaceholder": "بحث بالاسم، أو الموقع...",
+    "previousPage": "الصفحة السابقة",
+    "nextPage": "الصفحة التالية",
+    "refresh": "تحديث البيانات"
+  },
+  "table": {
+    "loading": "جارٍ جلب السجلات...",
+    "empty": "لا يوجد فروع مسجلة",
+    "emptySearch": "لا توجد نتائج مطابقة لـ \"{{search}}\"",
+    "emptyInstruction": "لم يتم إدراج أي فروع بعد. أضف فروعك الآن.",
+    "columns": {
+      "serial": "#",
+      "name": "اسم الفرع",
+      "code": "الكود",
+      "location": "الموقع",
+      "status": "الحالة",
+      "sportsCount": "الرياضات المرتبطة",
+      "actions": "الإجراءات"
+    },
+    "status": {
+      "active": "نشط",
+      "inactive": "معطل",
+      "archived": "مؤرشف"
+    },
+    "actions": {
+      "edit": "تعديل فرع",
+      "assign": "تعيين عضو",
+      "sports": "إدارة الرياضات",
+      "delete": "حذف الفرع"
+    }
+  },
+  "sportsPanel": {
+    "title": "الرياضات المرتبطة:",
+    "addSport": "إضافة رياضة",
+    "empty": "لا توجد رياضات مرتبطة بهذا الفرع بعد.",
+    "columns": {
+      "sportName": "اسم الرياضة",
+      "status": "الحالة",
+      "actions": "إجراءات"
+    },
+    "actions": {
+      "toggleStatus": "تفعيل / تعطيل الارتباط",
+      "remove": "إزالة من الفرع"
+    }
+  },
+  "modals": {
+    "addEdit": {
+      "titleAdd": "إضافة فرع جديد",
+      "titleEdit": "تعديل فرع",
+      "descAdd": "أدخل بيانات الفرع الجديد.",
+      "descEdit": "قم بتعديل بيانات الفرع المحدد.",
+      "fields": {
+        "code": "كود الفرع",
+        "codePlaceholder": "مثال: CAIRO-01",
+        "codeHint": "كود فريد للفرع (لا يمكن تغييره لاحقاً)",
+        "nameAr": "الاسم (عربي)",
+        "nameArPlaceholder": "مثال: فرع المهندسين",
+        "nameEn": "الاسم (إنجليزي)",
+        "nameEnPlaceholder": "Mohandiseen Branch",
+        "locationAr": "الموقع (عربي)",
+        "locationArPlaceholder": "مثال: شارع جامعة الدول العربية",
+        "locationEn": "الموقع (إنجليزي)",
+        "locationEnPlaceholder": "Arab League St.",
+        "status": "الحالة",
+        "statusPlaceholder": "اختر الحالة"
+      },
+      "buttons": {
+        "cancel": "إلغاء",
+        "save": "حفظ الفرع",
+        "saving": "جارٍ الحفظ..."
+      }
+    },
+    "delete": {
+      "title": "تأكيد الحذف",
+      "desc": "هل أنت متأكد من حذف هذا الفرع؟ لا يمكن التراجع عن هذا الإجراء وسيؤثر على السجلات المرتبطة به.",
+      "buttons": {
+        "cancel": "إلغاء",
+        "confirm": "تأكيد الحذف",
+        "deleting": "جارٍ الحذف..."
+      }
+    },
+    "assign": {
+      "title": "تعيين عضو في الفرع",
+      "desc": "تحديد العضو المراد ربطه بالفرع:",
+      "fields": {
+        "memberId": "رقم العضو",
+        "memberIdPlaceholder": "رقم العضو (مثل: 5049)",
+        "memberNotFound": "عضو غير موجود"
+      },
+      "buttons": {
+        "cancel": "إلغاء",
+        "assign": "تعيين العضو",
+        "assigning": "جارٍ التعيين..."
+      }
+    },
+    "addSport": {
+      "title": "ربط رياضة بالفرع",
+      "fields": {
+        "sport": "الرياضة",
+        "sportPlaceholder": "اختر رياضة",
+        "noSports": "لا توجد رياضات متاحة"
+      },
+      "buttons": {
+        "cancel": "إلغاء",
+        "add": "إضافة رياضة",
+        "adding": "جارٍ الإضافة..."
+      }
+    }
+  },
+  "toasts": {
+    "missingDataTitle": "بيانات ناقصة",
+    "missingDataDesc": "يرجى ملء الحقول الإجبارية (الكود والاسم والمكان بالعربية).",
+    "updateSuccessTitle": "تم التحديث",
+    "updateSuccessDesc": "تم تحديث بيانات الفرع بنجاح",
+    "addSuccessTitle": "تمت الإضافة",
+    "addSuccessDesc": "تمت إضافة الفرع بنجاح",
+    "inputErrorsTitle": "أخطاء في الإدخال",
+    "inputErrorsDesc": "يرجى مراجعة الحقول المحددة.",
+    "saveFailedTitle": "فشل الحفظ",
+    "saveFailedDesc": "حدث خطأ غير متوقع عند الحفظ",
+    "deleteSuccessTitle": "تم الحذف",
+    "deleteSuccessDesc": "تم حذف الفرع بنجاح",
+    "deleteFailedTitle": "فشل الحذف",
+    "deleteFailedDesc": "حدث خطأ غير متوقع عند الحذف",
+    "assignMissingDataDesc": "يرجى تحديد العضو المطلوب.",
+    "assignSuccessTitle": "تم التعيين",
+    "assignSuccessDesc": "تم ربط العضو بالفرع بنجاح",
+    "assignFailedTitle": "فشل التعيين",
+    "assignFailedDesc": "حدث خطأ غير متوقع عند التعيين",
+    "loadSportsFailedTitle": "فشل التحميل",
+    "loadSportsFailedDesc": "لم نتمكن من جلب الرياضات المرتبطة.",
+    "addSportSuccessTitle": "تم الإضافة",
+    "addSportSuccessDesc": "تم ربط الرياضة بالفرع بنجاح.",
+    "addSportFailedTitle": "فشل الإضافة",
+    "addSportFailedDesc": "حدث خطأ أثناء الربط.",
+    "updateSportFailedTitle": "فشل التحديث",
+    "updateSportFailedDesc": "لم نتمكن من تغيير حالة الرياضة.",
+    "removeSportSuccessTitle": "تم الإزالة",
+    "removeSportSuccessDesc": "تمت إزالة الرياضة بنجاح.",
+    "removeSportFailedTitle": "فشل الإزالة",
+    "removeSportFailedDesc": "تعذرت الإزالة.",
+    "loadBranchesFailedTitle": "فشل التحميل",
+    "loadBranchesFailedDesc": "تعذر تحميل الفروع"
+  }
+}

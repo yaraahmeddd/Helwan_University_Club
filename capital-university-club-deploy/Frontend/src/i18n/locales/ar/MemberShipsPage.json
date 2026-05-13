@@ -1,0 +1,86 @@
+{
+  "title": "خطط العضوية",
+  "searchPlaceholder": "بحث بالكود أو الاسم...",
+  "status": {
+    "active": "نشط",
+    "inactive": "غير نشط"
+  },
+  "table": {
+    "code": "الكود",
+    "memberType": "نوع العضوية",
+    "name": "الاسم",
+    "price": "السعر",
+    "durationMonths": "المدة (شهر)",
+    "status": "الحالة",
+    "actions": "الإجراءات",
+    "loading": "جاري التحميل...",
+    "noResults": "لا يوجد خطط عضوية مطابقة للبحث"
+  },
+  "action": {
+    "view": "عرض",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "deactivate": "تعطيل",
+    "activate": "تفعيل"
+  },
+  "pagination": {
+    "showing": "عرض {{start}}–{{end}} من {{total}}",
+    "prev": "السابق",
+    "next": "التالي"
+  },
+  "detail": {
+    "title": "تفاصيل خطة العضوية",
+    "description": "عرض البيانات الكاملة للخطة",
+    "nameAr": "الاسم (AR)",
+    "nameEn": "الاسم (EN)",
+    "renewalPrice": "سعر التجديد",
+    "installable": "قابل للتقسيط"
+  },
+  "edit": {
+    "title": "تعديل خطة العضوية",
+    "description": "قم بتحديث بيانات الخطة ثم احفظ",
+    "currency": "العملة"
+  },
+  "create": {
+    "title": "إضافة خطة عضوية",
+    "description": "أدخل بيانات الخطة الجديدة ثم اضغط حفظ",
+    "selectMemberType": "اختر نوع العضوية"
+  },
+  "delete": {
+    "title": "تأكيد الحذف",
+    "description": "هل أنت متأكد من حذف خطة العضوية {{name}}؟ لا يمكن التراجع عن هذا الإجراء."
+  },
+  "toast": {
+    "loadErrorTitle": "خطأ في التحميل",
+    "loadErrorDesc": "تعذر تحميل البيانات",
+    "loadPlansErrorTitle": "تعذر تحميل خطط العضوية",
+    "loadPlansErrorDesc": "تعذر تحميل خطط العضوية",
+    "createSuccessTitle": "تمت الإضافة",
+    "createSuccessDesc": "تم إنشاء خطة العضوية",
+    "createErrorTitle": "فشل الإضافة",
+    "createErrorDesc": "فشل إنشاء خطة العضوية",
+    "editSuccessTitle": "تم الحفظ",
+    "editSuccessDesc": "تم تحديث الخطة بنجاح",
+    "editErrorTitle": "فشل الحفظ",
+    "editErrorDesc": "فشل تحديث الخطة",
+    "deleteSuccessTitle": "تم الحذف",
+    "deleteSuccessDesc": "تم حذف الخطة بنجاح",
+    "deleteConflictTitle": "لا يمكن الحذف",
+    "deleteConflictDesc": "هذه الخطة مرتبطة باشتراكات أعضاء نشطة. يرجى تعطيل الخطة بدلاً من حذفها.",
+    "deleteErrorTitle": "فشل الحذف",
+    "deleteErrorDesc": "فشل حذف الخطة",
+    "statusSuccessTitle": "تم التحديث",
+    "statusSuccessDesc": "تم تغيير حالة الخطة",
+    "statusErrorTitle": "فشل التحديث",
+    "statusErrorDesc": "فشل تغيير الحالة"
+  },
+  "common": {
+    "yes": "نعم",
+    "no": "لا",
+    "close": "إغلاق",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "saving": "جارٍ الحفظ...",
+    "deleting": "جارٍ الحذف..."
+  }
+}

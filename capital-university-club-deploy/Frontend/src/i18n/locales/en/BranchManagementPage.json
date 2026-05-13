@@ -1,0 +1,152 @@
+{
+  "header": {
+    "title": "Branch Management",
+    "totalBranches": "Total Registered Branches",
+    "addBranch": "Add Branch"
+  },
+  "toolbar": {
+    "searchPlaceholder": "Search by name or location...",
+    "previousPage": "Previous Page",
+    "nextPage": "Next Page",
+    "refresh": "Refresh Data"
+  },
+  "table": {
+    "loading": "Fetching records...",
+    "empty": "No branches registered",
+    "emptySearch": "No results matching \"{{search}}\"",
+    "emptyInstruction": "No branches have been added yet. Add branches now.",
+    "columns": {
+      "serial": "#",
+      "name": "Branch Name",
+      "code": "Code",
+      "location": "Location",
+      "status": "Status",
+      "sportsCount": "Linked Sports",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "archived": "Archived"
+    },
+    "actions": {
+      "edit": "Edit Branch",
+      "assign": "Assign Member",
+      "sports": "Manage Sports",
+      "delete": "Delete Branch"
+    }
+  },
+  "sportsPanel": {
+    "title": "Linked Sports:",
+    "addSport": "Add Sport",
+    "empty": "No sports linked to this branch yet.",
+    "columns": {
+      "sportName": "Sport Name",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "actions": {
+      "toggleStatus": "Enable / Disable link",
+      "remove": "Remove from branch"
+    }
+  },
+  "modals": {
+    "addEdit": {
+      "titleAdd": "Add New Branch",
+      "titleEdit": "Edit Branch",
+      "descAdd": "Enter the details of the new branch.",
+      "descEdit": "Modify the details of the selected branch.",
+      "fields": {
+        "code": "Branch Code",
+        "codePlaceholder": "Example: CAIRO-01",
+        "codeHint": "Unique branch code (cannot be changed later)",
+        "nameAr": "Name (Arabic)",
+        "nameArPlaceholder": "Example: Mohandiseen Branch",
+        "nameEn": "Name (English)",
+        "nameEnPlaceholder": "Mohandiseen Branch",
+        "locationAr": "Location (Arabic)",
+        "locationArPlaceholder": "Example: Arab League St.",
+        "locationEn": "Location (English)",
+        "locationEnPlaceholder": "Arab League St.",
+        "status": "Status",
+        "statusPlaceholder": "Select Status"
+      },
+      "buttons": {
+        "cancel": "Cancel",
+        "save": "Save Branch",
+        "saving": "Saving..."
+      }
+    },
+    "delete": {
+      "title": "Confirm Deletion",
+      "desc": "Are you sure you want to delete this branch? This action cannot be undone and will affect associated records.",
+      "buttons": {
+        "cancel": "Cancel",
+        "confirm": "Confirm Deletion",
+        "deleting": "Deleting..."
+      }
+    },
+    "assign": {
+      "title": "Assign Member to Branch",
+      "desc": "Select the member to link to the branch:",
+      "fields": {
+        "memberId": "Member ID",
+        "memberIdPlaceholder": "Member ID (e.g.: 5049)",
+        "memberNotFound": "Member not found"
+      },
+      "buttons": {
+        "cancel": "Cancel",
+        "assign": "Assign Member",
+        "assigning": "Assigning..."
+      }
+    },
+    "addSport": {
+      "title": "Link Sport to Branch",
+      "fields": {
+        "sport": "Sport",
+        "sportPlaceholder": "Select a sport",
+        "noSports": "No available sports"
+      },
+      "buttons": {
+        "cancel": "Cancel",
+        "add": "Add Sport",
+        "adding": "Adding..."
+      }
+    }
+  },
+  "toasts": {
+    "missingDataTitle": "Missing data",
+    "missingDataDesc": "Please fill in the required fields (Code, Arabic Name, Arabic Location).",
+    "updateSuccessTitle": "Updated",
+    "updateSuccessDesc": "Branch details updated successfully",
+    "addSuccessTitle": "Added",
+    "addSuccessDesc": "Branch added successfully",
+    "inputErrorsTitle": "Input Errors",
+    "inputErrorsDesc": "Please review the highlighted fields.",
+    "saveFailedTitle": "Save Failed",
+    "saveFailedDesc": "An unexpected error occurred while saving",
+    "deleteSuccessTitle": "Deleted",
+    "deleteSuccessDesc": "Branch deleted successfully",
+    "deleteFailedTitle": "Delete Failed",
+    "deleteFailedDesc": "An unexpected error occurred while deleting",
+    "assignMissingDataDesc": "Please specify the required member.",
+    "assignSuccessTitle": "Assigned",
+    "assignSuccessDesc": "Member successfully linked to branch",
+    "assignFailedTitle": "Assignment Failed",
+    "assignFailedDesc": "An unexpected error occurred while assigning",
+    "loadSportsFailedTitle": "Load Failed",
+    "loadSportsFailedDesc": "Unable to fetch linked sports.",
+    "addSportSuccessTitle": "Added",
+    "addSportSuccessDesc": "Sport linked to branch successfully.",
+    "addSportFailedTitle": "Add Failed",
+    "addSportFailedDesc": "Error occurred during linking.",
+    "updateSportFailedTitle": "Update Failed",
+    "updateSportFailedDesc": "Unable to change sport status.",
+    "removeSportSuccessTitle": "Removed",
+    "removeSportSuccessDesc": "Sport removed successfully.",
+    "removeSportFailedTitle": "Remove Failed",
+    "removeSportFailedDesc": "Unable to remove.",
+    "loadBranchesFailedTitle": "Load Failed",
+    "loadBranchesFailedDesc": "Unable to load branches"
+  }
+}

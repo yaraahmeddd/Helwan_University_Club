@@ -1,0 +1,87 @@
+{
+  "errors": {
+    "fetchFailed": "Failed to load faculties",
+    "fetchFailedTitle": "Load Failed",
+    "missingDataTitle": "Missing Data",
+    "missingDataDesc": "Please fill in all required fields.",
+    "saveFailedTitle": "Save Failed",
+    "saveFailedDesc": "An unexpected error occurred while saving",
+    "deleteFailedTitle": "Delete Failed",
+    "deleteFailedDesc": "An unexpected error occurred while deleting",
+    "missingMemberDesc": "Please select the required member.",
+    "assignFailedTitle": "Assignment Failed",
+    "assignFailedDesc": "An unexpected error occurred during assignment"
+  },
+  "success": {
+    "updatedTitle": "Updated Successfully",
+    "updatedDesc": "Faculty details updated successfully",
+    "addedTitle": "Added Successfully",
+    "addedDesc": "Faculty added successfully",
+    "deletedTitle": "Deleted Successfully",
+    "deletedDesc": "Faculty deleted successfully",
+    "assignedTitle": "Assigned Successfully",
+    "assignedDesc": "Member successfully linked to the faculty"
+  },
+  "page": {
+    "title": "Faculty Management",
+    "totalFaculties": "Total Registered Academic Faculties:",
+    "addFacultyBtn": "Add Faculty",
+    "prevPage": "Previous Page",
+    "nextPage": "Next Page",
+    "searchPlaceholder": "Search by name, or code...",
+    "refreshBtn": "Refresh Data",
+    "fetchingRecords": "Fetching records...",
+    "noFaculties": "No Faculties Registered",
+    "noSearchResults": "No results found for \"{{search}}\"",
+    "noFacultiesDesc": "No faculties have been listed yet. Add your academic faculties now.",
+    "genericMember": "Member"
+  },
+  "table": {
+    "serial": "#",
+    "name": "Faculty",
+    "nameAr": "Faculty (Arabic)",
+    "nameEn": "Faculty (English)",
+    "code": "Reference Code",
+    "actions": "Actions",
+    "emptyEn": "—"
+  },
+  "actions": {
+    "edit": "Edit",
+    "assignMember": "Assign Member",
+    "delete": "Delete Faculty"
+  },
+  "modalAdd": {
+    "editTitle": "Edit Faculty",
+    "addTitle": "Add New Faculty",
+    "editDesc": "Edit the details of the selected faculty.",
+    "addDesc": "Enter the details for the new faculty. The code is used for quick identification.",
+    "codeLabel": "Code *",
+    "codePlaceholder": "ENG",
+    "nameArLabel": "Name (Arabic) *",
+    "nameArPlaceholder": "e.g., هندسة",
+    "nameEnLabel": "Name (English) *",
+    "nameEnPlaceholder": "Engineering",
+    "saving": "Saving...",
+    "saveBtn": "Save Faculty"
+  },
+  "modalDelete": {
+    "title": "Confirm Deletion",
+    "desc": "Are you sure you want to delete this faculty? This action cannot be undone and will affect related records.",
+    "deleting": "Deleting...",
+    "confirmBtn": "Confirm Delete"
+  },
+  "modalAssign": {
+    "title": "Assign Member to Faculty",
+    "desc": "Select the member to link to faculty:",
+    "memberIdLabel": "Member ID *",
+    "memberIdPlaceholder": "Member ID (e.g., 5049)",
+    "memberNotFound": "No member found matching this ID",
+    "enterNumbers": "Enter valid numbers to auto-search",
+    "nameLabel": "Name:",
+    "assigning": "Assigning...",
+    "assignBtn": "Confirm Assignment"
+  },
+  "common": {
+    "cancel": "Cancel"
+  }
+}

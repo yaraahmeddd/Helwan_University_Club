@@ -1,0 +1,55 @@
+{
+  "page": {
+    "title": "إدارة باقات الصلاحيات",
+    "packageCount": "{{count}} باقة",
+    "loading": "جارٍ التحميل...",
+    "addNew": "إضافة باقة جديدة",
+    "emptyStateTitle": "لا توجد باقات بعد",
+    "emptyStateDesc": "ابدأ بإنشاء أول باقة صلاحيات للموظفين",
+    "createPackage": "إنشاء باقة"
+  },
+  "card": {
+    "noPrivileges": "لا توجد صلاحيات مرتبطة",
+    "viewPrivileges": "عرض {{count}} صلاحية",
+    "editTooltip": "تعديل",
+    "deleteTooltip": "حذف"
+  },
+  "privModal": {
+    "associatedPrivileges": "صلاحية مرتبطة",
+    "searchPlaceholder": "ابحث في الصلاحيات...",
+    "resultsCount": "{{filtered}} نتيجة من {{total}}",
+    "noResults": "لا توجد صلاحيات مطابقة",
+    "generalModule": "عام"
+  },
+  "deleteModal": {
+    "title": "حذف الباقة",
+    "desc1": "هل أنت متأكد من حذف باقة",
+    "desc2": "؟ سيتم إزالة هذه الباقة من جميع الموظفين المرتبطين بها. لا يمكن التراجع عن هذا الإجراء.",
+    "confirm": "تأكيد الحذف"
+  },
+  "editModal": {
+    "title": "تعديل الباقة",
+    "nameLabel": "اسم الباقة *",
+    "nameRequired": "اسم الباقة مطلوب",
+    "descLabel": "الوصف",
+    "optional": "(اختياري)",
+    "descPlaceholder": "وصف مختصر...",
+    "save": "حفظ التعديلات"
+  },
+  "common": {
+    "close": "إغلاق",
+    "cancel": "إلغاء",
+    "deleting": "جارٍ الحذف...",
+    "saving": "جارٍ الحفظ..."
+  },
+  "toast": {
+    "errorTitle": "خطأ",
+    "loadError": "تعذر تحميل الباقات",
+    "editSuccessTitle": "تم التعديل",
+    "editSuccessDesc": "تم تحديث الباقة بنجاح",
+    "editError": "تعذر تعديل الباقة",
+    "deleteSuccessTitle": "تم الحذف",
+    "deleteSuccessDesc": "تم حذف الباقة بنجاح",
+    "deleteError": "تعذر حذف الباقة"
+  }
+}

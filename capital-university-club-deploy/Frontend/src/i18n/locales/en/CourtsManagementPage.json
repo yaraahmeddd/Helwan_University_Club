@@ -1,0 +1,99 @@
+{
+  "common": {
+    "notAvailable": "-",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "header": {
+    "title": "Courts & Fields Management",
+    "totalCourts": "Total courts:",
+    "addCourt": "Add Court"
+  },
+  "stats": {
+    "total": "Total Courts",
+    "active": "Active Courts",
+    "bookable": "Available for Booking"
+  },
+  "filters": {
+    "searchPlaceholder": "Search by court name or sport...",
+    "allSports": "All Sports",
+    "status": "Status",
+    "clear": "Clear"
+  },
+  "table": {
+    "colCourtName": "Court Name",
+    "colSport": "Sport",
+    "colCapacity": "Capacity",
+    "colRequiresBooking": "Requires Booking",
+    "colStatus": "Status",
+    "colActions": "Actions",
+    "loading": "Loading...",
+    "noResults": "No courts match the search criteria"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "maintenance": "Maintenance"
+  },
+  "actions": {
+    "edit": "Edit",
+    "enable": "Enable",
+    "disable": "Disable"
+  },
+  "dialog": {
+    "addTitle": "Add New Court",
+    "editTitle": "Edit Court",
+    "addDescription": "Enter the new court details",
+    "editDescription": "Edit the court details",
+    "fields": {
+      "nameAr": "Court Name (Arabic)",
+      "nameEn": "Court Name (English)",
+      "sport": "Sport",
+      "capacity": "Capacity (number of players)",
+      "booking": "Available for Booking",
+      "status": "Status"
+    },
+    "placeholders": {
+      "nameAr": "Example: \"ملعب بادل 1\"",
+      "nameEn": "e.g. \"Padel Court 1\"",
+      "sport": "Select sport",
+      "capacity": "Example: 22"
+    },
+    "booking": {
+      "availableHint": "Members can book this court online",
+      "unavailableHint": "Not available for online booking"
+    },
+    "status": {
+      "activeHint": "The court is active and available",
+      "inactiveHint": "The court is inactive and unavailable",
+      "maintenanceHint": "Maintenance"
+    },
+    "buttons": {
+      "saving": "Saving...",
+      "saveChanges": "Save Changes",
+      "addCourt": "Add Court",
+      "cancel": "Cancel"
+    }
+  },
+  "validation": {
+    "nameArRequired": "Arabic name is required.",
+    "nameEnRequired": "English name is required.",
+    "sportRequired": "Please select a sport.",
+    "capacityInvalid": "Please enter a valid capacity."
+  },
+  "toast": {
+    "errorTitle": "Error",
+    "validationTitle": "Missing Data",
+    "loadFailed": "Failed to load data. Please try again.",
+    "updateSuccessTitle": "Updated",
+    "updateSuccessDescription": "\"{{name}}\" was updated successfully.",
+    "createSuccessTitle": "Added",
+    "createSuccessDescription": "\"{{name}}\" was added successfully.",
+    "saveFailed": "Failed to save court",
+    "activatedTitle": "Activated",
+    "deactivatedTitle": "Deactivated",
+    "activatedDescription": "\"{{name}}\" is now active.",
+    "deactivatedDescription": "\"{{name}}\" is now inactive.",
+    "statusUpdateFailed": "Failed to update status"
+  }
+}

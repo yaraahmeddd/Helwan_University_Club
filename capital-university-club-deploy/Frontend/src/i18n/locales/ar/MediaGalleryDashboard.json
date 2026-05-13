@@ -1,0 +1,79 @@
+{
+  "hero": {
+    "title": "معرض الوسائط والفعاليات",
+    "subtitle": "استكشف أجمل اللحظات والفعاليات في نادي جامعة العاصمة من خلال الصور والفيديوهات"
+  },
+  "filters": {
+    "all": "الكل",
+    "photos": "الصور",
+    "videos": "الفيديوهات",
+    "activities": "الفعاليات",
+    "promotions": "العروض الترويجية",
+    "events": "الأحداث",
+    "ads": "الإعلانات",
+    "news": "الأخبار",
+    "maintenance": "الصيانة"
+  },
+  "categories": {
+    "photos": "صور",
+    "video": "فيديو",
+    "activities": "فعاليات",
+    "promotions": "عرض ترويجي",
+    "events": "حدث",
+    "ads": "إعلان",
+    "news": "أخبار",
+    "maintenance": "الصيانة"
+  },
+  "cards": {
+    "photoCount": "{{count}} صور"
+  },
+  "slider": {
+    "imageLabel": "صورة {{index}}"
+  },
+  "createModal": {
+    "editTitle": "تعديل المنشور",
+    "createTitle": "إضافة وسائط جديدة",
+    "titleLabel": "العنوان *",
+    "titlePlaceholder": "عنوان المنشور...",
+    "categoryLabel": "الفئة *",
+    "descLabel": "الوصف",
+    "descPlaceholder": "وصف تفصيلي...",
+    "videoUrlLabel": "رابط الفيديو",
+    "uploadLabel": "تحميل المرفقات",
+    "clickToSelect": "انقر لاختيار الصور",
+    "supportedFormats": "PNG, JPG, WEBP حتى 10 ميجابايت",
+    "youtubePlaceholder": "رابط يوتيوب أو فيميو...",
+    "or": "أو",
+    "selected": "تم اختيار: {{name}}",
+    "uploadDirect": "رفع فيديو مباشرة من الجهاز",
+    "updateBtn": "تحديث البيانات",
+    "savePublishBtn": "حفظ ونشر",
+    "cancel": "إلغاء"
+  },
+  "errors": {
+    "titleRequired": "العنوان مطلوب",
+    "imageRequired": "يجب تحميل صورة واحدة على الأقل",
+    "videoRequired": "يجب تحميل فيديو أو إدخال رابط",
+    "saveFailed": "فشل في حفظ المنشور"
+  },
+  "postPage": {
+    "back": "رجوع",
+    "notFoundTitle": "المنشور غير موجود",
+    "notFoundDesc": "لم نتمكن من العثور على هذا المنشور.",
+    "loading": "جاري تحميل المنشور...",
+    "details": "تفاصيل المنشور",
+    "publishedAt": "تم النشر في: {{date}}",
+    "hqPhotos": "يتضمن {{count}} صور عالية الجودة",
+    "noDescription": "لا يوجد وصف متاح لهذا المنشور."
+  },
+  "main": {
+    "addNew": "إضافة وسائط جديدة",
+    "loading": "جاري تحميل المعرض...",
+    "albumsSection": "الألبومات والفعاليات",
+    "videosSection": "مكتبة المرئيات",
+    "emptyTitle": "المعرض فارغ حالياً",
+    "emptyDesc": "لم يتم العثور على أي وسائط في هذه الفئة. يمكنك النقر على زر الإضافة للبدء في ملء المعرض.",
+    "deleteConfirm": "هل أنت متأكد من حذف هذا المنشور نهائياً؟",
+    "deleteFailed": "فشل في حذف المنشور"
+  }
+}

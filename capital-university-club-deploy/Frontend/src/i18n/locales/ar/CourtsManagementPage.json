@@ -1,0 +1,99 @@
+{
+  "common": {
+    "notAvailable": "-",
+    "yes": "نعم",
+    "no": "لا"
+  },
+  "header": {
+    "title": "إدارة الملاعب والفيلدات",
+    "totalCourts": "إجمالي الملاعب:",
+    "addCourt": "إضافة ملعب"
+  },
+  "stats": {
+    "total": "إجمالي الملاعب",
+    "active": "ملاعب نشطة",
+    "bookable": "متاحة للحجز"
+  },
+  "filters": {
+    "searchPlaceholder": "بحث باسم الملعب أو الرياضة...",
+    "allSports": "كل الرياضات",
+    "status": "الحالة",
+    "clear": "مسح"
+  },
+  "table": {
+    "colCourtName": "اسم الملعب",
+    "colSport": "الرياضة",
+    "colCapacity": "السعة",
+    "colRequiresBooking": "يحتاج حجز",
+    "colStatus": "الحالة",
+    "colActions": "الإجراءات",
+    "loading": "جاري التحميل...",
+    "noResults": "لا توجد ملاعب تطابق معايير البحث"
+  },
+  "status": {
+    "active": "نشط",
+    "inactive": "معطّل",
+    "maintenance": "صيانة"
+  },
+  "actions": {
+    "edit": "تعديل",
+    "enable": "تفعيل",
+    "disable": "تعطيل"
+  },
+  "dialog": {
+    "addTitle": "إضافة ملعب جديد",
+    "editTitle": "تعديل ملعب",
+    "addDescription": "أدخل بيانات الملعب الجديد",
+    "editDescription": "قم بتعديل بيانات الملعب",
+    "fields": {
+      "nameAr": "اسم الملعب (عربي)",
+      "nameEn": "اسم الملعب (إنجليزي)",
+      "sport": "الرياضة",
+      "capacity": "السعة (عدد اللاعبين)",
+      "booking": "متاح للحجز",
+      "status": "الحالة"
+    },
+    "placeholders": {
+      "nameAr": "مثال: \"ملعب بادل 1\"",
+      "nameEn": "e.g. \"Padel Court 1\"",
+      "sport": "اختر الرياضة",
+      "capacity": "مثال: 22"
+    },
+    "booking": {
+      "availableHint": "يمكن للأعضاء حجز هذا الملعب أونلاين",
+      "unavailableHint": "غير متاح للحجز الإلكتروني"
+    },
+    "status": {
+      "activeHint": "الملعب نشط ومتاح",
+      "inactiveHint": "الملعب معطّل وغير متاح",
+      "maintenanceHint": "صيانة"
+    },
+    "buttons": {
+      "saving": "جاري الحفظ...",
+      "saveChanges": "حفظ التعديلات",
+      "addCourt": "إضافة الملعب",
+      "cancel": "إلغاء"
+    }
+  },
+  "validation": {
+    "nameArRequired": "الاسم بالعربي مطلوب.",
+    "nameEnRequired": "الاسم بالإنجليزي مطلوب.",
+    "sportRequired": "يرجى اختيار الرياضة.",
+    "capacityInvalid": "يرجى إدخال سعة صحيحة."
+  },
+  "toast": {
+    "errorTitle": "خطأ",
+    "validationTitle": "بيانات ناقصة",
+    "loadFailed": "فشل تحميل البيانات. يرجى المحاولة مرة أخرى.",
+    "updateSuccessTitle": "تم التحديث",
+    "updateSuccessDescription": "تم تحديث \"{{name}}\" بنجاح.",
+    "createSuccessTitle": "تمت الإضافة",
+    "createSuccessDescription": "تمت إضافة \"{{name}}\" بنجاح.",
+    "saveFailed": "فشل حفظ الملعب",
+    "activatedTitle": "تم التفعيل",
+    "deactivatedTitle": "تم التعطيل",
+    "activatedDescription": "\"{{name}}\" نشط الآن.",
+    "deactivatedDescription": "\"{{name}}\" معطّل الآن.",
+    "statusUpdateFailed": "فشل تحديث الحالة"
+  }
+}

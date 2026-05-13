@@ -1,0 +1,526 @@
+/**
+ * MemberTable
+ *
+ * A reusable table component for displaying club members and team players.
+ * Built on top of the shared <DataTable> component.
+ *
+ * Usage:
+ *   <MemberTable
+ *     rows={pageRows}
+ *     isLoading={fetching}
+ *     emptyMessage="لا يوجد أعضاء في هذه الفئة"
+ *     sortField={sortField}
+ *     sortDir={sortDir}
+ *     onSort={handleSort}
+ *     onView={(row) => openDetail(row)}
+ *     onEdit={(row) => openEdit(row)}
+ *     onChangeStatus={(row) => openStatus(row)}
+ *     onDelete={(row) => openDelete(row)}
+ *   />
+ */
+
+import React from "react";
+import {
+    Trophy,
+    Eye,
+    Pencil,
+    Shield,
+    Trash2,
+    MoreHorizontal,
+    ChevronUp,
+    ChevronDown,
+    ChevronsUpDown,
+    CheckCircle,
+    XCircle,
+    Clock,
+    AlertTriangle,
+} from "lucide-react";
+import { DataTable, ColumnDef } from "./data-table";
+import { Button } from "./button";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "./dropdown-menu";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "./tooltip";
+import { RoleGuard } from "../RoleGuard";
+
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export type MemberRow = {
+    id: string;
+    firstNameAr: string;
+    firstNameEn: string;
+    lastNameAr: string;
+    lastNameEn: string;
+    email?: string;
+    phone?: string;
+    nationalId: string;
+    gender?: string;
+    nationality?: string;
+    birthdate?: string | null;
+    healthStatus?: string;
+    isForeign: boolean;
+    address?: string;
+    memberTypeId: number;
+    memberTypeLabel: string;
+    memberTypeCode: string;
+    isTeamPlayer: boolean;
+    pointsBalance: number;
+    status: string;
+    createdAt?: string;
+    sports: Array<{
+        id: number;
+        name: string;
+        level?: string;
+        position?: string;
+        joinDate?: string;
+    }>;
+};
+
+export type SortField = "name" | "memberType" | "status" | "points" | "createdAt";
+export type SortDir = "asc" | "desc";
+
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const AVATAR_PALETTE = [
+    "#1F3A5F", "#7C3AED", "#065F46", "#92400E", "#9D174D",
+    "#1E40AF", "#0369A1", "#6B21A8", "#0F766E", "#B45309",
+];
+
+export const getAvatarColor = (id: string) =>
+    AVATAR_PALETTE[parseInt(id, 10) % AVATAR_PALETTE.length];
+
+export const getInitials = (ar: string, en: string) =>
+    (ar || en || "?").split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+
+export const fmtDateShort = (v?: string | null) => {
+    if (!v) return "—";
+    try {
+        return new Date(v).toLocaleDateString("ar-EG", {
+            year: "2-digit",
+            month: "numeric",
+            day: "numeric",
+        });
+    } catch {
+        return v;
+    }
+};
+
+
+// ─── Status Badge ─────────────────────────────────────────────────────────────
+
+const STATUS_CONFIG: Record<
+    string,
+    { label: string; color: string; bg: string; border: string; icon: typeof CheckCircle }
+> = {
+    active:    { label: "نشط",           color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200", icon: CheckCircle },
+    suspended: { label: "موقوف",         color: "text-amber-700",   bg: "bg-amber-50",   border: "border-amber-200",   icon: Clock },
+    banned:    { label: "محظور",         color: "text-red-700",     bg: "bg-red-50",     border: "border-red-200",     icon: XCircle },
+    expired:   { label: "منتهي",         color: "text-slate-600",   bg: "bg-slate-50",   border: "border-slate-200",   icon: AlertTriangle },
+    cancelled: { label: "ملغى",          color: "text-rose-700",    bg: "bg-rose-50",    border: "border-rose-200",    icon: XCircle },
+    pending:   { label: "قيد المراجعة", color: "text-blue-700",    bg: "bg-blue-50",    border: "border-blue-200",    icon: Clock },
+};
+
+export function StatusBadge({
+    status,
+    compact = false,
+}: {
+    status: string;
+    compact?: boolean;
+}) {
+    const cfg = STATUS_CONFIG[status] ?? {
+        label: status,
+        color: "text-muted-foreground",
+        bg: "bg-muted",
+        border: "border-muted",
+        icon: Clock,
+    };
+    const Icon = cfg.icon;
+
+    return (
+        <span
+            className={`inline-flex items-center gap-1 rounded-full font-semibold border
+                ${cfg.color} ${cfg.bg} ${cfg.border}
+                ${compact ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-[11px]"}`}
+        >
+            <Icon className={compact ? "w-3 h-3" : "w-3.5 h-3.5"} />
+            {cfg.label}
+        </span>
+    );
+}
+
+
+// ─── Sort Icon ────────────────────────────────────────────────────────────────
+
+function SortIcon({
+    field,
+    active,
+    dir,
+}: {
+    field: SortField;
+    active: SortField;
+    dir: SortDir;
+}) {
+    if (field !== active) return <ChevronsUpDown className="w-3 h-3 opacity-40" />;
+    return dir === "asc"
+        ? <ChevronUp className="w-3 h-3 text-primary" />
+        : <ChevronDown className="w-3 h-3 text-primary" />;
+}
+
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function MemberCell({ row }: { row: MemberRow }) {
+    const nameAr = `${row.firstNameAr} ${row.lastNameAr}`.trim();
+    const nameEn = `${row.firstNameEn} ${row.lastNameEn}`.trim();
+
+    return (
+        <div className="flex items-center gap-2.5">
+            <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0"
+                style={{ background: getAvatarColor(row.id) }}
+            >
+                {getInitials(nameAr, nameEn)}
+            </div>
+            <div className="min-w-0">
+                <p className="font-semibold leading-tight truncate max-w-[160px] text-xs">
+                    {nameAr || "—"}
+                </p>
+                <p className="text-[10px] text-muted-foreground truncate max-w-[160px]" dir="ltr">
+                    {nameEn}
+                </p>
+            </div>
+        </div>
+    );
+}
+
+function MemberTypeCell({ row }: { row: MemberRow }) {
+    return (
+        <div className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap">
+            {row.isTeamPlayer && <Trophy className="w-3 h-3 text-amber-500 shrink-0" />}
+            <span className="truncate max-w-[100px]">{row.memberTypeLabel}</span>
+        </div>
+    );
+}
+
+function PointsCell({ row }: { row: MemberRow }) {
+    return (
+        <span
+            className={`font-semibold tabular-nums text-xs ${
+                row.pointsBalance > 0 ? "text-amber-600" : "text-muted-foreground"
+            }`}
+        >
+            {row.pointsBalance.toLocaleString()}
+        </span>
+    );
+}
+
+type ActionCellProps = {
+    row: MemberRow;
+    onView: (row: MemberRow) => void;
+    onEdit: (row: MemberRow) => void;
+    onChangeStatus: (row: MemberRow) => void;
+    onDelete: (row: MemberRow) => void;
+};
+
+function ActionCell({ row, onView, onEdit, onChangeStatus, onDelete }: ActionCellProps) {
+    return (
+        <div className="flex items-center justify-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            {/* View */}
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => onView(row)}
+                    >
+                        <Eye className="w-3.5 h-3.5 text-blue-600" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">عرض التفاصيل</TooltipContent>
+            </Tooltip>
+
+            {/* Edit */}
+            <RoleGuard privilege="UPDATE_MEMBER">
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => onEdit(row)}
+                        >
+                            <Pencil className="w-3.5 h-3.5 text-emerald-600" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">تعديل</TooltipContent>
+                </Tooltip>
+            </RoleGuard>
+
+            {/* More */}
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                        <MoreHorizontal className="w-3.5 h-3.5" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="text-xs">
+                    <RoleGuard privilege="MANAGE_MEMBER_BLOCK">
+                        <DropdownMenuItem onClick={() => onChangeStatus(row)} className="gap-2">
+                            <Shield className="w-3.5 h-3.5" />
+                            تغيير الحالة
+                        </DropdownMenuItem>
+                    </RoleGuard>
+                    <RoleGuard privilege="DELETE_MEMBER">
+                        <DropdownMenuItem
+                            onClick={() => onDelete(row)}
+                            className="gap-2 text-red-600 focus:text-red-600"
+                        >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            حذف العضو
+                        </DropdownMenuItem>
+                    </RoleGuard>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
+    );
+}
+
+
+// ─── Sortable Header ──────────────────────────────────────────────────────────
+
+type SortableThProps = {
+    field?: SortField;
+    sortField: SortField;
+    sortDir: SortDir;
+    onSort: (field: SortField) => void;
+    center?: boolean;
+    className?: string;
+    children: React.ReactNode;
+};
+
+function SortableTh({
+    field,
+    sortField,
+    sortDir,
+    onSort,
+    center,
+    className = "",
+    children,
+}: SortableThProps) {
+    return (
+        <th
+            onClick={() => field && onSort(field)}
+            className={`px-4 py-3 text-xs font-semibold text-muted-foreground whitespace-nowrap select-none align-middle
+                ${field ? "cursor-pointer hover:text-foreground" : ""}
+                ${center ? "text-center" : "text-right"} ${className}`}
+        >
+            <span className={`inline-flex items-center gap-1 ${center ? "justify-center" : ""}`}>
+                {children}
+                {field && <SortIcon field={field} active={sortField} dir={sortDir} />}
+            </span>
+        </th>
+    );
+}
+
+
+// ─── Skeleton Row ─────────────────────────────────────────────────────────────
+
+function SkeletonRows({ count = 8 }: { count?: number }) {
+    return (
+        <>
+            {Array.from({ length: count }).map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                    <td className="px-4 py-3">
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-full bg-muted shrink-0" />
+                            <div className="space-y-1">
+                                <div className="h-2.5 w-20 bg-muted rounded" />
+                                <div className="h-2 w-14 bg-muted rounded" />
+                            </div>
+                        </div>
+                    </td>
+                    {[1, 2, 3, 4, 5, 6].map((j) => (
+                        <td key={j} className="px-4 py-3">
+                            <div className="h-2.5 w-12 bg-muted rounded mx-auto" />
+                        </td>
+                    ))}
+                </tr>
+            ))}
+        </>
+    );
+}
+
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
+export type MemberTableProps = {
+    rows: MemberRow[];
+    /** Show skeleton loaders instead of data */
+    isLoading?: boolean;
+    /** Message shown when rows array is empty */
+    emptyMessage?: string;
+    /** Currently active sort field */
+    sortField: SortField;
+    /** Currently active sort direction */
+    sortDir: SortDir;
+    /** Called when a sortable header is clicked */
+    onSort: (field: SortField) => void;
+    /** Called when the Eye (view) button is clicked */
+    onView: (row: MemberRow) => void;
+    /** Called when the Pencil (edit) button is clicked */
+    onEdit: (row: MemberRow) => void;
+    /** Called when تغيير الحالة is clicked */
+    onChangeStatus: (row: MemberRow) => void;
+    /** Called when حذف is clicked */
+    onDelete: (row: MemberRow) => void;
+    /** Number of skeleton rows to show while loading (default: 8) */
+    skeletonRows?: number;
+};
+
+/**
+ * MemberTable — renders the members list table with sortable headers,
+ * skeleton loading, empty states, and per-row action buttons.
+ *
+ * Wraps its own <table> directly (rather than <DataTable>) so that sortable
+ * column headers can be rendered without extending the generic DataTable API.
+ */
+export function MemberTable({
+    rows,
+    isLoading = false,
+    emptyMessage = "لا يوجد أعضاء في هذه الفئة",
+    sortField,
+    sortDir,
+    onSort,
+    onView,
+    onEdit,
+    onChangeStatus,
+    onDelete,
+    skeletonRows = 8,
+}: MemberTableProps) {
+    return (
+        <TooltipProvider>
+            <div
+                className="flex-1 overflow-auto [&::-webkit-scrollbar]:hidden"
+                style={{ scrollbarWidth: "none" }}
+            >
+                {isLoading && rows.length === 0 ? (
+                    /* Skeleton loader */
+                    <table className="w-full text-sm">
+                        <thead className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
+                            <tr>
+                                <th className="px-4 py-3 text-xs font-semibold text-muted-foreground text-right">العضو</th>
+                                <th className="px-4 py-3 text-xs font-semibold text-muted-foreground text-right">النوع</th>
+                                <th className="px-4 py-3 text-xs font-semibold text-muted-foreground text-right">الهاتف</th>
+                                <th className="px-4 py-3 text-xs font-semibold text-muted-foreground text-center">النقاط</th>
+                                <th className="px-4 py-3 text-xs font-semibold text-muted-foreground text-center">الحالة</th>
+                                <th className="px-4 py-3 text-xs font-semibold text-muted-foreground text-center">التسجيل</th>
+                                <th className="px-4 py-3 text-xs font-semibold text-muted-foreground text-center">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                            <SkeletonRows count={skeletonRows} />
+                        </tbody>
+                    </table>
+                ) : rows.length === 0 ? (
+                    /* Empty state */
+                    <div className="py-12 text-center text-muted-foreground text-sm">
+                        {emptyMessage}
+                    </div>
+                ) : (
+                    /* Data table */
+                    <table className="w-full text-sm">
+                        <thead className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
+                            <tr>
+                                <SortableTh field="name" sortField={sortField} sortDir={sortDir} onSort={onSort} className="w-[200px]">
+                                    العضو
+                                </SortableTh>
+                                <SortableTh field="memberType" sortField={sortField} sortDir={sortDir} onSort={onSort}>
+                                    النوع
+                                </SortableTh>
+                                <SortableTh sortField={sortField} sortDir={sortDir} onSort={onSort}>
+                                    الهاتف
+                                </SortableTh>
+                                <SortableTh field="points" sortField={sortField} sortDir={sortDir} onSort={onSort} center>
+                                    النقاط
+                                </SortableTh>
+                                <SortableTh field="status" sortField={sortField} sortDir={sortDir} onSort={onSort} center>
+                                    الحالة
+                                </SortableTh>
+                                <SortableTh field="createdAt" sortField={sortField} sortDir={sortDir} onSort={onSort} center>
+                                    التسجيل
+                                </SortableTh>
+                                <SortableTh sortField={sortField} sortDir={sortDir} onSort={onSort} center className="w-[100px]">
+                                    الإجراءات
+                                </SortableTh>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                            {rows.map((row) => (
+                                <tr
+                                    key={row.id}
+                                    className="transition-colors hover:bg-muted/40 group"
+                                >
+                                    {/* Member (avatar + name) */}
+                                    <td className="px-4 py-3 align-middle">
+                                        <MemberCell row={row} />
+                                    </td>
+
+                                    {/* Type */}
+                                    <td className="px-4 py-3 align-middle">
+                                        <MemberTypeCell row={row} />
+                                    </td>
+
+                                    {/* Phone */}
+                                    <td className="px-4 py-3 text-xs tabular-nums text-right align-middle">
+                                        <span dir="ltr" className="text-muted-foreground">
+                                            {row.phone || "—"}
+                                        </span>
+                                    </td>
+
+                                    {/* Points */}
+                                    <td className="px-4 py-3 text-center align-middle">
+                                        <PointsCell row={row} />
+                                    </td>
+
+                                    {/* Status */}
+                                    <td className="px-4 py-3 text-center align-middle">
+                                        <StatusBadge status={row.status} compact />
+                                    </td>
+
+                                    {/* Registration date */}
+                                    <td className="px-4 py-3 text-center text-[10px] text-muted-foreground whitespace-nowrap align-middle">
+                                        {fmtDateShort(row.createdAt)}
+                                    </td>
+
+                                    {/* Actions */}
+                                    <td className="px-4 py-3 text-center align-middle">
+                                        <ActionCell
+                                            row={row}
+                                            onView={onView}
+                                            onEdit={onEdit}
+                                            onChangeStatus={onChangeStatus}
+                                            onDelete={onDelete}
+                                        />
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+        </TooltipProvider>
+    );
+}
+
+export default MemberTable;

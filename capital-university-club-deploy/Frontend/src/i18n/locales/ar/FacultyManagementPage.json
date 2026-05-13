@@ -1,0 +1,88 @@
+{
+  "errors": {
+    "fetchFailed": "تعذر تحميل الكليات",
+    "fetchFailedTitle": "فشل التحميل",
+    "missingDataTitle": "بيانات ناقصة",
+    "missingDataDesc": "يرجى ملء جميع الحقول المطلوبة.",
+    "saveFailedTitle": "فشل الحفظ",
+    "saveFailedDesc": "حدث خطأ غير متوقع عند الحفظ",
+    "deleteFailedTitle": "فشل الحذف",
+    "deleteFailedDesc": "حدث خطأ غير متوقع عند الحذف",
+    "missingMemberDesc": "يرجى تحديد العضو المطلوب.",
+    "assignFailedTitle": "فشل التعيين",
+    "assignFailedDesc": "حدث خطأ غير متوقع عند التعيين"
+  },
+  "success": {
+    "updatedTitle": "تم التحديث",
+    "updatedDesc": "تم تحديث بيانات الكلية بنجاح",
+    "addedTitle": "تمت الإضافة",
+    "addedDesc": "تمت إضافة الكلية بنجاح",
+    "deletedTitle": "تم الحذف",
+    "deletedDesc": "تم حذف الكلية بنجاح",
+    "assignedTitle": "تم التعيين",
+    "assignedDesc": "تم ربط العضو بالكلية بنجاح"
+  },
+  "page": {
+    "title": "إدارة الكليات",
+    "totalFaculties": "إجمالي الكليات الأكاديمية المسجلة:",
+    "addFacultyBtn": "إضافة كلية",
+    "prevPage": "الصفحة السابقة",
+    "nextPage": "الصفحة التالية",
+    "searchPlaceholder": "بحث بالاسم، أو الكود...",
+    "refreshBtn": "تحديث البيانات",
+    "fetchingRecords": "جارٍ جلب السجلات...",
+    "noFaculties": "لا توجد كليات مسجلة",
+    "noSearchResults": "لا توجد نتائج مطابقة لـ \"{{search}}\"",
+    "noFacultiesDesc": "لم يتم إدراج أي كليات بعد. أضف كلياتك الأكاديمية الآن.",
+    "genericMember": "عضو",
+    "genericName": "الاسم"
+  },
+  "table": {
+    "serial": "#",
+    "name": "الكلية",
+    "nameAr": "الكلية (عربي)",
+    "nameEn": "الكلية (إنجليزي)",
+    "code": "الكود المرجعي",
+    "actions": "الإجراءات",
+    "emptyEn": "—"
+  },
+  "actions": {
+    "edit": "تعديل",
+    "assignMember": "تعيين عضو",
+    "delete": "حذف الكلية"
+  },
+  "modalAdd": {
+    "editTitle": "تعديل كلية",
+    "addTitle": "إضافة كلية جديدة",
+    "editDesc": "قم بتعديل بيانات الكلية المحددة.",
+    "addDesc": "أدخل بيانات الكلية الجديدة، الكود يستخدم للتعريف السريع.",
+    "codeLabel": "الكود (Code) *",
+    "codePlaceholder": "ENG",
+    "nameArLabel": "الاسم (عربي) *",
+    "nameArPlaceholder": "مثال: هندسة",
+    "nameEnLabel": "الاسم (إنجليزي) *",
+    "nameEnPlaceholder": "Engineering",
+    "saving": "جارٍ الحفظ...",
+    "saveBtn": "حفظ الكلية"
+  },
+  "modalDelete": {
+    "title": "تأكيد الحذف",
+    "desc": "هل أنت متأكد من حذف هذه الكلية؟ لا يمكن التراجع عن هذا الإجراء وسيؤثر على السجلات المرتبطة بها.",
+    "deleting": "جارٍ الحذف...",
+    "confirmBtn": "تأكيد الحذف"
+  },
+  "modalAssign": {
+    "title": "تعيين عضو في الكلية",
+    "desc": "تحديد العضو المراد ربطه بكلية:",
+    "memberIdLabel": "رقم العضو *",
+    "memberIdPlaceholder": "رقم العضو (مثل: 5049)",
+    "memberNotFound": "لم يُعثر على عضو يطابق هذا الرقم",
+    "enterNumbers": "أدخل أرقاماً صحيحة وسيبدأ البحث التلقائي",
+    "nameLabel": "الاسم:",
+    "assigning": "جارٍ الربط...",
+    "assignBtn": "تأكيد التعيين"
+  },
+  "common": {
+    "cancel": "إلغاء"
+  }
+}

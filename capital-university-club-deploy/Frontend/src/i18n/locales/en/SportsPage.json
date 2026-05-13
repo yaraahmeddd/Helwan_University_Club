@@ -1,0 +1,134 @@
+{
+  "header": {
+    "title": "Sports Management",
+    "addButton": "Add Sport"
+  },
+  "filter": {
+    "all": "All",
+    "active": "Active",
+    "draft": "Draft",
+    "inactive": "Inactive"
+  },
+  "table": {
+    "name": "Sport Name",
+    "status": "Status",
+    "membersCount": "Members Count",
+    "price": "Price (EGP)",
+    "actions": "Actions"
+  },
+  "loading": "Loading...",
+  "empty": "No sports added yet",
+  "status": {
+    "draftTooltip": "This sport is not visible to members until schedules are added",
+    "inactive": "Inactive",
+    "draft": "Draft — No schedules",
+    "active": "Active"
+  },
+  "actions": {
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "dialog": {
+    "editTitle": "Edit Sport",
+    "addTitle": "Add New Sport",
+    "editDesc": "Modify sport details",
+    "addDesc": "Enter new sport details"
+  },
+  "form": {
+    "photoLabel": "Sport Photo",
+    "removePhoto": "× Remove Photo",
+    "uploadClick": "Click to select a photo",
+    "uploadChange": "Change Photo",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "branch": "Branch",
+    "branchPlaceholder": "Select Branch",
+    "noBranch": "No branch",
+    "nameArLabel": "Sport Name (AR)",
+    "nameArPlaceholder": "Enter Arabic name only",
+    "nameEnLabel": "Sport Name (EN)",
+    "nameEnPlaceholder": "Enter English name only",
+    "teamsLabel": "Teams",
+    "addTeam": "Add Team",
+    "teamTitle": "Team {{n}}",
+    "teamNameArLabel": "Team Name (AR)",
+    "teamNameArPlaceholder": "e.g. Under 18 Team",
+    "maxParticipants": "Max Participants",
+    "subscriptionPrice": "Subscription Price (EGP)",
+    "trainingLabel": "Training Schedules",
+    "trainingDays": "Training Days",
+    "from": "From",
+    "to": "To",
+    "timeError": "End time must be after start time",
+    "field": "Field",
+    "fieldPlaceholder": "Select Field",
+    "noFields": "No fields loaded from API — check server connection",
+    "trainingFee": "Training Fee (EGP)",
+    "requiresBooking": "Requires Court Booking",
+    "requiresBookingHint": "Enable for sports that require advance court booking like Padel",
+    "bookingWarning": "Warning: No fields added. Please add at least one field from Fields Management",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "save": "Save",
+    "startTimeTitle": "Start Time",
+    "endTimeTitle": "End Time",
+    "slotLockedTooltip": "This time is reserved"
+  },
+  "deleteDialog": {
+    "title": "Confirm Deletion",
+    "description": "Are you sure you want to delete this sport? This action cannot be undone.",
+    "cancel": "Cancel",
+    "deleting": "Deleting...",
+    "confirm": "Delete"
+  },
+  "membersDialog": {
+    "title": "Members of {{name}}",
+    "count": "({{n}} members)",
+    "countSubtitle": "{{n}} registered members",
+    "loading": "Loading members...",
+    "description": "List of members registered in this sport",
+    "empty": "No members for this sport currently",
+    "close": "Close"
+  },
+  "membersTable": {
+    "name": "Name",
+    "nationalId": "National ID",
+    "phone": "Phone Number",
+    "status": "Status",
+    "registrationDate": "Registration Date"
+  },
+  "memberStatus": {
+    "active": "Active",
+    "pending": "Pending",
+    "suspended": "Suspended",
+    "inactive": "Inactive"
+  },
+  "toast": {
+    "loadError": "Failed to load sports",
+    "arOnlyTitle": "Warning",
+    "arOnlyDesc": "Cannot enter English characters in the Arabic name field",
+    "enOnlyTitle": "Warning",
+    "enOnlyDesc": "Cannot enter Arabic characters in the English name field",
+    "requiredNameAr": "Please enter the sport name in Arabic.",
+    "requiredNameEn": "Please enter the sport name in English.",
+    "requiredPhoto": "Please upload a sport photo.",
+    "requiredBranch": "Please select a branch.",
+    "requiredFieldTitle": "Required Field",
+    "teamsErrorName": "Team name in Arabic and English are required for each team.",
+    "teamsErrorMax": "Please specify max participants for each team (greater than 0).",
+    "teamsErrorTime": "Please specify start and end time for team \"{{name}}\".",
+    "teamsErrorTimeRange": "End time must be after start time for team \"{{name}}\".",
+    "teamsErrorDays": "Please select at least one training day for team \"{{name}}\".",
+    "teamsErrorField": "Please select a field for team \"{{name}}\".",
+    "teamsErrorFee": "Please specify training fee for team \"{{name}}\".",
+    "updateSuccess": "Sport and teams updated successfully",
+    "updateTitle": "Updated",
+    "addSuccessTitle": "Added",
+    "addSuccessDesc": "Sport added successfully",
+    "saveErrorTitle": "Save Failed",
+    "deleteSuccessTitle": "Deleted",
+    "deleteSuccessDesc": "Sport deleted successfully",
+    "deleteErrorTitle": "Delete Failed"
+  }
+}

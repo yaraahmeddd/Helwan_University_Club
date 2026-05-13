@@ -1,0 +1,90 @@
+{
+  "header": {
+    "title": "Manage Invitations",
+    "subtitle": "View and manage invitation links for field bookings and participants.",
+    "refresh": "Refresh"
+  },
+  "filters": {
+    "searchPlaceholder": "Search by name or booking number...",
+    "statusPlaceholder": "Filter by status",
+    "allStatuses": "All Statuses"
+  },
+  "pagination": {
+    "page": "Page {{page}} of {{pages}}",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "table": {
+    "booker": "Booker",
+    "phone": "Phone",
+    "dateTime": "Date & Time",
+    "fieldSport": "Field / Sport",
+    "participants": "Participants",
+    "status": "Status",
+    "actions": "Actions"
+  },
+  "status": {
+    "confirmed": "Confirmed / Completed",
+    "pending_payment": "Pending Payment",
+    "cancelled": "Cancelled",
+    "in_progress": "In Progress"
+  },
+  "bookerType": {
+    "member": "Club Member",
+    "teamPlayer": "Team Player",
+    "memberShort": "Member",
+    "teamPlayerShort": "Player"
+  },
+  "cell": {
+    "unknown": "Unknown",
+    "noPhone": "No phone",
+    "noField": "Unknown Field",
+    "noSport": "Unknown Sport",
+    "copyLink": "Copy Link"
+  },
+  "actions": {
+    "details": "Details",
+    "viewDetails": "View Details",
+    "copyLink": "Copy Link"
+  },
+  "loading": "Loading invitations...",
+  "empty": {
+    "title": "No invitations found",
+    "subtitle": "No results match your current search."
+  },
+  "panel": {
+    "title": "Invitation Details",
+    "date": "Date",
+    "time": "Time",
+    "bookingInfo": "Booking Information",
+    "field": "Field:",
+    "sport": "Sport:",
+    "shareLink": "Share Link:",
+    "booker": "Booker",
+    "name": "Name:",
+    "phone": "Phone:",
+    "participants": "Participants List",
+    "registered": "registered",
+    "noParticipants": "No participants have joined yet.",
+    "bookingCreator": "Booking Creator",
+    "cancelButton": "Cancel Booking & Invitation"
+  },
+  "cancelDialog": {
+    "title": "Confirm Cancellation",
+    "description": "Are you sure you want to cancel this booking? The invitation link will be invalidated and participants will not be able to register or attend.",
+    "booking": "Booking:",
+    "day": "on",
+    "cancel": "Go Back",
+    "confirm": "Yes, Cancel Booking"
+  },
+  "toast": {
+    "loadFailed": "Error",
+    "loadFailedDesc": "Failed to load invitations.",
+    "copied": "Copied",
+    "copiedDesc": "Link copied successfully.",
+    "cancelSuccess": "Done",
+    "cancelSuccessDesc": "Booking cancelled successfully.",
+    "cancelFailed": "Error",
+    "cancelFailedDesc": "An error occurred while cancelling the booking."
+  }
+}

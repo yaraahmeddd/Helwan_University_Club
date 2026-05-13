@@ -1,0 +1,70 @@
+{
+  "createModal": {
+    "editTitle": "Edit Post",
+    "createTitle": "Add New Media",
+    "editSubtitle": "Update the media file details.",
+    "createSubtitle": "Upload and setup a new media file for the library.",
+    "removeBtn": "Delete",
+    "newBadge": "New",
+    "addImages": "Add Images",
+    "clickOrDrag": "Click or drag to add more",
+    "clickToUpload": "Click to upload",
+    "orDragAndDrop": "Or drag and drop files here",
+    "supportedFormats": "JPG, PNG up to 2GB - multiple images allowed",
+    "videoUrlLabel": "Video URL (YouTube/Vimeo)",
+    "orUploadFile": "Or upload file",
+    "titleLabel": "Title *",
+    "titlePlaceholder": "Enter media title",
+    "categoryLabel": "Category *",
+    "dateLabel": "Date",
+    "descLabel": "Description",
+    "descPlaceholder": "Additional description (optional)...",
+    "cancelBtn": "Cancel",
+    "saveBtn": "Save Media"
+  },
+  "errors": {
+    "titleRequired": "Title is required",
+    "imageRequired": "At least one image must be uploaded",
+    "videoRequired": "A video URL or file must be provided",
+    "saveFailed": "Failed to save post"
+  },
+  "categories": {
+    "photos": "Photos",
+    "video": "Video",
+    "activities": "Activities",
+    "promotions": "Promotions",
+    "events": "Events",
+    "ads": "Ads",
+    "news": "News",
+    "maintenance": "Maintenance"
+  },
+  "viewModal": {
+    "noDescription": "No description available for this post.",
+    "publishedAt": "Published on: {{date}}",
+    "includesImages": "Includes {{count}} high quality images"
+  },
+  "mainPage": {
+    "deleteError": "An error occurred during deletion",
+    "filters": {
+      "all": "All",
+      "photos": "Photos",
+      "video": "Video",
+      "activities": "Activities",
+      "news": "News"
+    },
+    "pageTitle": "Media Manager",
+    "pageSubtitle": "Manage and organize your club's media files.",
+    "uploadMediaBtn": "Upload Media",
+    "searchPlaceholder": "Search files...",
+    "noMediaTitle": "No Media Found",
+    "noMediaDesc": "Check back later or try adjusting your search.",
+    "prevPage": "Previous",
+    "nextPage": "Next"
+  },
+  "deleteModal": {
+    "confirmTitle": "Confirm Deletion",
+    "confirmDesc": "Are you sure you want to delete this media? This action cannot be undone.",
+    "cancelBtn": "Cancel",
+    "confirmBtn": "Yes, Delete"
+  }
+}

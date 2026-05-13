@@ -1,0 +1,90 @@
+{
+  "header": {
+    "title": "إدارة الدعوات",
+    "subtitle": "مشاهدة وإدارة روابط الدعوات لحجوزات الملاعب والمشاركين.",
+    "refresh": "تحديث"
+  },
+  "filters": {
+    "searchPlaceholder": "بحث بالاسم أو رقم الحجز...",
+    "statusPlaceholder": "تصفية حسب الحالة",
+    "allStatuses": "كل الحالات"
+  },
+  "pagination": {
+    "page": "صفحة {{page}} من {{pages}}",
+    "previous": "السابق",
+    "next": "التالي"
+  },
+  "table": {
+    "booker": "صاحب الحجز",
+    "phone": "رقم الهاتف",
+    "dateTime": "تاريخ ووقت الحجز",
+    "fieldSport": "الملعب / الرياضة",
+    "participants": "المشاركون",
+    "status": "الحالة",
+    "actions": "إجراءات"
+  },
+  "status": {
+    "confirmed": "مؤكد / مكتمل",
+    "pending_payment": "قيد الدفع",
+    "cancelled": "ملغي",
+    "in_progress": "جارٍ"
+  },
+  "bookerType": {
+    "member": "عضو نادي",
+    "teamPlayer": "لاعب فريق",
+    "memberShort": "عضو",
+    "teamPlayerShort": "لاعب"
+  },
+  "cell": {
+    "unknown": "غير محدد",
+    "noPhone": "لا يوجد رقم",
+    "noField": "ملعب غير محدد",
+    "noSport": "رياضة غير محددة",
+    "copyLink": "نسخ الرابط"
+  },
+  "actions": {
+    "details": "التفاصيل",
+    "viewDetails": "عرض التفاصيل",
+    "copyLink": "نسخ الرابط"
+  },
+  "loading": "جاري تحميل الدعوات...",
+  "empty": {
+    "title": "لا توجد دعوات مسجلة",
+    "subtitle": "لم يتم العثور على نتائج تطابق بحثك الحالي."
+  },
+  "panel": {
+    "title": "تفاصيل الدعوة",
+    "date": "التاريخ",
+    "time": "الوقت",
+    "bookingInfo": "معلومات الحجز",
+    "field": "الملعب:",
+    "sport": "الرياضة:",
+    "shareLink": "رابط المشاركة:",
+    "booker": "صاحب الحجز",
+    "name": "الاسم:",
+    "phone": "الهاتف:",
+    "participants": "قائمة المشاركين",
+    "registered": "مسجل",
+    "noParticipants": "لم ينضم أي مشارك حتى الآن.",
+    "bookingCreator": "منشئ الحجز",
+    "cancelButton": "إلغاء الحجز والدعوة نهائياً"
+  },
+  "cancelDialog": {
+    "title": "تأكيد إلغاء الحجز",
+    "description": "هل أنت متأكد من رغبتك في إلغاء هذا الحجز؟ سيتم إبطال رابط الدعوة ولن يتمكن المشاركون من التسجيل أو الحضور.",
+    "booking": "الحجز:",
+    "day": "يوم",
+    "cancel": "تراجع",
+    "confirm": "نعم، ألغ الحجز"
+  },
+  "toast": {
+    "loadFailed": "خطأ",
+    "loadFailedDesc": "فشل تحميل الدعوات المتاحة.",
+    "copied": "تم النسخ",
+    "copiedDesc": "تم نسخ الرابط بنجاح.",
+    "cancelSuccess": "تم",
+    "cancelSuccessDesc": "تم إلغاء الحجز بنجاح.",
+    "cancelFailed": "خطأ",
+    "cancelFailedDesc": "حدث خطأ أثناء إلغاء الحجز."
+  }
+}

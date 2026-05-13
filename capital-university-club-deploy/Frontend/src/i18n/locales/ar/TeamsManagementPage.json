@@ -1,0 +1,120 @@
+{
+  "header": {
+    "title": "إدارة الفرق",
+    "totalTeams": "إجمالي الفرق:",
+    "activeTeams": "{{count}} نشط",
+    "inactiveTeams": "{{count}} غير نشط"
+  },
+  "toolbar": {
+    "searchPlaceholder": "ابحث عن فريق...",
+    "statusFilter": "الحالة",
+    "sportFilter": "الرياضة",
+    "clearFilter": "مسح",
+    "clearAll": "مسح الفلاتر ×",
+    "results": "نتيجة"
+  },
+  "status": {
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "suspended": "موقوف",
+    "archived": "مؤرشف"
+  },
+  "table": {
+    "colIndex": "#",
+    "colName": "اسم الفريق",
+    "colSport": "الرياضة",
+    "colSchedule": "مواعيد التدريب",
+    "colMaxParticipants": "الحد الأقصى",
+    "colStatus": "الحالة",
+    "colActions": "الإجراءات",
+    "loading": "جاري التحميل...",
+    "noResultsFiltered": "لا توجد فرق تطابق الفلاتر المحددة",
+    "noResultsEmpty": "لا توجد فرق مسجلة بعد"
+  },
+  "actions": {
+    "addTeam": "إضافة فريق",
+    "edit": "تعديل",
+    "delete": "حذف"
+  },
+  "form": {
+    "addTitle": "إضافة فريق جديد",
+    "editTitle": "تعديل فريق",
+    "addDescription": "أدخل بيانات الفريق الجديد",
+    "editDescription": "قم بتعديل بيانات الفريق — جميع الحقول قابلة للتعديل",
+    "sportLabel": "الرياضة",
+    "sportPlaceholder": "اختر الرياضة",
+    "sportLockedNote": "لا يمكن تغيير الرياضة بعد إنشاء الفريق",
+    "nameArLabel": "اسم الفريق (AR)",
+    "nameArPlaceholder": "مثال: فريق تحت 18 سنة",
+    "nameEnLabel": "Team Name (EN)",
+    "nameEnPlaceholder": "e.g. Under 18 Team",
+    "maxParticipantsLabel": "الحد الأقصى للمشاركين",
+    "maxParticipantsPlaceholder": "20",
+    "statusLabel": "الحالة",
+    "visibilityLabel": "العضوية",
+    "visibilityPlaceholder": "اختر العضوية",
+    "visibilityNone": "— بدون تحديد —",
+    "visibilityInternal": "داخلي",
+    "visibilityExternal": "خارجي",
+    "visibilityBoth": "داخلي و خارجي",
+    "priceLabel": "السعر (ج.م)",
+    "pricePlaceholder": "0",
+    "training": {
+      "sectionTitle": "مواعيد التدريب",
+      "daysLabel": "أيام التدريب",
+      "fromLabel": "من",
+      "toLabel": "إلى",
+      "timeStartTitle": "وقت البداية",
+      "timeEndTitle": "وقت النهاية",
+      "fieldLabel": "الملعب",
+      "fieldPlaceholder": "اختر ملعب",
+      "fieldNoFields": "لا توجد ملاعب محملة من API — تأكد من اتصال الخادم",
+      "trainingFeeLabel": "رسوم التدريب (ج.م)",
+      "timeRangeError": "وقت النهاية يجب أن يكون بعد وقت البداية"
+    },
+    "buttons": {
+      "cancel": "إلغاء",
+      "save": "حفظ",
+      "saving": "جارٍ الحفظ..."
+    }
+  },
+  "validation": {
+    "nameArRequired": "اسم الفريق بالعربية مطلوب",
+    "nameEnRequired": "اسم الفريق بالإنجليزية مطلوب",
+    "sportRequired": "يجب اختيار الرياضة",
+    "maxParticipantsRequired": "الحد الأقصى للمشاركين مطلوب ويجب أن يكون أكبر من صفر",
+    "daysRequired": "يجب اختيار يوم تدريب واحد على الأقل",
+    "startTimeRequired": "وقت البداية مطلوب",
+    "endTimeRequired": "وقت النهاية مطلوب",
+    "timeRangeInvalid": "وقت النهاية يجب أن يكون بعد وقت البداية",
+    "trainingFeeRequired": "رسوم التدريب مطلوبة"
+  },
+  "deleteDialog": {
+    "title": "تأكيد الحذف",
+    "description": "هل أنت متأكد من حذف هذا الفريق؟ لا يمكن التراجع عن هذا الإجراء.",
+    "cancel": "إلغاء",
+    "confirm": "حذف",
+    "confirming": "جارٍ الحذف..."
+  },
+  "toast": {
+    "loadSportsFailed": "فشل تحميل الرياضات",
+    "loadTeamsFailed": "فشل تحميل الفرق",
+    "addSuccess": "تم إضافة الفريق بنجاح",
+    "addSuccessTitle": "✓ تمت الإضافة",
+    "updateSuccess": "تم تحديث الفريق بنجاح",
+    "updateSuccessTitle": "✓ تم التحديث",
+    "saveFailed": "حدث خطأ غير متوقع",
+    "saveFailedTitle": "فشل الحفظ",
+    "deleteSuccess": "تم حذف الفريق بنجاح",
+    "deleteSuccessTitle": "✓ تم الحذف",
+    "deleteFailed": "فشل الحذف",
+    "nameArOnly": "الاسم العربي يقبل عربي فقط",
+    "nameArOnlyTitle": "تنبيه",
+    "nameEnOnly": "English name only",
+    "nameEnOnlyTitle": "تنبيه",
+    "warning": "تحذير"
+  },
+  "common": {
+    "notAvailable": "—"
+  }
+}

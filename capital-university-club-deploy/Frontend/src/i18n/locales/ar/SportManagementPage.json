@@ -1,0 +1,58 @@
+{
+  "common": {
+    "error": "خطأ"
+  },
+  "header": {
+    "title": "الأعضاء بالرياضة",
+    "total": "إجمالي: {{count}} عضو",
+    "allSports": "كل الرياضات: {{count}}",
+    "refresh": "تحديث"
+  },
+  "sidebar": {
+    "sports": "الرياضات",
+    "all": "الكل"
+  },
+  "toolbar": {
+    "searchPlaceholder": "بحث بالاسم أو الهاتف أو الرقم القومي...",
+    "allStatuses": "كل الحالات",
+    "results": "{{count}} نتيجة"
+  },
+  "teams": {
+    "loading": "جارٍ تحميل الفرق...",
+    "all": "الكل",
+    "empty": "لا توجد فرق لهذه الرياضة"
+  },
+  "table": {
+    "loading": "جارٍ تحميل الأعضاء...",
+    "emptyFiltered": "لا توجد نتائج تطابق البحث",
+    "emptySport": "لا يوجد أعضاء في رياضة {{sport}}",
+    "empty": "لا يوجد أعضاء",
+    "member": "العضو",
+    "phone": "رقم الهاتف",
+    "nationalId": "الرقم القومي",
+    "sports": "الرياضات",
+    "subscriptionDate": "تاريخ الاشتراك",
+    "status": "الحالة"
+  },
+  "status": {
+    "active": "نشط",
+    "approved": "مقبول",
+    "inactive": "غير نشط",
+    "rejected": "مرفوض",
+    "suspended": "موقوف",
+    "pending": "قيد الانتظار"
+  },
+  "pagination": {
+    "summary": "صفحة {{page}} من {{totalPages}} · {{count}} نتيجة",
+    "previous": "الصفحة السابقة",
+    "next": "الصفحة التالية"
+  },
+  "toasts": {
+    "loadSportsFailed": {
+      "title": "تعذر تحميل الرياضات"
+    },
+    "loadMembersFailed": {
+      "title": "تعذر تحميل الأعضاء"
+    }
+  }
+}

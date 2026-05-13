@@ -1,0 +1,120 @@
+{
+  "header": {
+    "title": "Teams Management",
+    "totalTeams": "Total Teams:",
+    "activeTeams": "{{count}} active",
+    "inactiveTeams": "{{count}} inactive"
+  },
+  "toolbar": {
+    "searchPlaceholder": "Search for a team...",
+    "statusFilter": "Status",
+    "sportFilter": "Sport",
+    "clearFilter": "Clear",
+    "clearAll": "Clear Filters ×",
+    "results": "result(s)"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "suspended": "Suspended",
+    "archived": "Archived"
+  },
+  "table": {
+    "colIndex": "#",
+    "colName": "Team Name",
+    "colSport": "Sport",
+    "colSchedule": "Training Schedule",
+    "colMaxParticipants": "Max",
+    "colStatus": "Status",
+    "colActions": "Actions",
+    "loading": "Loading...",
+    "noResultsFiltered": "No teams match the selected filters",
+    "noResultsEmpty": "No teams registered yet"
+  },
+  "actions": {
+    "addTeam": "Add Team",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "form": {
+    "addTitle": "Add New Team",
+    "editTitle": "Edit Team",
+    "addDescription": "Enter the details for the new team",
+    "editDescription": "Edit team data — all fields are editable",
+    "sportLabel": "Sport",
+    "sportPlaceholder": "Select sport",
+    "sportLockedNote": "Sport cannot be changed after team creation",
+    "nameArLabel": "Team Name (AR)",
+    "nameArPlaceholder": "e.g. Under 18 Team",
+    "nameEnLabel": "Team Name (EN)",
+    "nameEnPlaceholder": "e.g. Under 18 Team",
+    "maxParticipantsLabel": "Max Participants",
+    "maxParticipantsPlaceholder": "20",
+    "statusLabel": "Status",
+    "visibilityLabel": "Membership",
+    "visibilityPlaceholder": "Select membership",
+    "visibilityNone": "— Not specified —",
+    "visibilityInternal": "Internal",
+    "visibilityExternal": "External",
+    "visibilityBoth": "Internal & External",
+    "priceLabel": "Price (EGP)",
+    "pricePlaceholder": "0",
+    "training": {
+      "sectionTitle": "Training Schedule",
+      "daysLabel": "Training Days",
+      "fromLabel": "From",
+      "toLabel": "To",
+      "timeStartTitle": "Start Time",
+      "timeEndTitle": "End Time",
+      "fieldLabel": "Field",
+      "fieldPlaceholder": "Select field",
+      "fieldNoFields": "No fields loaded from API — check server connection",
+      "trainingFeeLabel": "Training Fee (EGP)",
+      "timeRangeError": "End time must be after start time"
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving..."
+    }
+  },
+  "validation": {
+    "nameArRequired": "Team name in Arabic is required",
+    "nameEnRequired": "Team name in English is required",
+    "sportRequired": "Sport is required",
+    "maxParticipantsRequired": "Max participants is required and must be greater than zero",
+    "daysRequired": "At least one training day must be selected",
+    "startTimeRequired": "Start time is required",
+    "endTimeRequired": "End time is required",
+    "timeRangeInvalid": "End time must be after start time",
+    "trainingFeeRequired": "Training fee is required"
+  },
+  "deleteDialog": {
+    "title": "Confirm Deletion",
+    "description": "Are you sure you want to delete this team? This action cannot be undone.",
+    "cancel": "Cancel",
+    "confirm": "Delete",
+    "confirming": "Deleting..."
+  },
+  "toast": {
+    "loadSportsFailed": "Failed to load sports",
+    "loadTeamsFailed": "Failed to load teams",
+    "addSuccess": "Team added successfully",
+    "addSuccessTitle": "✓ Added",
+    "updateSuccess": "Team updated successfully",
+    "updateSuccessTitle": "✓ Updated",
+    "saveFailed": "An unexpected error occurred",
+    "saveFailedTitle": "Save failed",
+    "deleteSuccess": "Team deleted successfully",
+    "deleteSuccessTitle": "✓ Deleted",
+    "deleteFailed": "Delete failed",
+    "nameArOnly": "Arabic name accepts Arabic only",
+    "nameArOnlyTitle": "Notice",
+    "nameEnOnly": "English name only",
+    "nameEnOnlyTitle": "Notice",
+    "warning": "Warning"
+  },
+  "common": {
+    "notAvailable": "—"
+  }
+}

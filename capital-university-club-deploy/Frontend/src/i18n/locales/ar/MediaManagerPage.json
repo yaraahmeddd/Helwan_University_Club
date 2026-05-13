@@ -1,0 +1,70 @@
+{
+  "createModal": {
+    "editTitle": "تعديل المنشور",
+    "createTitle": "إضافة وسائط جديدة",
+    "editSubtitle": "قم بتحديث بيانات ملف الوسائط.",
+    "createSubtitle": "قم برفع وإعداد ملف الوسائط الجديد للمكتبة.",
+    "removeBtn": "حذف",
+    "newBadge": "جديد",
+    "addImages": "إضافة صور",
+    "clickOrDrag": "انقر أو اسحب لإضافة المزيد",
+    "clickToUpload": "انقر للرفع",
+    "orDragAndDrop": "أو قم بسحب وإفلات الملفات هنا",
+    "supportedFormats": "JPG, PNG حتى 2 جيجابايت - يمكن تحميل عدة صور",
+    "videoUrlLabel": "رابط الفيديو (YouTube/Vimeo)",
+    "orUploadFile": "أو رفع ملف",
+    "titleLabel": "العنوان *",
+    "titlePlaceholder": "أدخل عنوان الوسائط",
+    "categoryLabel": "الفئة *",
+    "dateLabel": "التاريخ",
+    "descLabel": "الوصف",
+    "descPlaceholder": "وصف إضافي (اختياري)...",
+    "cancelBtn": "إلغاء",
+    "saveBtn": "حفظ الوسائط"
+  },
+  "errors": {
+    "titleRequired": "العنوان مطلوب",
+    "imageRequired": "يجب تحميل صورة واحدة على الأقل",
+    "videoRequired": "يجب إدخال رابط الفيديو أو رفع ملف",
+    "saveFailed": "فشل في حفظ المنشور"
+  },
+  "categories": {
+    "photos": "صور",
+    "video": "فيديو",
+    "activities": "فعاليات",
+    "promotions": "عرض ترويجي",
+    "events": "حدث",
+    "ads": "إعلان",
+    "news": "أخبار",
+    "maintenance": "الصيانة"
+  },
+  "viewModal": {
+    "noDescription": "لا يوجد وصف متاح لهذا المنشور.",
+    "publishedAt": "تم النشر في: {{date}}",
+    "includesImages": "يتضمن {{count}} صور عالية الجودة"
+  },
+  "mainPage": {
+    "deleteError": "حدث خطأ أثناء الحذف",
+    "filters": {
+      "all": "الكل",
+      "photos": "صور",
+      "video": "فيديو",
+      "activities": "فعاليات",
+      "news": "أخبار"
+    },
+    "pageTitle": "إدارة الوسائط",
+    "pageSubtitle": "إدارة وتنظيم ملفات الوسائط الخاصة بناديك.",
+    "uploadMediaBtn": "رفع وسائط",
+    "searchPlaceholder": "البحث في الملفات...",
+    "noMediaTitle": "لا توجد وسائط",
+    "noMediaDesc": "عد لاحقاً أو جرب تعديل بحثك.",
+    "prevPage": "السابق",
+    "nextPage": "التالي"
+  },
+  "deleteModal": {
+    "confirmTitle": "تأكيد الحذف",
+    "confirmDesc": "هل أنت متأكد أنك تريد حذف هذه الوسائط؟ لا يمكن التراجع عن هذا الإجراء.",
+    "cancelBtn": "إلغاء",
+    "confirmBtn": "نعم، احذف"
+  }
+}

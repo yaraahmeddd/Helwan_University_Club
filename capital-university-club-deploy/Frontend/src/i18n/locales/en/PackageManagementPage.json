@@ -1,0 +1,55 @@
+{
+  "page": {
+    "title": "Privilege Packages Management",
+    "packageCount": "{{count}} packages",
+    "loading": "Loading...",
+    "addNew": "Add New Package",
+    "emptyStateTitle": "No packages yet",
+    "emptyStateDesc": "Start by creating the first privilege package for staff",
+    "createPackage": "Create Package"
+  },
+  "card": {
+    "noPrivileges": "No associated privileges",
+    "viewPrivileges": "View {{count}} privileges",
+    "editTooltip": "Edit",
+    "deleteTooltip": "Delete"
+  },
+  "privModal": {
+    "associatedPrivileges": "Associated privileges",
+    "searchPlaceholder": "Search privileges...",
+    "resultsCount": "{{filtered}} results of {{total}}",
+    "noResults": "No matching privileges",
+    "generalModule": "General"
+  },
+  "deleteModal": {
+    "title": "Delete Package",
+    "desc1": "Are you sure you want to delete the package",
+    "desc2": "? This package will be removed from all associated staff members. This action cannot be undone.",
+    "confirm": "Confirm Deletion"
+  },
+  "editModal": {
+    "title": "Edit Package",
+    "nameLabel": "Package Name *",
+    "nameRequired": "Package name is required",
+    "descLabel": "Description",
+    "optional": "(Optional)",
+    "descPlaceholder": "Brief description...",
+    "save": "Save Changes"
+  },
+  "common": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "deleting": "Deleting...",
+    "saving": "Saving..."
+  },
+  "toast": {
+    "errorTitle": "Error",
+    "loadError": "Could not load packages",
+    "editSuccessTitle": "Edited",
+    "editSuccessDesc": "Package updated successfully",
+    "editError": "Could not update package",
+    "deleteSuccessTitle": "Deleted",
+    "deleteSuccessDesc": "Package deleted successfully",
+    "deleteError": "Could not delete package"
+  }
+}

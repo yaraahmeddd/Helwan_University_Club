@@ -1,0 +1,134 @@
+{
+  "header": {
+    "title": "إدارة الرياضات",
+    "addButton": "إضافة رياضة"
+  },
+  "filter": {
+    "all": "الكل",
+    "active": "مفعّلة",
+    "draft": "Draft",
+    "inactive": "معطّلة"
+  },
+  "table": {
+    "name": "اسم الرياضة",
+    "status": "الحالة",
+    "membersCount": "عدد الأعضاء",
+    "price": "السعر (ج.م)",
+    "actions": "الإجراءات"
+  },
+  "loading": "جاري التحميل...",
+  "empty": "لا توجد رياضات مضافة حالياً",
+  "status": {
+    "draftTooltip": "هذه الرياضة غير مرئية للأعضاء حتى تتم إضافة مواعيد لها",
+    "inactive": "معطّلة",
+    "draft": "Draft — بدون مواعيد",
+    "active": "مفعّلة"
+  },
+  "actions": {
+    "edit": "تعديل",
+    "delete": "حذف"
+  },
+  "dialog": {
+    "editTitle": "تعديل رياضة",
+    "addTitle": "إضافة رياضة جديدة",
+    "editDesc": "قم بتعديل بيانات الرياضة",
+    "addDesc": "أدخل بيانات الرياضة الجديدة"
+  },
+  "form": {
+    "photoLabel": "صورة الرياضة",
+    "removePhoto": "× حذف الصورة",
+    "uploadClick": "اضغط لاختيار صورة",
+    "uploadChange": "تغيير الصورة",
+    "status": "الحالة",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "branch": "الفرع",
+    "branchPlaceholder": "اختر الفرع",
+    "noBranch": "بدون فرع",
+    "nameArLabel": "اسم الرياضة (AR)",
+    "nameArPlaceholder": "أدخل الاسم العربي فقط",
+    "nameEnLabel": "اسم الرياضة (EN)",
+    "nameEnPlaceholder": "Enter English name only",
+    "teamsLabel": "الفرق",
+    "addTeam": "إضافة فريق",
+    "teamTitle": "فريق {{n}}",
+    "teamNameArLabel": "اسم الفريق (AR)",
+    "teamNameArPlaceholder": "مثال: فريق تحت 18 سنة",
+    "maxParticipants": "الحد الأقصى",
+    "subscriptionPrice": "سعر الاشتراك (ج.م)",
+    "trainingLabel": "مواعيد التدريب",
+    "trainingDays": "أيام التدريب",
+    "from": "من",
+    "to": "إلى",
+    "timeError": "وقت النهاية يجب أن يكون بعد وقت البداية",
+    "field": "الملعب",
+    "fieldPlaceholder": "اختر ملعب",
+    "noFields": "لا توجد ملاعب محملة من API — تأكد من اتصال الخادم",
+    "trainingFee": "رسوم التدريب (ج.م)",
+    "requiresBooking": "يحتاج حجز ملاعب",
+    "requiresBookingHint": "فعّل للرياضات التي تتطلب حجز ملعب مسبقاً كالبادل",
+    "bookingWarning": "تنبيه: لم يتم إضافة أي ملاعب. يرجى إضافة ملعب واحد على الأقل من إدارة الملاعب",
+    "cancel": "إلغاء",
+    "saving": "جارٍ الحفظ...",
+    "save": "حفظ",
+    "startTimeTitle": "وقت البداية",
+    "endTimeTitle": "وقت النهاية",
+    "slotLockedTooltip": "هذا الوقت محجوز"
+  },
+  "deleteDialog": {
+    "title": "تأكيد الحذف",
+    "description": "هل أنت متأكد من حذف هذه الرياضة؟ لا يمكن التراجع عن هذا الإجراء.",
+    "cancel": "إلغاء",
+    "deleting": "جارٍ الحذف...",
+    "confirm": "حذف"
+  },
+  "membersDialog": {
+    "title": "أعضاء {{name}}",
+    "count": "({{n}} عضو)",
+    "countSubtitle": "{{n}} عضو مسجل",
+    "loading": "جارٍ تحميل الأعضاء...",
+    "description": "قائمة الأعضاء المسجلين في هذه الرياضة",
+    "empty": "لا يوجد أعضاء لهذه الرياضة حالياً",
+    "close": "إغلاق"
+  },
+  "membersTable": {
+    "name": "الاسم",
+    "nationalId": "الرقم القومي",
+    "phone": "رقم الهاتف",
+    "status": "الحالة",
+    "registrationDate": "تاريخ التسجيل"
+  },
+  "memberStatus": {
+    "active": "نشط",
+    "pending": "قيد الانتظار",
+    "suspended": "موقوف",
+    "inactive": "غير نشط"
+  },
+  "toast": {
+    "loadError": "تعذر تحميل الرياضات",
+    "arOnlyTitle": "رسالة تنبيه",
+    "arOnlyDesc": "لا يمكن إدخال أحرف إنجليزية في حقل الاسم العربي",
+    "enOnlyTitle": "رسالة تنبيه",
+    "enOnlyDesc": "لا يمكن إدخال أحرف عربية في حقل الاسم الإنجليزي",
+    "requiredNameAr": "يرجى إدخال اسم الرياضة بالعربي.",
+    "requiredNameEn": "يرجى إدخال اسم الرياضة بالإنجليزي.",
+    "requiredPhoto": "يرجى رفع صورة للرياضة.",
+    "requiredBranch": "يرجى اختيار الفرع.",
+    "requiredFieldTitle": "حقل مطلوب",
+    "teamsErrorName": "اسم الفريق بالعربي والإنجليزي مطلوبان لكل فريق.",
+    "teamsErrorMax": "يرجى تحديد عدد المشاركين الأقصى لكل فريق (أكبر من صفر).",
+    "teamsErrorTime": "يرجى تحديد وقت بداية ونهاية التدريب لفريق \"{{name}}\".",
+    "teamsErrorTimeRange": "وقت النهاية يجب أن يكون بعد وقت البداية لفريق \"{{name}}\".",
+    "teamsErrorDays": "يرجى اختيار يوم تدريب واحد على الأقل لفريق \"{{name}}\".",
+    "teamsErrorField": "يرجى اختيار الملعب لفريق \"{{name}}\".",
+    "teamsErrorFee": "يرجى تحديد رسوم التدريب لفريق \"{{name}}\".",
+    "updateSuccess": "تم تحديث الرياضة والفرق بنجاح",
+    "updateTitle": "تم التحديث",
+    "addSuccessTitle": "تمت الإضافة",
+    "addSuccessDesc": "تم إضافة الرياضة بنجاح",
+    "saveErrorTitle": "فشل الحفظ",
+    "deleteSuccessTitle": "تم الحذف",
+    "deleteSuccessDesc": "تم حذف الرياضة بنجاح",
+    "deleteErrorTitle": "فشل الحذف"
+  }
+}

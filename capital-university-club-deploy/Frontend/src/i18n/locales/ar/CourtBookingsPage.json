@@ -1,0 +1,184 @@
+{
+  "common": {
+    "notAvailable": "-",
+    "loading": "جاري التحميل...",
+    "cancel": "إلغاء",
+    "close": "إغلاق",
+    "member": "عضو",
+    "other": "أخرى"
+  },
+  "header": {
+    "title": "إدارة حجوزات الملاعب",
+    "addManual": "إضافة حجز يدوي",
+    "addManualAria": "إضافة حجز يدوي جديد"
+  },
+  "status": {
+    "confirmed": "مؤكد",
+    "blocked": "محجوب",
+    "cancelled": "ملغي",
+    "available": "متاح",
+    "inactive": "معطّل"
+  },
+  "bookingType": {
+    "manual": "يدوي - من الموظف",
+    "automatic": "تلقائي - من التطبيق",
+    "manualShort": "يدوي"
+  },
+  "memberTypes": {
+    "member": "عضو اجتماعي",
+    "teamMember": "لاعب فريق"
+  },
+  "timePicker": {
+    "noTimes": "لا توجد أوقات متاحة"
+  },
+  "detail": {
+    "title": "تفاصيل الحجز",
+    "closeAria": "إغلاق لوحة التفاصيل",
+    "blockReason": "سبب الحجب",
+    "memberSection": "بيانات العضو",
+    "noMember": "لا توجد بيانات عضو لهذا الحجز",
+    "fields": {
+      "court": "الملعب",
+      "date": "التاريخ",
+      "time": "الوقت",
+      "status": "الحالة",
+      "type": "النوع",
+      "name": "الاسم",
+      "memberId": "رقم العضو",
+      "phone": "الهاتف",
+      "nationalId": "الرقم القومي",
+      "memberType": "نوع العضوية"
+    },
+    "actions": {
+      "contact": "تواصل",
+      "viewProfile": "عرض الملف",
+      "edit": "تعديل",
+      "cancelBooking": "إلغاء الحجز",
+      "unblock": "إلغاء الحجب"
+    }
+  },
+  "bookingDialog": {
+    "addTitle": "إضافة حجز يدوي",
+    "editTitle": "تعديل الحجز",
+    "addDescription": "أدخل بيانات الحجز الجديد",
+    "editDescription": "عدّل بيانات الحجز ثم اضغط حفظ",
+    "sections": {
+      "booking": "تفاصيل الحجز",
+      "member": "بيانات العضو"
+    },
+    "fields": {
+      "court": "الملعب",
+      "date": "التاريخ",
+      "from": "من الساعة",
+      "to": "إلى الساعة",
+      "fromShort": "من",
+      "toShort": "إلى",
+      "memberId": "رقم العضو",
+      "memberName": "اسم العضو",
+      "phone": "رقم الهاتف",
+      "nationalId": "الرقم القومي",
+      "memberType": "نوع العضو"
+    },
+    "placeholders": {
+      "court": "اختر الملعب",
+      "from": "البداية",
+      "to": "النهاية",
+      "toTime": "وقت النهاية",
+      "memberName": "الاسم بالعربية"
+    },
+    "lookup": {
+      "notFound": "لم يُعثر على عضو بهذا الرقم",
+      "hint": "أدخل الرقم النظامي للعضو - ستُملأ البيانات تلقائياً",
+      "found": "تم جلب بيانات العضو"
+    },
+    "buttons": {
+      "saving": "جارٍ الحفظ...",
+      "adding": "جارٍ الإضافة...",
+      "saveChanges": "حفظ التعديلات",
+      "addBooking": "إضافة الحجز"
+    }
+  },
+  "blockDialog": {
+    "title": "حجب وقت",
+    "description": "سيتم منع الحجوزات في هذا الوقت",
+    "reason": "السبب (اختياري)",
+    "reasonPlaceholder": "مثال: \"صيانة\", \"بطولة داخلية\"",
+    "buttons": {
+      "block": "حجب الوقت"
+    }
+  },
+  "shareDialog": {
+    "title": "تمت الإضافة بنجاح",
+    "description": "شارك رابط الدعوة مع اللاعبين",
+    "copy": "نسخ الرابط",
+    "copied": "تم النسخ بنجاح"
+  },
+  "filters": {
+    "courtAria": "اختيار الملعب",
+    "selectCourt": "اختر الملعب",
+    "refresh": "تحديث",
+    "previousWeek": "الانتقال إلى الأسبوع السابق",
+    "nextWeek": "الانتقال إلى الأسبوع التالي",
+    "currentWeek": "الانتقال إلى الأسبوع الحالي",
+    "today": "اليوم"
+  },
+  "grid": {
+    "availableCellAria": "خانة متاحة - {{day}} {{time}}",
+    "addBooking": "إضافة حجز",
+    "blockTime": "حجب الوقت",
+    "confirmedBookingAria": "حجز مؤكد - {{name}}",
+    "blockedTimeAria": "وقت محجوب",
+    "cancelledBookingAria": "حجز ملغي"
+  },
+  "blockedReasons": {
+    "training": "حصة تدريبية",
+    "blocked": "محجوب"
+  },
+  "validation": {
+    "bookingRequired": "يرجى ملء جميع الحقول المطلوبة.",
+    "invalidDateTitle": "تاريخ غير صالح",
+    "pastDate": "لا يمكن إضافة حجز في تاريخ ماضٍ.",
+    "pastTimeTitle": "وقت مضى",
+    "pastTime": "لا يمكن الحجز في وقت سبق الساعة الحالية.",
+    "invalidTimeTitle": "توقيت خاطئ",
+    "endAfterStart": "وقت النهاية يجب أن يكون بعد وقت البداية.",
+    "conflictTitle": "تعارض في المواعيد",
+    "timeConflict": "هذا الوقت محجوز بالفعل.",
+    "blockRequired": "يرجى تحديد الملعب والتاريخ والوقت.",
+    "invalidMemberTitle": "رقم العضو غير صالح",
+    "invalidMemberId": "يرجى إدخال رقم عضو صحيح.",
+    "incompleteDataTitle": "بيانات غير مكتملة",
+    "missingCourtSport": "لا يمكن تحديد النشاط لهذا الملعب."
+  },
+  "toast": {
+    "validationTitle": "بيانات ناقصة",
+    "copiedTitle": "تم النسخ",
+    "phoneCopied": "تم نسخ رقم الهاتف إلى الحافظة",
+    "loadCourtsFailed": "تعذر تحميل الملاعب",
+    "alreadyCancelled": "الحجز ملغي بالفعل",
+    "cancelSuccessTitle": "تم الإلغاء",
+    "cancelSuccessDescription": "تم إلغاء الحجز بنجاح",
+    "cancelFailedTitle": "فشل إلغاء الحجز",
+    "unexpectedError": "حدث خطأ غير متوقع",
+    "unblockSuccessTitle": "تم إلغاء الحجب",
+    "unblockSuccessDescription": "الوقت متاح الآن للحجز",
+    "unblockFailedTitle": "فشل إلغاء الحجب",
+    "addSuccessTitle": "تمت الإضافة",
+    "addSuccessDescription": "تم إضافة حجز \"{{name}}\" بنجاح.",
+    "createFailedTitle": "فشل إنشاء الحجز",
+    "updateSuccessTitle": "تم التحديث",
+    "updateSuccessDescription": "تم تحديث بيانات الحجز بنجاح.",
+    "updateFailedTitle": "فشل تحديث الحجز",
+    "blockSuccessTitle": "تم الحجب",
+    "blockSuccessDescription": "تم حجب الوقت بنجاح.",
+    "blockFailedTitle": "فشل حجب الوقت"
+  },
+  "apiReasons": {
+    "cancelByStaff": "إلغاء من الموظف",
+    "unblockByStaff": "إلغاء الحجب من الموظف",
+    "manualBookingByStaff": "حجز يدوي من الموظف",
+    "editBookingByStaff": "تعديل الحجز من الموظف",
+    "manualEditByStaff": "تعديل يدوي من الموظف",
+    "adminBlock": "حجب إداري"
+  }
+}

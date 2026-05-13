@@ -1,0 +1,93 @@
+{
+  "dashboard": {
+    "title": "لوحة العضو"
+  },
+  "common": {
+    "na": "—",
+    "loading": "جاري التحميل..."
+  },
+  "status": {
+    "active": "نشط",
+    "pending": "قيد المراجعة",
+    "suspended": "معلق",
+    "rejected": "مرفوض",
+    "expired": "منتهي",
+    "cancelled": "ملغي",
+    "confirmed": "مؤكد",
+    "completed": "مكتمل"
+  },
+  "home": {
+    "sportsSubscriptions": "اشتراكاتي الرياضية",
+    "bookings": "حجوزات الملاعب",
+    "notifications": "الإشعارات",
+    "noSubscriptions": "لا توجد اشتراكات رياضية",
+    "noBookings": "لا توجد حجوزات حالياً",
+    "noNotifications": "لا توجد إشعارات حالياً"
+  },
+  "homePage": {
+    "myData": "بياناتي",
+    "memberId": "رقم العضو",
+    "sportsCount": "الرياضات",
+    "bookingsCount": "الحجوزات",
+    "copied": "تم نسخ الرابط بنجاح!"
+  },
+  "profilePage": {
+    "edit": "تعديل البيانات",
+    "save": "حفظ التعديلات",
+    "saving": "جارٍ الحفظ...",
+    "cancel": "إلغاء",
+    "personalInfo": "البيانات الشخصية",
+    "membershipInfo": "بيانات العضوية",
+    "documents": "الوثائق والمستندات",
+    "firstNameAr": "الاسم الأول (عربي)",
+    "lastNameAr": "الاسم الأخير (عربي)",
+    "firstNameEn": "الاسم الأول (إنجليزي)",
+    "lastNameEn": "الاسم الأخير (إنجليزي)",
+    "email": "البريد الإلكتروني",
+    "phone": "رقم الهاتف",
+    "birthdate": "تاريخ الميلاد",
+    "address": "العنوان",
+    "nationalId": "رقم الهوية الوطنية",
+    "memberId": "رقم العضوية",
+    "joinDate": "تاريخ الانضمام",
+    "state": "الحالة",
+    "memberType": "نوع العضوية"
+  },
+  "membershipPage": {
+    "currentPlan": "خطة العضوية الحالية",
+    "usageDuration": "مدة الاشتراك المستخدمة",
+    "renewMembership": "تجديد العضوية",
+    "registrationDate": "تاريخ التسجيل",
+    "expiryDate": "تاريخ الانتهاء / التجديد",
+    "planFee": "رسوم الخطة",
+    "nextRenewalFee": "رسوم التجديد القادم",
+    "noMembershipData": "لا توجد بيانات عضوية مرتبطة بهذا الحساب."
+  },
+  "subscribePage": {
+    "title": "اشترك في رياضة جديدة",
+    "availableSports": "الرياضات المتاحة",
+    "availableSportsHint": "اختر رياضة لعرض فرقها ومواعيد تدريبها",
+    "sportFallback": "رياضة",
+    "noSports": "لا توجد رياضات متاحة",
+    "sportSubtitle": "دوري {{sport}} الداخلية",
+    "stepChooseTeam": "الخطوة ١ — اختر الفريق",
+    "stepChooseTeamHint": "كل فريق له مواعيد تدريب خاصة به",
+    "noTeams": "لا توجد فرق متاحة لهذه الرياضة حالياً",
+    "joining": "⏳ جاري...",
+    "pay": "💳 الدفع",
+    "pendingReview": "⏳ قيد المراجعة",
+    "joined": "✓ مشترك",
+    "submit": "تقديم طلب الاشتراك",
+    "subscriptionFee": "قيمة الاشتراك",
+    "currency": "ج.م",
+    "pickSport": "اختر رياضة من القائمة لعرض التفاصيل",
+    "loadingSports": "جارٍ تحميل الرياضات...",
+    "loadError": "فشل في تحميل الرياضات من الخادم",
+    "joinError": "فشل في الانضمام للرياضة",
+    "maxSports": "لا يمكنك الاشتراك في أكثر من {{max}} رياضات",
+    "alreadyJoined": "أنت مشترك بالفعل في هذا الفريق",
+    "warningTitle": "تنبيه",
+    "errorTitle": "خطأ"
+  }
+}
+

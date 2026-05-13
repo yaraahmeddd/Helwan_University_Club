@@ -1,0 +1,184 @@
+{
+  "common": {
+    "notAvailable": "-",
+    "loading": "Loading...",
+    "cancel": "Cancel",
+    "close": "Close",
+    "member": "Member",
+    "other": "Other"
+  },
+  "header": {
+    "title": "Court Booking Management",
+    "addManual": "Add Manual Booking",
+    "addManualAria": "Add a new manual booking"
+  },
+  "status": {
+    "confirmed": "Confirmed",
+    "blocked": "Blocked",
+    "cancelled": "Cancelled",
+    "available": "Available",
+    "inactive": "Inactive"
+  },
+  "bookingType": {
+    "manual": "Manual - Staff",
+    "automatic": "Automatic - App",
+    "manualShort": "Manual"
+  },
+  "memberTypes": {
+    "member": "Social Member",
+    "teamMember": "Team Player"
+  },
+  "timePicker": {
+    "noTimes": "No available times"
+  },
+  "detail": {
+    "title": "Booking Details",
+    "closeAria": "Close details panel",
+    "blockReason": "Block Reason",
+    "memberSection": "Member Data",
+    "noMember": "No member data for this booking",
+    "fields": {
+      "court": "Court",
+      "date": "Date",
+      "time": "Time",
+      "status": "Status",
+      "type": "Type",
+      "name": "Name",
+      "memberId": "Member No.",
+      "phone": "Phone",
+      "nationalId": "National ID",
+      "memberType": "Membership Type"
+    },
+    "actions": {
+      "contact": "Contact",
+      "viewProfile": "View Profile",
+      "edit": "Edit",
+      "cancelBooking": "Cancel Booking",
+      "unblock": "Unblock"
+    }
+  },
+  "bookingDialog": {
+    "addTitle": "Add Manual Booking",
+    "editTitle": "Edit Booking",
+    "addDescription": "Enter the new booking details",
+    "editDescription": "Edit the booking details, then save",
+    "sections": {
+      "booking": "Booking Details",
+      "member": "Member Data"
+    },
+    "fields": {
+      "court": "Court",
+      "date": "Date",
+      "from": "From",
+      "to": "To",
+      "fromShort": "From",
+      "toShort": "To",
+      "memberId": "Member No.",
+      "memberName": "Member Name",
+      "phone": "Phone Number",
+      "nationalId": "National ID",
+      "memberType": "Member Type"
+    },
+    "placeholders": {
+      "court": "Select court",
+      "from": "Start",
+      "to": "End",
+      "toTime": "End time",
+      "memberName": "Name in Arabic"
+    },
+    "lookup": {
+      "notFound": "No member found with this number",
+      "hint": "Enter the member system number - details will be filled automatically",
+      "found": "Member data loaded"
+    },
+    "buttons": {
+      "saving": "Saving...",
+      "adding": "Adding...",
+      "saveChanges": "Save Changes",
+      "addBooking": "Add Booking"
+    }
+  },
+  "blockDialog": {
+    "title": "Block Time",
+    "description": "Bookings will be prevented during this time",
+    "reason": "Reason (optional)",
+    "reasonPlaceholder": "Example: \"Maintenance\", \"Internal tournament\"",
+    "buttons": {
+      "block": "Block Time"
+    }
+  },
+  "shareDialog": {
+    "title": "Added Successfully",
+    "description": "Share the invitation link with the players",
+    "copy": "Copy Link",
+    "copied": "Copied Successfully"
+  },
+  "filters": {
+    "courtAria": "Select court",
+    "selectCourt": "Select court",
+    "refresh": "Refresh",
+    "previousWeek": "Go to previous week",
+    "nextWeek": "Go to next week",
+    "currentWeek": "Go to current week",
+    "today": "Today"
+  },
+  "grid": {
+    "availableCellAria": "Available cell - {{day}} {{time}}",
+    "addBooking": "Add Booking",
+    "blockTime": "Block Time",
+    "confirmedBookingAria": "Confirmed booking - {{name}}",
+    "blockedTimeAria": "Blocked time",
+    "cancelledBookingAria": "Cancelled booking"
+  },
+  "blockedReasons": {
+    "training": "Training session",
+    "blocked": "Blocked"
+  },
+  "validation": {
+    "bookingRequired": "Please fill all required fields.",
+    "invalidDateTitle": "Invalid Date",
+    "pastDate": "You cannot add a booking in a past date.",
+    "pastTimeTitle": "Past Time",
+    "pastTime": "You cannot book a time earlier than the current time.",
+    "invalidTimeTitle": "Invalid Time",
+    "endAfterStart": "End time must be after start time.",
+    "conflictTitle": "Time Conflict",
+    "timeConflict": "This time is already booked.",
+    "blockRequired": "Please select the court, date, and time.",
+    "invalidMemberTitle": "Invalid Member Number",
+    "invalidMemberId": "Please enter a valid member number.",
+    "incompleteDataTitle": "Incomplete Data",
+    "missingCourtSport": "Cannot determine the activity for this court."
+  },
+  "toast": {
+    "validationTitle": "Missing Data",
+    "copiedTitle": "Copied",
+    "phoneCopied": "Phone number copied to clipboard",
+    "loadCourtsFailed": "Failed to load courts",
+    "alreadyCancelled": "Booking is already cancelled",
+    "cancelSuccessTitle": "Cancelled",
+    "cancelSuccessDescription": "Booking cancelled successfully",
+    "cancelFailedTitle": "Failed to cancel booking",
+    "unexpectedError": "An unexpected error occurred",
+    "unblockSuccessTitle": "Unblocked",
+    "unblockSuccessDescription": "The time is now available for booking",
+    "unblockFailedTitle": "Failed to unblock time",
+    "addSuccessTitle": "Added",
+    "addSuccessDescription": "Booking for \"{{name}}\" was added successfully.",
+    "createFailedTitle": "Failed to create booking",
+    "updateSuccessTitle": "Updated",
+    "updateSuccessDescription": "Booking details updated successfully.",
+    "updateFailedTitle": "Failed to update booking",
+    "blockSuccessTitle": "Blocked",
+    "blockSuccessDescription": "Time blocked successfully.",
+    "blockFailedTitle": "Failed to block time"
+  },
+  "apiReasons": {
+    "cancelByStaff": "Cancelled by staff",
+    "unblockByStaff": "Unblocked by staff",
+    "manualBookingByStaff": "Manual booking by staff",
+    "editBookingByStaff": "Booking edited by staff",
+    "manualEditByStaff": "Manual edit by staff",
+    "adminBlock": "Admin block"
+  }
+}

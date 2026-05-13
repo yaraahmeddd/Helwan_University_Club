@@ -1,0 +1,133 @@
+{
+  "common": {
+    "assign": "تعيين",
+    "back": "رجوع",
+    "cancel": "إلغاء",
+    "loading": "جاري التحميل...",
+    "save": "حفظ",
+    "saving": "جارٍ الحفظ...",
+    "unexpectedError": "حدث خطأ غير متوقع"
+  },
+  "header": {
+    "title": "تعيين الرياضات",
+    "subtitle": "الأعضاء النشطون فقط - الصفحة {{page}} من {{totalPages}} ({{count}} عضو)",
+    "refresh": "تحديث"
+  },
+  "tabs": {
+    "members": "أعضاء النادي",
+    "teamMembers": "اللاعبين"
+  },
+  "toolbar": {
+    "searchPlaceholder": "ابحث بالاسم أو الرقم القومي...",
+    "results": "{{count}} نتيجة"
+  },
+  "pagination": {
+    "previous": "الصفحة السابقة",
+    "next": "الصفحة التالية"
+  },
+  "table": {
+    "loading": "جارٍ تحميل الأعضاء النشطين...",
+    "emptyTitle": "لا يوجد أعضاء نشطون",
+    "emptySearch": "لا توجد نتائج مطابقة لـ \"{{search}}\"",
+    "emptyDescription": "لم يتم العثور على أعضاء نشطين",
+    "name": "الاسم",
+    "status": "الحالة",
+    "sports": "الرياضات",
+    "actions": "الإجراءات"
+  },
+  "status": {
+    "active": "نشط"
+  },
+  "actions": {
+    "editSports": "تعديل الرياضات",
+    "assignTeam": "تعيين فريق"
+  },
+  "sportsModal": {
+    "title": "تعيين الرياضات",
+    "titleWithMember": "تعيين رياضات - {{member}}",
+    "description": "اختر الرياضات التي تريد تعيينها. التغييرات تُطبَّق عند الضغط على حفظ.",
+    "maxSports": "الحد الأقصى {{max}} رياضات لكل عضو",
+    "searchPlaceholder": "ابحث عن رياضة...",
+    "added": "مضاف",
+    "selectTeamPlaceholder": "اختر الفريق",
+    "selectedCount": "{{count}} / {{max}} رياضات مختارة",
+    "tabs": {
+      "all": "جميع الرياضات",
+      "subscribed": "المشترك فيها ({{count}})",
+      "unsubscribed": "غير مشترك فيها"
+    },
+    "empty": {
+      "subscribed": "لا توجد رياضات مشترك فيها حالياً",
+      "unsubscribed": "جميع الرياضات مشترك فيها بالفعل",
+      "all": "لا توجد رياضات مطابقة"
+    }
+  },
+  "assignTeamModal": {
+    "titleStepSport": "تعيين فريق - اختر الرياضة",
+    "titleStepTeam": "تعيين فريق - اختر الفريق",
+    "member": "العضو: {{member}}",
+    "noSports": "لا توجد رياضات متاحة",
+    "sportsBreadcrumb": "الرياضات",
+    "loadingTeams": "جاري تحميل الفرق...",
+    "noTeams": "لا توجد فرق لهذه الرياضة",
+    "participants": "{{count}} مشارك",
+    "assigning": "جارٍ التعيين..."
+  },
+  "toasts": {
+    "loadSportsFailed": {
+      "title": "تحذير",
+      "description": "فشل تحميل قائمة الرياضات"
+    },
+    "loadMembersFailed": {
+      "title": "خطأ",
+      "description": "فشل تحميل قائمة الأعضاء"
+    },
+    "editOpened": {
+      "title": "تعديل رياضات",
+      "description": "تم فتح نافذة تعديل رياضات {{member}}"
+    },
+    "sportRemoved": {
+      "title": "تمت الإزالة",
+      "description": "تم إلغاء تحديد \"{{sport}}\""
+    },
+    "sportAdded": {
+      "title": "تمت الإضافة",
+      "description": "تم تحديد \"{{sport}}\""
+    },
+    "maxSports": {
+      "title": "الحد الأقصى",
+      "description": "لا يمكن إضافة أكثر من {{max}} رياضات لكل عضو"
+    },
+    "validationError": {
+      "title": "خطأ في التحقق",
+      "description": "عدد الرياضات المختارة ({{count}}) يتجاوز الحد الأقصى ({{max}})"
+    },
+    "selectTeam": {
+      "title": "يرجى اختيار الفريق",
+      "description": "اختر فريق لكل رياضة قبل الحفظ"
+    },
+    "partialSave": {
+      "title": "تم الحفظ جزئياً",
+      "description": "تم الحفظ مع {{count}} خطأ: {{error}}"
+    },
+    "saveSuccess": {
+      "title": "تم الحفظ",
+      "description": "تم تحديث الرياضات لـ {{member}} بنجاح"
+    },
+    "saveFailed": {
+      "title": "خطأ",
+      "description": "فشل في حفظ التعديلات، حاول مرة أخرى"
+    },
+    "assignTeamSuccess": {
+      "title": "تم التعيين",
+      "description": "تم تعيين {{member}} إلى فريق \"{{team}}\" بنجاح"
+    },
+    "assignTeamFailed": {
+      "title": "فشل التعيين"
+    }
+  },
+  "errors": {
+    "removeSport": "فشل إزالة الرياضة {{id}}",
+    "addSport": "فشل إضافة الرياضة {{id}}"
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "title": "Membership Plans",
+  "searchPlaceholder": "Search by code or name...",
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "table": {
+    "code": "Code",
+    "memberType": "Member Type",
+    "name": "Name",
+    "price": "Price",
+    "durationMonths": "Duration (Months)",
+    "status": "Status",
+    "actions": "Actions",
+    "loading": "Loading...",
+    "noResults": "No membership plans match your search"
+  },
+  "action": {
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deactivate": "Deactivate",
+    "activate": "Activate"
+  },
+  "pagination": {
+    "showing": "Showing {{start}}–{{end}} of {{total}}",
+    "prev": "Previous",
+    "next": "Next"
+  },
+  "detail": {
+    "title": "Membership Plan Details",
+    "description": "View complete plan data",
+    "nameAr": "Name (AR)",
+    "nameEn": "Name (EN)",
+    "renewalPrice": "Renewal Price",
+    "installable": "Installable"
+  },
+  "edit": {
+    "title": "Edit Membership Plan",
+    "description": "Update plan data then save",
+    "currency": "Currency"
+  },
+  "create": {
+    "title": "Add Membership Plan",
+    "description": "Enter new plan data then click save",
+    "selectMemberType": "Select member type"
+  },
+  "delete": {
+    "title": "Confirm Deletion",
+    "description": "Are you sure you want to delete the membership plan {{name}}? This action cannot be undone."
+  },
+  "toast": {
+    "loadErrorTitle": "Loading Error",
+    "loadErrorDesc": "Could not load data",
+    "loadPlansErrorTitle": "Could not load membership plans",
+    "loadPlansErrorDesc": "Could not load membership plans",
+    "createSuccessTitle": "Added",
+    "createSuccessDesc": "Membership plan created successfully",
+    "createErrorTitle": "Add Failed",
+    "createErrorDesc": "Failed to create membership plan",
+    "editSuccessTitle": "Saved",
+    "editSuccessDesc": "Plan updated successfully",
+    "editErrorTitle": "Save Failed",
+    "editErrorDesc": "Failed to update plan",
+    "deleteSuccessTitle": "Deleted",
+    "deleteSuccessDesc": "Plan deleted successfully",
+    "deleteConflictTitle": "Cannot Delete",
+    "deleteConflictDesc": "This plan is associated with active member subscriptions. Please deactivate the plan instead of deleting it.",
+    "deleteErrorTitle": "Delete Failed",
+    "deleteErrorDesc": "Failed to delete plan",
+    "statusSuccessTitle": "Updated",
+    "statusSuccessDesc": "Plan status changed",
+    "statusErrorTitle": "Update Failed",
+    "statusErrorDesc": "Failed to change status"
+  },
+  "common": {
+    "yes": "Yes",
+    "no": "No",
+    "close": "Close",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "deleting": "Deleting..."
+  }
+}

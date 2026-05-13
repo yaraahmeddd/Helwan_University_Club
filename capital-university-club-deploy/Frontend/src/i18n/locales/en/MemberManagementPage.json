@@ -1,0 +1,249 @@
+{
+  "header": {
+    "title": "Member Management",
+    "totalLoaded": "Total Loaded:",
+    "lastUpdated": "Last updated:",
+    "paymentAlert": "{{count}} payment alert",
+    "refresh": "Refresh",
+    "refreshing": "Loading..."
+  },
+  "tabs": {
+    "all": "All",
+    "members": "Members",
+    "players": "Players",
+    "allPlayerTypes": "All player types",
+    "allTypesPlaceholder": "All Types"
+  },
+  "toolbar": {
+    "searchPlaceholder": "Search members...",
+    "statusFilter": "Status",
+    "clearFilter": "Clear",
+    "results": "results"
+  },
+  "table": {
+    "colMember": "Member",
+    "colType": "Type",
+    "colPhone": "Phone",
+    "colPoints": "Points",
+    "colStatus": "Status",
+    "colRegistration": "Registered",
+    "colActions": "Actions",
+    "noResults": "No results matching \"{{query}}\"",
+    "noMembers": "No members in this category"
+  },
+  "status": {
+    "active": "Active",
+    "suspended": "Suspended",
+    "banned": "Banned",
+    "expired": "Expired",
+    "cancelled": "Cancelled",
+    "pending": "Pending Review"
+  },
+  "gender": {
+    "male": "Male",
+    "female": "Female",
+    "other": "Other"
+  },
+  "pagination": {
+    "showingNone": "Showing 0 of 0",
+    "showing": "Showing {{from}}-{{to}} of {{total}}",
+    "page": "Page {{page}} of {{totalPages}}",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "detail": {
+    "tabInfo": "Personal Info",
+    "tabSports": "Sports",
+    "tabPhotos": "🖼️ Photos & Documents",
+    "sectionPersonal": "Personal Information",
+    "sectionContact": "Contact Info",
+    "sectionExtra": "Additional Info",
+    "sectionPayment": "Subscription & Payment",
+    "fieldMemberId": "Member No.",
+    "fieldNationalId": "National ID",
+    "fieldGender": "Gender",
+    "fieldNationality": "Nationality",
+    "fieldBirthdate": "Birthdate",
+    "fieldJoinDate": "Registration Date",
+    "fieldEmail": "Email",
+    "fieldPhone": "Phone",
+    "fieldAddress": "Address",
+    "fieldHealthStatus": "Health Status",
+    "fieldPoints": "Points",
+    "fieldMemberType": "Membership Type",
+    "loading": "Loading details...",
+    "playerBadge": "Player",
+    "noSports": "No sports registered",
+    "notPlayer": "Not a sports player",
+    "sportStatusActive": "Active",
+    "sportStatusPending": "Pending",
+    "payment": {
+      "subscriptionStatus": "Subscription Status",
+      "subscriptionType": "Subscription Type",
+      "lastPayment": "Last Payment",
+      "nextRenewal": "Next Renewal",
+      "statusActive": "Active",
+      "statusExpiring": "Expiring Soon",
+      "statusOverdue": "Overdue",
+      "overdueDays": "{{count}} day(s) overdue",
+      "expiringDays": "{{count}} day(s) remaining",
+      "alertOverdue": "Renewal overdue by {{count}} day(s)",
+      "alertExpiring": "Subscription expires in {{count}} day(s)"
+    },
+    "photos": {
+      "personalPhoto": "Personal Photo",
+      "noPersonalPhoto": "No personal photo",
+      "idFront": "National ID (Front)",
+      "idBack": "National ID (Back)",
+      "notUploaded": "Not uploaded",
+      "medicalReport": "Medical Report",
+      "noMedicalReport": "No medical report attached"
+    },
+    "footer": {
+      "delete": "Delete",
+      "changeStatus": "Change Status",
+      "edit": "Edit",
+      "viewDetails": "View Details"
+    },
+    "dialogs": {
+      "detailDialogTitle": "{{type}} Details",
+      "detailDialogDesc": "View the full profile of the member or team player",
+      "memberLabel": "Member",
+      "playerLabel": "Team Player"
+    }
+  },
+  "edit": {
+    "title": "Edit Member Data",
+    "description": "Edit personal and contact information",
+    "tabInfo": "👤 Personal Data",
+    "tabDocs": "🖼️ Photos & Documents",
+    "firstNameAr": "First Name (Arabic)",
+    "lastNameAr": "Last Name (Arabic)",
+    "firstNameEn": "First Name (English)",
+    "lastNameEn": "Last Name (English)",
+    "gender": "Gender",
+    "genderSelect": "Select",
+    "birthdate": "Birthdate",
+    "phone": "Phone",
+    "nationality": "Nationality",
+    "address": "Address",
+    "healthStatus": "Health Status",
+    "uploadPhoto": "Click to upload",
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "cancel": "Cancel"
+  },
+  "changeStatus": {
+    "title": "Change Member Status",
+    "currentStatus": "Current Status:",
+    "newStatus": "New Status",
+    "selectStatus": "Select Status",
+    "reason": "Reason (optional)",
+    "reasonPlaceholder": "Reason for status change",
+    "confirm": "Confirm Change",
+    "confirming": "Changing...",
+    "cancel": "Cancel"
+  },
+  "delete": {
+    "title": "Confirm Member Deletion",
+    "description": "The member status will be changed to \"cancelled\". This action cannot be undone.",
+    "confirm": "Yes, Delete",
+    "deleting": "Deleting...",
+    "cancel": "Cancel"
+  },
+  "toast": {
+    "loadFailed": "Failed to load members",
+    "loadDetailsFailed": "Failed to load details",
+    "teamDataError": "Error loading data",
+    "teamDetailFailed": "Failed to load team player data (ID: {{id}})",
+    "updateSuccess": "Updated successfully",
+    "updateFailed": "Update failed",
+    "statusChanged": "Status changed",
+    "statusChangeFailed": "Status change failed",
+    "deleted": "Member deleted",
+    "deleteFailed": "Delete failed",
+    "deletedByAdmin": "Deleted by administration"
+  },
+  "memberTypes": {
+    "teamPlayer": "Team Player"
+  },
+  "rowActions": {
+    "viewDetails": "View Details",
+    "edit": "Edit",
+    "changeStatus": "Change Status",
+    "deleteMember": "Delete Member"
+  },
+  "detailModal": {
+    "title": "{{type}} Details",
+    "description": "View the full profile of the member or team player",
+    "teamPlayer": "Team Player",
+    "member": "Member"
+  },
+  "editModal": {
+    "title": "Edit Member Data",
+    "description": "Edit personal and contact information",
+    "tabs": {
+      "personalInfo": "👤 Personal Data",
+      "docsAndPhotos": "🖼️ Photos & Documents"
+    },
+    "fields": {
+      "firstNameAr": "First Name (Arabic)",
+      "lastNameAr": "Last Name (Arabic)",
+      "firstNameEn": "First Name (English)",
+      "lastNameEn": "Last Name (English)",
+      "gender": "Gender",
+      "birthdate": "Birthdate",
+      "phone": "Phone",
+      "nationality": "Nationality",
+      "address": "Address",
+      "healthStatus": "Health Status"
+    },
+    "placeholders": {
+      "firstNameAr": "Mohamed",
+      "lastNameAr": "Ahmed",
+      "firstNameEn": "Mohamed",
+      "lastNameEn": "Ahmed",
+      "select": "Select",
+      "phone": "+201012345678",
+      "nationality": "Egyptian",
+      "address": "Cairo, Egypt",
+      "healthStatus": "No chronic diseases"
+    },
+    "docs": {
+      "photo": "Personal Photo",
+      "idFront": "National ID (Front)",
+      "idBack": "National ID (Back)",
+      "medicalReport": "Medical Report",
+      "clickToUpload": "Click to upload"
+    },
+    "buttons": {
+      "saving": "Saving...",
+      "save": "Save Changes",
+      "cancel": "Cancel"
+    }
+  },
+  "statusModal": {
+    "title": "Change Member Status",
+    "currentStatus": "Current Status:",
+    "newStatus": "New Status",
+    "selectStatus": "Select Status",
+    "reason": "Reason (optional)",
+    "reasonPlaceholder": "Reason for status change",
+    "buttons": {
+      "saving": "Changing...",
+      "confirm": "Confirm Change",
+      "cancel": "Cancel"
+    }
+  },
+  "deleteModal": {
+    "title": "Delete Member",
+    "areYouSure": "Are you sure you want to delete",
+    "thisMember": "this member",
+    "warning": "The status will be changed to \"cancelled\" and they will not appear in the list.",
+    "buttons": {
+      "deleting": "Deleting...",
+      "confirm": "Confirm Deletion",
+      "cancel": "Cancel"
+    }
+  }
+}

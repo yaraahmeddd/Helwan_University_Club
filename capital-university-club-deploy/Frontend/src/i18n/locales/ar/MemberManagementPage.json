@@ -1,0 +1,249 @@
+{
+  "header": {
+    "title": "إدارة الأعضاء",
+    "totalLoaded": "إجمالي المحملين:",
+    "lastUpdated": "آخر تحديث:",
+    "paymentAlert": "{{count}} تنبيه دفع",
+    "refresh": "تحديث",
+    "refreshing": "جارٍ التحميل..."
+  },
+  "tabs": {
+    "all": "الجميع",
+    "members": "الأعضاء",
+    "players": "اللاعبون",
+    "allPlayerTypes": "كل أنواع اللاعبين",
+    "allTypesPlaceholder": "كل الأنواع"
+  },
+  "toolbar": {
+    "searchPlaceholder": "بحث في الأعضاء...",
+    "statusFilter": "الحالة",
+    "clearFilter": "مسح",
+    "results": "نتيجة"
+  },
+  "table": {
+    "colMember": "العضو",
+    "colType": "النوع",
+    "colPhone": "الهاتف",
+    "colPoints": "النقاط",
+    "colStatus": "الحالة",
+    "colRegistration": "التسجيل",
+    "colActions": "الإجراءات",
+    "noResults": "لا توجد نتائج مطابقة لـ \"{{query}}\"",
+    "noMembers": "لا يوجد أعضاء في هذه الفئة"
+  },
+  "status": {
+    "active": "نشط",
+    "suspended": "موقوف",
+    "banned": "محظور",
+    "expired": "منتهي",
+    "cancelled": "ملغى",
+    "pending": "قيد المراجعة"
+  },
+  "gender": {
+    "male": "ذكر",
+    "female": "أنثى",
+    "other": "أخرى"
+  },
+  "pagination": {
+    "showingNone": "عرض 0 من 0",
+    "showing": "عرض {{from}}-{{to}} من {{total}}",
+    "page": "صفحة {{page}} من {{totalPages}}",
+    "previous": "السابق",
+    "next": "التالي"
+  },
+  "detail": {
+    "tabInfo": "المعلومات الشخصية",
+    "tabSports": "الرياضات",
+    "tabPhotos": "🖼️ الصور والمستندات",
+    "sectionPersonal": "المعلومات الشخصية",
+    "sectionContact": "معلومات التواصل",
+    "sectionExtra": "معلومات إضافية",
+    "sectionPayment": "بيانات الاشتراك والدفع",
+    "fieldMemberId": "رقم العضو",
+    "fieldNationalId": "الرقم القومي",
+    "fieldGender": "الجنس",
+    "fieldNationality": "الجنسية",
+    "fieldBirthdate": "تاريخ الميلاد",
+    "fieldJoinDate": "التاريخ القومي",
+    "fieldEmail": "البريد الإلكتروني",
+    "fieldPhone": "رقم الهاتف",
+    "fieldAddress": "العنوان",
+    "fieldHealthStatus": "الحالة الصحية",
+    "fieldPoints": "النقاط",
+    "fieldMemberType": "نوع العضوية",
+    "loading": "جارٍ تحميل التفاصيل...",
+    "playerBadge": "لاعب",
+    "noSports": "لا توجد رياضات مسجّلة",
+    "notPlayer": "ليس لاعباً رياضياً",
+    "sportStatusActive": "نشط",
+    "sportStatusPending": "قيد المراجعة",
+    "payment": {
+      "subscriptionStatus": "حالة الاشتراك",
+      "subscriptionType": "نوع الاشتراك",
+      "lastPayment": "آخر دفعة",
+      "nextRenewal": "التجديد القادم",
+      "statusActive": "نشط",
+      "statusExpiring": "ينتهي قريباً",
+      "statusOverdue": "متأخر",
+      "overdueDays": "متأخر {{count}} يوم",
+      "expiringDays": "فاضل {{count}} يوم",
+      "alertOverdue": "تجاوز موعد التجديد منذ {{count}} يوم",
+      "alertExpiring": "الاشتراك سينتهي خلال {{count}} يوم"
+    },
+    "photos": {
+      "personalPhoto": "الصورة الشخصية",
+      "noPersonalPhoto": "لا توجد صورة شخصية",
+      "idFront": "بطاقة الرقم القومي (أمام)",
+      "idBack": "بطاقة الرقم القومي (خلف)",
+      "notUploaded": "لم يتم الرفع",
+      "medicalReport": "التقرير الطبي",
+      "noMedicalReport": "لم يتم إرفاق تقرير طبي"
+    },
+    "footer": {
+      "delete": "حذف",
+      "changeStatus": "تغيير الحالة",
+      "edit": "تعديل",
+      "viewDetails": "عرض التفاصيل"
+    },
+    "dialogs": {
+      "detailDialogTitle": "تفاصيل {{type}}",
+      "detailDialogDesc": "عرض ملف المعلومات الكامل للعضو أو لاعب الفريق",
+      "memberLabel": "العضو",
+      "playerLabel": "لاعب الفريق"
+    }
+  },
+  "edit": {
+    "title": "تعديل بيانات العضو",
+    "description": "تعديل المعلومات الشخصية والتواصل",
+    "tabInfo": "👤 البيانات الشخصية",
+    "tabDocs": "🖼️ الصور والمستندات",
+    "firstNameAr": "الاسم الأول (عربي)",
+    "lastNameAr": "الاسم الأخير (عربي)",
+    "firstNameEn": "الاسم الأول (إنجليزي)",
+    "lastNameEn": "الاسم الأخير (إنجليزي)",
+    "gender": "الجنس",
+    "genderSelect": "اختر",
+    "birthdate": "تاريخ الميلاد",
+    "phone": "رقم الهاتف",
+    "nationality": "الجنسية",
+    "address": "العنوان",
+    "healthStatus": "الحالة الصحية",
+    "uploadPhoto": "اضغط لرفع صورة",
+    "save": "حفظ التغييرات",
+    "saving": "جارٍ الحفظ...",
+    "cancel": "إلغاء"
+  },
+  "changeStatus": {
+    "title": "تغيير حالة العضو",
+    "currentStatus": "الحالة الحالية:",
+    "newStatus": "الحالة الجديدة",
+    "selectStatus": "اختر الحالة",
+    "reason": "السبب (اختياري)",
+    "reasonPlaceholder": "سبب تغيير الحالة",
+    "confirm": "تأكيد التغيير",
+    "confirming": "جارٍ التغيير...",
+    "cancel": "إلغاء"
+  },
+  "delete": {
+    "title": "تأكيد حذف العضو",
+    "description": "سيتم تغيير حالة العضو إلى «ملغى». هذا الإجراء لا يمكن التراجع عنه.",
+    "confirm": "نعم، احذف",
+    "deleting": "جارٍ الحذف...",
+    "cancel": "إلغاء"
+  },
+  "toast": {
+    "loadFailed": "تعذر تحميل الأعضاء",
+    "loadDetailsFailed": "تعذر تحميل التفاصيل",
+    "teamDataError": "خطأ في تحميل البيانات",
+    "teamDetailFailed": "فشل تحميل بيانات لاعب الفريق (ID: {{id}})",
+    "updateSuccess": "تم التحديث بنجاح",
+    "updateFailed": "فشل التحديث",
+    "statusChanged": "تم تغيير الحالة",
+    "statusChangeFailed": "فشل تغيير الحالة",
+    "deleted": "تم حذف العضو",
+    "deleteFailed": "فشل الحذف",
+    "deletedByAdmin": "حُذف بواسطة الإدارة"
+  },
+  "memberTypes": {
+    "teamPlayer": "لاعب فريق"
+  },
+  "rowActions": {
+    "viewDetails": "عرض التفاصيل",
+    "edit": "تعديل",
+    "changeStatus": "تغيير الحالة",
+    "deleteMember": "حذف العضو"
+  },
+  "detailModal": {
+    "title": "تفاصيل {{type}}",
+    "description": "عرض ملف المعلومات الكامل للعضو أو لاعب الفريق",
+    "teamPlayer": "لاعب الفريق",
+    "member": "العضو"
+  },
+  "editModal": {
+    "title": "تعديل بيانات العضو",
+    "description": "تعديل المعلومات الشخصية والتواصل",
+    "tabs": {
+      "personalInfo": "👤 البيانات الشخصية",
+      "docsAndPhotos": "🖼️ الصور والمستندات"
+    },
+    "fields": {
+      "firstNameAr": "الاسم الأول (عربي)",
+      "lastNameAr": "الاسم الأخير (عربي)",
+      "firstNameEn": "الاسم الأول (إنجليزي)",
+      "lastNameEn": "الاسم الأخير (إنجليزي)",
+      "gender": "الجنس",
+      "birthdate": "تاريخ الميلاد",
+      "phone": "رقم الهاتف",
+      "nationality": "الجنسية",
+      "address": "العنوان",
+      "healthStatus": "الحالة الصحية"
+    },
+    "placeholders": {
+      "firstNameAr": "محمد",
+      "lastNameAr": "أحمد",
+      "firstNameEn": "Mohamed",
+      "lastNameEn": "Ahmed",
+      "select": "اختر",
+      "phone": "+201012345678",
+      "nationality": "Egyptian",
+      "address": "القاهرة، مصر",
+      "healthStatus": "لا توجد أمراض مزمنة"
+    },
+    "docs": {
+      "photo": "الصورة الشخصية",
+      "idFront": "البطاقة القومية (أمام)",
+      "idBack": "البطاقة القومية (خلف)",
+      "medicalReport": "التقرير الطبي",
+      "clickToUpload": "اضغط لرفع صورة"
+    },
+    "buttons": {
+      "saving": "جارٍ الحفظ...",
+      "save": "حفظ التغييرات",
+      "cancel": "إلغاء"
+    }
+  },
+  "statusModal": {
+    "title": "تغيير حالة العضو",
+    "currentStatus": "الحالة الحالية:",
+    "newStatus": "الحالة الجديدة",
+    "selectStatus": "اختر الحالة",
+    "reason": "السبب (اختياري)",
+    "reasonPlaceholder": "سبب تغيير الحالة",
+    "buttons": {
+      "saving": "جارٍ التغيير...",
+      "confirm": "تأكيد التغيير",
+      "cancel": "إلغاء"
+    }
+  },
+  "deleteModal": {
+    "title": "حذف العضو",
+    "areYouSure": "هل أنت متأكد من حذف",
+    "thisMember": "هذا العضو",
+    "warning": "سيتم تغيير حالته إلى \"ملغى\" ولن يظهر في القائمة.",
+    "buttons": {
+      "deleting": "جارٍ الحذف...",
+      "confirm": "تأكيد الحذف",
+      "cancel": "إلغاء"
+    }
+  }
+}

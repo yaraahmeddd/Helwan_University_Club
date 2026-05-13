@@ -1,0 +1,72 @@
+{
+  "pageTitle": "Staff Dashboard",
+  "loadingMessage": "Loading dashboard data...",
+  "welcomeMessage": "Welcome, {{name}}",
+  "lastUpdated": "Last updated: {{time}}",
+  "refreshBtn": "Refresh",
+  "refreshingBtn": "Refreshing...",
+  "dataLoadError": "Failed to load dashboard data from backend. Check backend server and login token.",
+  "unnamedSport": "Unnamed Sport",
+  "untitledTask": "Untitled Task",
+  "system": "System",
+  "stats": {
+    "totalMembers": "Total Members",
+    "activeMembers": "Active Members",
+    "totalSports": "Sports Activities",
+    "sportsRevenue": "Sports Revenue",
+    "tasksList": "Tasks List",
+    "membershipPlans": "Membership Plans",
+    "auditLogsToday": "Audit Logs (Today)",
+    "myPrivileges": "My Privileges",
+    "connectedToServer": "Connected to server",
+    "noAccess": "No access",
+    "pendingApprovals": "{{count}} pending approvals",
+    "activeAndPending": "{{active}} active | {{pending}} pending",
+    "avgSportFee": "Avg sport fee: {{fee}}",
+    "pendingActions": "{{count}} pending actions",
+    "activePlans": "{{count}} active plans",
+    "totalLogs": "{{count}} total logs",
+    "visibleModules": "{{count}} visible modules"
+  },
+  "charts": {
+    "memberDistribution": "Member Status Distribution",
+    "noMemberData": "No member data available.",
+    "noMemberAccess": "You do not have access to member analytics.",
+    "topSports": "Most Enrolled Sports",
+    "noSportsData": "No sport enrollment data available.",
+    "noSportsAccess": "You do not have access to sports analytics."
+  },
+  "alerts": {
+    "title": "Subscription Alerts",
+    "needsAttention": "{{count}} alerts need attention",
+    "viewAll": "View All",
+    "overdue": "Overdue by {{days}} days",
+    "dueIn": "Due in {{days}} days",
+    "moreAlerts": "+{{count}} more alerts",
+    "allValid": "✅ All subscriptions are valid"
+  },
+  "status": {
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "pending": "Pending",
+    "active": "Active",
+    "other": "Other"
+  },
+  "tables": {
+    "recentTasksTitle": "Recent Tasks",
+    "noTasksAccess": "Task list is not available for your role.",
+    "noTasksFound": "No tasks found.",
+    "recentSportsTitle": "Recent Sports",
+    "noSportsAccess": "Sports list is not available for your role.",
+    "noSportsFound": "No sports found.",
+    "columns": {
+      "taskName": "Task",
+      "status": "Status",
+      "createdBy": "Created By",
+      "createdAt": "Created At",
+      "sportName": "Sport",
+      "members": "Members",
+      "price": "Price"
+    }
+  }
+}

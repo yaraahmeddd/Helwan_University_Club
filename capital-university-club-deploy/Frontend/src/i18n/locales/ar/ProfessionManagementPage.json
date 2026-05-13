@@ -1,0 +1,87 @@
+{
+  "errors": {
+    "fetchFailed": "تعذر تحميل المهن",
+    "fetchFailedTitle": "فشل التحميل",
+    "missingDataTitle": "بيانات ناقصة",
+    "missingDataDesc": "يرجى ملء جميع الحقول المطلوبة.",
+    "saveFailedTitle": "فشل الحفظ",
+    "saveFailedDesc": "حدث خطأ غير متوقع عند الحفظ",
+    "deleteFailedTitle": "فشل الحذف",
+    "deleteFailedDesc": "حدث خطأ غير متوقع عند الحذف",
+    "missingMemberDesc": "يرجى تحديد العضو المطلوب.",
+    "assignFailedTitle": "فشل التعيين",
+    "assignFailedDesc": "حدث خطأ غير متوقع عند التعيين"
+  },
+  "success": {
+    "updatedTitle": "تم التحديث",
+    "updatedDesc": "تم تحديث بيانات المهنة بنجاح",
+    "addedTitle": "تمت الإضافة",
+    "addedDesc": "تمت إضافة المهنة بنجاح",
+    "deletedTitle": "تم الحذف",
+    "deletedDesc": "تم حذف المهنة بنجاح",
+    "assignedTitle": "تم التعيين",
+    "assignedDesc": "تم ربط العضو بالمهنة بنجاح"
+  },
+  "page": {
+    "title": "إدارة المهن",
+    "totalProfessions": "إجمالي المهن المسجلة:",
+    "addProfessionBtn": "إضافة مهنة",
+    "prevPage": "الصفحة السابقة",
+    "nextPage": "الصفحة التالية",
+    "searchPlaceholder": "بحث بالاسم أو الكود...",
+    "refreshBtn": "تحديث البيانات",
+    "fetchingRecords": "جارٍ جلب السجلات...",
+    "noProfessions": "لا توجد مهن مسجلة",
+    "noSearchResults": "لا توجد نتائج مطابقة لـ \"{{search}}\"",
+    "noProfessionsDesc": "لم يتم إدراج أي مهن بعد. أضف مهنك الآن.",
+    "genericMember": "عضو"
+  },
+  "table": {
+    "serial": "#",
+    "code": "الكود المرجعي",
+    "name": "المهنة",
+    "nameAr": "المهنة (عربي)",
+    "nameEn": "المهنة (إنجليزي)",
+    "actions": "الإجراءات",
+    "emptyEn": "—"
+  },
+  "actions": {
+    "edit": "تعديل",
+    "assignMember": "تعيين لعضو",
+    "delete": "حذف المهنة"
+  },
+  "modalAdd": {
+    "editTitle": "تعديل مهنة",
+    "addTitle": "إضافة مهنة جديدة",
+    "editDesc": "قم بتعديل بيانات المهنة المحددة.",
+    "addDesc": "أدخل بيانات المهنة الجديدة. الكود يستخدم للتعريف السريع.",
+    "codeLabel": "الكود (Code) *",
+    "codePlaceholder": "ENG",
+    "nameArLabel": "الاسم (عربي) *",
+    "nameArPlaceholder": "مثال: مهندس",
+    "nameEnLabel": "الاسم (إنجليزي) *",
+    "nameEnPlaceholder": "Engineer",
+    "saving": "جارٍ الحفظ...",
+    "saveBtn": "حفظ المهنة"
+  },
+  "modalDelete": {
+    "title": "تأكيد الحذف",
+    "desc": "هل أنت متأكد من حذف هذه المهنة؟ لا يمكن التراجع عن هذا الإجراء وسيؤثر على السجلات المرتبطة بها.",
+    "deleting": "جارٍ الحذف...",
+    "confirmBtn": "تأكيد الحذف"
+  },
+  "modalAssign": {
+    "title": "تعيين عضو في المهنة",
+    "desc": "تحديد العضو المراد ربطه بمهنة:",
+    "memberIdLabel": "رقم العضو *",
+    "memberIdPlaceholder": "رقم العضو (مثل: 5049)",
+    "memberNotFound": "لم يُعثر على عضو يطابق هذا الرقم",
+    "enterNumbers": "أدخل أرقاماً صحيحة وسيبدأ البحث التلقائي",
+    "nameLabel": "الاسم:",
+    "assigning": "جارٍ الربط...",
+    "assignBtn": "تأكيد التعيين"
+  },
+  "common": {
+    "cancel": "إلغاء"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "common": {
+    "error": "Error"
+  },
+  "header": {
+    "title": "Members by Sport",
+    "total": "Total: {{count}} members",
+    "allSports": "All sports: {{count}}",
+    "refresh": "Refresh"
+  },
+  "sidebar": {
+    "sports": "Sports",
+    "all": "All"
+  },
+  "toolbar": {
+    "searchPlaceholder": "Search by name, phone, or national ID...",
+    "allStatuses": "All statuses",
+    "results": "{{count}} results"
+  },
+  "teams": {
+    "loading": "Loading teams...",
+    "all": "All",
+    "empty": "No teams for this sport"
+  },
+  "table": {
+    "loading": "Loading members...",
+    "emptyFiltered": "No results match the search",
+    "emptySport": "There are no members in {{sport}}",
+    "empty": "No members found",
+    "member": "Member",
+    "phone": "Phone number",
+    "nationalId": "National ID",
+    "sports": "Sports",
+    "subscriptionDate": "Subscription date",
+    "status": "Status"
+  },
+  "status": {
+    "active": "Active",
+    "approved": "Approved",
+    "inactive": "Inactive",
+    "rejected": "Rejected",
+    "suspended": "Suspended",
+    "pending": "Pending"
+  },
+  "pagination": {
+    "summary": "Page {{page}} of {{totalPages}} · {{count}} results",
+    "previous": "Previous page",
+    "next": "Next page"
+  },
+  "toasts": {
+    "loadSportsFailed": {
+      "title": "Could not load sports"
+    },
+    "loadMembersFailed": {
+      "title": "Could not load members"
+    }
+  }
+}
