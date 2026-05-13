@@ -1,8 +1,21 @@
+
+-- DELETE THIS BEFORE RUNNING:
+-- ###STEPS TO RUN THIS FILE ON PGADMIN###
+
+-- 1. Right-click on your target database in the left sidebar.
+
+-- 2. Select PSQL Tool from the menu (this opens a command-line interface inside pgAdmin).
+
+-- 3. Type the following command and hit Enter: \i 'THIS FILEPATH'
+
+
+
+
+
+
 --
 -- PostgreSQL database dump
 --
-
-\restrict 4cJvACUGcg46DSpzG6pAzHRfJaUrWbn1TZNAu7J5pAldy1hi233Hyu5zeLihmBv
 
 -- Dumped from database version 18.3
 -- Dumped by pg_dump version 18.3
@@ -4746,5 +4759,4 @@ ALTER TABLE ONLY public.members
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 4cJvACUGcg46DSpzG6pAzHRfJaUrWbn1TZNAu7J5pAldy1hi233Hyu5zeLihmBv
 
