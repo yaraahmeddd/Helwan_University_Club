@@ -18,6 +18,7 @@ import {
 } from "../components/StaffPagesComponents/ui/dialog";
 import { useToast } from "../hooks/use-toast";
 import api from "../services/axios";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 
 // ─── API shape types ────────────────────────────────────────────────────────
 type SportApiItem = { id: number; name_ar: string; name_en: string };
@@ -282,15 +283,15 @@ export default function AttendancePage() {
 
     const handleExportPDF = () => {
         const tableRows = filteredAbsenceRows.map((row, i) => `
-      <tr>
-        <td>${i + 1}</td>
-        <td>${row.memberNameAr} (${row.memberCode})</td>
-        <td>${row.sportNameAr}</td>
-        <td>${row.totalAbsences}</td>
-        <td>${row.lastAbsenceDate
+      <TableRow>
+        <TableCell>${i + 1}</TableCell>
+        <TableCell>${row.memberNameAr} (${row.memberCode})</TableCell>
+        <TableCell>${row.sportNameAr}</TableCell>
+        <TableCell>${row.totalAbsences}</TableCell>
+        <TableCell>${row.lastAbsenceDate
                 ? new Date(row.lastAbsenceDate).toLocaleDateString("ar-EG")
-                : "—"}</td>
-      </tr>
+                : "—"}</TableCell>
+      </TableRow>
     `).join("");
 
         const html = `<html dir="rtl"><head><meta charset="UTF-8"/>
@@ -307,13 +308,13 @@ export default function AttendancePage() {
       <body>
         <h2>سجل الغيابات — نادي جامعة العاصمة</h2>
         <p>تاريخ التصدير: ${new Date().toLocaleDateString("ar-EG")}</p>
-        <table>
-          <thead><tr>
-            <th>#</th><th>اللاعب</th><th>الرياضة</th>
-            <th>إجمالي الغياب</th><th>آخر غياب</th>
-          </tr></thead>
-          <tbody>${tableRows}</tbody>
-        </table>
+        <Table>
+          <TableHeader><TableRow>
+            <TableHead>#</TableHead><TableHead>اللاعب</TableHead><TableHead>الرياضة</TableHead>
+            <TableHead>إجمالي الغياب</TableHead><TableHead>آخر غياب</TableHead>
+          </TableRow></TableHeader>
+          <TableBody>${tableRows}</TableBody>
+        </Table>
       </body></html>`;
 
         const w = window.open("", "_blank");

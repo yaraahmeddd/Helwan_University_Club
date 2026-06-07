@@ -224,75 +224,86 @@ const ComprehensiveRegistrationForm = () => {
                 throw new Error(basicRes.message || "Registration Failed");
             }
             const memberId = basicRes.data.member_id;
+            const accountId: number = basicRes.data.account_id; // stored for rollback
 
-            // 2. Determine Membership
-            const determinationData = {
-                member_id: memberId,
-                is_student: category === 'student',
-                is_working: category === 'staff',
-                is_foreign: category === 'foreigner', // Fixed: Derived from category
-                is_graduated: false, // Default
-                has_relation: category === 'dependent',
-                is_retired: category === 'retired',
-                relation_member_id: data.relatedMemberId ? Number(data.relatedMemberId) : undefined
-            };
-            const determineRes = await AuthService.determineMembership(determinationData);
+            // All post-basic steps wrapped — rollback on any failure
+            try {
+                // 2. Determine Membership
+                const determinationData = {
+                    member_id: memberId,
+                    is_student: category === 'student',
+                    is_working: category === 'staff',
+                    is_foreign: category === 'foreigner',
+                    is_graduated: false,
+                    has_relation: category === 'dependent',
+                    is_retired: category === 'retired',
+                    relation_member_id: data.relatedMemberId ? Number(data.relatedMemberId) : undefined
+                };
+                const determineRes = await AuthService.determineMembership(determinationData);
 
-            // 3. Submit Details
-            const formData = new FormData();
-            formData.append('member_id', String(memberId));
-            formData.append('address', data.address);
+                // 3. Submit Details
+                const formData = new FormData();
+                formData.append('member_id', String(memberId));
+                formData.append('address', data.address);
 
-            // Files - Using keys from renderStep4_Files (id_front, id_back, photo, etc.)
-            // Mapping: UI Key -> Backend Key
-            if (files.id_front) formData.append('national_id_front', files.id_front);
-            if (files.id_back) formData.append('national_id_back', files.id_back);
-            if (files.passport) formData.append('national_id_front', files.passport); // Passport serves as ID front for foreigners
-            if (files.photo) formData.append('personal_photo', files.photo);
-            if (files.salary_slip) formData.append('salary_slip', files.salary_slip);
-            if (files.medical) formData.append('medical_report', files.medical);
-            // new keys
-            if (files.student_proof) formData.append('student_proof', files.student_proof);
-            if (files.relation_proof) formData.append('relation_proof', files.relation_proof);
+                // Files - Using keys from renderStep4_Files (id_front, id_back, photo, etc.)
+                // Mapping: UI Key -> Backend Key
+                if (files.id_front) formData.append('national_id_front', files.id_front);
+                if (files.id_back) formData.append('national_id_back', files.id_back);
+                if (files.passport) formData.append('national_id_front', files.passport); // Passport serves as ID front for foreigners
+                if (files.photo) formData.append('personal_photo', files.photo);
+                if (files.salary_slip) formData.append('salary_slip', files.salary_slip);
+                if (files.medical) formData.append('medical_report', files.medical);
+                // new keys
+                if (files.student_proof) formData.append('student_proof', files.student_proof);
+                if (files.relation_proof) formData.append('relation_proof', files.relation_proof);
 
-            let endpoint = 'visitor'; // Default
-            if (category === 'student') {
-                endpoint = 'student';
-                formData.append('university_id', data.universityId || '0');
-                formData.append('faculty_id', data.facultyId || '0');
-                formData.append('graduation_year', data.graduationYear || '2024');
-                formData.append('enrollment_date', new Date().toISOString());
-            } else if (category === 'staff') {
-                endpoint = 'working';
-                formData.append('profession_id', data.professionId || '0');
-                formData.append('department_en', data.department || 'General');
-                formData.append('department_ar', data.department || 'عام');
-                formData.append('salary', data.salary || '0');
-                formData.append('employment_start_date', new Date().toISOString());
-                formData.append('university_id', '1');
-            } else if (category === 'retired') {
-                endpoint = 'retired';
-                formData.append('profession_code', data.professionCode || 'RETIRED');
-                formData.append('retirement_date', data.retirementDate || new Date().toISOString());
-            } else if (category === 'foreigner') {
-                // Endpoint might be different or mapped to existing
-                endpoint = 'visitor'; // Or specific endpoint if exists
-                formData.append('visitor_type', 'FOREIGNER');
-            } else if (category === 'visitor') {
-                // Standard visitor category
-                endpoint = 'visitor';
-                formData.append('visitor_type', 'VISITOR');
+                let endpoint = 'visitor'; // Default
+                if (category === 'student') {
+                    endpoint = 'student';
+                    formData.append('university_id', data.universityId || '0');
+                    formData.append('faculty_id', data.facultyId || '0');
+                    formData.append('graduation_year', data.graduationYear || '2024');
+                    formData.append('enrollment_date', new Date().toISOString());
+                } else if (category === 'staff') {
+                    endpoint = 'working';
+                    formData.append('profession_id', data.professionId || '0');
+                    formData.append('department_en', data.department || 'General');
+                    formData.append('department_ar', data.department || 'عام');
+                    formData.append('salary', data.salary || '0');
+                    formData.append('employment_start_date', new Date().toISOString());
+                    formData.append('university_id', '1');
+                } else if (category === 'retired') {
+                    endpoint = 'retired';
+                    formData.append('profession_code', data.professionCode || 'RETIRED');
+                    formData.append('retirement_date', data.retirementDate || new Date().toISOString());
+                } else if (category === 'foreigner') {
+                    // Endpoint might be different or mapped to existing
+                    endpoint = 'visitor'; // Or specific endpoint if exists
+                    formData.append('visitor_type', 'FOREIGNER');
+                } else if (category === 'visitor') {
+                    // Standard visitor category
+                    endpoint = 'visitor';
+                    formData.append('visitor_type', 'VISITOR');
+                }
+
+                await AuthService.submitDetailedInfo(endpoint, formData);
+
+                // 4. Complete
+                await AuthService.completeRegistration({
+                    member_id: memberId,
+                    membership_plan_code: determineRes.data?.next_step || 'FULL_ACCESS'
+                });
+
+                alert("تم إرسال طلب العضوية بنجاح! سيتم مراجعة البيانات.");
+
+            } catch (postBasicError: unknown) {
+                // ROLLBACK: remove the account + member that was already saved
+                console.error('❌ Post-basic step failed — rolling back account:', accountId, postBasicError);
+                await AuthService.rollbackRegistration(accountId);
+                throw postBasicError;
             }
 
-            await AuthService.submitDetailedInfo(endpoint, formData);
-
-            // 4. Complete
-            await AuthService.completeRegistration({
-                member_id: memberId,
-                membership_plan_code: determineRes.data?.next_step || 'FULL_ACCESS'
-            });
-
-            alert("تم إرسال طلب العضوية بنجاح! سيتم مراجعة البيانات.");
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "حدث خطأ أثناء التسجيل";
             console.error(error);

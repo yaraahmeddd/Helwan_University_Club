@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 import {
     Users, UserPlus, Search, MoreVertical, Edit, Trash2, X, Check,
     ChevronLeft, Upload, Calendar, CreditCard, FileText,
@@ -113,21 +114,21 @@ const UserTable = ({ users, onEdit, onDelete, onView }: { users: User[], onEdit:
     return (
         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
             <div className="overflow-x-auto">
-                <table className="w-full text-right">
-                    <thead className="bg-slate-50/50 border-b border-slate-100">
-                        <tr>
+                <Table>
+                    <TableHeader className="bg-slate-50/50 border-b border-slate-100">
+                        <TableRow>
                             {['العضو', 'ID', 'الفئة', 'العضوية', 'الحالة', 'إجراءات'].map((h, i) => (
-                                <th key={i} className="px-6 py-5 text-sm font-bold text-slate-800">{h}</th>
+                                <TableHead key={i} className="px-6 py-5 text-sm font-bold text-slate-800">{h}</TableHead>
                             ))}
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody className="divide-y divide-slate-100">
                         {users.length === 0 ? (
-                            <tr><td colSpan={6} className="px-6 py-8 text-center text-slate-500">لا يوجد أعضاء</td></tr>
+                            <TableRow><TableCell colSpan={6} className="px-6 py-8 text-center text-slate-500">لا يوجد أعضاء</TableCell></TableRow>
                         ) : (
                             users.map((user) => (
-                                <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-6 py-4">
+                                <TableRow key={user.id} className="hover:bg-slate-50/50 transition-colors">
+                                    <TableCell className="px-6 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 font-bold border border-slate-200">
                                                 {user.fullName.charAt(0)}
@@ -137,36 +138,36 @@ const UserTable = ({ users, onEdit, onDelete, onView }: { users: User[], onEdit:
                                                 <p className="text-xs text-slate-500">{user.email}</p>
                                             </div>
                                         </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-sm font-medium text-slate-600">{user.id}</td>
-                                    <td className="px-6 py-4">
+                                    </TableCell>
+                                    <TableCell className="px-6 py-4 text-sm font-medium text-slate-600">{user.id}</TableCell>
+                                    <TableCell className="px-6 py-4">
                                         <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold ${user.category === 'student' ? 'bg-blue-50 text-blue-700' : user.category === 'staff' ? 'bg-purple-50 text-purple-700' : 'bg-orange-50 text-orange-700'}`}>
                                             {user.category === 'student' ? 'طالب' : user.category === 'staff' ? 'موظف' : 'عام'}
                                         </span>
-                                    </td>
-                                    <td className="px-6 py-4">
+                                    </TableCell>
+                                    <TableCell className="px-6 py-4">
                                         <span className="text-sm text-slate-700 font-medium">
                                             {user.membershipType === 'vip' ? 'VIP' : user.membershipType === 'annual' ? 'سنوية' : 'شهرية'}
                                         </span>
-                                    </td>
-                                    <td className="px-6 py-4">
+                                    </TableCell>
+                                    <TableCell className="px-6 py-4">
                                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${user.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
                                             <span className={`w-1.5 h-1.5 rounded-full ${user.status === 'active' ? 'bg-emerald-600' : 'bg-red-600'}`}></span>
                                             {user.status === 'active' ? 'نشط' : user.status === 'expired' ? 'منتهي' : 'معلق'}
                                         </span>
-                                    </td>
-                                    <td className="px-6 py-4">
+                                    </TableCell>
+                                    <TableCell className="px-6 py-4">
                                         <div className="flex items-center gap-2">
                                             <button onClick={() => onView(user)} className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"><Search className="w-4 h-4" /></button>
                                             <button onClick={() => onEdit(user)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"><Edit className="w-4 h-4" /></button>
                                             <button onClick={() => onDelete(user.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"><Trash2 className="w-4 h-4" /></button>
                                         </div>
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             ))
                         )}
-                    </tbody>
-                </table>
+                    </TableBody>
+                </Table>
             </div>
         </div>
     );
@@ -386,20 +387,20 @@ const MembershipManagement = () => {
             </div>
             {loading ? <div className="text-center py-20">جار التحميل...</div> : (
                 <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-                    <table className="w-full text-right">
-                        <thead className="bg-slate-50/50"><tr>{['الاسم', 'الكود', 'السعر', 'المدة', 'الحالة'].map((h, i) => <th key={i} className="px-6 py-5 text-sm font-bold text-slate-800">{h}</th>)}</tr></thead>
-                        <tbody className="divide-y divide-slate-100">
+                    <Table>
+                        <TableHeader className="bg-slate-50/50"><TableRow>{['الاسم', 'الكود', 'السعر', 'المدة', 'الحالة'].map((h, i) => <TableHead key={i} className="px-6 py-5 text-sm font-bold text-slate-800">{h}</TableHead>)}</TableRow></TableHeader>
+                        <TableBody className="divide-y divide-slate-100">
                             {plans.map(plan => (
-                                <tr key={plan.id} className="hover:bg-slate-50/50">
-                                    <td className="px-6 py-4 font-bold text-slate-900">{plan.name_ar}</td>
-                                    <td className="px-6 py-4"><span className="bg-slate-100 px-3 py-1 rounded-lg text-xs font-mono font-bold text-slate-600">{plan.plan_code}</span></td>
-                                    <td className="px-6 py-4 text-emerald-600 font-bold">{plan.price} {plan.currency}</td>
-                                    <td className="px-6 py-4 font-medium text-slate-600">{plan.duration_months} شهر</td>
-                                    <td className="px-6 py-4"><span className={`px-3 py-1 rounded-full text-xs font-bold ${plan.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>{plan.is_active ? 'نشط' : 'غير نشط'}</span></td>
-                                </tr>
+                                <TableRow key={plan.id} className="hover:bg-slate-50/50">
+                                    <TableCell className="px-6 py-4 font-bold text-slate-900">{plan.name_ar}</TableCell>
+                                    <TableCell className="px-6 py-4"><span className="bg-slate-100 px-3 py-1 rounded-lg text-xs font-mono font-bold text-slate-600">{plan.plan_code}</span></TableCell>
+                                    <TableCell className="px-6 py-4 text-emerald-600 font-bold">{plan.price} {plan.currency}</TableCell>
+                                    <TableCell className="px-6 py-4 font-medium text-slate-600">{plan.duration_months} شهر</TableCell>
+                                    <TableCell className="px-6 py-4"><span className={`px-3 py-1 rounded-full text-xs font-bold ${plan.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>{plan.is_active ? 'نشط' : 'غير نشط'}</span></TableCell>
+                                </TableRow>
                             ))}
-                        </tbody>
-                    </table>
+                        </TableBody>
+                    </Table>
                 </div>
             )}
         </div>

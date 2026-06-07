@@ -10,6 +10,7 @@ import { Plus, Search, RefreshCw, ChevronRight, ChevronLeft, MapPin, Pencil, Tra
 import { useToast } from "../hooks/use-toast";
 import api from "../services/axios";
 import { useTranslation } from "react-i18next";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -464,46 +465,46 @@ export default function BranchManagementPage() {
                                 </p>
                             </div>
                         ) : (
-                            <table className="w-full text-sm text-right">
-                                <thead className="sticky top-0 bg-white z-10 before:absolute before:inset-0 before:border-b before:border-zinc-100 before:pointer-events-none">
-                                    <tr>
-                                        <th className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle w-12">{t('table.columns.serial')}</th>
-                                        <th className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle">{t('table.columns.name')}</th>
-                                        <th className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle">{t('table.columns.code')}</th>
-                                        <th className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle">{t('table.columns.location')}</th>
-                                        <th className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle">{t('table.columns.status')}</th>
-                                        <th className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle text-center">{t('table.columns.sportsCount')}</th>
-                                        <th className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle text-center">{t('table.columns.actions')}</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-zinc-100">
+                            <Table>
+                                <TableHeader className="sticky top-0 bg-white z-10 before:absolute before:inset-0 before:border-b before:border-zinc-100 before:pointer-events-none">
+                                    <TableRow>
+                                        <TableHead className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle w-12">{t('table.columns.serial')}</TableHead>
+                                        <TableHead className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle">{t('table.columns.name')}</TableHead>
+                                        <TableHead className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle">{t('table.columns.code')}</TableHead>
+                                        <TableHead className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle">{t('table.columns.location')}</TableHead>
+                                        <TableHead className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle">{t('table.columns.status')}</TableHead>
+                                        <TableHead className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle text-center">{t('table.columns.sportsCount')}</TableHead>
+                                        <TableHead className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle text-center">{t('table.columns.actions')}</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody className="divide-y divide-zinc-100">
                                     {pagedRows.map((branch, idx) => (
                                         <React.Fragment key={branch.id}>
-                                            <tr className="transition-colors hover:bg-zinc-50/80 group">
+                                            <TableRow className="transition-colors hover:bg-zinc-50/80 group">
                                                 {/* Serial */}
-                                                <td className="px-6 py-3.5 text-[13px] text-zinc-400 font-mono align-middle">
+                                                <TableCell className="px-6 py-3.5 text-[13px] text-zinc-400 font-mono align-middle">
                                                     {(page - 1) * PAGE_SIZE + idx + 1}
-                                                </td>
+                                                </TableCell>
 
                                                 {/* Name */}
-                                                <td className="px-6 py-3.5 align-middle font-bold text-zinc-900 border-e-2 border-transparent group-hover:border-primary/40 transition-all">
+                                                <TableCell className="px-6 py-3.5 align-middle font-bold text-zinc-900 border-e-2 border-transparent group-hover:border-primary/40 transition-all">
                                                     {isRTL ? (branch.name_ar || branch.name_en || "—") : (branch.name_en || branch.name_ar || "—")}
-                                                </td>
+                                                </TableCell>
 
                                                 {/* Code */}
-                                                <td className="px-6 py-3.5 align-middle">
+                                                <TableCell className="px-6 py-3.5 align-middle">
                                                     {branch.code ? (
                                                         <span className="text-[11px] font-mono font-bold text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded border border-zinc-200">{branch.code}</span>
                                                     ) : "—"}
-                                                </td>
+                                                </TableCell>
 
                                                 {/* Location */}
-                                                <td className="px-6 py-3.5 align-middle text-zinc-500 font-medium tracking-wide">
+                                                <TableCell className="px-6 py-3.5 align-middle text-zinc-500 font-medium tracking-wide">
                                                     {isRTL ? (branch.location_ar || branch.location_en || "—") : (branch.location_en || branch.location_ar || "—")}
-                                                </td>
+                                                </TableCell>
 
                                                 {/* Status */}
-                                                <td className="px-6 py-3.5 align-middle">
+                                                <TableCell className="px-6 py-3.5 align-middle">
                                                     {branch.status ? (
                                                         <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-widest border ${
                                                             branch.status === 'active' 
@@ -515,18 +516,18 @@ export default function BranchManagementPage() {
                                                             {branch.status === 'active' ? t('table.status.active') : branch.status === 'inactive' ? t('table.status.inactive') : t('table.status.archived')}
                                                         </span>
                                                     ) : "—"}
-                                                </td>
+                                                </TableCell>
 
                                                 {/* Sports Count */}
-                                                <td className="px-6 py-3.5 align-middle text-center">
+                                                <TableCell className="px-6 py-3.5 align-middle text-center">
                                                     <span className="bg-zinc-100/80 text-zinc-600 px-2.5 py-1 rounded-md text-[11px] font-mono font-bold uppercase tracking-widest border border-zinc-200/60 shadow-sm">
                                                         {branch.sports_count ?? "—"}
                                                     </span>
-                                                </td>
+                                                </TableCell>
 
                                                 {/* Actions */}
-                                                <td className="px-6 py-3.5 align-middle">
-                                                    <div className="flex items-center justify-center gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                                                <TableCell className="px-6 py-3.5 align-middle">
+                                                    <div className="flex items-center justify-center gap-2  transition-opacity">
                                                         
                                                         <RoleGuard privilege="UPDATE_BRANCH">
                                                             <button
@@ -569,12 +570,12 @@ export default function BranchManagementPage() {
                                                         </RoleGuard>
 
                                                     </div>
-                                                </td>
-                                            </tr>
+                                                </TableCell>
+                                            </TableRow>
                                             {/* EXPANDED PANEL HERE */}
                                             {expandedBranchId === branch.id && (
-                                                <tr className="bg-zinc-50/80 border-b border-zinc-200/80">
-                                                    <td colSpan={7} className="p-0 border-s-4 border-s-emerald-500 shadow-inner">
+                                                <TableRow className="bg-zinc-50/80 border-b border-zinc-200/80">
+                                                    <TableCell colSpan={7} className="p-0 border-s-4 border-s-emerald-500 shadow-inner">
                                                         <div className="p-6">
                                                             <div className="flex items-center justify-between mb-4">
                                                                 <h4 className="text-[13px] font-bold text-zinc-800 flex items-center gap-2">
@@ -599,19 +600,19 @@ export default function BranchManagementPage() {
                                                                 </div>
                                                             ) : (
                                                                 <div className="bg-white rounded-xl border border-zinc-200/60 shadow-sm overflow-hidden border-t-0">
-                                                                    <table className="w-full text-xs text-start">
-                                                                        <thead className="bg-zinc-50/50 border-b border-zinc-100">
-                                                                            <tr>
-                                                                                <th className="px-5 py-3 font-bold text-zinc-500">{t('sportsPanel.columns.sportName')}</th>
-                                                                                <th className="px-5 py-3 font-bold text-zinc-500 text-center w-28">{t('sportsPanel.columns.status')}</th>
-                                                                                <th className="px-5 py-3 font-bold text-zinc-500 text-center w-24">{t('sportsPanel.columns.actions')}</th>
-                                                                            </tr>
-                                                                        </thead>
-                                                                        <tbody className="divide-y divide-zinc-100">
+                                                                    <Table>
+                                                                        <TableHeader className="bg-zinc-50/50 border-b border-zinc-100">
+                                                                            <TableRow>
+                                                                                <TableHead className="px-5 py-3 font-bold text-zinc-500">{t('sportsPanel.columns.sportName')}</TableHead>
+                                                                                <TableHead className="px-5 py-3 font-bold text-zinc-500 text-center w-28">{t('sportsPanel.columns.status')}</TableHead>
+                                                                                <TableHead className="px-5 py-3 font-bold text-zinc-500 text-center w-24">{t('sportsPanel.columns.actions')}</TableHead>
+                                                                            </TableRow>
+                                                                        </TableHeader>
+                                                                        <TableBody className="divide-y divide-zinc-100">
                                                                             {branchSports[branch.id].map(bs => (
-                                                                                <tr key={bs.id} className="hover:bg-zinc-50/30 transition-colors">
-                                                                                    <td className="px-5 py-3 font-bold text-zinc-700">{bs.sport?.name_ar || "—"}</td>
-                                                                                    <td className="px-5 py-3 text-center">
+                                                                                <TableRow key={bs.id} className="hover:bg-zinc-50/30 transition-colors">
+                                                                                    <TableCell className="px-5 py-3 font-bold text-zinc-700">{bs.sport?.name_ar || "—"}</TableCell>
+                                                                                    <TableCell className="px-5 py-3 text-center">
                                                                                         <RoleGuard privilege="UPDATE_BRANCH" fallback={
                                                                                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${bs.status === 'active' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-zinc-100 text-zinc-600 border border-zinc-200'}`}>
                                                                                                 {bs.status === 'active' ? t('table.status.active') : t('table.status.inactive')}
@@ -624,8 +625,8 @@ export default function BranchManagementPage() {
                                                                                                 />
                                                                                             </div>
                                                                                         </RoleGuard>
-                                                                                    </td>
-                                                                                    <td className="px-5 py-3 text-center">
+                                                                                    </TableCell>
+                                                                                    <TableCell className="px-5 py-3 text-center">
                                                                                         <RoleGuard privilege="DELETE_BRANCH">
                                                                                             <div className="flex justify-center">
                                                                                                 <button onClick={() => setDeleteBranchSportId(bs.id)} className="p-1.5 rounded-md text-zinc-400 hover:bg-rose-100 hover:text-rose-600 transition-colors" title={t('sportsPanel.actions.remove')}>
@@ -633,21 +634,21 @@ export default function BranchManagementPage() {
                                                                                                 </button>
                                                                                             </div>
                                                                                         </RoleGuard>
-                                                                                    </td>
-                                                                                </tr>
+                                                                                    </TableCell>
+                                                                                </TableRow>
                                                                             ))}
-                                                                        </tbody>
-                                                                    </table>
+                                                                        </TableBody>
+                                                                    </Table>
                                                                 </div>
                                                             )}
                                                         </div>
-                                                    </td>
-                                                </tr>
+                                                    </TableCell>
+                                                </TableRow>
                                             )}
                                         </React.Fragment>
                                     ))}
-                                </tbody>
-                            </table>
+                                </TableBody>
+                            </Table>
                         )}
                     </div>
 

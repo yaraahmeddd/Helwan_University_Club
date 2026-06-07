@@ -11,6 +11,7 @@ import { RoleGuard } from "../components/StaffPagesComponents/RoleGuard";
 import api from "../services/axios";
 import { useTranslation } from "react-i18next";
 import i18n from "../i18n";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 
 // ─── Unified record type ────────────────────────────────────────────────────
 interface RegistrationRecord {
@@ -356,20 +357,20 @@ export default function RegistrationManagementPage() {
                         </p>
                     </div>
                 ) : (
-                    <table className="w-full text-sm">
-                        <thead className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
-                            <tr>
-                                <th className={`px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle w-10 ${isRTL ? 'text-right' : 'text-left'}`}>{t('table.index')}</th>
-                                <th className={`px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle ${isRTL ? 'text-right' : 'text-left'}`}>{t('table.name')}</th>
-                                <th className={`px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle ${isRTL ? 'text-right' : 'text-left'}`}>{t('table.phone')}</th>
-                                <th className={`px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle ${isRTL ? 'text-right' : 'text-left'}`}>{t('table.nationalId')}</th>
-                                <th className={`px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle ${isRTL ? 'text-right' : 'text-left'}`}>{t('table.registrationDate')}</th>
-                                <th className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">{t('table.type')}</th>
-                                <th className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">{t('table.status')}</th>
-                                <th className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">{t('table.actions')}</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
+                    <Table>
+                        <TableHeader className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
+                            <TableRow>
+                                <TableHead className={`px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle w-10 ${isRTL ? 'text-right' : 'text-left'}`}>{t('table.index')}</TableHead>
+                                <TableHead className={`px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle ${isRTL ? 'text-right' : 'text-left'}`}>{t('table.name')}</TableHead>
+                                <TableHead className={`px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle ${isRTL ? 'text-right' : 'text-left'}`}>{t('table.phone')}</TableHead>
+                                <TableHead className={`px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle ${isRTL ? 'text-right' : 'text-left'}`}>{t('table.nationalId')}</TableHead>
+                                <TableHead className={`px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle ${isRTL ? 'text-right' : 'text-left'}`}>{t('table.registrationDate')}</TableHead>
+                                <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">{t('table.type')}</TableHead>
+                                <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">{t('table.status')}</TableHead>
+                                <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">{t('table.actions')}</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody className="divide-y divide-border">
                             {filteredRecords.map((record, idx) => {
                                 const key = `${record.memberType}-${record.id}`;
                                 const isApproving = approvingId === key;
@@ -378,35 +379,35 @@ export default function RegistrationManagementPage() {
                                 const isTeamMember = record.memberType === 'team_member';
 
                                 return (
-                                    <tr
+                                    <TableRow
                                         key={key}
                                         className={`transition-colors hover:bg-muted/40 ${isJustApproved ? 'bg-emerald-500/10' : ''}`}
                                     >
-                                        <td className="px-4 py-3 text-sm text-muted-foreground font-mono align-middle">{idx + 1}</td>
+                                        <TableCell className="px-4 py-3 text-sm text-muted-foreground font-mono align-middle">{idx + 1}</TableCell>
 
-                                        <td className="px-4 py-3 align-middle">
+                                        <TableCell className="px-4 py-3 align-middle">
                                             <p className="font-semibold leading-tight">{getDisplayName(record)}</p>
                                             {((isRTL && (record.first_name_en || record.last_name_en)) || (!isRTL && (record.first_name_ar || record.last_name_ar))) && (
                                                 <p className="text-[11px] text-muted-foreground/70 italic tracking-wide" dir={isRTL ? 'ltr' : undefined}>
                                                     {isRTL ? `${record.first_name_en || ''} ${record.last_name_en || ''}` : `${record.first_name_ar || ''} ${record.last_name_ar || ''}`}
                                                 </p>
                                             )}
-                                        </td>
+                                        </TableCell>
 
-                                        <td className={`px-4 py-3 tabular-nums text-sm align-middle ${isRTL ? 'text-right' : 'text-left'}`}>
+                                        <TableCell className={`px-4 py-3 tabular-nums text-sm align-middle ${isRTL ? 'text-right' : 'text-left'}`}>
                                             <span dir="ltr">{record.phone}</span>
-                                        </td>
+                                        </TableCell>
 
-                                        <td className={`px-4 py-3 font-mono text-xs align-middle ${isRTL ? 'text-right' : 'text-left'}`}>
+                                        <TableCell className={`px-4 py-3 font-mono text-xs align-middle ${isRTL ? 'text-right' : 'text-left'}`}>
                                             <span dir="ltr">{record.national_id}</span>
-                                        </td>
+                                        </TableCell>
 
-                                        <td className="px-4 py-3 text-sm text-muted-foreground tabular-nums align-middle">
+                                        <TableCell className="px-4 py-3 text-sm text-muted-foreground tabular-nums align-middle">
                                             {new Date(record.created_at).toLocaleDateString(locale)}
-                                        </td>
+                                        </TableCell>
 
                                         {/* Member type badge */}
-                                        <td className="px-4 py-3 text-center align-middle">
+                                        <TableCell className="px-4 py-3 text-center align-middle">
                                             {isTeamMember ? (
                                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800">
                                                     <Award className="w-3 h-3" />
@@ -418,20 +419,20 @@ export default function RegistrationManagementPage() {
                                                     {t('memberTypes.member')}
                                                 </span>
                                             )}
-                                        </td>
+                                        </TableCell>
 
                                         {/* Status badge */}
-                                        <td className="px-4 py-3 text-center align-middle">
+                                        <TableCell className="px-4 py-3 text-center align-middle">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${isActive
                                                 ? 'bg-emerald-100 text-emerald-700'
                                                 : 'bg-amber-100 text-amber-800'
                                                 }`}>
                                                 {isActive ? t('status.active') : t('status.pending')}
                                             </span>
-                                        </td>
+                                        </TableCell>
 
                                         {/* Actions */}
-                                        <td className="px-4 py-3 align-middle">
+                                        <TableCell className="px-4 py-3 align-middle">
                                             <div className="flex items-center justify-center gap-1.5">
                                                 <RoleGuard privilege="VIEW_MEMBERS">
                                                     <Button
@@ -471,12 +472,12 @@ export default function RegistrationManagementPage() {
                                                     {t('actions.print')}
                                                 </Button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 );
                             })}
-                        </tbody>
-                    </table>
+                        </TableBody>
+                    </Table>
                 )}
             </div>
 

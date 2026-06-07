@@ -4,6 +4,7 @@ import api from "../services/axios";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Input } from "../components/StaffPagesComponents/ui/input";
 import { Badge } from "../components/StaffPagesComponents/ui/badge";
+import i18n from "../i18n";
 import { Label } from "../components/StaffPagesComponents/ui/label";
 import {
     Table,
@@ -217,7 +218,7 @@ export default function StaffListPage() {
     const staffTypeLabelById = useMemo(() => {
         const map = new Map<number, string>();
         staffTypes.forEach((t) => {
-            map.set(t.id, t.name_ar || t.title_ar || t.name_en || t.title_en || `#${t.id}`);
+            map.set(t.id, i18n.language === 'ar' ? (t.name_ar || t.title_ar || t.name_en || t.title_en || `#${t.id}`) : (t.name_en || t.title_en || t.name_ar || t.title_ar || `#${t.id}`));
         });
         return map;
     }, [staffTypes]);
@@ -622,7 +623,7 @@ export default function StaffListPage() {
                                                         className="inline-flex items-center gap-1.5 rounded-lg border border-primary/25 bg-primary/8 text-primary px-3 py-1.5 text-xs font-semibold"
                                                     >
                                                         <Package className="h-3 w-3" />
-                                                        {pkg.name_ar || pkg.name_en || pkg.code}
+                                                        {i18n.language === 'ar' ? (pkg.name_ar || pkg.name_en || pkg.code) : (pkg.name_en || pkg.name_ar || pkg.code)}
                                                         <span className="text-[10px] text-muted-foreground font-mono bg-muted px-1 py-0.5 rounded mr-0.5">
                                                             {pkg.code}
                                                         </span>

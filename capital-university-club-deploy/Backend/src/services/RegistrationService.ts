@@ -817,6 +817,60 @@ export class RegistrationService {
             }
         });
     }
+    /**
+     * Rollback a partially-created registration.
+     * Deletes the account identified by account_id and all related records
+     * (members / team_members and their children) atomically inside a transaction.
+     *
+     * Called by DELETE /register/rollback/:account_id whenever any step after
+     * /register/basic fails on the frontend, so no orphaned rows are left in the DB.
+     */
+    static async rollbackRegistration(account_id: number): Promise<{ deleted: boolean }> {
+        const accountRepository = AppDataSource.getRepository(Account);
+        const memberRepository = AppDataSource.getRepository(Member);
+        const teamMemberRepository = AppDataSource.getRepository(TeamMember);
+
+        return await AppDataSource.manager.transaction(async (em) => {
+            // Only allow rollback of accounts that are still in 'pending' status
+            // (i.e. registration was never completed / approved).
+            const account = await em.findOne(Account, { where: { id: account_id } });
+
+            if (!account) {
+                return { deleted: false };
+            }
+
+            if (account.status !== 'pending') {
+                throw new Error('Cannot rollback a registration that has already been completed or approved.');
+            }
+
+            // Delete related member record (FK: members.account_id → accounts.id)
+            const member = await memberRepository.findOne({ where: { account_id } });
+            if (member) {
+                // Delete child records that don't have DB-level CASCADE
+                await em.query('DELETE FROM member_memberships WHERE member_id = $1', [member.id]);
+                await em.query('DELETE FROM employee_details WHERE member_id = $1', [member.id]);
+                await em.query('DELETE FROM retired_employee_details WHERE member_id = $1', [member.id]);
+                await em.query('DELETE FROM university_student_details WHERE member_id = $1', [member.id]);
+                await em.query('DELETE FROM outsider_details WHERE member_id = $1', [member.id]);
+                await em.query('DELETE FROM member_relationships WHERE member_id = $1 OR related_member_id = $1', [member.id]);
+                await em.remove(Member, member);
+            }
+
+            // Delete related team_member record (FK: team_members.account_id → accounts.id)
+            const teamMember = await teamMemberRepository.findOne({ where: { account_id } });
+            if (teamMember) {
+                await em.query('DELETE FROM team_member_team_subscriptions WHERE team_member_id = $1', [teamMember.id]);
+                await em.query('DELETE FROM team_member_teams WHERE team_member_id = $1', [teamMember.id]);
+                await em.remove(TeamMember, teamMember);
+            }
+
+            // Finally delete the account itself
+            await em.remove(Account, account);
+
+            console.log(`🗑️  Rolled back registration for account_id=${account_id}`);
+            return { deleted: true };
+        });
+    }
 }
 
 export default RegistrationService;

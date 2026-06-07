@@ -1,4 +1,5 @@
 import React from "react";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../StaffPagesComponents/ui/table";
 
 type AccessLog = {
   date: string;
@@ -74,24 +75,24 @@ const MembershipTab: React.FC = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse text-right">
-            <thead>
-              <tr className="bg-gray-100 text-gray-700 text-left">
-                <th className="p-3 font-semibold text-right">التاريخ والوقت</th>
-                <th className="p-3 font-semibold text-right">الموقع</th>
-                <th className="p-3 font-semibold text-right">نوع الدخول</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-100 text-gray-700 text-left">
+                <TableHead className="p-3 font-semibold text-right">التاريخ والوقت</TableHead>
+                <TableHead className="p-3 font-semibold text-right">الموقع</TableHead>
+                <TableHead className="p-3 font-semibold text-right">نوع الدخول</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {accessLogs.map((log, i) => (
-                <tr key={i} className="border-b hover:bg-gray-50 transition">
-                  <td className="p-3">{log.date}</td>
-                  <td className="p-3">{log.location}</td>
-                  <td className="p-3">{log.type}</td>
-                </tr>
+                <TableRow key={i} className="border-b hover:bg-gray-50 transition">
+                  <TableCell className="p-3">{log.date}</TableCell>
+                  <TableCell className="p-3">{log.location}</TableCell>
+                  <TableCell className="p-3">{log.type}</TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
     </div>

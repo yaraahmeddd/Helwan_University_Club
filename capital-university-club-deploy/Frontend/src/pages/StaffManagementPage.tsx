@@ -19,6 +19,8 @@ import {
 import { RoleGuard } from "../components/StaffPagesComponents/RoleGuard";
 import { useNavigate } from "react-router-dom";
 import { StaffService } from "../services/staffService";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
+import i18n from "../i18n";
 
 const PAGE_SIZE = 12;
 
@@ -381,7 +383,7 @@ function DetailPanel({ row, details, privileges, loading, roleName, onDelete, st
                                     <div className="flex flex-wrap gap-1.5">
                                         {details.assigned_packages?.map((pkg) => (
                                             <span key={pkg.id} className="inline-flex items-center gap-1 rounded-lg border border-primary/20 bg-primary/10 text-primary px-3 py-1 text-xs font-semibold">
-                                                📦 {pkg.name_ar || pkg.name_en || pkg.code}
+                                                📦 {(i18n.language === 'ar' ? (pkg.name_ar || pkg.name_en) : (pkg.name_en || pkg.name_ar)) || pkg.code}
                                             </span>
                                         ))}
                                     </div>
@@ -740,23 +742,23 @@ export default function StaffManagementPage() {
 
                     {/* Native HTML Table – consistent with RegistrationManagementPage style */}
                     <div className="flex-1 overflow-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
-                        <table className="w-full text-sm">
-                            <thead className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
-                                <tr>
-                                    <th className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle w-10">#</th>
-                                    <th className="text-right pr-4 pl-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">الموظف</th>
-                                    <th className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">الوظيفة</th>
-                                    <th className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">بداية العمل</th>
-                                    <th className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">الحالة</th>
-                                    <th className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">الإجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border">
+                        <Table>
+                            <TableHeader className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
+                                <TableRow>
+                                    <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle w-10">#</TableHead>
+                                    <TableHead className="text-right pr-4 pl-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">الموظف</TableHead>
+                                    <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">الوظيفة</TableHead>
+                                    <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">بداية العمل</TableHead>
+                                    <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">الحالة</TableHead>
+                                    <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">الإجراءات</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody className="divide-y divide-border">
                                 {loading ? (
                                     Array.from({ length: 8 }).map((_, i) => (
-                                        <tr key={i} className="animate-pulse">
-                                            <td className="px-4 py-3"><div className="h-3 w-5 bg-muted rounded" /></td>
-                                            <td className="px-4 py-3">
+                                        <TableRow key={i} className="animate-pulse">
+                                            <TableCell className="px-4 py-3"><div className="h-3 w-5 bg-muted rounded" /></TableCell>
+                                            <TableCell className="px-4 py-3">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-9 h-9 rounded-full bg-muted shrink-0" />
                                                     <div className="space-y-1.5">
@@ -764,37 +766,37 @@ export default function StaffManagementPage() {
                                                         <div className="h-2.5 w-20 bg-muted rounded" />
                                                     </div>
                                                 </div>
-                                            </td>
-                                            <td className="px-4 py-3"><div className="h-3 w-24 bg-muted rounded" /></td>
-                                            <td className="px-4 py-3"><div className="h-3 w-20 bg-muted rounded" /></td>
-                                            <td className="px-4 py-3 text-center"><div className="h-5 w-12 bg-muted rounded-full mx-auto" /></td>
-                                            <td className="px-4 py-3 text-center"><div className="h-7 w-20 bg-muted rounded mx-auto" /></td>
-                                        </tr>
+                                            </TableCell>
+                                            <TableCell className="px-4 py-3"><div className="h-3 w-24 bg-muted rounded" /></TableCell>
+                                            <TableCell className="px-4 py-3"><div className="h-3 w-20 bg-muted rounded" /></TableCell>
+                                            <TableCell className="px-4 py-3 text-center"><div className="h-5 w-12 bg-muted rounded-full mx-auto" /></TableCell>
+                                            <TableCell className="px-4 py-3 text-center"><div className="h-7 w-20 bg-muted rounded mx-auto" /></TableCell>
+                                        </TableRow>
                                     ))
                                 ) : filteredRows.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={6} className="text-center py-16 text-muted-foreground text-sm">
+                                    <TableRow>
+                                        <TableCell colSpan={6} className="text-center py-16 text-muted-foreground text-sm">
                                             {search ? "لا توجد نتائج للبحث" : "لا يوجد موظفون مسجلون"}
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ) : (
                                     pagedRows.map((row, idx) => {
                                         const color = getColor(row.id);
                                         const nameAr = [row.firstNameAr, row.lastNameAr].filter(Boolean).join(" ");
                                         const nameEn = [row.firstNameEn, row.lastNameEn].filter(Boolean).join(" ");
                                         return (
-                                            <tr
+                                            <TableRow
                                                 key={row.id}
                                                 className="transition-colors hover:bg-muted/40 cursor-pointer"
                                                 onClick={() => { void openDetail(row); }}
                                             >
                                                 {/* # */}
-                                                <td className="px-4 py-3 text-muted-foreground font-mono text-xs align-middle">
+                                                <TableCell className="px-4 py-3 text-muted-foreground font-mono text-xs align-middle">
                                                     {(page - 1) * 12 + idx + 1}
-                                                </td>
+                                                </TableCell>
 
                                                 {/* Employee */}
-                                                <td className="px-4 py-3 align-middle">
+                                                <TableCell className="px-4 py-3 align-middle">
                                                     <div className="flex items-center gap-3">
                                                         <div
                                                             className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
@@ -809,25 +811,25 @@ export default function StaffManagementPage() {
                                                             )}
                                                         </div>
                                                     </div>
-                                                </td>
+                                                </TableCell>
 
                                                 {/* Role */}
-                                                <td className="px-4 py-3 text-sm text-muted-foreground align-middle max-w-[180px]">
+                                                <TableCell className="px-4 py-3 text-sm text-muted-foreground align-middle max-w-[180px]">
                                                     <span className="truncate block">{roleOf(row)}</span>
-                                                </td>
+                                                </TableCell>
 
                                                 {/* Start date */}
-                                                <td className="px-4 py-3 text-sm tabular-nums align-middle">
+                                                <TableCell className="px-4 py-3 text-sm tabular-nums align-middle">
                                                     {formatDate(row.employmentStartDate)}
-                                                </td>
+                                                </TableCell>
 
                                                 {/* Status */}
-                                                <td className="px-4 py-3 text-center align-middle">
+                                                <TableCell className="px-4 py-3 text-center align-middle">
                                                     <StatusBadge status={row.status} row={row} />
-                                                </td>
+                                                </TableCell>
 
                                                 {/* Actions */}
-                                                <td className="px-4 py-3 align-middle" onClick={(e) => e.stopPropagation()}>
+                                                <TableCell className="px-4 py-3 align-middle" onClick={(e) => e.stopPropagation()}>
                                                     <div className="flex items-center justify-center gap-1">
                                                         <button
                                                             title="عرض"
@@ -860,13 +862,13 @@ export default function StaffManagementPage() {
                                                             </button>
                                                         </RoleGuard>
                                                     </div>
-                                                </td>
-                                            </tr>
+                                                </TableCell>
+                                            </TableRow>
                                         );
                                     })
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
 
 

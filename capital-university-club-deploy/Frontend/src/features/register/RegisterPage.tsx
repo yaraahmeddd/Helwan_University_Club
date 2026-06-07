@@ -406,114 +406,130 @@ export const RegisterPage = () => {
 
             // Extract the correct ID based on role (member_id for members, team_member_id for team members)
             const memberId = basicRes.data.member_id || basicRes.data.team_member_id;
+            const accountId: number = basicRes.data.account_id; // ← stored for rollback
             const role = basicRes.data.role;
 
             if (!memberId) {
+                // Account was created but no member record — rollback immediately
+                if (accountId) await AuthService.rollbackRegistration(accountId);
                 throw new Error('No valid ID returned from registration');
             }
 
-            console.log('✅ Basic registration successful. Role:', role, 'ID:', memberId);
+            console.log('✅ Basic registration successful. Role:', role, 'ID:', memberId, 'Account:', accountId);
             // Keep member id for assignment/printing page
             localStorage.setItem('last_registered_member_id', String(memberId));
 
-            const determinationData = {
-                member_id: memberId,
-                is_student: data.category === 'student',
-                is_working: data.category === 'staff',
-                is_foreign: data.category === 'foreigner',
-                is_graduated: false,
-                has_relation: data.category === 'dependent',
-                is_retired: data.category === 'retired',
-                is_sports_player: data.memberRole === 'sports_player',
-                selected_sports: data.selectedSports,
-                relation_member_id:
-                    data.category === 'dependent' && 'relatedMemberId' in data
-                        ? Number(data.relatedMemberId)
-                        : undefined,
-            };
+            // ─────────────────────────────────────────────────────────────────────
+            // All steps from here on run inside a try/catch so that if ANY of them
+            // fail the partially-created account is deleted (rollback) before the
+            // error is shown to the user — keeping the DB clean.
+            // ─────────────────────────────────────────────────────────────────────
+            try {
+                const determinationData = {
+                    member_id: memberId,
+                    is_student: data.category === 'student',
+                    is_working: data.category === 'staff',
+                    is_foreign: data.category === 'foreigner',
+                    is_graduated: false,
+                    has_relation: data.category === 'dependent',
+                    is_retired: data.category === 'retired',
+                    is_sports_player: data.memberRole === 'sports_player',
+                    selected_sports: data.selectedSports,
+                    relation_member_id:
+                        data.category === 'dependent' && 'relatedMemberId' in data
+                            ? Number(data.relatedMemberId)
+                            : undefined,
+                };
 
-            const determineRes = await AuthService.determineMembership(determinationData);
-            console.log('✅ Membership determination successful:', determineRes.data);
+                const determineRes = await AuthService.determineMembership(determinationData);
+                console.log('✅ Membership determination successful:', determineRes.data);
 
-            // ========================================================================
-            // TEAM MEMBER (Sports Player) Flow
-            // ========================================================================
-            if (data.memberRole === 'sports_player') {
-                console.log('🏃 Processing team member registration...');
+                // ========================================================================
+                // TEAM MEMBER (Sports Player) Flow
+                // ========================================================================
+                if (data.memberRole === 'sports_player') {
+                    console.log('🏃 Processing team member registration...');
 
-                // Step 1: Submit team member details (photos and address)
-                const teamMemberFormData = new FormData();
-                teamMemberFormData.append('member_id', String(memberId));
+                    // Step 1: Submit team member details (photos and address)
+                    const teamMemberFormData = new FormData();
+                    teamMemberFormData.append('member_id', String(memberId));
 
-                if (data.address) {
-                    teamMemberFormData.append('address', data.address);
+                    if (data.address) {
+                        teamMemberFormData.append('address', data.address);
+                    }
+
+                    // Add files
+                    if (files.photo) {
+                        teamMemberFormData.append('personal_photo', files.photo);
+                    }
+                    if (files.medical) {
+                        teamMemberFormData.append('medical_report', files.medical);
+                    }
+                    // Step4 files use id_front/id_back keys; keep fallback for legacy keys.
+                    const idFrontFile = files.id_front || files.national_id_front;
+                    const idBackFile = files.id_back || files.national_id_back;
+                    if (idFrontFile) {
+                        teamMemberFormData.append('national_id_front', idFrontFile);
+                    }
+                    if (idBackFile) {
+                        teamMemberFormData.append('national_id_back', idBackFile);
+                    }
+                    if (files.proof) {
+                        teamMemberFormData.append('proof', files.proof);
+                    }
+
+                    await AuthService.submitTeamMemberDetails(teamMemberFormData);
+                    console.log('✅ Team member details submitted successfully');
+
+                    // Step 2: Select teams (map sport IDs to team names)
+                    const teamNames = data.selectedSports
+                        .map(sportId => {
+                            const sport = availableSportsList.find(s => s.id.toString() === sportId);
+                            return sport ? sport.name_en : null;
+                        })
+                        .filter((name): name is string => name !== null); // Type-safe filter
+
+                    if (teamNames.length > 0) {
+                        await AuthService.selectTeamMemberTeams({
+                            member_id: memberId,
+                            teams: teamNames,
+                        });
+                        console.log('✅ Team selection submitted successfully:', teamNames);
+                    }
+                }
+                // ========================================================================
+                // SOCIAL MEMBER Flow (Original)
+                // ========================================================================
+                else {
+                    const { endpoint, formData } = prepareSubmissionData(data, memberId, files);
+
+                    console.log('📦 Submission Strategy:', { category: data.category, endpoint });
+                    debugFormData(formData);
+
+                    await AuthService.submitDetailedInfo(endpoint, formData);
+                    console.log('✅ Detailed information submitted successfully');
                 }
 
-                // Add files
-                if (files.photo) {
-                    teamMemberFormData.append('personal_photo', files.photo);
-                }
-                if (files.medical) {
-                    teamMemberFormData.append('medical_report', files.medical);
-                }
-                // Step4 files use id_front/id_back keys; keep fallback for legacy keys.
-                const idFrontFile = files.id_front || files.national_id_front;
-                const idBackFile = files.id_back || files.national_id_back;
-                if (idFrontFile) {
-                    teamMemberFormData.append('national_id_front', idFrontFile);
-                }
-                if (idBackFile) {
-                    teamMemberFormData.append('national_id_back', idBackFile);
-                }
-                if (files.proof) {
-                    teamMemberFormData.append('proof', files.proof);
-                }
+                await AuthService.completeRegistration({
+                    member_id: memberId,
+                    membership_plan_code: determineRes.data?.next_step || 'FULL_ACCESS',
+                });
 
-                await AuthService.submitTeamMemberDetails(teamMemberFormData);
-                console.log('✅ Team member details submitted successfully');
+                console.log('✅ Registration completed successfully');
+                showToast('تم إرسال طلب العضوية بنجاح! سيتم مراجعة البيانات.', 'success');
 
-                // Step 2: Select teams (map sport IDs to team names)
-                const teamNames = data.selectedSports
-                    .map(sportId => {
-                        const sport = availableSportsList.find(s => s.id.toString() === sportId);
-                        return sport ? sport.name_en : null;
-                    })
-                    .filter((name): name is string => name !== null); // Type-safe filter
+                // Redirect to assignment page after a short delay
+                setTimeout(() => {
+                    window.location.href = '/assignment';
+                }, 1500);
 
-                if (teamNames.length > 0) {
-                    await AuthService.selectTeamMemberTeams({
-                        member_id: memberId,
-                        teams: teamNames,
-                    });
-                    console.log('✅ Team selection submitted successfully:', teamNames);
-                }
+            } catch (postBasicError: unknown) {
+                // ── ROLLBACK: remove the account + member that was already saved ──
+                console.error('❌ Post-basic step failed — rolling back account:', accountId, postBasicError);
+                await AuthService.rollbackRegistration(accountId);
+                // Re-throw so the outer catch shows the error to the user
+                throw postBasicError;
             }
-            // ========================================================================
-            // SOCIAL MEMBER Flow (Original)
-            // ========================================================================
-            else {
-                const { endpoint, formData } = prepareSubmissionData(data, memberId, files);
-
-                console.log('📦 Submission Strategy:', { category: data.category, endpoint });
-                debugFormData(formData);
-
-                await AuthService.submitDetailedInfo(endpoint, formData);
-                console.log('✅ Detailed information submitted successfully');
-            }
-
-            await AuthService.completeRegistration({
-                member_id: memberId,
-                membership_plan_code: determineRes.data?.next_step || 'FULL_ACCESS',
-            });
-
-            console.log('✅ Registration completed successfully');
-
-            showToast('تم إرسال طلب العضوية بنجاح! سيتم مراجعة البيانات.', 'success');
-
-            // Redirect to assignment page after a short delay
-            setTimeout(() => {
-                window.location.href = '/assignment';
-            }, 1500);
 
         } catch (error: unknown) {
             console.error('❌ Registration Error:', error);

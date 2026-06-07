@@ -9,6 +9,7 @@ import { Input } from "../components/StaffPagesComponents/ui/input";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Badge } from "../components/StaffPagesComponents/ui/badge";
 import { useToast } from "../hooks/use-toast";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -474,24 +475,24 @@ export default function RevokePrivilegesPage() {
                             <p className="text-sm">{search || roleFilter ? "لا توجد نتائج مطابقة" : "لم يتم العثور على موظفين"}</p>
                         </div>
                     ) : (
-                        <table className="w-full text-sm">
-                            <thead className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
-                                <tr>
-                                    <th className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground w-10">#</th>
-                                    <th className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground">الموظف</th>
-                                    <th className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground">الرقم القومي</th>
-                                    <th className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground">الوظيفة</th>
-                                    <th className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground">بداية العمل</th>
-                                    <th className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground">الإجراء</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border">
+                        <Table>
+                            <TableHeader className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
+                                <TableRow>
+                                    <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground w-10">#</TableHead>
+                                    <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground">الموظف</TableHead>
+                                    <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground">الرقم القومي</TableHead>
+                                    <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground">الوظيفة</TableHead>
+                                    <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground">بداية العمل</TableHead>
+                                    <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground">الإجراء</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody className="divide-y divide-border">
                                 {staffRows.map((staff, idx) => (
-                                    <tr key={staff.id} className="transition-colors hover:bg-muted/40">
-                                        <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
+                                    <TableRow key={staff.id} className="transition-colors hover:bg-muted/40">
+                                        <TableCell className="px-4 py-3 text-muted-foreground font-mono text-xs">
                                             {(currentPage - 1) * PAGE_SIZE + idx + 1}
-                                        </td>
-                                        <td className="px-4 py-3">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3">
                                             <div className="flex items-center gap-3">
                                                 <div
                                                     className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
@@ -506,17 +507,17 @@ export default function RevokePrivilegesPage() {
                                                     )}
                                                 </div>
                                             </div>
-                                        </td>
-                                        <td className="px-4 py-3 font-mono text-xs">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 font-mono text-xs">
                                             <span dir="ltr">{staff.nationalId || "—"}</span>
-                                        </td>
-                                        <td className="px-4 py-3 text-center">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-center">
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-700">
                                                 {ROLE_LABELS[staff.role] ?? staff.role}
                                             </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-xs tabular-nums">{formatDate(staff.startDate)}</td>
-                                        <td className="px-4 py-3 text-center">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-xs tabular-nums">{formatDate(staff.startDate)}</TableCell>
+                                        <TableCell className="px-4 py-3 text-center">
                                             <Button
                                                 size="sm"
                                                 variant="outline"
@@ -526,11 +527,11 @@ export default function RevokePrivilegesPage() {
                                                 سحب الصلاحيات
                                                 <ArrowRight className="w-3.5 h-3.5" />
                                             </Button>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ))}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     )}
                 </div>
             </div>

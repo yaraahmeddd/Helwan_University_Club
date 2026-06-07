@@ -1,4 +1,5 @@
 import React from "react";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../StaffPagesComponents/ui/table";
 
 type Activity = {
   name: string;
@@ -96,25 +97,25 @@ const ActivitiesTab: React.FC = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse text-right">
-            <thead>
-              <tr className="bg-gray-50 text-gray-700">
-                <th className="p-3 font-medium">النشاط</th>
-                <th className="p-3 font-medium">الجلسات المتبقية</th>
-                <th className="p-3 font-medium">تاريخ الانتهاء</th>
-                <th className="p-3 font-medium">الحالة</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-50 text-gray-700">
+                <TableHead className="p-3 font-medium">النشاط</TableHead>
+                <TableHead className="p-3 font-medium">الجلسات المتبقية</TableHead>
+                <TableHead className="p-3 font-medium">تاريخ الانتهاء</TableHead>
+                <TableHead className="p-3 font-medium">الحالة</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {subscriptions.map((sub, i) => (
-                <tr
+                <TableRow
                   key={i}
                   className="border-b hover:bg-gray-50 transition"
                 >
-                  <td className="p-3">{sub.activity}</td>
-                  <td className="p-3">{sub.remaining}</td>
-                  <td className="p-3">{sub.expiryDate}</td>
-                  <td className="p-3">
+                  <TableCell className="p-3">{sub.activity}</TableCell>
+                  <TableCell className="p-3">{sub.remaining}</TableCell>
+                  <TableCell className="p-3">{sub.expiryDate}</TableCell>
+                  <TableCell className="p-3">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${
                         sub.status === "Active"
@@ -124,11 +125,11 @@ const ActivitiesTab: React.FC = () => {
                     >
                       {getStatusLabel(sub.status)}
                     </span>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
     </div>

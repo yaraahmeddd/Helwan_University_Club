@@ -1,6 +1,8 @@
 import React from "react";
-import { UserX } from "lucide-react";
+import { UserX, Loader2 } from "lucide-react";
 import { cn } from "../../../lib/utils";
+import { useTranslation } from "react-i18next";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./table";
 
 export interface ColumnDef<T> {
     header: React.ReactNode | string;
@@ -29,29 +31,37 @@ interface DataTableProps<T> {
 }
 
 export function DataTable<T>({ data, columns, isLoading, emptyMessage }: DataTableProps<T>) {
+    const { i18n } = useTranslation();
+    const isRTL = i18n.language === 'ar';
+
     return (
-        <div className="flex-1 overflow-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
+        <div 
+            className="flex-1 overflow-auto [&::-webkit-scrollbar]:hidden [&_td_button]:h-8 [&_td_button]:w-8 [&_td_button]:inline-flex [&_td_button]:items-center [&_td_button]:justify-center [&_td_button]:rounded-md [&_td_button]:transition-colors hover:[&_td_button]:bg-muted [&_td_button]:border-transparent [&_td_button]:shadow-none [&_td_button]:text-muted-foreground hover:[&_td_button]:text-foreground [&_td_button]:bg-transparent" 
+            style={{ scrollbarWidth: 'none' }}
+        >
             {isLoading ? (
                 <div className="py-20 text-center text-muted-foreground">
-                    <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-3" />
-                    <p className="text-sm">جارٍ التحميل...</p>
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-primary" />
+                    <p className="text-sm">{isRTL ? 'جارٍ التحميل...' : 'Loading...'}</p>
                 </div>
             ) : data.length === 0 ? (
                 <div className="py-20 text-center text-muted-foreground">
                     <div className="rounded-full bg-muted/30 p-6 mb-4 w-fit mx-auto">
                         <UserX className="h-12 w-12 text-muted-foreground/50" />
                     </div>
-                    <h3 className="text-base font-semibold text-foreground mb-1">لا يوجد بيانات حالياً</h3>
+                    <h3 className="text-base font-semibold text-foreground mb-1">
+                        {isRTL ? 'لا يوجد بيانات حالياً' : 'No Data Available'}
+                    </h3>
                     <p className="text-sm">
-                        {emptyMessage || "لم يتم العثور على بيانات"}
+                        {emptyMessage || (isRTL ? 'لم يتم العثور على بيانات' : 'No data found')}
                     </p>
                 </div>
             ) : (
-                <table className="w-full text-sm">
-                    <thead className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
-                        <tr>
+                <Table>
+                    <TableHeader className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
+                        <TableRow>
                             {columns.map((col, idx) => (
-                                <th
+                                <TableHead
                                     key={idx}
                                     className={cn(
                                         "px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle",
@@ -59,18 +69,18 @@ export function DataTable<T>({ data, columns, isLoading, emptyMessage }: DataTab
                                     )}
                                 >
                                     {col.header}
-                                </th>
+                                </TableHead>
                             ))}
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody className="divide-y divide-border">
                         {data.map((row, rowIndex) => (
-                            <tr
+                            <TableRow
                                 key={rowIndex}
                                 className="transition-colors hover:bg-muted/40"
                             >
                                 {columns.map((col, colIndex) => (
-                                    <td
+                                    <TableCell
                                         key={colIndex}
                                         className={cn(
                                             "px-4 py-3 align-middle",
@@ -82,12 +92,12 @@ export function DataTable<T>({ data, columns, isLoading, emptyMessage }: DataTab
                                             : col.accessorKey
                                                 ? (row as any)[col.accessorKey]
                                                 : null}
-                                    </td>
+                                    </TableCell>
                                 ))}
-                            </tr>
+                            </TableRow>
                         ))}
-                    </tbody>
-                </table>
+                    </TableBody>
+                </Table>
             )}
         </div>
     );

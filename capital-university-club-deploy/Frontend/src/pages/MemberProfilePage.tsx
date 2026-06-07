@@ -687,7 +687,7 @@ export default function MemberProfilePage() {
                                     )}
 
                                     {editing && (
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <div className="absolute inset-0 bg-black/40  transition-opacity flex items-center justify-center">
                                             <label className="cursor-pointer bg-white text-gray-800 px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg flex items-center gap-1.5 hover:bg-gray-100">
                                                 <Edit3 size={12} />
                                                 تغيير

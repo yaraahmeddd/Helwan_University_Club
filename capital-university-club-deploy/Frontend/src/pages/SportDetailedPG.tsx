@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../services/axios';
+import i18n from "../i18n";
 
 interface Sport {
     id: string;
@@ -196,7 +197,7 @@ const SportDetailedPG: React.FC = () => {
         () =>
             branchSports.map((sport) => ({
                 value: resolveSportKey(sport),
-                labelAr: sport.name_ar || sport.name_en || t("sports.default_sport", "رياضة"),
+                labelAr: (i18n.language === 'ar' ? (sport.name_ar || sport.name_en) : (sport.name_en || sport.name_ar)) || t("sports.default_sport", "رياضة"),
                 labelEn: sport.name_en || sport.name_ar || t("sports.default_sport_en", "Sport"),
             })),
         [branchSports, t]
@@ -352,7 +353,7 @@ const SportDetailedPG: React.FC = () => {
                                     ) : (
                                         branches.map((branch) => (
                                             <option key={branch.id} value={String(branch.id)}>
-                                                {isArabic ? (branch.name_ar || branch.name_en || `#${branch.id}`) : (branch.name_en || branch.name_ar || `#${branch.id}`)}
+                                                {isArabic ? ((i18n.language === 'ar' ? (branch.name_ar || branch.name_en) : (branch.name_en || branch.name_ar)) || `#${branch.id}`) : (branch.name_en || branch.name_ar || `#${branch.id}`)}
                                             </option>
                                         ))
                                     )}
@@ -557,7 +558,7 @@ const SportDetailedPG: React.FC = () => {
                                     >
                                         {branches.map((branch) => (
                                             <option key={branch.id} value={String(branch.id)}>
-                                                {isArabic ? (branch.name_ar || branch.name_en || `#${branch.id}`) : (branch.name_en || branch.name_ar || `#${branch.id}`)}
+                                                {isArabic ? ((i18n.language === 'ar' ? (branch.name_ar || branch.name_en) : (branch.name_en || branch.name_ar)) || `#${branch.id}`) : (branch.name_en || branch.name_ar || `#${branch.id}`)}
                                             </option>
                                         ))}
                                     </select>

@@ -20,6 +20,7 @@ import {
 } from "../components/StaffPagesComponents/ui/select";
 import api from "../services/api";
 import { useToast } from "../hooks/use-toast";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 
 // Types
 
@@ -706,31 +707,31 @@ export default function SportsMembersPage() {
             </p>
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
-              <tr>
-                <th className={`${isRTL ? "text-right" : "text-left"} px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle w-10`}>#</th>
-                <th className={`${isRTL ? "text-right" : "text-left"} px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle`}>{t("table.name")}</th>
-                <th className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">{t("table.status")}</th>
-                <th className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">{t("table.sports")}</th>
-                <th className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">{t("table.actions")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
+          <Table>
+            <TableHeader className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
+              <TableRow>
+                <TableHead className={`${isRTL ? "text-right" : "text-left"} px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle w-10`}>#</TableHead>
+                <TableHead className={`${isRTL ? "text-right" : "text-left"} px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle`}>{t("table.name")}</TableHead>
+                <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">{t("table.status")}</TableHead>
+                <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">{t("table.sports")}</TableHead>
+                <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">{t("table.actions")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-border">
               {members.map((member, idx) => {
                 const secondaryName = getMemberSecondaryName(member, language);
                 return (
-                  <tr key={member.id} className="transition-colors hover:bg-muted/40">
-                    <td className="px-4 py-3 text-sm text-muted-foreground font-mono align-middle">
+                  <TableRow key={member.id} className="transition-colors hover:bg-muted/40">
+                    <TableCell className="px-4 py-3 text-sm text-muted-foreground font-mono align-middle">
                       {(currentPage - 1) * PAGE_SIZE + idx + 1}
-                    </td>
-                    <td className="px-4 py-3 align-middle">
+                    </TableCell>
+                    <TableCell className="px-4 py-3 align-middle">
                       <p className="font-semibold leading-tight">{getMemberDisplayName(member, language)}</p>
                       {secondaryName && (
                         <p className="text-[11px] text-muted-foreground/70 italic tracking-wide">{secondaryName}</p>
                       )}
-                    </td>
-                    <td className="px-4 py-3 text-center align-middle">
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-center align-middle">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${isActiveStatus(member.status)
                         ? "bg-emerald-100 text-emerald-700"
                         : "bg-amber-100 text-amber-800"
@@ -738,8 +739,8 @@ export default function SportsMembersPage() {
                       >
                         {isActiveStatus(member.status) ? t("status.active") : member.status}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-center align-middle">
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-center align-middle">
                       <span className={`inline-flex items-center gap-1 text-xs font-medium ${member.sports.length >= MAX_SPORTS_PER_MEMBER
                         ? "text-amber-600 font-semibold"
                         : "text-muted-foreground"
@@ -748,8 +749,8 @@ export default function SportsMembersPage() {
                         <Trophy className="w-3 h-3" />
                         {member.sports.length} / {MAX_SPORTS_PER_MEMBER}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 align-middle text-center">
+                    </TableCell>
+                    <TableCell className="px-4 py-3 align-middle text-center">
                       <div className="flex items-center justify-center gap-2">
                         <Button
                           size="sm"
@@ -768,12 +769,12 @@ export default function SportsMembersPage() {
                           {t("actions.assignTeam")}
                         </Button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         )}
       </div>
 

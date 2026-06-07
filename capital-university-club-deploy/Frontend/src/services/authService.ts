@@ -45,6 +45,22 @@ export const AuthService = {
     },
 
     /**
+     * Rollback: Delete a partially-created registration.
+     * Must be called whenever any step after registerBasic fails,
+     * so no orphaned account / member rows are left in the database.
+     */
+    rollbackRegistration: async (account_id: number): Promise<void> => {
+        try {
+            await api.delete(`/register/rollback/${account_id}`);
+            console.log(`🗑️  Registration rolled back for account_id=${account_id}`);
+        } catch (rollbackErr) {
+            // Log but never throw — the rollback is best-effort.
+            // The original error should still reach the user.
+            console.error('⚠️  Rollback request failed (account may remain in DB):', rollbackErr);
+        }
+    },
+
+    /**
      * Get all faculties from database
      */
     getFaculties: async () => {

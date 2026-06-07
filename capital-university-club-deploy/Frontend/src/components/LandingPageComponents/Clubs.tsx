@@ -4,6 +4,7 @@ import api from '../../services/axios';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination } from 'swiper/modules';
 import type { Swiper as SwiperType } from 'swiper';
+import i18n from "../../i18n";
 import 'swiper/css';
 import 'swiper/css/pagination';
 
@@ -51,7 +52,7 @@ const AutoBranchImages: React.FC<{ images: string[]; alt: string; intervalMs?: n
   if (!images.length) return null;
 
   return (
-    <div className="relative w-full max-w-sm aspect-square drop-shadow-2xl">
+    <div className="relative w-full max-w-md lg:max-w-lg lg:scale-[1.15] z-10 aspect-square drop-shadow-2xl">
       {images.map((src, i) => (
         <img
           key={src + i}
@@ -135,6 +136,27 @@ const Clubs: React.FC<ClubsProps> = ({ onNavigate }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [selectedService, setSelectedService] = useState<string>('social');
+  const [selectedAcademy, setSelectedAcademy] = useState<string>('football');
+
+  const academiesData = {
+    football: {
+      players: 554, coaches: 16, courts: 3,
+      desc: "الأكاديمية هي واحدة من أكبر أكاديميات كرة القدم في المنطقة. يبدأ التسجيل من 4 سنوات لكلا الجنسين. يتم تقييم اللاعبين على أساس ربع سنوي."
+    },
+    tennis: {
+      players: 120, coaches: 5, courts: 6,
+      desc: "توفر أكاديمية التنس بيئة تدريبية ممتازة لجميع الأعمار والمستويات. التركيز على اللياقة البدنية والتقنيات الأساسية والمتقدمة للعبة."
+    },
+    swimming: {
+      players: 340, coaches: 12, courts: 2,
+      desc: "تمتلك أكاديمية السباحة حمامات مجهزة بالكامل. التدريب متاح من عمر 3 سنوات وحتى مستويات المنافسة العالية."
+    },
+    basketball: {
+      players: 210, coaches: 8, courts: 4,
+      desc: "تركز أكاديمية كرة السلة على بناء روح الفريق والمهارات الأساسية والمتقدمة. لدينا فرق تشارك في البطولات المختلفة."
+    }
+  };
+  const currentAcademy = academiesData[selectedAcademy as keyof typeof academiesData] || academiesData.football;
 
   const currentClub =
     clubsData.find(club => club.id === selectedClub) ||
@@ -223,18 +245,36 @@ const Clubs: React.FC<ClubsProps> = ({ onNavigate }) => {
       try {
         const response = await api.get('/register/branches');
         const raw = Array.isArray(response?.data?.branches) ? response.data.branches : [];
-        const mapped: ClubData[] = raw.map((branch: any, idx: number) => ({
-          id: String(branch.id),
-          code: branch.code ? String(branch.code).toUpperCase() : undefined,
-          nameAr: String(branch.name_ar || branch.name_en || `#${branch.id}`),
-          nameEn: String(branch.name_en || branch.name_ar || `#${branch.id}`),
-          locationAr: String(branch.location_ar || branch.location_en || ""),
-          locationEn: String(branch.location_en || branch.location_ar || ""),
-          courts: idx === 0 ? 26 : 20,
-          pools: idx === 0 ? 3 : 2,
-          restaurants: idx === 0 ? 2 : 1,
-          kidsArea: idx === 0 ? 2 : 1,
-        }));
+        const mapped: ClubData[] = raw.map((branch: any, idx: number) => {
+          const code = branch.code ? String(branch.code).toUpperCase() : "";
+          
+          let courts = 10, pools = 1, restaurants = 1, kidsArea = 1;
+
+          if (idx === 0) {
+            courts = 26; pools = 3; restaurants = 2; kidsArea = 2;
+          } else if (idx === 1) {
+            courts = 18; pools = 2; restaurants = 2; kidsArea = 1;
+          } else if (idx === 2) {
+            courts = 12; pools = 1; restaurants = 1; kidsArea = 2;
+          } else if (idx === 3) {
+            courts = 8; pools = 1; restaurants = 1; kidsArea = 1;
+          } else {
+            courts = 14; pools = 2; restaurants = 1; kidsArea = 1;
+          }
+
+          return {
+            id: String(branch.id),
+            code: code || undefined,
+            nameAr: String((i18n.language === 'ar' ? (branch.name_ar || branch.name_en) : (branch.name_en || branch.name_ar)) || `#${branch.id}`),
+            nameEn: String(branch.name_en || branch.name_ar || `#${branch.id}`),
+            locationAr: String(branch.location_ar || branch.location_en || ""),
+            locationEn: String(branch.location_en || branch.location_ar || ""),
+            courts,
+            pools,
+            restaurants,
+            kidsArea,
+          };
+        });
 
         if (isMounted) {
           setClubsData(mapped);
@@ -369,73 +409,32 @@ const Clubs: React.FC<ClubsProps> = ({ onNavigate }) => {
       <section className="py-10 md:py-14 to-gray-800">
         <div className="container mx-auto px-4">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-20 items-center">
               {/* Left: Dropdown */}
               <div className="flex flex-col gap-6">
                 <div>
                   <label className="block text-[#0e1c38] font-bold mb-3 text-lg">{t("clubs.select_branch", "اختر الفرع")}</label>
-                  <select
-                    value={selectedClub}
-                    onChange={(e) => setSelectedClub(e.target.value)}
-                    className="w-full bg-transparent border-b-2 border-[#FDBF00] text-[#0e1c38] px-0 py-3 rounded-none font-bold text-lg appearance-none cursor-pointer focus:outline-none bg-no-repeat bg-right"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23FDBF00' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-                      paddingRight: '20px'
-                    }}
-                  >
-                    {clubsData.map((club) => (
-                      <option key={club.id} value={club.id} style={{ backgroundColor: '#0e1c38', color: 'white' }}>
-                        {isArabic ? (club.nameAr || club.nameEn) : (club.nameEn || club.nameAr)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {clubsData.length > 1 && (
-                  <div className="pt-1">
-                    <Swiper
-                      modules={[Pagination]}
-                      onSwiper={(swiper) => {
-                        branchSwiperRef.current = swiper;
-                      }}
-                      onSlideChange={(swiper) => {
-                        const club = clubsData[swiper.activeIndex];
-                        if (club && club.id !== selectedClub) {
-                          setSelectedClub(club.id);
-                        }
-                      }}
-                      spaceBetween={10}
-                      slidesPerView={1.25}
-                      breakpoints={{
-                        640: { slidesPerView: 1.8 },
-                        1024: { slidesPerView: 1.5 },
-                      }}
-                      pagination={{ clickable: true }}
-                      dir={isArabic ? 'rtl' : 'ltr'}
-                      className="pb-7"
-                    >
-                      {clubsData.map((club) => {
-                        const label = isArabic ? (club.nameAr || club.nameEn) : (club.nameEn || club.nameAr);
-                        const isSelected = club.id === selectedClub;
-                        return (
-                          <SwiperSlide key={club.id}>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedClub(club.id)}
-                              className={`w-full rounded-xl border px-4 py-3 text-sm font-bold transition-all ${
-                                isSelected
-                                  ? 'border-[#FDBF00] bg-[#FDBF00]/20 text-[#0e1c38]'
-                                  : 'border-[#c9d3e5] bg-white text-[#0e1c38] hover:border-[#FDBF00]'
-                              }`}
-                            >
-                              {label}
-                            </button>
-                          </SwiperSlide>
-                        );
-                      })}
-                    </Swiper>
+                  <div className="grid grid-cols-2 gap-3">
+                    {clubsData.map((club) => {
+                      const label = isArabic ? (club.nameAr || club.nameEn) : (club.nameEn || club.nameAr);
+                      const isSelected = club.id === selectedClub;
+                      return (
+                        <button
+                          key={club.id}
+                          type="button"
+                          onClick={() => setSelectedClub(club.id)}
+                          className={`w-full rounded-xl border-2 px-4 py-3 text-sm font-bold transition-all duration-300 flex items-center justify-center text-center min-h-[3rem] ${
+                            isSelected
+                              ? 'border-[#FDBF00] bg-[#FDBF00] text-[#0e1c38] shadow-md transform scale-[1.02]'
+                              : 'border-transparent bg-white text-[#0e1c38] shadow-sm hover:border-[#FDBF00] hover:shadow-md'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
                   </div>
-                )}
+                </div>
 
                 {/* Address — clickable, opens Google Maps with branch name */}
                 <div className="space-y-3 pt-4">
@@ -520,7 +519,10 @@ const Clubs: React.FC<ClubsProps> = ({ onNavigate }) => {
                 <div className="lg:col-span-1 space-y-8">
                   {/* Sport Dropdown */}
                   <div>
-                    <select className="w-full bg-[#0e1c38] border-b-2 border-[#FDBF00] text-white px-4 py-3 rounded-none font-bold text-lg appearance-none cursor-pointer focus:outline-none bg-no-repeat bg-right"
+                    <select 
+                      value={selectedAcademy}
+                      onChange={(e) => setSelectedAcademy(e.target.value)}
+                      className="w-full bg-[#0e1c38] border-b-2 border-[#FDBF00] text-white px-4 py-3 rounded-none font-bold text-lg appearance-none cursor-pointer focus:outline-none bg-no-repeat bg-right"
                       style={{
                         backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23FDBF00' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
                         paddingRight: '20px'
@@ -540,7 +542,7 @@ const Clubs: React.FC<ClubsProps> = ({ onNavigate }) => {
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                       </svg>
                       <div>
-                        <div className="text-4xl font-bold text-[#FDBF00]">554</div>
+                        <div className="text-4xl font-bold text-[#FDBF00]">{currentAcademy.players}</div>
                         <div className="text-white font-semibold">{t("clubs.players", "لاعبين")}</div>
                       </div>
                     </div>
@@ -550,7 +552,7 @@ const Clubs: React.FC<ClubsProps> = ({ onNavigate }) => {
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                       </svg>
                       <div>
-                        <div className="text-4xl font-bold text-[#FDBF00]">16</div>
+                        <div className="text-4xl font-bold text-[#FDBF00]">{currentAcademy.coaches}</div>
                         <div className="text-white font-semibold">{t("clubs.coaches", "مدربين")}</div>
                       </div>
                     </div>
@@ -560,7 +562,7 @@ const Clubs: React.FC<ClubsProps> = ({ onNavigate }) => {
                         <path d="M6 6h12v2H6zm0 5h12v2H6zm0 5h12v2H6z" />
                       </svg>
                       <div>
-                        <div className="text-4xl font-bold text-[#FDBF00]">3</div>
+                        <div className="text-4xl font-bold text-[#FDBF00]">{currentAcademy.courts}</div>
                         <div className="text-white font-semibold">{t("clubs.courts", "ملاعب")}</div>
                       </div>
                     </div>
@@ -568,7 +570,7 @@ const Clubs: React.FC<ClubsProps> = ({ onNavigate }) => {
 
                   {/* Description */}
                   <p className="text-white leading-relaxed text-base">
-                    {t("clubs.academy_desc", "الأكاديمية هي واحدة من أكبر أكاديميات كرة القدم في المنطقة. يبدأ التسجيل من 4 سنوات لكلا الجنسين. يتم تقييم اللاعبين على أساس ربع سنوي.")}
+                    {t(`clubs.academy_desc_${selectedAcademy}`, currentAcademy.desc)}
                   </p>
 
                   {/* Action Buttons */}

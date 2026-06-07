@@ -21,6 +21,7 @@ import { AuthService } from "../services/authService";
 import type { EnrolledSport } from "../features/dashboard/types";
 import { Card, Badge, StatChip, ProgressBar } from "../features/dashboard/DashboardComponents";
 import { useTranslation } from "react-i18next";
+import i18n from "../i18n";
 import {
     buildMonthEvents,
     getEffectiveEndDate,
@@ -216,7 +217,7 @@ export default function MemberSportsPage() {
                 date: (b.start_time || b.date || "").split('T')[0],
                 time: (b.start_time || "").split('T')[1]?.slice(0, 5) || b.time_from || "",
                 court: isRtl
-                    ? (b.field?.name_ar || b.field?.name_en || b.facility_name || "ملعب")
+                    ? ((i18n.language === 'ar' ? (b.field?.name_ar || b.field?.name_en) : (b.field?.name_en || b.field?.name_ar)) || b.facility_name || "ملعب")
                     : (b.field?.name_en || b.field?.name_ar || b.facility_name || "Court"),
                 isServer: true
             }));
@@ -454,7 +455,7 @@ export default function MemberSportsPage() {
                             : (firstSched?.days_en || firstSched?.days_ar || "Soon"),
                         nextTime: firstSched ? `${firstSched.start_time} - ${firstSched.end_time}` : "-",
                         court: isRtl
-                            ? (firstSched?.field?.name_ar || firstSched?.field?.name_en || "ملعب النادي")
+                            ? ((i18n.language === 'ar' ? (firstSched?.field?.name_ar || firstSched?.field?.name_en) : (firstSched?.field?.name_en || firstSched?.field?.name_ar)) || "ملعب النادي")
                             : (firstSched?.field?.name_en || firstSched?.field?.name_ar || "Club Court"),
                         attended: s.stats.attended,
                         absent: s.stats.absent,

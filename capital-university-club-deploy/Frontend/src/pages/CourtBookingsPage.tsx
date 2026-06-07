@@ -1761,7 +1761,7 @@ export default function CourtBookingsPage() {
                                                     tabIndex={0}
                                                     aria-label={t("grid.availableCellAria", { day: dayOfWeekLabel(day, language), time: formatClockTime(slot, language) })}
                                                 >
-                                                    <span className="text-[9px] text-primary/60 opacity-0 group-hover:opacity-100 transition-opacity select-none">
+                                                    <span className="text-[9px] text-primary/60  transition-opacity select-none">
                                                         {t("status.available")}
                                                     </span>
                                                 </div>

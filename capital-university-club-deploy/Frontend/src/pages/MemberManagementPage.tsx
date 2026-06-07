@@ -74,6 +74,7 @@ import {
     getDaysUntilRenewal,
 } from "../data/paymentsData";
 import { BACKEND_ORIGIN } from "../config/backend";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 
 
 
@@ -1074,7 +1075,7 @@ export default function MemberManagementPage() {
 
         memberTypeId: item.member_type_id,
 
-        memberTypeLabel: item.member_type?.name_ar || item.member_type?.name_en || `#${item.member_type_id}`,
+        memberTypeLabel: isRTL ? (item.member_type?.name_ar || item.member_type?.name_en || `#${item.member_type_id}`) : (item.member_type?.name_en || item.member_type?.name_ar || `#${item.member_type_id}`),
 
         memberTypeCode: item.member_type?.code ?? "",
 
@@ -2005,7 +2006,7 @@ export default function MemberManagementPage() {
 
     const Th = ({ field, children, center, className = "" }: { field?: SortField; children: React.ReactNode; center?: boolean; className?: string }) => (
 
-        <th
+        <TableHead
 
             onClick={() => field && handleSort(field)}
 
@@ -2025,7 +2026,7 @@ export default function MemberManagementPage() {
 
             </span>
 
-        </th>
+        </TableHead>
 
     );
 
@@ -2325,11 +2326,11 @@ export default function MemberManagementPage() {
 
                         <div className="flex-1 overflow-auto">
 
-                            <table className="w-full text-sm">
+                            <Table>
 
-                                <thead className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
+                                <TableHeader className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
 
-                                    <tr>
+                                    <TableRow>
                                         <Th field="name" className="w-[200px]">{t('table.colMember')}</Th>
                                         <Th field="memberType">{t('table.colType')}</Th>
                                         <Th>{t('table.colPhone')}</Th>
@@ -2337,19 +2338,19 @@ export default function MemberManagementPage() {
                                         <Th field="status" center>{t('table.colStatus')}</Th>
                                         <Th field="createdAt" center>{t('table.colRegistration')}</Th>
                                         <Th center className="w-[100px]">{t('table.colActions')}</Th>
-                                    </tr>
+                                    </TableRow>
 
-                                </thead>
+                                </TableHeader>
 
-                                <tbody className="divide-y divide-border">
+                                <TableBody className="divide-y divide-border">
 
                                     {fetching && allRows.length === 0 ? (
 
                                         Array.from({ length: 8 }).map((_, i) => (
 
-                                            <tr key={i} className="animate-pulse">
+                                            <TableRow key={i} className="animate-pulse">
 
-                                                <td className="px-4 py-3">
+                                                <TableCell className="px-4 py-3">
 
                                                     <div className="flex items-center gap-2.5">
 
@@ -2365,23 +2366,23 @@ export default function MemberManagementPage() {
 
                                                     </div>
 
-                                                </td>
+                                                </TableCell>
 
-                                                {[1, 2, 3, 4, 5, 6].map(j => <td key={j} className="px-4 py-3"><div className="h-2.5 w-12 bg-muted rounded mx-auto" /></td>)}
+                                                {[1, 2, 3, 4, 5, 6].map(j => <TableCell key={j} className="px-4 py-3"><div className="h-2.5 w-12 bg-muted rounded mx-auto" /></TableCell>)}
 
-                                            </tr>
+                                            </TableRow>
 
                                         ))
 
                                     ) : pageRows.length === 0 ? (
 
-                                        <tr>
+                                        <TableRow>
 
-                                            <td colSpan={7} className="text-center py-12 text-muted-foreground text-sm">
+                                            <TableCell colSpan={7} className="text-center py-12 text-muted-foreground text-sm">
                                                 {search ? t('table.noResults', { query: search }) : t('table.noMembers')}
-                                            </td>
+                                            </TableCell>
 
-                                        </tr>
+                                        </TableRow>
 
                                     ) : pageRows.map((row) => {
 
@@ -2391,7 +2392,7 @@ export default function MemberManagementPage() {
 
                                         return (
 
-                                            <tr
+                                            <TableRow
 
                                                 key={row.id}
 
@@ -2399,7 +2400,7 @@ export default function MemberManagementPage() {
 
                                             >
 
-                                                <td className="px-4 py-3 align-middle">
+                                                <TableCell className="px-4 py-3 align-middle">
 
                                                     <div className="flex items-center gap-2.5">
 
@@ -2435,9 +2436,9 @@ export default function MemberManagementPage() {
 
                                                     </div>
 
-                                                </td>
+                                                </TableCell>
 
-                                                <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap align-middle">
+                                                <TableCell className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap align-middle">
 
                                                     <div className="flex items-center gap-1">
 
@@ -2447,15 +2448,15 @@ export default function MemberManagementPage() {
 
                                                     </div>
 
-                                                </td>
+                                                </TableCell>
 
-                                                <td className="px-4 py-3 text-xs tabular-nums text-start align-middle">
+                                                <TableCell className="px-4 py-3 text-xs tabular-nums text-start align-middle">
 
                                                     <span dir="ltr" className="text-muted-foreground">{row.phone || "—"}</span>
 
-                                                </td>
+                                                </TableCell>
 
-                                                <td className="px-4 py-3 text-center align-middle">
+                                                <TableCell className="px-4 py-3 text-center align-middle">
 
                                                     <span className={`font-semibold tabular-nums text-xs ${row.pointsBalance > 0 ? "text-amber-600" : "text-muted-foreground"}`}>
 
@@ -2463,23 +2464,23 @@ export default function MemberManagementPage() {
 
                                                     </span>
 
-                                                </td>
+                                                </TableCell>
 
-                                                <td className="px-4 py-3 text-center align-middle">
+                                                <TableCell className="px-4 py-3 text-center align-middle">
 
                                                     <StatusBadge status={row.status} compact />
 
-                                                </td>
+                                                </TableCell>
 
-                                                <td className="px-4 py-3 text-center text-[10px] text-muted-foreground whitespace-nowrap align-middle">
+                                                <TableCell className="px-4 py-3 text-center text-[10px] text-muted-foreground whitespace-nowrap align-middle">
 
                                                     {fmtDateShort(row.createdAt)}
 
-                                                </td>
+                                                </TableCell>
 
-                                                <td className="px-4 py-3 text-center align-middle">
+                                                <TableCell className="px-4 py-3 text-center align-middle">
 
-                                                    <div className="flex items-center justify-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <div className="flex items-center justify-center gap-0.5">
 
                                                         <Tooltip>
 
@@ -2577,17 +2578,17 @@ export default function MemberManagementPage() {
 
                                                     </div>
 
-                                                </td>
+                                                </TableCell>
 
-                                            </tr>
+                                            </TableRow>
 
                                         );
 
                                     })}
 
-                                </tbody>
+                                </TableBody>
 
-                            </table>
+                            </Table>
 
                         </div>
 

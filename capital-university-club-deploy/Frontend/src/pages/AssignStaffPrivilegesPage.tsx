@@ -9,6 +9,8 @@ import { Input } from "../components/StaffPagesComponents/ui/input";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Badge } from "../components/StaffPagesComponents/ui/badge";
 import { useToast } from "../hooks/use-toast";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
+import i18n from "../i18n";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -266,7 +268,7 @@ export default function AssignStaffPrivilegesPage() {
       key: `backend:${pkg.id}`,
       backendId: pkg.id,
       code: pkg.code || `PKG_${pkg.id}`,
-      name: pkg.name_ar || pkg.name_en || pkg.code || `Package #${pkg.id}`,
+      name: (i18n.language === 'ar' ? (pkg.name_ar || pkg.name_en) : (pkg.name_en || pkg.name_ar)) || pkg.code || `Package #${pkg.id}`,
       description: pkg.description_ar || pkg.description_en,
       privilegeCodes: packageCodesByKey[`backend:${pkg.id}`] || [],
     })),
@@ -546,25 +548,25 @@ export default function AssignStaffPrivilegesPage() {
               <p className="text-sm">{search || roleFilter ? "لا توجد نتائج مطابقة" : "لم يتم العثور على موظفين"}</p>
             </div>
           ) : (
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
-                <tr>
-                  <th className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground w-10">#</th>
-                  <th className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground">الموظف</th>
-                  <th className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground">الرقم القومي</th>
-                  <th className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground">الوظيفة</th>
-                  <th className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground">بداية العمل</th>
-                  <th className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground">الإجراء</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
+            <Table>
+              <TableHeader className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
+                <TableRow>
+                  <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground w-10">#</TableHead>
+                  <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground">الموظف</TableHead>
+                  <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground">الرقم القومي</TableHead>
+                  <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground">الوظيفة</TableHead>
+                  <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground">بداية العمل</TableHead>
+                  <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground">الإجراء</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border">
                 {staffRows.map((staff, idx) => (
-                  <tr key={staff.id} className="transition-colors hover:bg-muted/40">
-                    <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
+                  <TableRow key={staff.id} className="transition-colors hover:bg-muted/40">
+                    <TableCell className="px-4 py-3 text-muted-foreground font-mono text-xs">
                       {(currentPage - 1) * PAGE_SIZE + idx + 1}
-                    </td>
+                    </TableCell>
                     {/* Avatar + Name */}
-                    <td className="px-4 py-3">
+                    <TableCell className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div
                           className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
@@ -579,23 +581,23 @@ export default function AssignStaffPrivilegesPage() {
                           )}
                         </div>
                       </div>
-                    </td>
+                    </TableCell>
                     {/* NID */}
-                    <td className="px-4 py-3 font-mono text-xs">
+                    <TableCell className="px-4 py-3 font-mono text-xs">
                       <span dir="ltr">{staff.nationalId || "—"}</span>
-                    </td>
+                    </TableCell>
                     {/* Role */}
-                    <td className="px-4 py-3 text-center">
+                    <TableCell className="px-4 py-3 text-center">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700">
                         {ROLE_LABELS[staff.role] ?? staff.role}
                       </span>
-                    </td>
+                    </TableCell>
                     {/* Start date */}
-                    <td className="px-4 py-3 text-xs tabular-nums">
+                    <TableCell className="px-4 py-3 text-xs tabular-nums">
                       {formatDate(staff.startDate)}
-                    </td>
+                    </TableCell>
                     {/* Action */}
-                    <td className="px-4 py-3 text-center">
+                    <TableCell className="px-4 py-3 text-center">
                       <Button
                         size="sm"
                         variant="outline"
@@ -605,11 +607,11 @@ export default function AssignStaffPrivilegesPage() {
                         تعيين الصلاحيات
                         <ArrowRight className="w-3.5 h-3.5" />
                       </Button>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           )}
         </div>
       </div>
@@ -715,7 +717,7 @@ export default function AssignStaffPrivilegesPage() {
                             return (
                               <div key={code} className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-1.5">
                                 <Check className="w-3 h-3 text-emerald-600 shrink-0" />
-                                <p className="text-xs font-medium text-emerald-900 truncate">{priv?.name_ar || priv?.name_en || code}</p>
+                                <p className="text-xs font-medium text-emerald-900 truncate">{(i18n.language === 'ar' ? (priv?.name_ar || priv?.name_en) : (priv?.name_en || priv?.name_ar)) || code}</p>
                               </div>
                             );
                           })}
@@ -778,7 +780,7 @@ export default function AssignStaffPrivilegesPage() {
                   </div>
                   <div className="p-2 space-y-1">
                     {group.items.map((privilege) => {
-                      const displayName = privilege.name_ar || privilege.name_en || privilege.code;
+                      const displayName = (i18n.language === 'ar' ? (privilege.name_ar || privilege.name_en) : (privilege.name_en || privilege.name_ar)) || privilege.code;
                       const isSelected = selectedExtraPrivilegeIds.includes(privilege.id);
                       const inPackage = selectedPackageCodes.has(privilege.code);
                       return (

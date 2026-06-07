@@ -793,7 +793,7 @@ const ProfileTab = memo(({ member, setMember, dir = 'rtl' }: ProfileTabProps) =>
 
                                     {/* Edit Overlay */}
                                     {editing && (
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <div className="absolute inset-0 bg-black/40  transition-opacity flex items-center justify-center">
                                             <label className="cursor-pointer bg-white text-gray-800 px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg flex items-center gap-1.5">
                                                 <Icon d={icons.edit} size={12} />
                                                 {t("profile.change_file")}

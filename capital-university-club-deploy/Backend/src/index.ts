@@ -221,10 +221,10 @@ AppDataSource.initialize()
     await initializeFolderStructure();
     console.log('✅ Upload folder structure initialized');
 
-    // NOTE: legacy default plans disabled — official plans now come from the seed
-    // (see Backend/src/scripts/full-reseed.ts and the SQL in scripts/update-membership-plans.sql).
-    // const { initializeDefaultPlans } = await import('./utils/initializePlans');
-    // await initializeDefaultPlans();
+    // Auto-seed default membership plans (ANNUAL, STUDENT, DEPENDENT, SEASONAL, FULL_ACCESS)
+    // This is idempotent — it only inserts plans that are missing, so it's safe to run every startup.
+    const { initializeDefaultPlans } = await import('./utils/initializePlans');
+    await initializeDefaultPlans();
 
     // Create HTTP server with Express app
     const httpServer = createServer(app);

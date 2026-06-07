@@ -1,4 +1,5 @@
 import React from "react";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../StaffPagesComponents/ui/table";
 
 type Membership = {
   type: string;
@@ -151,25 +152,25 @@ const ProfileTab = ({ memberData = null, loading = false, error = null }: Profil
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse text-right">
-            <thead>
-              <tr className="bg-gray-50 text-gray-700">
-                <th className="p-3 font-medium">نوع العضوية</th>
-                <th className="p-3 font-medium">تاريخ البدء</th>
-                <th className="p-3 font-medium">تاريخ الانتهاء</th>
-                <th className="p-3 font-medium">الحالة</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-50 text-gray-700">
+                <TableHead className="p-3 font-medium">نوع العضوية</TableHead>
+                <TableHead className="p-3 font-medium">تاريخ البدء</TableHead>
+                <TableHead className="p-3 font-medium">تاريخ الانتهاء</TableHead>
+                <TableHead className="p-3 font-medium">الحالة</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {memberships.map((m, i) => (
-                <tr
+                <TableRow
                   key={i}
                   className="border-b hover:bg-gray-50 transition"
                 >
-                  <td className="p-3">{m.type}</td>
-                  <td className="p-3">{m.startDate}</td>
-                  <td className="p-3">{m.endDate}</td>
-                  <td className="p-3">
+                  <TableCell className="p-3">{m.type}</TableCell>
+                  <TableCell className="p-3">{m.startDate}</TableCell>
+                  <TableCell className="p-3">{m.endDate}</TableCell>
+                  <TableCell className="p-3">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${
                         m.status === "Active"
@@ -179,11 +180,11 @@ const ProfileTab = ({ memberData = null, loading = false, error = null }: Profil
                     >
                       {translateStatus(m.status)}
                     </span>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
     </div>

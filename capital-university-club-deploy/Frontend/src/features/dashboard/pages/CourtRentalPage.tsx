@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/StaffPagesComponents/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "../../../components/StaffPagesComponents/ui/popover";
 import { Loader2, CalendarCheck, Clock, Lock } from "lucide-react";
+import i18n from "../../../i18n";
 
 // --- Types ---
 interface ApiField {
@@ -62,7 +63,7 @@ const getLocalizedFieldName = (
 ) => {
     if (!field) return fallback;
     return isRtl
-        ? field.name_ar || field.name_en || field.name || fallback
+        ? (i18n.language === 'ar' ? (field.name_ar || field.name_en) : (field.name_en || field.name_ar)) || field.name || fallback
         : field.name_en || field.name_ar || field.name || fallback;
 };
 

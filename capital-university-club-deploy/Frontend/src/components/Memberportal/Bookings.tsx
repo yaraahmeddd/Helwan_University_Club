@@ -1,4 +1,5 @@
 import React from "react";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../StaffPagesComponents/ui/table";
 
 const bookingsData = [
   {
@@ -74,25 +75,25 @@ const Bookings: React.FC = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full text-right border border-gray-200">
-            <thead className="bg-gray-50 text-gray-700">
-              <tr>
-                <th className="p-3 border-b font-medium">الخدمة</th>
-                <th className="p-3 border-b font-medium">التاريخ والوقت</th>
-                <th className="p-3 border-b font-medium">المدة</th>
-                <th className="p-3 border-b font-medium">المبلغ</th>
-                <th className="p-3 border-b font-medium">الحالة</th>
-                <th className="p-3 border-b font-medium">الإجراء</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <TableHeader className="bg-gray-50 text-gray-700">
+              <TableRow>
+                <TableHead className="p-3 border-b font-medium">الخدمة</TableHead>
+                <TableHead className="p-3 border-b font-medium">التاريخ والوقت</TableHead>
+                <TableHead className="p-3 border-b font-medium">المدة</TableHead>
+                <TableHead className="p-3 border-b font-medium">المبلغ</TableHead>
+                <TableHead className="p-3 border-b font-medium">الحالة</TableHead>
+                <TableHead className="p-3 border-b font-medium">الإجراء</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {bookingsData.map((booking, i) => (
-                <tr key={i} className="hover:bg-gray-50 transition">
-                  <td className="p-3 border-b">{booking.service}</td>
-                  <td className="p-3 border-b">{booking.date}</td>
-                  <td className="p-3 border-b">{booking.duration}</td>
-                  <td className="p-3 border-b">{booking.amount}</td>
-                  <td className="p-3 border-b">
+                <TableRow key={i} className="hover:bg-gray-50 transition">
+                  <TableCell className="p-3 border-b">{booking.service}</TableCell>
+                  <TableCell className="p-3 border-b">{booking.date}</TableCell>
+                  <TableCell className="p-3 border-b">{booking.duration}</TableCell>
+                  <TableCell className="p-3 border-b">{booking.amount}</TableCell>
+                  <TableCell className="p-3 border-b">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${
                         booking.status === "Confirmed"
@@ -102,16 +103,16 @@ const Bookings: React.FC = () => {
                     >
                       {translateStatus(booking.status)}
                     </span>
-                  </td>
-                  <td className="p-3 border-b">
+                  </TableCell>
+                  <TableCell className="p-3 border-b">
                     <button className="bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600 transition shadow-sm">
                       إلغاء
                     </button>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
     </div>
