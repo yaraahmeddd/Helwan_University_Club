@@ -1,0 +1,1 @@
+{"version":3,"file":"Profession.d.ts","sourceRoot":"","sources":["../../src/entities/Profession.ts"],"names":[],"mappings":"AASA,OAAO,EAAE,cAAc,EAAE,MAAM,kBAAkB,CAAC;AAElD,qBAEa,UAAU;IAErB,EAAE,EAAE,MAAM,CAAC;IAGX,IAAI,EAAE,MAAM,CAAC;IAGb,OAAO,EAAE,MAAM,CAAC;IAGhB,OAAO,EAAE,MAAM,CAAC;IAGhB,UAAU,EAAE,IAAI,CAAC;IAGjB,UAAU,EAAE,IAAI,CAAC;IAIjB,gBAAgB,EAAE,cAAc,EAAE,CAAC;CACpC"}

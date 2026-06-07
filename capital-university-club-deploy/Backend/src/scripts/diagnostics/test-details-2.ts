@@ -1,5 +1,5 @@
-import { AppDataSource } from './database/data-source';
-import { TeamMemberService } from './services/TeamMemberService';
+import { AppDataSource } from '../../database/data-source';
+import { TeamMemberService } from '../../services/TeamMemberService';
 
 async function test() {
     await AppDataSource.initialize();

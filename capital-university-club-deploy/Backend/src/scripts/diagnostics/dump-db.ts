@@ -1,4 +1,4 @@
-import { AppDataSource } from './database/data-source';
+import { AppDataSource } from '../../database/data-source';
 const { TeamMember } = require('./entities/TeamMember');
 
 async function check() {

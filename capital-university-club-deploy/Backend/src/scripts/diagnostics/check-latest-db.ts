@@ -1,5 +1,5 @@
-import { AppDataSource } from './database/data-source';
-import { TeamMember } from './entities/TeamMember';
+import { AppDataSource } from '../../database/data-source';
+import { TeamMember } from '../../entities/TeamMember';
 
 async function checkLatest() {
     await AppDataSource.initialize();

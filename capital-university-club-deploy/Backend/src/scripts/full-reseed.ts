@@ -188,7 +188,7 @@ async function main() {
   const planRepo = AppDataSource.getRepository(MembershipPlan);
   // Official prices from "شروط وأسعار العضويات - رؤية الاستدامة 2030"
   // VAT 14% is NOT included in these prices.
-  const plans = await planRepo.save([
+  const plans: MembershipPlan[] = await planRepo.save([
     // Working — Faculty members
     { member_type_id: mt('WORKING').id,  plan_code: 'WRK-FAC',    name_en: 'Faculty Member',          name_ar: 'عضوية هيئة التدريس',                   price: 20000, currency: 'EGP', duration_months: 12, renewal_price: 300,   is_installable: true,  max_installments: 4, is_active: true },
     // Working — Salary brackets (employees, TAs, demonstrators)
@@ -730,18 +730,18 @@ async function main() {
   // ═══════════════════════════ MEDIA POSTS ═══════════════════════════
   console.log('\n=== Seeding media posts ===');
   const mpRepo = AppDataSource.getRepository(MediaPost);
+  const mediaPostCategories = ['صور', 'فيديو', 'فعاليات'];
   const mediaPostsCount = 6;
   for (let i = 0; i < mediaPostsCount; i++) {
-    try {
-      await mpRepo.save({
-        title_en: `News Update #${i+1}`,
-        title_ar: `خبر جديد #${i+1}`,
-        content_en: `This is the content of news update number ${i+1}.`,
-        content_ar: `هذا هو محتوى الخبر رقم ${i+1}.`,
-        status: i < 4 ? 'published' : 'draft',
-        is_featured: i === 0,
-      } as any);
-    } catch { /* schema mismatch — skip */ }
+    await mpRepo.save({
+      title: i < 3 ? `News Update #${i+1}` : `خبر جديد #${i+1}`,
+      description: `This is the content of media post number ${i+1}.`,
+      category: mediaPostCategories[i % mediaPostCategories.length],
+      images: i < 2 ? [`/uploads/media/image-${i+1}-1.jpg`, `/uploads/media/image-${i+1}-2.jpg`] : undefined,
+      videoUrl: i === 2 ? 'https://www.youtube.com/embed/example' : undefined,
+      videoDuration: i === 2 ? '02:45' : undefined,
+      date: daysAgo(i),
+    });
   }
 
   // ═══════════════════════════ TASKS ═══════════════════════════
