@@ -255,40 +255,50 @@ const StaffAddMemberPage = () => {
             if (!basicRes.success || !basicRes.data) throw new Error(basicRes.message || 'فشل التسجيل الأساسي');
 
             const memberId = basicRes.data.member_id || basicRes.data.team_member_id;
+            const accountId: number = basicRes.data.account_id; // stored for rollback
             if (!memberId) throw new Error('لم يُعاد معرف العضو');
 
-            // 2. Determine membership
-            const determinationData = {
-                member_id: memberId,
-                is_student: data.category === 'student',
-                is_working: data.category === 'staff',
-                is_foreign: data.category === 'foreigner',
-                is_graduated: false,
-                has_relation: data.category === 'dependent',
-                is_retired: data.category === 'retired',
-                is_sports_player: false,
-                selected_sports: [],
-                relation_member_id: data.category === 'dependent' ? Number(data.relatedMemberId) : undefined,
-            };
-            const determineRes = await AuthService.determineMembership(determinationData);
+            // All post-basic steps wrapped — rollback on any failure
+            try {
+                // 2. Determine membership
+                const determinationData = {
+                    member_id: memberId,
+                    is_student: data.category === 'student',
+                    is_working: data.category === 'staff',
+                    is_foreign: data.category === 'foreigner',
+                    is_graduated: false,
+                    has_relation: data.category === 'dependent',
+                    is_retired: data.category === 'retired',
+                    is_sports_player: false,
+                    selected_sports: [],
+                    relation_member_id: data.category === 'dependent' ? Number(data.relatedMemberId) : undefined,
+                };
+                const determineRes = await AuthService.determineMembership(determinationData);
 
-            // 3. Submit detailed info + files
-            const { endpoint, formData } = prepareSubmissionData(data, memberId, files);
-            debugFormData(formData);
-            await AuthService.submitDetailedInfo(endpoint, formData);
+                // 3. Submit detailed info + files
+                const { endpoint, formData } = prepareSubmissionData(data, memberId, files);
+                debugFormData(formData);
+                await AuthService.submitDetailedInfo(endpoint, formData);
 
-            // 4. Complete registration
-            await AuthService.completeRegistration({
-                member_id: memberId,
-                membership_plan_code: determineRes.data?.next_step || 'FULL_ACCESS',
-            });
+                // 4. Complete registration
+                await AuthService.completeRegistration({
+                    member_id: memberId,
+                    membership_plan_code: determineRes.data?.next_step || 'FULL_ACCESS',
+                });
 
-            // 5. ✅ Staff-only: auto-activate
-            await activateMember(memberId);
+                // 5. ✅ Staff-only: auto-activate
+                await activateMember(memberId);
 
-            const fullName = `${data.first_name_ar} ${data.last_name_ar}`;
-            setSuccessData({ name: fullName, id: memberId });
-            toast({ title: 'تم إضافة العضو', description: `${fullName} — مُفعَّل تلقائياً` });
+                const fullName = `${data.first_name_ar} ${data.last_name_ar}`;
+                setSuccessData({ name: fullName, id: memberId });
+                toast({ title: 'تم إضافة العضو', description: `${fullName} — مُفعَّل تلقائياً` });
+
+            } catch (postBasicError: unknown) {
+                // ROLLBACK: remove the account + member that was already saved
+                console.error('❌ Post-basic step failed — rolling back account:', accountId, postBasicError);
+                await AuthService.rollbackRegistration(accountId);
+                throw postBasicError;
+            }
 
         } catch (error: unknown) {
             const msg = error instanceof Error ? error.message : 'حدث خطأ أثناء التسجيل';

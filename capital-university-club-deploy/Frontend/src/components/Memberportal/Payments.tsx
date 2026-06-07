@@ -1,4 +1,5 @@
 import React from "react";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../StaffPagesComponents/ui/table";
 
 const Payments: React.FC = () => {
   const paymentMethods = [
@@ -84,36 +85,36 @@ const Payments: React.FC = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full text-left border border-gray-200">
-            <thead className="bg-gray-50 text-gray-700">
-              <tr>
-                <th className="p-3 border-b font-medium">Date</th>
-                <th className="p-3 border-b font-medium">Description</th>
-                <th className="p-3 border-b font-medium">Amount</th>
-                <th className="p-3 border-b font-medium">Status</th>
-                <th className="p-3 border-b font-medium">Invoice</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <TableHeader className="bg-gray-50 text-gray-700">
+              <TableRow>
+                <TableHead className="p-3 border-b font-medium">Date</TableHead>
+                <TableHead className="p-3 border-b font-medium">Description</TableHead>
+                <TableHead className="p-3 border-b font-medium">Amount</TableHead>
+                <TableHead className="p-3 border-b font-medium">Status</TableHead>
+                <TableHead className="p-3 border-b font-medium">Invoice</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {paymentHistory.map((payment, i) => (
-                <tr key={i} className="hover:bg-gray-50 transition">
-                  <td className="p-3 border-b">{payment.date}</td>
-                  <td className="p-3 border-b">{payment.description}</td>
-                  <td className="p-3 border-b">{payment.amount}</td>
-                  <td className="p-3 border-b">
+                <TableRow key={i} className="hover:bg-gray-50 transition">
+                  <TableCell className="p-3 border-b">{payment.date}</TableCell>
+                  <TableCell className="p-3 border-b">{payment.description}</TableCell>
+                  <TableCell className="p-3 border-b">{payment.amount}</TableCell>
+                  <TableCell className="p-3 border-b">
                     <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full shadow-sm">
                       {payment.status}
                     </span>
-                  </td>
-                  <td className="p-3 border-b">
+                  </TableCell>
+                  <TableCell className="p-3 border-b">
                     <button className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm hover:bg-blue-700 transition shadow-sm">
                       View
                     </button>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
 
@@ -126,30 +127,30 @@ const Payments: React.FC = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full text-left border border-gray-200">
-            <thead className="bg-gray-50 text-gray-700">
-              <tr>
-                <th className="p-3 border-b font-medium">Due Date</th>
-                <th className="p-3 border-b font-medium">Description</th>
-                <th className="p-3 border-b font-medium">Amount</th>
-                <th className="p-3 border-b font-medium">Action</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <TableHeader className="bg-gray-50 text-gray-700">
+              <TableRow>
+                <TableHead className="p-3 border-b font-medium">Due Date</TableHead>
+                <TableHead className="p-3 border-b font-medium">Description</TableHead>
+                <TableHead className="p-3 border-b font-medium">Amount</TableHead>
+                <TableHead className="p-3 border-b font-medium">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {pendingPayments.map((pending, i) => (
-                <tr key={i} className="hover:bg-gray-50 transition">
-                  <td className="p-3 border-b">{pending.dueDate}</td>
-                  <td className="p-3 border-b">{pending.description}</td>
-                  <td className="p-3 border-b">{pending.amount}</td>
-                  <td className="p-3 border-b">
+                <TableRow key={i} className="hover:bg-gray-50 transition">
+                  <TableCell className="p-3 border-b">{pending.dueDate}</TableCell>
+                  <TableCell className="p-3 border-b">{pending.description}</TableCell>
+                  <TableCell className="p-3 border-b">{pending.amount}</TableCell>
+                  <TableCell className="p-3 border-b">
                     <button className="bg-green-600 text-white px-3 py-1.5 rounded-md text-sm hover:bg-green-700 transition shadow-sm">
                       Pay Now
                     </button>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
     </div>

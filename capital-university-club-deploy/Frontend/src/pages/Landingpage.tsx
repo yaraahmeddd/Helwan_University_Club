@@ -27,6 +27,7 @@ import 'swiper/css/effect-coverflow';
 
 import { motion } from "framer-motion";
 import api from "../services/axios";
+import i18n from "../i18n";
 
 interface MembershipPlan {
   id: number;
@@ -496,7 +497,7 @@ const App = () => {
                     : branches.map((branch, idx) => {
                         const routeId = toBranchRouteId(branch);
                         const branchName = isArabic
-                          ? (branch.name_ar || branch.name_en || `#${branch.id}`)
+                          ? ((i18n.language === 'ar' ? (branch.name_ar || branch.name_en) : (branch.name_en || branch.name_ar)) || `#${branch.id}`)
                           : (branch.name_en || branch.name_ar || `#${branch.id}`);
                         const branchLocation = isArabic
                           ? (branch.location_ar || branch.location_en || t("common.not_available", "Not available"))
@@ -883,7 +884,7 @@ const App = () => {
                   >
                     {/* Title — fixed height keeps all titles aligned */}
                     <h3 className="text-2xl md:text-3xl font-bold text-center mb-4 text-gray-900 px-2 min-h-[80px] flex items-center justify-center">
-                      {isArabic ? (plan.name_ar || plan.name_en || "") : (plan.name_en || plan.name_ar || "")}
+                      {isArabic ? ((i18n.language === 'ar' ? (plan.name_ar || plan.name_en) : (plan.name_en || plan.name_ar)) || "") : (plan.name_en || plan.name_ar || "")}
                     </h3>
 
                     {/* Price — fixed height keeps all prices aligned */}
@@ -973,7 +974,7 @@ const App = () => {
               onClick={() => handleTabChange("home")}
             >
               <div className="relative">
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#2596be]/20 via-transparent to-[#f8941c]/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#2596be]/20 via-transparent to-[#f8941c]/20 blur-md  transition-opacity duration-500" />
                 <div className="relative flex w-14 h-14 sm:w-16 sm:h-16 md:w-[68px] md:h-[68px] items-center justify-center rounded-2xl bg-white shadow-md ring-1 ring-gray-200/80 overflow-hidden group-hover:ring-[#2596be]/40 group-hover:shadow-lg transition-all duration-300">
                   <img src={HUCLogo} alt={t("common.club_name", "نادي جامعة العاصمة")} className="w-full h-full object-contain p-1" />
                 </div>

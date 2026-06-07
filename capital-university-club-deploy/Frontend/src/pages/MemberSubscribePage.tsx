@@ -6,6 +6,7 @@ import { useToast } from "../components/StaffPagesComponents/ui/use-toast";
 import type { ExploreSport, TimeSlotOption } from "../features/dashboard/types";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import i18n from "../i18n";
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800&q=80";
 const MAX_SPORTS = 4;
@@ -308,7 +309,7 @@ export default function MemberSubscribePage() {
                         teamId: String(schedule.team_id || teamId || ""),
                         time: `${(schedule.start_time || "").slice(0, 5)} - ${(schedule.end_time || "").slice(0, 5)}`,
                         days: schedule.days_ar || schedule.days_en || "-",
-                        court: `${schedule.field?.name_ar || schedule.field?.name_en || (team.name_ar || team.team_name_ar || team.name_en || team.team_name_en || (isEnglish ? "Team" : "فريق"))} • ${audienceLabel(audienceType, isEnglish)}`,
+                        court: `${(i18n.language === 'ar' ? (schedule.field?.name_ar || schedule.field?.name_en) : (schedule.field?.name_en || schedule.field?.name_ar)) || (team.name_ar || (i18n.language === 'ar' ? (team.team_name_ar || team.name_en) : (team.name_en || team.team_name_ar)) || team.team_name_en || (isEnglish ? "Team" : "فريق"))} • ${audienceLabel(audienceType, isEnglish)}`,
                         price: pickPositiveAmount(schedule.training_fee, schedule.price, teamBasePrice),
                         spots: 10,
                     }))
@@ -317,7 +318,7 @@ export default function MemberSubscribePage() {
                         teamId: teamId || null,
                         time: "—",
                         days: "—",
-                        court: `${team.name_ar || team.team_name_ar || team.name_en || team.team_name_en || (isEnglish ? "Team" : "فريق")} • ${audienceLabel(audienceType, isEnglish)}`,
+                        court: `${team.name_ar || (i18n.language === 'ar' ? (team.team_name_ar || team.name_en) : (team.name_en || team.team_name_ar)) || team.team_name_en || (isEnglish ? "Team" : "فريق")} • ${audienceLabel(audienceType, isEnglish)}`,
                         price: teamBasePrice,
                         spots: 10,
                     }];

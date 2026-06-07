@@ -134,7 +134,7 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ post, onClick }) => {
 
             {/* Hover Content */}
             <div className="absolute inset-0 flex flex-col justify-end p-6 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                <div className="flex items-center gap-2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
+                <div className="flex items-center gap-2 mb-2  transition-opacity duration-500 delay-100">
                     <span className="bg-[var(--huc-accent-blue)]/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
                         {getCategoryTranslation(post.category, t)}
                     </span>
@@ -142,7 +142,7 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ post, onClick }) => {
                 <h3 className="text-xl font-bold mb-2 leading-tight drop-shadow-md">
                     {post.title}
                 </h3>
-                <div className="flex items-center justify-between mt-2 pt-4 border-t border-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200">
+                <div className="flex items-center justify-between mt-2 pt-4 border-t border-white/20  transition-opacity duration-500 delay-200">
                     <div className="flex items-center gap-2 text-sm text-slate-200">
                         <Calendar size={14} />
                         <span>{post.date}</span>
@@ -243,13 +243,13 @@ const ImagePreviewSlider: React.FC<ImagePreviewSliderProps> = ({ images, onRemov
                     <>
                         <button
                             onClick={() => setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md text-slate-800 shadow-lg hover:bg-white hover:scale-110 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                            className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md text-slate-800 shadow-lg hover:bg-white hover:scale-110 flex items-center justify-center transition-all "
                         >
                             <ChevronLeft size={24} />
                         </button>
                         <button
                             onClick={() => setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md text-slate-800 shadow-lg hover:bg-white hover:scale-110 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md text-slate-800 shadow-lg hover:bg-white hover:scale-110 flex items-center justify-center transition-all "
                         >
                             <ChevronRight size={24} />
                         </button>
@@ -573,13 +573,13 @@ const MediaViewModal: React.FC<{ post: MediaPost | null; onClose: () => void }> 
                                     <>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1)); }}
-                                            className="absolute left-6 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-slate-900/60 backdrop-blur-xl text-white flex items-center justify-center hover:bg-white hover:text-slate-950 transition-all opacity-0 group-hover:opacity-100 ring-1 ring-white/20"
+                                            className="absolute left-6 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-slate-900/60 backdrop-blur-xl text-white flex items-center justify-center hover:bg-white hover:text-slate-950 transition-all  ring-1 ring-white/20"
                                         >
                                             <ChevronLeft size={32} />
                                         </button>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1)); }}
-                                            className="absolute right-6 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-slate-900/60 backdrop-blur-xl text-white flex items-center justify-center hover:bg-white hover:text-slate-950 transition-all opacity-0 group-hover:opacity-100 ring-1 ring-white/20"
+                                            className="absolute right-6 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-slate-900/60 backdrop-blur-xl text-white flex items-center justify-center hover:bg-white hover:text-slate-950 transition-all  ring-1 ring-white/20"
                                         >
                                             <ChevronRight size={32} />
                                         </button>
@@ -742,13 +742,13 @@ export const MediaGalleryPostPage: React.FC = () => {
                                     <>
                                         <button
                                             onClick={() => setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))}
-                                            className="absolute left-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-slate-900/60 backdrop-blur-xl text-white flex items-center justify-center hover:bg-white hover:text-slate-950 transition-all opacity-0 group-hover:opacity-100 ring-1 ring-white/20"
+                                            className="absolute left-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-slate-900/60 backdrop-blur-xl text-white flex items-center justify-center hover:bg-white hover:text-slate-950 transition-all  ring-1 ring-white/20"
                                         >
                                             <ChevronLeft size={28} />
                                         </button>
                                         <button
                                             onClick={() => setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))}
-                                            className="absolute right-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-slate-900/60 backdrop-blur-xl text-white flex items-center justify-center hover:bg-white hover:text-slate-950 transition-all opacity-0 group-hover:opacity-100 ring-1 ring-white/20"
+                                            className="absolute right-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-slate-900/60 backdrop-blur-xl text-white flex items-center justify-center hover:bg-white hover:text-slate-950 transition-all  ring-1 ring-white/20"
                                         >
                                             <ChevronRight size={28} />
                                         </button>

@@ -14,6 +14,7 @@ import {
   Search,
 } from "lucide-react";
 import type { AuditLog } from "../services/auditLogApi";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 import {
   getAuditLogs,
   getAuditLogFilters,
@@ -473,36 +474,36 @@ const AuditLogPage: React.FC = () => {
 
           <div style={{ backgroundColor: colors.white, borderRadius: "12px", boxShadow: "0 1px 3px rgba(0,0,0,0.08)", overflow: "hidden" }}>
             <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ backgroundColor: colors.gray[50], borderBottom: `2px solid ${colors.border}` }}>
-                    <th style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>رقم السجل</th>
-                    <th style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>اسم المستخدم</th>
-                    <th style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>الدور</th>
-                    <th style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>العملية</th>
-                    <th style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>القسم</th>
-                    <th style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], minWidth: "200px" }}>الوصف</th>
-                    <th style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>الحالة</th>
-                    <th style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>التاريخ والوقت</th>
-                    <th style={{ padding: "16px", textAlign: "center", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>الإجراءات</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table>
+                <TableHeader>
+                  <TableRow style={{ backgroundColor: colors.gray[50], borderBottom: `2px solid ${colors.border}` }}>
+                    <TableHead style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>رقم السجل</TableHead>
+                    <TableHead style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>اسم المستخدم</TableHead>
+                    <TableHead style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>الدور</TableHead>
+                    <TableHead style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>العملية</TableHead>
+                    <TableHead style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>القسم</TableHead>
+                    <TableHead style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], minWidth: "200px" }}>الوصف</TableHead>
+                    <TableHead style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>الحالة</TableHead>
+                    <TableHead style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>التاريخ والوقت</TableHead>
+                    <TableHead style={{ padding: "16px", textAlign: "center", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>الإجراءات</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {isLoading ? (
-                    <tr>
-                      <td colSpan={9} style={{ padding: "24px", textAlign: "center", color: colors.gray[600] }}>
+                    <TableRow>
+                      <TableCell colSpan={9} style={{ padding: "24px", textAlign: "center", color: colors.gray[600] }}>
                         جاري التحميل...
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ) : logs.length === 0 ? (
-                    <tr>
-                      <td colSpan={9} style={{ padding: "24px", textAlign: "center", color: colors.gray[600] }}>
+                    <TableRow>
+                      <TableCell colSpan={9} style={{ padding: "24px", textAlign: "center", color: colors.gray[600] }}>
                         لا توجد سجلات
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ) : (
                     logs.map((log) => (
-                      <tr
+                      <TableRow
                         key={log.id}
                         style={{ borderBottom: `1px solid ${colors.border}`, transition: "background-color 0.2s", cursor: "default" }}
                         onMouseEnter={(e) => {
@@ -512,15 +513,15 @@ const AuditLogPage: React.FC = () => {
                           e.currentTarget.style.backgroundColor = "transparent";
                         }}
                       >
-                        <td style={{ padding: "16px", fontSize: "14px", color: colors.gray[900], fontWeight: 600 }}>{log.id}</td>
-                        <td style={{ padding: "16px", fontSize: "14px", color: colors.gray[900] }}>{log.userName}</td>
-                        <td style={{ padding: "16px", fontSize: "13px", color: colors.gray[600] }}>{log.role}</td>
-                        <td style={{ padding: "16px", fontSize: "13px", color: colors.gray[900], fontWeight: 500 }}>{log.action}</td>
-                        <td style={{ padding: "16px", fontSize: "13px", color: colors.gray[600] }}>{log.module}</td>
-                        <td style={{ padding: "16px", fontSize: "13px", color: colors.gray[600], maxWidth: "250px" }}>{log.description}</td>
-                        <td style={{ padding: "16px" }}>{getStatusBadge(log.status)}</td>
-                        <td style={{ padding: "16px", fontSize: "13px", color: colors.gray[600], direction: "ltr", textAlign: "right" }}>{new Date(log.dateTime).toLocaleString('en-US')}</td>
-                        <td style={{ padding: "16px", textAlign: "center" }}>
+                        <TableCell style={{ padding: "16px", fontSize: "14px", color: colors.gray[900], fontWeight: 600 }}>{log.id}</TableCell>
+                        <TableCell style={{ padding: "16px", fontSize: "14px", color: colors.gray[900] }}>{log.userName}</TableCell>
+                        <TableCell style={{ padding: "16px", fontSize: "13px", color: colors.gray[600] }}>{log.role}</TableCell>
+                        <TableCell style={{ padding: "16px", fontSize: "13px", color: colors.gray[900], fontWeight: 500 }}>{log.action}</TableCell>
+                        <TableCell style={{ padding: "16px", fontSize: "13px", color: colors.gray[600] }}>{log.module}</TableCell>
+                        <TableCell style={{ padding: "16px", fontSize: "13px", color: colors.gray[600], maxWidth: "250px" }}>{log.description}</TableCell>
+                        <TableCell style={{ padding: "16px" }}>{getStatusBadge(log.status)}</TableCell>
+                        <TableCell style={{ padding: "16px", fontSize: "13px", color: colors.gray[600], direction: "ltr", textAlign: "right" }}>{new Date(log.dateTime).toLocaleString('en-US')}</TableCell>
+                        <TableCell style={{ padding: "16px", textAlign: "center" }}>
                           <button
                             onClick={() => handleViewDetails(log)}
                             style={{
@@ -546,12 +547,12 @@ const AuditLogPage: React.FC = () => {
                           >
                             <Eye size={16} />
                           </button>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))
                   )}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderTop: `1px solid ${colors.border}` }}>

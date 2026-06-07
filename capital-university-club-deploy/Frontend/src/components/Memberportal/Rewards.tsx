@@ -1,4 +1,5 @@
 import React from "react";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../StaffPagesComponents/ui/table";
 
 const Rewards: React.FC = () => {
   const rewardsCatalog = [
@@ -89,28 +90,28 @@ const Rewards: React.FC = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full text-left border border-gray-200">
-            <thead className="bg-gray-50 text-gray-700">
-              <tr>
-                <th className="p-3 border-b font-medium">Rank</th>
-                <th className="p-3 border-b font-medium">Member</th>
-                <th className="p-3 border-b font-medium">Points</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <TableHeader className="bg-gray-50 text-gray-700">
+              <TableRow>
+                <TableHead className="p-3 border-b font-medium">Rank</TableHead>
+                <TableHead className="p-3 border-b font-medium">Member</TableHead>
+                <TableHead className="p-3 border-b font-medium">Points</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {leaderboard.map((entry, i) => (
-                <tr key={i} className="hover:bg-gray-50 transition">
-                  <td className="p-3 border-b font-semibold text-gray-700">
+                <TableRow key={i} className="hover:bg-gray-50 transition">
+                  <TableCell className="p-3 border-b font-semibold text-gray-700">
                     {entry.rank}
-                  </td>
-                  <td className="p-3 border-b">{entry.member}</td>
-                  <td className="p-3 border-b text-blue-600 font-medium">
+                  </TableCell>
+                  <TableCell className="p-3 border-b">{entry.member}</TableCell>
+                  <TableCell className="p-3 border-b text-blue-600 font-medium">
                     {entry.points}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
     </div>

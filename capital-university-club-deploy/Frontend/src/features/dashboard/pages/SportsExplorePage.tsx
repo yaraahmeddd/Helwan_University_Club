@@ -7,6 +7,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 import { localizeDays } from "../calendarUtils";
+import i18n from "../../../i18n";
 
 const FALLBACK_IMAGES: Record<string, string> = {
     "كرة القدم": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&q=80",
@@ -67,7 +68,7 @@ const getLocalizedFieldName = (
 ): string => {
     if (!field) return fallback;
     return isRtl
-        ? field.name_ar || field.name_en || fallback
+        ? (i18n.language === 'ar' ? (field.name_ar || field.name_en) : (field.name_en || field.name_ar)) || fallback
         : field.name_en || field.name_ar || fallback;
 };
 

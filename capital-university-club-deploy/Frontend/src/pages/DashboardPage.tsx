@@ -44,6 +44,7 @@ import {
 } from "../components/StaffPagesComponents/ui/table";
 import api from "../services/axios";
 import { useAuth } from "../context/AuthContext";
+import i18n from "../i18n";
 
 type SectionKey = "members" | "sports" | "plans" | "tasks" | "audit" | "privileges";
 
@@ -287,7 +288,7 @@ export default function DashboardPage() {
         const sportsRaw = toArray(sportsPayloadObj?.data ?? sportsPayload) as Array<Record<string, unknown>>;
         const sports = sportsRaw.map((sport) => {
           const price = toNumber(sport?.price);
-          const name = language === 'ar' ? (sport?.name_ar || sport?.name_en || sport?.name) : (sport?.name_en || sport?.name_ar || sport?.name);
+          const name = language === 'ar' ? ((i18n.language === 'ar' ? (sport?.name_ar || sport?.name_en) : (sport?.name_en || sport?.name_ar)) || sport?.name) : (sport?.name_en || sport?.name_ar || sport?.name);
           return {
             id: toNumber(sport?.id),
             name: String(name || t("unnamedSport")),

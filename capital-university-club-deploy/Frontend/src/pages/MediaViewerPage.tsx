@@ -270,7 +270,7 @@ const MediaViewerPage: React.FC = () => {
                                 {/* Previous Button */}
                                 <button 
                                     onClick={handlePrevImage}
-                                    className="absolute left-6 md:left-8 top-1/2 transform -translate-y-1/2 z-20 w-12 h-12 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-[#0e1c38] opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-white shadow-lg"
+                                    className="absolute left-6 md:left-8 top-1/2 transform -translate-y-1/2 z-20 w-12 h-12 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-[#0e1c38]  transition-all duration-300 hover:scale-110 hover:bg-white shadow-lg"
                                 >
                                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -280,7 +280,7 @@ const MediaViewerPage: React.FC = () => {
                                 {/* Next Button */}
                                 <button 
                                     onClick={handleNextImage}
-                                    className="absolute right-6 md:right-8 top-1/2 transform -translate-y-1/2 z-20 w-12 h-12 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-[#0e1c38] opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-white shadow-lg"
+                                    className="absolute right-6 md:right-8 top-1/2 transform -translate-y-1/2 z-20 w-12 h-12 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-[#0e1c38]  transition-all duration-300 hover:scale-110 hover:bg-white shadow-lg"
                                 >
                                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

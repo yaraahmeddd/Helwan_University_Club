@@ -96,7 +96,7 @@ export const SiteNavbar: React.FC<SiteNavbarProps> = ({
               onClick={() => handleTab("home")}
             >
               <div className="relative">
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#2596be]/20 via-transparent to-[#f8941c]/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#2596be]/20 via-transparent to-[#f8941c]/20 blur-md  transition-opacity duration-500" />
                 <div className="relative flex w-14 h-14 sm:w-16 sm:h-16 md:w-[68px] md:h-[68px] items-center justify-center rounded-2xl bg-white shadow-md ring-1 ring-gray-200/80 overflow-hidden group-hover:ring-[#2596be]/40 group-hover:shadow-lg transition-all duration-300">
                   <img src={HUCLogo} alt="نادي جامعة العاصمة" className="w-full h-full object-contain p-1" />
                 </div>

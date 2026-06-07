@@ -8,6 +8,7 @@ import { Plus, Loader2, Pencil, Eye, Trash2, Search, RefreshCw, ChevronRight, Ch
 import { useToast } from "../hooks/use-toast";
 import api from "../services/axios";
 import { useTranslation } from "react-i18next";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -321,39 +322,39 @@ export default function ProfessionManagementPage() {
                                     </p>
                                 </div>
                             ) : (
-                                <table className={`w-full text-sm ${isRTL ? "text-right" : "text-left"}`}>
-                                    <thead className="sticky top-0 bg-white z-10 before:absolute before:inset-0 before:border-b before:border-zinc-100 before:pointer-events-none">
-                                        <tr>
-                                            <th className={`px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle w-12 ${isRTL ? "text-right" : "text-left"}`}>{t("table.serial")}</th>
-                                            <th className={`px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle ${isRTL ? "text-right" : "text-left"}`}>{t("table.code")}</th>
-                                            <th className={`px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle ${isRTL ? "text-right" : "text-left"}`}>{t("table.name")}</th>
-                                            <th className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle text-center">{t("table.actions")}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-zinc-100">
+                                <Table>
+                                    <TableHeader className="sticky top-0 bg-white z-10 before:absolute before:inset-0 before:border-b before:border-zinc-100 before:pointer-events-none">
+                                        <TableRow>
+                                            <TableHead className={`px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle w-12 ${isRTL ? "text-right" : "text-left"}`}>{t("table.serial")}</TableHead>
+                                            <TableHead className={`px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle ${isRTL ? "text-right" : "text-left"}`}>{t("table.code")}</TableHead>
+                                            <TableHead className={`px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle ${isRTL ? "text-right" : "text-left"}`}>{t("table.name")}</TableHead>
+                                            <TableHead className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle text-center">{t("table.actions")}</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody className="divide-y divide-zinc-100">
                                         {pagedRows.map((profession, idx) => (
-                                            <tr key={profession.id} className="transition-colors hover:bg-zinc-50/80 group">
+                                            <TableRow key={profession.id} className="transition-colors hover:bg-zinc-50/80 group">
 
                                                 {/* Serial */}
-                                                <td className="px-6 py-3.5 text-[13px] text-zinc-400 font-mono align-middle">
+                                                <TableCell className="px-6 py-3.5 text-[13px] text-zinc-400 font-mono align-middle">
                                                     {(page - 1) * PAGE_SIZE + idx + 1}
-                                                </td>
+                                                </TableCell>
 
                                                 {/* Code */}
-                                                <td className="px-6 py-3.5 align-middle">
+                                                <TableCell className="px-6 py-3.5 align-middle">
                                                     <span className="bg-zinc-100/80 text-zinc-600 px-2.5 py-1 rounded-md text-[11px] font-mono font-bold uppercase tracking-widest border border-zinc-200/60 shadow-sm" dir="ltr">
                                                         {profession.code}
                                                     </span>
-                                                </td>
+                                                </TableCell>
 
                                                 {/* Name */}
-                                                <td className={`px-6 py-3.5 align-middle font-bold text-zinc-900 border-transparent group-hover:border-primary/40 transition-all ${isRTL ? "border-r-2" : "border-l-2"}`} dir={isRTL ? "rtl" : "ltr"}>
+                                                <TableCell className={`px-6 py-3.5 align-middle font-bold text-zinc-900 border-transparent group-hover:border-primary/40 transition-all ${isRTL ? "border-r-2" : "border-l-2"}`} dir={isRTL ? "rtl" : "ltr"}>
                                                     {isRTL ? profession.name_ar : (profession.name_en || profession.name_ar)}
-                                                </td>
+                                                </TableCell>
 
                                                 {/* Actions */}
-                                                <td className="px-6 py-3.5 align-middle">
-                                                    <div className="flex items-center justify-center gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                                                <TableCell className="px-6 py-3.5 align-middle">
+                                                    <div className="flex items-center justify-center gap-2  transition-opacity">
 
                                                         <RoleGuard privilege="UPDATE_PROFESSION">
                                                             <button
@@ -386,11 +387,11 @@ export default function ProfessionManagementPage() {
                                                         </RoleGuard>
 
                                                     </div>
-                                                </td>
-                                            </tr>
+                                                </TableCell>
+                                            </TableRow>
                                         ))}
-                                    </tbody>
-                                </table>
+                                    </TableBody>
+                                </Table>
                             )}
                         </div>
 

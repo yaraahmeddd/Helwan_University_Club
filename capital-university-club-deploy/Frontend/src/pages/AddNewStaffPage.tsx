@@ -27,6 +27,7 @@ import {
   DialogTitle,
 } from "../components/StaffPagesComponents/ui/dialog";
 import { useToast } from "../hooks/use-toast";
+import i18n from "../i18n";
 
 type StaffType = {
   id: number;
@@ -482,7 +483,7 @@ export default function AddNewStaffPage() {
         key,
         backendId: pkg.id,
         code: pkg.code || `PKG_${pkg.id}`,
-        name: pkg.name_ar || pkg.name_en || pkg.code || `Package #${pkg.id}`,
+        name: (i18n.language === 'ar' ? (pkg.name_ar || pkg.name_en) : (pkg.name_en || pkg.name_ar)) || pkg.code || `Package #${pkg.id}`,
         description: pkg.description_ar || pkg.description_en,
         privilegeCodes: packagePrivilegeCodesByKey[key] || [],
       };
@@ -519,7 +520,7 @@ export default function AddNewStaffPage() {
       .map(([module, items]) => ({
         module,
         items: [...items].sort((a, b) =>
-          (a.name_ar || a.name_en || a.code).localeCompare(b.name_ar || b.name_en || b.code),
+          ((i18n.language === 'ar' ? (a.name_ar || a.name_en) : (a.name_en || a.name_ar)) || a.code).localeCompare((i18n.language === 'ar' ? (b.name_ar || b.name_en) : (b.name_en || b.name_ar)) || b.code),
         ),
       }))
       .sort((a, b) => a.module.localeCompare(b.module));
@@ -1244,7 +1245,7 @@ export default function AddNewStaffPage() {
                                   <div className="flex-1 text-right min-w-0">
                                     <p className={`text-xs font-medium truncate ${isSelected ? "text-emerald-700" : isExcluded ? "text-red-700" : "text-foreground"
                                       }`}>
-                                      {privilege.name_ar || privilege.name_en || privilege.code}
+                                      {(i18n.language === 'ar' ? (privilege.name_ar || privilege.name_en) : (privilege.name_en || privilege.name_ar)) || privilege.code}
                                     </p>
                                     <p className="text-[10px] font-mono text-muted-foreground truncate mt-0.5">
                                       {privilege.code}

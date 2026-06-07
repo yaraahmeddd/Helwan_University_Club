@@ -188,7 +188,7 @@ const CreateMediaModal: React.FC<CreateMediaModalProps> = ({ isOpen, onClose, on
                                                                 alt={`existing-${index}`} 
                                                                 className="w-full h-full object-cover" 
                                                             />
-                                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                            <div className="absolute inset-0 bg-black/50  transition-opacity flex items-center justify-center">
                                                                 <button
                                                                     type="button"
                                                                     onClick={(e) => {
@@ -211,7 +211,7 @@ const CreateMediaModal: React.FC<CreateMediaModalProps> = ({ isOpen, onClose, on
                                                                 alt={`preview-${index}`} 
                                                                 className="w-full h-full object-cover" 
                                                             />
-                                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                            <div className="absolute inset-0 bg-black/50  transition-opacity flex items-center justify-center">
                                                                 <button
                                                                     type="button"
                                                                     onClick={(e) => {
@@ -418,13 +418,13 @@ const MediaViewModal: React.FC<{ post: MediaPost | null; onClose: () => void }> 
                                     <>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1)); }}
-                                            className="absolute left-6 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-slate-900/60 backdrop-blur-xl text-white flex items-center justify-center hover:bg-white hover:text-slate-950 transition-all opacity-0 group-hover:opacity-100 ring-1 ring-white/20"
+                                            className="absolute left-6 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-slate-900/60 backdrop-blur-xl text-white flex items-center justify-center hover:bg-white hover:text-slate-950 transition-all  ring-1 ring-white/20"
                                         >
                                             <ChevronLeft size={32} />
                                         </button>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1)); }}
-                                            className="absolute right-6 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-slate-900/60 backdrop-blur-xl text-white flex items-center justify-center hover:bg-white hover:text-slate-950 transition-all opacity-0 group-hover:opacity-100 ring-1 ring-white/20"
+                                            className="absolute right-6 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-slate-900/60 backdrop-blur-xl text-white flex items-center justify-center hover:bg-white hover:text-slate-950 transition-all  ring-1 ring-white/20"
                                         >
                                             <ChevronRight size={32} />
                                         </button>
@@ -700,7 +700,7 @@ const MediaManagerPage: React.FC = () => {
                                                 <span className="text-xs font-semibold text-gray-900 uppercase">{getCategoryTranslation(post.category, t)}</span>
                                             </div>
 
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400 z-10 pointer-events-none"></div>
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent  transition-opacity duration-400 z-10 pointer-events-none"></div>
 
                                             <div className={`absolute bottom-4 ${isRTL ? "left-4" : "right-4"} flex gap-2 z-20`}>
                                                 <button 

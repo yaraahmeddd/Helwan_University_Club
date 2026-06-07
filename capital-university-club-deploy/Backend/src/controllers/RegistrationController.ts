@@ -797,8 +797,50 @@ export class RegistrationController {
       });
     }
   }
+  /**
+   * ROLLBACK: Delete a partially-created registration
+   * Route: DELETE /register/rollback/:account_id
+   *
+   * Called by the frontend whenever any step after /register/basic fails,
+   * so no orphaned account/member rows are left in the database.
+   * Safety: only accounts with status='pending' can be rolled back.
+   */
+  async rollbackRegistration(req: Request, res: Response) {
+    try {
+      const account_id = parseInt(req.params.account_id, 10);
+
+      if (!account_id || isNaN(account_id)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Valid account_id is required',
+        });
+      }
+
+      const result = await RegistrationService.rollbackRegistration(account_id);
+
+      if (!result.deleted) {
+        return res.status(404).json({
+          success: false,
+          message: 'Account not found — nothing to rollback',
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Registration rolled back successfully. All records removed.',
+      });
+
+    } catch (error: Error | unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Rollback Error:', errorMessage);
+      return res.status(500).json({
+        success: false,
+        message: errorMessage,
+      });
+    }
+  }
 }
 
 // Important: Export an INSTANCE of the controller
 // عشان في الراوتس بتنادي RegistrationController.registerBasic مباشرة
-export default new RegistrationController();
+export default new RegistrationController();

@@ -212,7 +212,7 @@ const App = () => {
                                             <h3 className="font-bold text-xl text-gray-900 leading-snug group-hover:text-[#0b2f8f] transition-colors">
                                                 {item.title}
                                             </h3>
-                                            <span className="inline-flex items-center text-[#0b2f8f] text-sm font-bold mt-3 opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0 duration-300">
+                                            <span className="inline-flex items-center text-[#0b2f8f] text-sm font-bold mt-3  transition-opacity transform translate-y-2 group-hover:translate-y-0 duration-300">
                                                 اقرأ المزيد <ChevronLeft className="w-4 h-4 mr-1" />
                                             </span>
                                         </div>

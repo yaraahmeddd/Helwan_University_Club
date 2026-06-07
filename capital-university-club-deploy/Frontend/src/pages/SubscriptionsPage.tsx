@@ -10,6 +10,8 @@ import {
 import DateRangeFilter from "../components/StaffPagesComponents/shared/DateRangeFilter";
 import type { DateRange } from "../components/StaffPagesComponents/shared/DateRangeFilter";
 import api from "../services/axios";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
+import i18n from "../i18n";
 
 // ─── Types from API ───────────────────────────────────────────────────────────
 
@@ -149,7 +151,7 @@ export default function SubscriptionsPage() {
                 memberName: s.member
                     ? `${s.member.first_name_ar ?? ""} ${s.member.last_name_ar ?? ""}`.trim()
                     : `عضو #${s.member_id}`,
-                teamName: s.team?.name_ar || s.team?.name_en || `فريق #${s.team_id}`,
+                teamName: (i18n.language === 'ar' ? (s.team?.name_ar || s.team?.name_en) : (s.team?.name_en || s.team?.name_ar)) || `فريق #${s.team_id}`,
                 status: s.status,
                 paymentStatus: s.payment_status ?? "unpaid",
                 monthlyFee: Number(s.monthly_fee) || 0,
@@ -168,7 +170,7 @@ export default function SubscriptionsPage() {
                 memberName: s.team_member
                     ? `${s.team_member.first_name_ar ?? ""} ${s.team_member.last_name_ar ?? ""}`.trim()
                     : `لاعب #${s.team_member_id}`,
-                teamName: s.team?.name_ar || s.team?.name_en || `فريق #${s.team_id}`,
+                teamName: (i18n.language === 'ar' ? (s.team?.name_ar || s.team?.name_en) : (s.team?.name_en || s.team?.name_ar)) || `فريق #${s.team_id}`,
                 status: s.status,
                 paymentStatus: s.payment_status ?? "unpaid",
                 monthlyFee: Number(s.monthly_fee) || 0,
@@ -352,38 +354,38 @@ export default function SubscriptionsPage() {
             {/* ── Table ── */}
             <div className="flex-1 overflow-auto px-6 pb-6">
                 <div className="rounded-xl border border-border overflow-hidden">
-                    <table className="w-full text-sm">
-                        <thead className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
-                            <tr>
-                                <th className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground w-10">#</th>
-                                <th className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground">الكود</th>
-                                <th className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground">الاسم</th>
-                                <th className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground">النوع</th>
-                                <th className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground">الفريق</th>
-                                <th className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground">الرسوم الشهرية</th>
-                                <th className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground">تاريخ البداية</th>
-                                <th className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground">تاريخ الانتهاء</th>
-                                <th className="px-4 py-3 text-center font-semibold text-xs text-muted-foreground">الحالة</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
+                    <Table>
+                        <TableHeader className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
+                            <TableRow>
+                                <TableHead className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground w-10">#</TableHead>
+                                <TableHead className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground">الكود</TableHead>
+                                <TableHead className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground">الاسم</TableHead>
+                                <TableHead className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground">النوع</TableHead>
+                                <TableHead className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground">الفريق</TableHead>
+                                <TableHead className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground">الرسوم الشهرية</TableHead>
+                                <TableHead className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground">تاريخ البداية</TableHead>
+                                <TableHead className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground">تاريخ الانتهاء</TableHead>
+                                <TableHead className="px-4 py-3 text-center font-semibold text-xs text-muted-foreground">الحالة</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody className="divide-y divide-border">
                             {loading ? (
-                                <tr>
-                                    <td colSpan={9} className="text-center py-16">
+                                <TableRow>
+                                    <TableCell colSpan={9} className="text-center py-16">
                                         <div className="flex items-center justify-center gap-2 text-muted-foreground">
                                             <Loader2 className="h-5 w-5 animate-spin" />
                                             <span className="text-sm">جاري التحميل…</span>
                                         </div>
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             ) : filtered.length === 0 ? (
-                                <tr>
-                                    <td colSpan={9} className="text-center py-16 text-sm text-muted-foreground">
+                                <TableRow>
+                                    <TableCell colSpan={9} className="text-center py-16 text-sm text-muted-foreground">
                                         {rows.length === 0
                                             ? "لا توجد اشتراكات معلقة في الوقت الحالي"
                                             : "لا توجد اشتراكات تطابق الفلاتر المحددة"}
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             ) : (
                                 filtered.map((r, idx) => {
                                     const alertStatus = toAlertStatus(r.endDate, r.status);
@@ -392,19 +394,19 @@ export default function SubscriptionsPage() {
                                         statusLabelMap[r.status] ?? { label: r.status, cls: "border-gray-200 bg-gray-100 text-gray-600" };
 
                                     return (
-                                        <tr key={r.id} className="hover:bg-muted/30 transition-colors">
-                                            <td className="px-4 py-3 text-xs text-muted-foreground">{idx + 1}</td>
+                                        <TableRow key={r.id} className="hover:bg-muted/30 transition-colors">
+                                            <TableCell className="px-4 py-3 text-xs text-muted-foreground">{idx + 1}</TableCell>
 
                                             {/* Code */}
-                                            <td className="px-4 py-3">
+                                            <TableCell className="px-4 py-3">
                                                 <span className="font-mono text-xs font-semibold">{r.memberCode}</span>
-                                            </td>
+                                            </TableCell>
 
                                             {/* Name */}
-                                            <td className="px-4 py-3 text-sm">{r.memberName || "—"}</td>
+                                            <TableCell className="px-4 py-3 text-sm">{r.memberName || "—"}</TableCell>
 
                                             {/* Type badge */}
-                                            <td className="px-4 py-3">
+                                            <TableCell className="px-4 py-3">
                                                 {r.memberType === "team_member" ? (
                                                     <span className="inline-flex items-center rounded-full border border-purple-200 bg-purple-50 text-purple-700 px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap">
                                                         لاعب فريق
@@ -414,23 +416,23 @@ export default function SubscriptionsPage() {
                                                         عضو اجتماعي
                                                     </span>
                                                 )}
-                                            </td>
+                                            </TableCell>
 
                                             {/* Team */}
-                                            <td className="px-4 py-3 text-sm text-muted-foreground">{r.teamName}</td>
+                                            <TableCell className="px-4 py-3 text-sm text-muted-foreground">{r.teamName}</TableCell>
 
                                             {/* Monthly fee */}
-                                            <td className="px-4 py-3 text-sm font-semibold tabular-nums" dir="ltr">
+                                            <TableCell className="px-4 py-3 text-sm font-semibold tabular-nums" dir="ltr">
                                                 {r.monthlyFee > 0 ? `${r.monthlyFee.toLocaleString("ar-EG")} ج.م` : "—"}
-                                            </td>
+                                            </TableCell>
 
                                             {/* Start date */}
-                                            <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
+                                            <TableCell className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
                                                 {fmtDate(r.startDate)}
-                                            </td>
+                                            </TableCell>
 
                                             {/* End date with alert */}
-                                            <td className="px-4 py-3">
+                                            <TableCell className="px-4 py-3">
                                                 {r.endDate ? (
                                                     <div>
                                                         <p className={`text-sm font-medium whitespace-nowrap ${alertStatus === "overdue" ? "text-rose-600" :
@@ -450,20 +452,20 @@ export default function SubscriptionsPage() {
                                                 ) : (
                                                     <span className="text-xs text-muted-foreground">—</span>
                                                 )}
-                                            </td>
+                                            </TableCell>
 
                                             {/* Status badge */}
-                                            <td className="px-4 py-3 text-center">
+                                            <TableCell className="px-4 py-3 text-center">
                                                 <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold whitespace-nowrap ${statusCls}`}>
                                                     {statusLabel}
                                                 </span>
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     );
                                 })
                             )}
-                        </tbody>
-                    </table>
+                        </TableBody>
+                    </Table>
                 </div>
             </div>
         </div>

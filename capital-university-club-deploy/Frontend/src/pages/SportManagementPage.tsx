@@ -24,6 +24,7 @@ import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "../components/StaffPagesComponents/ui/select";
 import { motion } from "framer-motion";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 
 // Types
 
@@ -192,7 +193,7 @@ function Th({
     isRTL: boolean;
 }) {
     return (
-        <th
+        <TableHead
             onClick={() => field && onSort(field)}
             className={`
         ${center ? "text-center" : isRTL ? "text-right" : "text-left"}
@@ -211,7 +212,7 @@ function Th({
                         : <ChevronsUpDown className="w-3 h-3 opacity-40" />
                 )}
             </span>
-        </th>
+        </TableHead>
     );
 }
 
@@ -550,37 +551,37 @@ export default function SportManagementPage() {
                                 </p>
                             </div>
                         ) : (
-                            <table className="w-full text-sm">
-                                <thead className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
-                                    <tr>
+                            <Table>
+                                <TableHeader className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
+                                    <TableRow>
                                         <Th field="name" {...thProps}>{t("table.member")}</Th>
                                         <Th {...thProps}>{t("table.phone")}</Th>
                                         <Th field="national_id" {...thProps}>{t("table.nationalId")}</Th>
                                         <Th {...thProps}>{t("table.sports")}</Th>
                                         <Th field="created_at" {...thProps}>{t("table.subscriptionDate")}</Th>
                                         <Th field="status" {...thProps} center>{t("table.status")}</Th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border">
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody className="divide-y divide-border">
                                     {pageRows.map((m) => {
                                         const secondary = secondaryName(m, language);
                                         return (
-                                            <tr key={m.id} className="hover:bg-muted/20 transition-colors">
-                                                <td className="px-4 py-3 font-semibold align-middle">
+                                            <TableRow key={m.id} className="hover:bg-muted/20 transition-colors">
+                                                <TableCell className="px-4 py-3 font-semibold align-middle">
                                                     <div>{fullName(m, language)}</div>
                                                     {secondary && (
                                                         <div className="text-xs text-muted-foreground font-normal" dir={language === "en" ? "rtl" : "ltr"}>
                                                             {secondary}
                                                         </div>
                                                     )}
-                                                </td>
-                                                <td className={`${isRTL ? "text-right" : "text-left"} px-4 py-3 tabular-nums align-middle`}>
+                                                </TableCell>
+                                                <TableCell className={`${isRTL ? "text-right" : "text-left"} px-4 py-3 tabular-nums align-middle`}>
                                                     <span dir="ltr">{m.phone ?? "-"}</span>
-                                                </td>
-                                                <td className={`${isRTL ? "text-right" : "text-left"} px-4 py-3 font-mono text-xs align-middle`}>
+                                                </TableCell>
+                                                <TableCell className={`${isRTL ? "text-right" : "text-left"} px-4 py-3 font-mono text-xs align-middle`}>
                                                     <span dir="ltr">{m.national_id}</span>
-                                                </td>
-                                                <td className="px-4 py-3 align-middle">
+                                                </TableCell>
+                                                <TableCell className="px-4 py-3 align-middle">
                                                     <div className="flex flex-wrap gap-1">
                                                         {sportTags(m).length > 0
                                                             ? sportTags(m).map((tag) => (
@@ -594,24 +595,24 @@ export default function SportManagementPage() {
                                                             : <span className="text-muted-foreground text-xs">-</span>
                                                         }
                                                     </div>
-                                                </td>
-                                                <td className={`${isRTL ? "text-right" : "text-left"} px-4 py-3 text-xs text-muted-foreground tabular-nums align-middle`}>
+                                                </TableCell>
+                                                <TableCell className={`${isRTL ? "text-right" : "text-left"} px-4 py-3 text-xs text-muted-foreground tabular-nums align-middle`}>
                                                     <span dir="ltr">
                                                         {m.created_at
                                                             ? new Date(m.created_at).toLocaleDateString(language === "ar" ? "ar-EG" : "en-US")
                                                             : "-"}
                                                     </span>
-                                                </td>
-                                                <td className="px-4 py-3 text-center align-middle">
+                                                </TableCell>
+                                                <TableCell className="px-4 py-3 text-center align-middle">
                                                     <span className={`inline-flex text-[11px] font-semibold rounded-full px-2.5 py-0.5 ${STATUS_CLASSES[m.status] ?? "bg-muted text-muted-foreground"}`}>
                                                         {t(`status.${m.status}`, { defaultValue: m.status })}
                                                     </span>
-                                                </td>
-                                            </tr>
+                                                </TableCell>
+                                            </TableRow>
                                         );
                                     })}
-                                </tbody>
-                            </table>
+                                </TableBody>
+                            </Table>
                         )}
                     </div>
 

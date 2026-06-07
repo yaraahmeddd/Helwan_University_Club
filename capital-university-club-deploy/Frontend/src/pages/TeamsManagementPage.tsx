@@ -583,23 +583,25 @@ export default function TeamsManagementPage() {
                                                 </span>
                                             </TableCell>
                                             <TableCell className="whitespace-nowrap text-center">
-                                                <div className="flex items-center justify-center gap-2">
+                                                <div className="flex items-center justify-center gap-1.5">
                                                     <RoleGuard privilege="UPDATE_TEAM">
                                                         <Button
-                                                            size="sm" variant="outline"
-                                                            className="gap-1 text-accent border-accent hover:bg-accent hover:text-accent-foreground"
+                                                            size="icon" variant="ghost"
+                                                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors"
                                                             onClick={() => openEdit(team)}
+                                                            title={t('actions.edit')}
                                                         >
-                                                            <Pencil className="h-3 w-3" /> {t('actions.edit')}
+                                                            <Pencil className="h-4 w-4" />
                                                         </Button>
                                                     </RoleGuard>
                                                     <RoleGuard privilege="DELETE_TEAM">
                                                         <Button
-                                                            size="sm" variant="outline"
-                                                            className="gap-1 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                                            size="icon" variant="ghost"
+                                                            className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50 transition-colors"
                                                             onClick={() => setDeleteId(team.id)}
+                                                            title={t('actions.delete')}
                                                         >
-                                                            <Trash2 className="h-3 w-3" /> {t('actions.delete')}
+                                                            <Trash2 className="h-4 w-4" />
                                                         </Button>
                                                     </RoleGuard>
                                                 </div>

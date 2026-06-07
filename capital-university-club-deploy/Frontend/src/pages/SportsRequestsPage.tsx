@@ -18,6 +18,7 @@ import api from "../services/axios";
 import { useToast } from "../hooks/use-toast";
 import DateRangeFilter from "../components/StaffPagesComponents/shared/DateRangeFilter";
 import type { DateRange } from "../components/StaffPagesComponents/shared/DateRangeFilter";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -395,20 +396,20 @@ export default function SportsRequestsPage() {
                         </p>
                     </div>
                 ) : (
-                    <table className="w-full text-sm">
-                        <thead className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
-                            <tr>
-                                <th className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle w-10">#</th>
-                                <th className="text-right pr-4 pl-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">اسم عضو نادي</th>
-                                <th className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">رقم العضو</th>
-                                <th className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">النوع</th>
-                                <th className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">الرياضة</th>
-                                <th className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">الفريق المطلوب</th>
-                                <th className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">تاريخ الطلب</th>
-                                <th className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">الإجراء</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
+                    <Table>
+                        <TableHeader className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
+                            <TableRow>
+                                <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle w-10">#</TableHead>
+                                <TableHead className="text-right pr-4 pl-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">اسم عضو نادي</TableHead>
+                                <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">رقم العضو</TableHead>
+                                <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">النوع</TableHead>
+                                <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">الرياضة</TableHead>
+                                <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">الفريق المطلوب</TableHead>
+                                <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">تاريخ الطلب</TableHead>
+                                <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">الإجراء</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody className="divide-y divide-border">
                             {filtered.map((sub, idx) => {
                                 const approveKey = `${sub.requesterType}-${sub.id}-approve`;
                                 const declineKey = `${sub.requesterType}-${sub.id}-decline`;
@@ -416,27 +417,27 @@ export default function SportsRequestsPage() {
                                 const isTeam = sub.requesterType === "team_member";
 
                                 return (
-                                    <tr
+                                    <TableRow
                                         key={`${sub.requesterType}-${sub.id}`}
                                         className="transition-colors hover:bg-muted/40"
                                     >
                                         {/* # */}
-                                        <td className="px-4 py-3 text-sm text-muted-foreground font-mono align-middle">
+                                        <TableCell className="px-4 py-3 text-sm text-muted-foreground font-mono align-middle">
                                             {idx + 1}
-                                        </td>
+                                        </TableCell>
 
                                         {/* Name */}
-                                        <td className="px-4 py-3 align-middle font-semibold leading-tight">
+                                        <TableCell className="px-4 py-3 align-middle font-semibold leading-tight">
                                             {getDisplayName(sub)}
-                                        </td>
+                                        </TableCell>
 
                                         {/* Member ID */}
-                                        <td className="px-4 py-3 font-mono text-xs align-middle text-right">
+                                        <TableCell className="px-4 py-3 font-mono text-xs align-middle text-right">
                                             <span dir="ltr">{getMemberId(sub)}</span>
-                                        </td>
+                                        </TableCell>
 
                                         {/* Type badge */}
-                                        <td className="px-4 py-3 text-center align-middle">
+                                        <TableCell className="px-4 py-3 text-center align-middle">
                                             {isTeam ? (
                                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800">
                                                     <Award className="w-3 h-3" />
@@ -448,66 +449,66 @@ export default function SportsRequestsPage() {
                                                     عضو اجتماعي
                                                 </span>
                                             )}
-                                        </td>
+                                        </TableCell>
 
                                         {/* Sport */}
-                                        <td className="px-4 py-3 align-middle">
+                                        <TableCell className="px-4 py-3 align-middle">
                                             <span className="inline-flex items-center bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-xs font-medium">
                                                 {getSportName(sub)}
                                             </span>
-                                        </td>
+                                        </TableCell>
 
                                         {/* Team */}
-                                        <td className="px-4 py-3 align-middle">
+                                        <TableCell className="px-4 py-3 align-middle">
                                             <span className="inline-flex items-center bg-purple-100 text-purple-800 px-2 py-1 rounded-md text-xs font-medium">
                                                 {getTeamName(sub)}
                                             </span>
-                                        </td>
+                                        </TableCell>
 
                                         {/* Date */}
-                                        <td className="px-4 py-3 text-sm text-muted-foreground tabular-nums align-middle">
+                                        <TableCell className="px-4 py-3 text-sm text-muted-foreground tabular-nums align-middle">
                                             {formatArabicDate(sub.created_at)}
-                                        </td>
+                                        </TableCell>
 
                                         {/* Actions */}
-                                        <td className="px-4 py-3 align-middle">
+                                        <TableCell className="px-4 py-3 align-middle">
                                             <div className="flex items-center justify-center gap-1.5">
                                                 <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="h-8 px-3 gap-1.5 border-emerald-500/40 text-emerald-700 hover:bg-emerald-50 disabled:opacity-40"
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    className="h-8 w-8 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 transition-colors disabled:opacity-40"
                                                     onClick={() => void handleAction(sub, "approve")}
+                                                    title={actionId === approveKey ? "جارٍ..." : "قبول"}
                                                     disabled={isActing}
                                                 >
                                                     {actionId === approveKey ? (
-                                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
                                                     ) : (
-                                                        <CheckCircle className="h-3.5 w-3.5" />
+                                                        <CheckCircle className="h-4 w-4" />
                                                     )}
-                                                    {actionId === approveKey ? "جارٍ..." : "قبول"}
                                                 </Button>
 
                                                 <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="h-8 px-3 gap-1.5 border-red-400/50 text-red-600 hover:bg-red-50 disabled:opacity-40"
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    className="h-8 w-8 text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors disabled:opacity-40"
                                                     onClick={() => void handleAction(sub, "decline")}
+                                                    title={actionId === declineKey ? "جارٍ..." : "رفض"}
                                                     disabled={isActing}
                                                 >
                                                     {actionId === declineKey ? (
-                                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
                                                     ) : (
-                                                        <XCircle className="h-3.5 w-3.5" />
+                                                        <XCircle className="h-4 w-4" />
                                                     )}
-                                                    {actionId === declineKey ? "جارٍ..." : "رفض"}
                                                 </Button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 );
                             })}
-                        </tbody>
-                    </table>
+                        </TableBody>
+                    </Table>
                 )}
             </div>
         </div>

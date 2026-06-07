@@ -341,6 +341,12 @@ router.post('/determine-membership', (req, res) =>
   RegistrationController.determineMembership(req, res)
 );
 
+// Rollback: Delete a partially-created registration (called on frontend error)
+// Safety guard: only accounts with status='pending' are deleted
+router.delete('/rollback/:account_id', (req, res) =>
+  RegistrationController.rollbackRegistration(req, res)
+);
+
 // Step 4: Complete registration with membership
 router.post('/complete', (req, res) => RegistrationController.completeRegistration(req, res));
 

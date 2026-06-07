@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/StaffPagesComponents/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/StaffPagesComponents/ui/popover";
 import { Loader2, CalendarCheck, Clock, Lock } from "lucide-react";
+import i18n from "../i18n";
 
 // --- Types ---
 interface ApiField {
@@ -385,7 +386,7 @@ export default function ReservationPage() {
               <SelectContent>
                 {sports.map(s => (
                   <SelectItem key={s.sport_id} value={String(s.sport_id)}>
-                    {s.sport_name_ar || s.sport_name_en}
+                    {(i18n.language === 'ar' ? ((i18n.language === 'ar' ? (s.sport_name_ar || s.sport_name_en) : (s.sport_name_en || s.sport_name_ar))) : (s.sport_name_en || s.sport_name_ar))}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -400,7 +401,7 @@ export default function ReservationPage() {
               <SelectContent>
                 {activeFields.map(f => (
                   <SelectItem key={f.id} value={f.id}>
-                    {f.name_ar || f.name_en || f.name}
+                    {(i18n.language === 'ar' ? (f.name_ar || f.name_en) : (f.name_en || f.name_ar)) || f.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -524,7 +525,7 @@ export default function ReservationPage() {
             <div className="bg-white border text-[15px] font-semibold border-gray-100 shadow-sm rounded-2xl p-5 flex flex-col gap-4">
               <div className="flex justify-between items-center">
                 <span className="text-gray-500">النشاط</span>
-                <span className="text-gray-900">{activeSport?.sport_name_ar || activeSport?.sport_name_en}</span>
+                <span className="text-gray-900">{(i18n.language === 'ar' ? ((i18n.language === 'ar' ? (activeSport?.sport_name_ar || activeSport?.sport_name_en) : (activeSport?.sport_name_en || activeSport?.sport_name_ar))) : (activeSport?.sport_name_en || activeSport?.sport_name_ar))}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-500">الملعب</span>
