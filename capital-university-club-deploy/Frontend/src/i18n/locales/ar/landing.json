@@ -248,7 +248,30 @@
           }
         }
       }
-    }
+    },
+    "back_to_sports": "العودة لقائمة الألعاب",
+    "back_to_sports_footer": "العودة لقائمة الألعاب الرياضية",
+    "founded_2023": "تأسست عام 2023 ضمن منظومة أكاديميات النادي",
+    "select_sport": "اختر اللعبة:",
+    "about_academy": "نبذة عن الأكاديمية",
+    "schedule_label": "الجدول",
+    "flexible_weekly": "مرن أسبوعياً",
+    "fees_label": "الرسوم",
+    "available_branches": "الفروع المتاحة",
+    "age_groups": "الفئات العمرية المتاحة",
+    "subscription_steps": "خطوات الاشتراك",
+    "required_docs": "المستندات المطلوبة",
+    "subscription_benefits": "مميزات الاشتراك",
+    "training_schedule": "جدول التدريبات",
+    "head_coach": "المدرب المسؤول",
+    "monthly_fees": "الرسوم الشهرية",
+    "register_now_cta": "سجّل الآن واحجز مكانك في",
+    "contact_info_label": "بيانات التواصل",
+    "contact_academy": "تواصل مع إدارة الأكاديمية",
+    "contact_subtitle": "للاستفسار عن الاشتراك أو الفئات العمرية أو الجدول",
+    "academy_location": "مقر الأكاديمية",
+    "hours_sat_thu": "السبت إلى الخميس: من 9 صباحاً حتى 10 مساءً",
+    "hours_fri": "الجمعة: من 2 ظهراً حتى 10 مساءً"
   },
   "app": {
     "points_title_part1": "استفد ",
