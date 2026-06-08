@@ -363,7 +363,10 @@
     "academies_title": "Sports Academies",
     "players": "Players",
     "coaches": "Coaches",
-    "academy_desc": "The academy is one of the largest football academies in the region. Registration starts from 4 years old for both genders. Players are evaluated quarterly.",
+    "academy_desc_football": "The academy is one of the largest football academies in the region. Registration starts from 4 years old for both genders. Players are evaluated quarterly.",
+    "academy_desc_tennis": "The tennis academy provides an excellent training environment for all ages and levels. Focus is on fitness and basic and advanced techniques of the game.",
+    "academy_desc_swimming": "The swimming academy has fully equipped pools. Training is available from the age of 3 up to high competition levels.",
+    "academy_desc_basketball": "The basketball academy focuses on building team spirit and basic and advanced skills. We have teams participating in various tournaments.",
     "become_member": "Become a Member",
     "more_details": "More Details",
     "gym": {
