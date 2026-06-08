@@ -443,7 +443,7 @@ const App = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
               </div>
 
-              <div className="container mx-auto px-4 sm:px-6 relative z-10 pt-16 sm:pt-20">
+              <div className="w-full px-6 sm:px-10 md:px-16 lg:px-20 xl:px-24 relative z-10 pt-16 sm:pt-20">
                 <div className="max-w-3xl text-white text-start">
                   <h1 className="text-3xl sm:text-4xl md:text-7xl font-black mb-4 sm:mb-6 leading-tight mt-0">
                     {t("hero.title", "نادي جامعة العاصمة")}<br />
@@ -763,8 +763,24 @@ const App = () => {
             <section className="pt-10 pb-0 bg-[#0e1c38] relative overflow-hidden">
               <div className="container mx-auto px-4 relative z-10">
                 <div className="relative flex items-center justify-center py-12 md:py-16">
-                  <img src={asset("Uber rewards.png")} alt="App Screenshot Left" className="hidden md:block absolute start-0 md:-start-8 lg:-start-14 xl:-start-20 w-48 md:w-80 lg:w-102 translate-y-11" />
-                  <img src={asset("Gold iphone.png")} alt="App Screenshot Right" className="hidden md:block absolute end-0 md:-end-8 lg:-end-14 xl:-end-20 w-48 md:w-80 lg:w-95 translate-y-12" />
+                  <img
+                    src={asset("Uber rewards.png")}
+                    alt="App Screenshot Left"
+                    className="hidden md:block absolute translate-y-11"
+                    style={{
+                      [isArabic ? "right" : "left"]: "-120px",
+                      width: "250px",
+                    }}
+                  />
+                  <img
+                    src={asset("Gold iphone.png")}
+                    alt="App Screenshot Right"
+                    className="hidden md:block absolute translate-y-12"
+                    style={{
+                      [isArabic ? "left" : "right"]: "-120px",
+                      width: "250px",
+                    }}
+                  />
                   <div className="text-center text-white max-w-4xl">
                     <h2 className="text-5xl md:text-6xl lg:text-7xl font-extrabold mb-4 leading-tight tracking-wide md:tracking-wider">
                       {t("app.points_title_part1", "استفد ")}<span className="text-[#f8941c]">{t("app.points_title_part2", "بالنقاط")}</span> {t("app.points_title_part3", "من خلال")}

@@ -61,5 +61,20 @@
     "apply": "تطبيق",
     "clear": "مسح",
     "rangeUntil": "حتى {{date}}"
+  },
+  "review": {
+    "accountInfo": "معلومات الحساب",
+    "email": "البريد الإلكتروني",
+    "registerTime": "وقت التسجيل",
+    "status": "الحالة",
+    "personalInfo": "المعلومات الشخصية",
+    "name": "الاسم",
+    "nationality": "الجنسية",
+    "contactInfo": "معلومات الاتصال",
+    "address": "العنوان",
+    "membershipDetails": "تفاصيل العضوية",
+    "memberType": "نوع العضو",
+    "membershipPlan": "خطة العضوية",
+    "age": "سنة"
   }
 }
