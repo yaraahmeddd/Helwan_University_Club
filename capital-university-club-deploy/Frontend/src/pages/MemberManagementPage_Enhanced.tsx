@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { AlertCircle } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { memberEditSchema, type MemberEditFormValues } from "../features/admin/schemas/memberEditValidation";
+import { type MemberEditFormValues } from "../features/admin/schemas/memberEditValidation";
+import { useMemberEditSchema } from "../hooks/useValidation";
 import { ValidatedInput } from "../features/admin/components/ValidatedInput";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Label } from "../components/StaffPagesComponents/ui/label";
@@ -60,6 +61,7 @@ const EnhancedEditDialog = ({
     getFileUrl: (path?: string) => string | undefined;
 }) => {
     const [editTab, setEditTab] = useState<'info' | 'docs'>('info');
+    const memberEditSchema = useMemberEditSchema();
 
     const {
         register,

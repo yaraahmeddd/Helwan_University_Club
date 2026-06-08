@@ -8,11 +8,19 @@ const HUCFootball = '/assets/HUC football.jpg';
 import { AuthService } from '../services/authService';
 import type { LoginResponse, UserInfo } from '../types';
 import { useAuth } from '../context/AuthContext';
+import {
+  PATTERNS,
+  formatValidationError,
+  validateEmail,
+  validateLoginNationalId,
+  validatePassword,
+} from '../lib/validation';
 
 const BG_IMAGES = [HUCPictureFull, HUCFootball];
 
 const Login: React.FC = () => {
   const { i18n } = useTranslation();
+  const { t: tVal } = useTranslation('validation');
   const { login: authLogin } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -32,18 +40,25 @@ const Login: React.FC = () => {
   const isRTL = i18n.resolvedLanguage?.startsWith('ar') || i18n.language?.startsWith('ar');
   const tr = (ar: string, en: string) => (isRTL ? ar : en);
 
+  const resolveIdentifierError = (value: string, type: typeof loginType) => {
+    if (!value.trim()) return tVal('login.identifierRequired');
+    if (type === 'national_id') return formatValidationError(validateLoginNationalId(value), tVal) ?? '';
+    if (type === 'email') return formatValidationError(validateEmail(value), tVal) ?? '';
+    return '';
+  };
+
+  const resolvePasswordError = (value: string) =>
+    formatValidationError(validatePassword(value, true, { minLength: 6 }), tVal) ?? '';
+
   useEffect(() => {
     const value = formData.email;
-    if (/^\d{14}$/.test(value)) setLoginType('national_id');
+    if (PATTERNS.NATIONAL_ID_LOGIN.test(value)) setLoginType('national_id');
     else if (value.length > 0) setLoginType('email');
     else setLoginType(null);
   }, [formData.email]);
 
-  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validateNationalId = (nid: string) => /^\d{14}$/.test(nid);
-
   const handleChange = (field: 'email' | 'password', value: string) => {
-    if (field === 'email' && loginType === 'national_id' && value.length > 0 && !/^\d*$/.test(value)) {
+    if (field === 'email' && loginType === 'national_id' && value.length > 0 && !PATTERNS.DIGITS_ONLY.test(value)) {
       return;
     }
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -54,54 +69,19 @@ const Login: React.FC = () => {
     setTouched((prev) => ({ ...prev, [field]: true }));
 
     if (field === 'email') {
-      let emailError = '';
-      if (!formData.email) {
-        emailError = tr('البريد الإلكتروني أو الرقم القومي مطلوب', 'Please enter your email or national ID');
-      } else if (loginType === 'national_id' && !validateNationalId(formData.email)) {
-        emailError = tr('الرقم القومي يجب أن يكون 14 رقمًا', 'National ID must be exactly 14 digits');
-      } else if (loginType === 'email' && !validateEmail(formData.email)) {
-        emailError = tr('البريد الإلكتروني غير صحيح', 'Please enter a valid email address');
-      }
-      setErrors((prev) => ({ ...prev, email: emailError }));
+      setErrors((prev) => ({ ...prev, email: resolveIdentifierError(formData.email, loginType) }));
     }
 
-    if (field === 'password') {
-      if (loginType === 'national_id') return;
-      const passwordError =
-        !formData.password
-          ? tr('كلمة المرور مطلوبة', 'Please enter your password')
-          : formData.password.length < 6
-            ? tr('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'Password must be at least 6 characters')
-            : '';
-      setErrors((prev) => ({ ...prev, password: passwordError }));
+    if (field === 'password' && loginType !== 'national_id') {
+      setErrors((prev) => ({ ...prev, password: resolvePasswordError(formData.password) }));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    let emailError = '';
-    let passwordError = '';
-
-    if (!formData.email) {
-      emailError = tr('البريد الإلكتروني أو الرقم القومي مطلوب', 'Please enter your email or national ID');
-    } else if (loginType === 'national_id') {
-      if (!validateNationalId(formData.email)) {
-        emailError = tr('الرقم القومي يجب أن يكون 14 رقمًا', 'National ID must be exactly 14 digits');
-      }
-    } else if (loginType === 'email') {
-      if (!validateEmail(formData.email)) {
-        emailError = tr('البريد الإلكتروني غير صحيح', 'Please enter a valid email address');
-      }
-    }
-
-    if (loginType !== 'national_id') {
-      if (!formData.password) {
-        passwordError = tr('كلمة المرور مطلوبة', 'Please enter your password');
-      } else if (formData.password.length < 6) {
-        passwordError = tr('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'Password must be at least 6 characters');
-      }
-    }
+    const emailError = resolveIdentifierError(formData.email, loginType);
+    const passwordError = loginType === 'national_id' ? '' : resolvePasswordError(formData.password);
 
     setErrors({ email: emailError, password: passwordError, api: '' });
     setTouched({ email: true, password: true });

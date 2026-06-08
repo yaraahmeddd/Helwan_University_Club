@@ -10,7 +10,8 @@ import { Users, CheckCircle2, RotateCcw, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
-import { registerSchema, type RegisterFormValues } from '../features/register/schemas/validation';
+import { type RegisterFormValues } from '../features/register/schemas/validation';
+import { useRegisterSchema } from '../hooks/useValidation';
 import { prepareSubmissionData, debugFormData, type FileUploadMap } from '../features/register/utils/submissionFactory';
 import { AuthService } from '../services/authService';
 import { RegisterStepIndicator } from '../features/register/components/RegisterStepIndicator';
@@ -109,6 +110,8 @@ const StaffAddMemberPage = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [successData, setSuccessData] = useState<{ name: string; id: number } | null>(null);
     const { toast } = useToast();
+
+    const registerSchema = useRegisterSchema();
 
     const methods = useForm<RegisterFormValues>({
         resolver: zodResolver(registerSchema) as never,

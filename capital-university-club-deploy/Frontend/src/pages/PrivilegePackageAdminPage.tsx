@@ -3,6 +3,8 @@ import { ChevronDown, X, Search, CheckSquare, Square } from "lucide-react";
 import api from "../services/axios";
 import { useToast } from "../hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "../hooks/useLanguage";
+import { getLocalizedText } from "../lib/localizedDisplay";
 
 // ─── Brand tokens (unchanged) ────────────────────────────────────────────────
 const theme = {
@@ -14,8 +16,23 @@ const theme = {
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-type PrivilegeItem = { id: number; name: string };
+type PrivilegeItem = {
+  id: number;
+  nameAr?: string;
+  nameEn?: string;
+  labelKey?: string;
+};
+
 type ModuleItem = { id: string; name: string; privileges: PrivilegeItem[] };
+
+const privilegeDisplayName = (
+  privilege: PrivilegeItem,
+  language: "ar" | "en",
+  t: (key: string) => string,
+) => {
+  if (privilege.labelKey) return t(privilege.labelKey);
+  return getLocalizedText(privilege.nameAr, privilege.nameEn, language) || "";
+};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -26,19 +43,50 @@ const toModuleId = (name: string) =>
 
 export default function PrivilegePackageAdminPage() {
   const { toast } = useToast();
-  const { t, i18n } = useTranslation("PrivilegePackageAdminPage");
-  const isRTL = i18n.language === "ar";
+  const { t } = useTranslation("PrivilegePackageAdminPage");
+  const { language, isRTL } = useLanguage();
 
-  // Fallback mock data
   const mockModules: ModuleItem[] = [
-    { id: "members", name: t("modules.members"), privileges: [{ id: -1, name: "إضافة عضو" }, { id: -2, name: "تعديل بيانات عضو" }, { id: -3, name: "حذف عضو" }, { id: -4, name: "طباعة بطاقة عضو" }] },
-    { id: "teams", name: t("modules.teams"), privileges: [{ id: -5, name: "إضافة فريق" }, { id: -6, name: "تعديل فريق" }, { id: -7, name: "حذف فريق" }] },
-    { id: "media", name: t("modules.media"), privileges: [{ id: -8, name: "إضافة وسائط" }, { id: -9, name: "حذف وسائط" }] },
-    { id: "finance", name: t("modules.finance"), privileges: [{ id: -10, name: "عرض البيانات المالية" }, { id: -11, name: "إنشاء معاملة" }, { id: -12, name: "تعديل معاملة" }, { id: -13, name: "حذف معاملة" }] },
+    {
+      id: "members",
+      name: t("modules.members"),
+      privileges: [
+        { id: -1, labelKey: "mockPrivileges.addMember" },
+        { id: -2, labelKey: "mockPrivileges.editMember" },
+        { id: -3, labelKey: "mockPrivileges.deleteMember" },
+        { id: -4, labelKey: "mockPrivileges.printMemberCard" },
+      ],
+    },
+    {
+      id: "teams",
+      name: t("modules.teams"),
+      privileges: [
+        { id: -5, labelKey: "mockPrivileges.addTeam" },
+        { id: -6, labelKey: "mockPrivileges.editTeam" },
+        { id: -7, labelKey: "mockPrivileges.deleteTeam" },
+      ],
+    },
+    {
+      id: "media",
+      name: t("modules.media"),
+      privileges: [
+        { id: -8, labelKey: "mockPrivileges.addMedia" },
+        { id: -9, labelKey: "mockPrivileges.deleteMedia" },
+      ],
+    },
+    {
+      id: "finance",
+      name: t("modules.finance"),
+      privileges: [
+        { id: -10, labelKey: "mockPrivileges.viewFinance" },
+        { id: -11, labelKey: "mockPrivileges.createTransaction" },
+        { id: -12, labelKey: "mockPrivileges.editTransaction" },
+        { id: -13, labelKey: "mockPrivileges.deleteTransaction" },
+      ],
+    },
   ];
 
-  // Helper to translate module names
-  const getArabicModuleName = (name: string): string => {
+  const getModuleLabel = (name: string): string => {
     const key = name.toLowerCase().trim().replace(/[-\s]/g, "_");
     const trans = t(`modules.${key}`);
     // If translation doesn't exist, i18next returns the key string
@@ -80,16 +128,22 @@ export default function PrivilegePackageAdminPage() {
         const apiModules: ModuleItem[] = Object.entries(grouped as Record<string, unknown[]>)
           .map(([moduleName, list]) => ({
             id: toModuleId(moduleName),
-            name: getArabicModuleName(moduleName),
+            name: getModuleLabel(moduleName),
             privileges: Array.isArray(list)
               ? list
                 .map((item) => {
                   const priv = item as Record<string, unknown>;
                   const id = Number(priv?.id);
-                  const name = String(isRTL ? (priv?.name_ar || priv?.name_en || priv?.code) : (priv?.name_en || priv?.name_ar || priv?.code) || priv?.id || "").trim();
-                  return { id, name };
+                  const nameAr = String(priv?.name_ar ?? "").trim();
+                  const nameEn = String(priv?.name_en ?? "").trim();
+                  const code = String(priv?.code ?? "").trim();
+                  return {
+                    id,
+                    nameAr: nameAr || undefined,
+                    nameEn: nameEn || code || undefined,
+                  };
                 })
-                .filter((p) => Number.isFinite(p.id) && p.id > 0 && p.name)
+                .filter((p) => Number.isFinite(p.id) && p.id > 0 && (p.nameAr || p.nameEn))
               : [],
           }))
           .filter((m) => m.privileges.length > 0);
@@ -107,7 +161,7 @@ export default function PrivilegePackageAdminPage() {
       }
     };
     void load();
-  }, [isRTL]); // Reload on language change so names get updated
+  }, [language, t]);
 
   // ── Computed values ────────────────────────────────────────────────────────
 
@@ -121,13 +175,18 @@ export default function PrivilegePackageAdminPage() {
     return modules
       .map((m) => {
         let privs = m.privileges;
-        if (q) privs = privs.filter((p) => p.name.toLowerCase().includes(q) || m.name.toLowerCase().includes(q));
+        if (q) {
+          privs = privs.filter((p) => {
+            const label = privilegeDisplayName(p, language, t).toLowerCase();
+            return label.includes(q) || m.name.toLowerCase().includes(q);
+          });
+        }
         if (viewFilter === "selected") privs = privs.filter((p) => selectedPrivileges.has(p.id));
         if (viewFilter === "unselected") privs = privs.filter((p) => !selectedPrivileges.has(p.id));
         return { ...m, privileges: privs };
       })
       .filter((m) => m.privileges.length > 0);
-  }, [modules, globalSearch, viewFilter, selectedPrivileges]);
+  }, [modules, globalSearch, viewFilter, selectedPrivileges, language, t]);
 
   // Sidebar: selected items grouped by module, filtered by sidebarSearch
   const sidebarGroups = useMemo(() => {
@@ -137,11 +196,11 @@ export default function PrivilegePackageAdminPage() {
         moduleId: m.id,
         moduleName: m.name,
         items: m.privileges.filter(
-          (p) => selectedPrivileges.has(p.id) && (!sq || p.name.toLowerCase().includes(sq))
+          (p) => selectedPrivileges.has(p.id) && (!sq || privilegeDisplayName(p, language, t).toLowerCase().includes(sq))
         ),
       }))
       .filter((g) => g.items.length > 0);
-  }, [modules, selectedPrivileges, sidebarSearch]);
+  }, [modules, selectedPrivileges, sidebarSearch, language, t]);
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
@@ -423,7 +482,7 @@ export default function PrivilegePackageAdminPage() {
                                 : { backgroundColor: "white", color: "#374151", borderColor: theme.border }
                               }
                             >
-                              {p.name}
+                              {privilegeDisplayName(p, language, t)}
                             </button>
                           );
                         })}
@@ -489,7 +548,7 @@ export default function PrivilegePackageAdminPage() {
                           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium text-white"
                           style={{ backgroundColor: theme.accentBlue }}
                         >
-                          {p.name}
+                          {privilegeDisplayName(p, language, t)}
                           <button
                             onClick={() => togglePrivilege(p.id)}
                             className="hover:bg-white/20 rounded-full p-0.5 transition-colors"

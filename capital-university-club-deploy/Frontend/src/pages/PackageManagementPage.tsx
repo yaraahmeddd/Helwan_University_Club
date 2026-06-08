@@ -4,6 +4,14 @@ import { Plus, Pencil, Trash2, ShieldCheck, X, AlertTriangle, Eye, Search } from
 import api from "../services/axios";
 import { useToast } from "../hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "../hooks/useLanguage";
+import { getLocalizedText, localeFontFamily, type DisplayLanguage } from "../lib/localizedDisplay";
+
+const packageLabel = (pkg: Package, language: DisplayLanguage) =>
+  getLocalizedText(pkg.name_ar, pkg.name_en, language) || pkg.code;
+
+const privilegeLabel = (p: Privilege, language: DisplayLanguage) =>
+  getLocalizedText(p.name_ar, p.name_en, language) || p.code || "";
 
 const theme = {
   primaryDark: "#1F3A5F",
@@ -37,8 +45,8 @@ function PrivilegesModal({
   pkg: Package;
   onClose: () => void;
 }) {
-  const { t, i18n } = useTranslation("PackageManagementPage");
-  const isRTL = i18n.language === "ar";
+  const { t } = useTranslation("PackageManagementPage");
+  const { language, isRTL } = useLanguage();
   const [search, setSearch] = useState("");
   const privileges = pkg.privileges ?? [];
 
@@ -46,11 +54,11 @@ function PrivilegesModal({
     const q = search.trim().toLowerCase();
     if (!q) return privileges;
     return privileges.filter((p) => {
-      const label = (p.name_ar || p.name_en || p.code || "").toLowerCase();
+      const label = privilegeLabel(p, language).toLowerCase();
       const mod = (p.module || "").toLowerCase();
       return label.includes(q) || mod.includes(q);
     });
-  }, [privileges, search]);
+  }, [privileges, search, language]);
 
   const grouped = useMemo(() => {
     const hasModules = filtered.some((p) => p.module);
@@ -85,7 +93,7 @@ function PrivilegesModal({
                 <ShieldCheck className="w-4 h-4" style={{ color: theme.accentBlue }} />
               </div>
               <div>
-                <h2 className="text-base font-bold" style={{ color: theme.primaryDark }}>{isRTL ? (pkg.name_ar || pkg.name_en) : pkg.name_en}</h2>
+                <h2 className="text-base font-bold" style={{ color: theme.primaryDark }}>{packageLabel(pkg, language)}</h2>
                 <p className="text-xs text-gray-400 mt-0.5">
                   <span className="font-semibold mx-1" style={{ color: theme.accentBlue }}>{privileges.length}</span>
                   {t("privModal.associatedPrivileges")}
@@ -148,7 +156,7 @@ function PrivilegesModal({
                         className="px-3 py-1.5 rounded-full text-xs font-medium text-white"
                         style={{ backgroundColor: theme.accentBlue }}
                       >
-                        {isRTL ? (p.name_ar || p.name_en || p.code) : (p.name_en || p.name_ar || p.code)}
+                        {privilegeLabel(p, language)}
                       </span>
                     ))}
                   </div>
@@ -163,7 +171,7 @@ function PrivilegesModal({
                   className="px-3 py-1.5 rounded-full text-xs font-medium text-white"
                   style={{ backgroundColor: theme.accentBlue }}
                 >
-                  {isRTL ? (p.name_ar || p.name_en || p.code) : (p.name_en || p.name_ar || p.code)}
+                  {privilegeLabel(p, language)}
                 </span>
               ))}
             </div>
@@ -196,9 +204,9 @@ function DeleteModal({
   onCancel: () => void;
   isDeleting: boolean;
 }) {
-  const { t, i18n } = useTranslation("PackageManagementPage");
-  const isRTL = i18n.language === "ar";
-  
+  const { t } = useTranslation("PackageManagementPage");
+  const { language, isRTL } = useLanguage();
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" dir={isRTL ? "rtl" : "ltr"}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
@@ -210,7 +218,7 @@ function DeleteModal({
             <div className="flex-1">
               <h2 className={`text-lg font-bold text-gray-900 mb-1 ${isRTL ? "text-right" : "text-left"}`}>{t("deleteModal.title")}</h2>
               <p className={`text-sm text-gray-500 leading-relaxed ${isRTL ? "text-right" : "text-left"}`}>
-                {t("deleteModal.desc1")} <span className="font-bold text-gray-800">"{isRTL ? (pkg.name_ar || pkg.name_en) : pkg.name_en}"</span>{t("deleteModal.desc2")}
+                {t("deleteModal.desc1")} <span className="font-bold text-gray-800">"{packageLabel(pkg, language)}"</span>{t("deleteModal.desc2")}
               </p>
             </div>
           </div>
@@ -249,10 +257,10 @@ function EditModal({
   onCancel: () => void;
   isSaving: boolean;
 }) {
-  const { t, i18n } = useTranslation("PackageManagementPage");
-  const isRTL = i18n.language === "ar";
-  
-  const initialName = isRTL ? (pkg.name_ar || pkg.name_en) : pkg.name_en;
+  const { t } = useTranslation("PackageManagementPage");
+  const { language, isRTL } = useLanguage();
+
+  const initialName = packageLabel(pkg, language);
   
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState(pkg.description || "");
@@ -330,12 +338,11 @@ function PackageCard({
   onDelete: (pkg: Package) => void;
   onViewPrivileges: (pkg: Package) => void;
 }) {
-  const { t, i18n } = useTranslation("PackageManagementPage");
-  const isRTL = i18n.language === "ar";
+  const { t } = useTranslation("PackageManagementPage");
+  const { language, isRTL } = useLanguage();
   const privCount = pkg.privileges?.length ?? 0;
-  
-  const mainName = isRTL ? (pkg.name_ar || pkg.name_en) : pkg.name_en;
-  const secondaryName = isRTL ? (pkg.name_en && pkg.name_en !== pkg.name_ar ? pkg.name_en : null) : (pkg.name_ar && pkg.name_ar !== pkg.name_en ? pkg.name_ar : null);
+
+  const displayName = packageLabel(pkg, language);
 
   return (
     <div className="bg-white rounded-xl border shadow-sm hover:shadow-md transition-shadow overflow-hidden" style={{ borderColor: theme.border }}>
@@ -346,10 +353,13 @@ function PackageCard({
               <ShieldCheck className="w-5 h-5" style={{ color: theme.accentBlue }} />
             </div>
             <div className={`min-w-0 ${isRTL ? "text-right" : "text-left"}`}>
-              <p className="font-bold text-gray-900 text-base leading-tight truncate" dir="auto">{mainName}</p>
-              {secondaryName && (
-                <p className="text-xs text-gray-400 mt-0.5 truncate" dir="auto">{secondaryName}</p>
-              )}
+              <p
+                className="font-bold text-gray-900 text-base leading-tight truncate"
+                dir="auto"
+                style={{ fontFamily: localeFontFamily(language) }}
+              >
+                {displayName}
+              </p>
               <span className="inline-block mt-1 text-[11px] font-mono px-2 py-0.5 rounded bg-gray-100 text-gray-500">{pkg.code}</span>
               {pkg.description && (
                 <p className="text-sm text-gray-500 mt-2 leading-relaxed line-clamp-2" dir="auto">{pkg.description}</p>
@@ -403,8 +413,8 @@ function PackageCard({
 export default function PackageManagementPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { t, i18n } = useTranslation("PackageManagementPage");
-  const isRTL = i18n.language === "ar";
+  const { t } = useTranslation("PackageManagementPage");
+  const { isRTL } = useLanguage();
 
   const [packages, setPackages] = useState<Package[]>([]);
   const [loading, setLoading] = useState(true);

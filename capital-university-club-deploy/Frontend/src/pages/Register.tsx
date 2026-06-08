@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, User, Phone, AlertCircle } from 'lucide-react';
 import { useLocalizedTranslation } from '../hooks/useLocalizedTranslation';
+import { useTranslation } from 'react-i18next';
+import {
+  formatValidationError,
+  validateEmail,
+  validateEnglishName,
+  validateEgyptianPhone,
+  validatePassword,
+  validatePasswordMatch,
+  validateRequired,
+} from '../lib/validation';
 
 const SignUp: React.FC = () => {
   const { t: tCommon } = useLocalizedTranslation('common');
@@ -47,8 +57,7 @@ const SignUp: React.FC = () => {
     { value: 'FOREIGNER', label_ar: 'أجنبي', label_en: 'Foreigner Member', description_ar: 'الأجانب' }
   ];
 
-  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validatePhone = (phone: string) => /^[0-9]{10,15}$/.test(phone.replace(/[\s-]/g, ''));
+  const { t: tVal } = useTranslation('validation');
 
   const handleChange = (field: keyof typeof formData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -59,29 +68,25 @@ const SignUp: React.FC = () => {
     let error = '';
     switch (field) {
       case 'firstName':
-        if (!value.trim()) error = 'الاسم الأول مطلوب';
+        error = formatValidationError(validateEnglishName(value), tVal) ?? '';
         break;
       case 'lastName':
-        if (!value.trim()) error = 'الاسم الثاني مطلوب';
+        error = formatValidationError(validateEnglishName(value), tVal) ?? '';
         break;
       case 'email':
-        if (!value) error = 'البريد الإلكتروني مطلوب';
-        else if (!validateEmail(value)) error = 'البريد الإلكتروني غير صحيح';
+        error = formatValidationError(validateEmail(value), tVal) ?? '';
         break;
       case 'phone':
-        if (!value) error = 'رقم الهاتف مطلوب';
-        else if (!validatePhone(value)) error = 'رقم الهاتف غير صحيح';
+        error = formatValidationError(validateEgyptianPhone(value), tVal) ?? '';
         break;
       case 'password':
-        if (!value) error = 'كلمة المرور مطلوبة';
-        else if (value.length < 8) error = 'كلمة المرور يجب أن تكون 8 أحرف على الأقل';
+        error = formatValidationError(validatePassword(value, true, { minLength: 8 }), tVal) ?? '';
         break;
       case 'confirmPassword':
-        if (!value) error = 'تأكيد كلمة المرور مطلوب';
-        else if (value !== formData.password) error = 'كلمة المرور غير متطابقة';
+        error = formatValidationError(validatePasswordMatch(formData.password, value), tVal) ?? '';
         break;
       case 'membershipType':
-        if (!value) error = 'اختر نوع العضوية من فضلك';
+        error = formatValidationError(validateRequired(value, 'category.required'), tVal) ?? '';
         break;
     }
     setErrors(prev => ({ ...prev, [field]: error }));

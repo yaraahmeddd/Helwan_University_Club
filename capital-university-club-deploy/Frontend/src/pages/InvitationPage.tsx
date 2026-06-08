@@ -9,6 +9,14 @@ import {
     Home,
 } from "lucide-react";
 import api from "../services/axios";
+import { useTranslation } from "react-i18next";
+import {
+    formatValidationError,
+    validateEgyptianPhone,
+    validateInviteNationalId,
+    validateEmail,
+    validateRequired,
+} from "../lib/validation";
 const HUCLogo = "/assets/HUC logo.jpeg";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -314,6 +322,7 @@ function DetailsPanel({ details }: { details: InviteDetails }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function InvitationPage() {
     const { token } = useParams<{ token: string }>();
+    const { t: tVal } = useTranslation("validation");
 
     const [pageState, setPageState] = useState<PageState>("loading");
     const [details, setDetails] = useState<InviteDetails | null>(null);
@@ -369,22 +378,28 @@ export default function InvitationPage() {
     // ── Validation ──
     const validate = (): boolean => {
         const errs: FormErrors = {};
-        if (!form.full_name.trim()) errs.full_name = "الاسم الكامل مطلوب";
 
-        // Egyptian mobile: exactly 11 digits, starts with 010 / 011 / 012 / 015
-        if (form.phone_number && !/^01[0125]\d{8}$/.test(form.phone_number))
-            errs.phone_number = "رقم الهاتف يجب أن يكون 11 رقماً ويبدأ بـ 010 أو 011 أو 012 أو 015";
+        const fullNameError = formatValidationError(validateRequired(form.full_name, "fullName.required"), tVal);
+        if (fullNameError) errs.full_name = fullNameError;
 
-        // Egyptian national ID: exactly 14 digits, starts with 2 or 3
-        if (form.national_id && !/^[23]\d{13}$/.test(form.national_id))
-            errs.national_id = "الرقم القومي يجب أن يكون 14 رقماً ويبدأ بـ 2 أو 3";
+        if (form.phone_number.trim()) {
+            const phoneError = formatValidationError(validateEgyptianPhone(form.phone_number), tVal);
+            if (phoneError) errs.phone_number = phoneError;
+        }
 
-        if (
-            !form.phone_number.trim() &&
-            !form.national_id.trim() &&
-            !form.email.trim()
-        )
-            errs.contact = "يرجى إدخال رقم الهاتف أو الرقم القومي أو البريد الإلكتروني";
+        if (form.national_id.trim()) {
+            const nidError = formatValidationError(validateInviteNationalId(form.national_id), tVal);
+            if (nidError) errs.national_id = nidError;
+        }
+
+        if (form.email.trim()) {
+            const emailError = formatValidationError(validateEmail(form.email), tVal);
+            if (emailError) errs.email = emailError;
+        }
+
+        if (!form.phone_number.trim() && !form.national_id.trim() && !form.email.trim()) {
+            errs.contact = tVal("contact.required");
+        }
 
         setErrors(errs);
         return Object.keys(errs).length === 0;

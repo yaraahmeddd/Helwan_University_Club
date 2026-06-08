@@ -1,6 +1,15 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../services/axios";
+import { useTranslation } from "react-i18next";
+import {
+  firstError,
+  formatValidationError,
+  validateEmail,
+  validateEgyptianPhone,
+  validateMemberNationalId,
+  validateRequired,
+} from "../lib/validation";
 import {
   Calendar,
   Clock,
@@ -67,6 +76,7 @@ function formatDateTime(dateStr: string, type: "date" | "time") {
 const JoinBookingPage: React.FC = () => {
   const { shareToken } = useParams<{ shareToken: string }>();
   const navigate = useNavigate();
+  const { t: tVal } = useTranslation("validation");
 
   const [booking, setBooking] = useState<PublicBookingDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -120,43 +130,31 @@ const JoinBookingPage: React.FC = () => {
     if (!shareToken) return;
 
     const fullNameTrimmed = form.full_name.trim();
-    if (!fullNameTrimmed) {
-      setError("يرجى إدخال الاسم الكامل.");
+    const nameRequired = formatValidationError(validateRequired(fullNameTrimmed, "fullName.required"), tVal);
+    if (nameRequired) {
+      setError(nameRequired);
       return;
     }
 
     const nameParts = fullNameTrimmed.split(/\s+/);
     if (nameParts.length < 2) {
-      setError("يرجى إدخال الاسم بالكامل (الاسم الأول واسم العائلة على الأقل).");
+      setError(tVal("fullName.parts"));
       return;
     }
 
-    if (form.phone_number && !/^01[0125]\d{8}$/.test(form.phone_number.trim())) {
-      setError("رقم الهاتف غير صحيح (يجب أن يبدأ بـ 010 أو 011 أو 012 أو 015 ويتكون من 11 رقم).");
+    const contactChecks = [];
+    if (form.phone_number.trim()) contactChecks.push(validateEgyptianPhone(form.phone_number));
+    if (form.email.trim()) contactChecks.push(validateEmail(form.email));
+    if (form.national_id.trim()) contactChecks.push(validateMemberNationalId(form.national_id));
+
+    const fieldError = firstError(contactChecks, tVal);
+    if (fieldError) {
+      setError(fieldError);
       return;
     }
 
-    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
-      setError("البريد الإلكتروني غير صحيح.");
-      return;
-    }
-
-    if (form.national_id) {
-      const natIdTrimmed = form.national_id.trim();
-      if (!/^\d{14}$/.test(natIdTrimmed)) {
-        setError("الرقم القومي يجب أن يتكون من 14 رقم.");
-        return;
-      }
-      if (natIdTrimmed.startsWith("0")) {
-        setError("الرقم القومي غير صحيح (لا يمكن أن يبدأ برقم 0).");
-        return;
-      }
-    }
-
-    if (!form.phone_number && !form.national_id && !form.email) {
-      setError(
-        "يرجى إدخال وسيلة تواصل واحدة على الأقل (رقم الهاتف أو البريد الإلكتروني أو الرقم القومي)."
-      );
+    if (!form.phone_number.trim() && !form.national_id.trim() && !form.email.trim()) {
+      setError(tVal("contact.required"));
       return;
     }
 

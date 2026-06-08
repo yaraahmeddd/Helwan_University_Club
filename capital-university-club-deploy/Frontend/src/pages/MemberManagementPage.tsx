@@ -23,6 +23,7 @@ import api from "../services/axios";
 
 import { useToast } from "../hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { useMemberEditSchema } from "../hooks/useValidation";
 
 import { Button } from "../components/StaffPagesComponents/ui/button";
 
@@ -889,6 +890,7 @@ export default function MemberManagementPage() {
     const { t, i18n } = useTranslation('MemberManagementPage');
     const { language, isRTL } = useLanguage();
     const { toast } = useToast();
+    const memberEditSchema = useMemberEditSchema();
 
     const getMemberDisplayName = useCallback((row: Pick<MemberRow, "firstNameAr" | "lastNameAr" | "firstNameEn" | "lastNameEn">) => {
         return buildPersonName(row, language).primary;
@@ -1750,6 +1752,27 @@ export default function MemberManagementPage() {
     const handleSaveEdit = async () => {
 
         if (!selectedRow) return;
+
+        const validation = memberEditSchema.safeParse({
+            first_name_ar: editFirstNameAr.trim(),
+            last_name_ar: editLastNameAr.trim(),
+            first_name_en: editFirstNameEn.trim(),
+            last_name_en: editLastNameEn.trim(),
+            gender: (editGender.trim() || 'male') as 'male' | 'female' | 'other',
+            phone: editPhone.trim(),
+            birthdate: editBirthdate.trim(),
+            nationality: editNationality.trim(),
+            address: editAddress.trim(),
+            health_status: editHealth.trim(),
+        });
+
+        if (!validation.success) {
+            toast({
+                title: validation.error.issues[0]?.message ?? t('toast.updateFailed'),
+                variant: 'destructive',
+            });
+            return;
+        }
 
         setEditSaving(true);
 

@@ -9,6 +9,11 @@ import { Toaster, toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { resolveFileUrl } from '../utils/fileUrl';
 import { useLocalizedTranslation } from '../hooks/useLocalizedTranslation';
+import { useLanguage } from '../hooks/useLanguage';
+import { getLocalizedText } from '../lib/localizedDisplay';
+import { useStaffJobLabels } from '../lib/staffJobLabel';
+import { formatValidationError, validatePassword, validatePasswordMatch } from '../lib/validation';
+import { useTranslation as useI18nTranslation } from 'react-i18next';
 
 // Design System - HUC Branding
 const colors = {
@@ -37,21 +42,24 @@ const colors = {
 // Types mapped to Frontend UI
 interface UserProfile {
     id: number;
-    fullName: string;
+    fullNameAr: string;
+    fullNameEn: string;
     email: string;
     phone: string;
     nationalId: string;
-    dateOfBirth: string; // Not in Staff Entity directly? Using employment_start_date as proxy or adding if available
+    dateOfBirth: string;
     address: string;
-    department: string;
-    jobTitle: string; // Staff Type
-    role: string;
-    employeeId: string; // Staff ID
-    accountStatus: string;
+    staffTypeId: number;
+    staffTypeNameAr?: string;
+    staffTypeNameEn?: string;
+    staffTypeCode?: string;
+    employeeId: string;
+    accountStatusKey: 'active' | 'inactive';
     profilePhoto: string;
     lastLogin: string;
     accountCreated: string;
     totalActions: number;
+    isAdminProfile?: boolean;
 }
 
 interface Privilege {
@@ -62,13 +70,32 @@ interface Privilege {
     create: boolean;
 }
 
+type PasswordStrengthLevel = 'weak' | 'medium' | 'strong';
+
 interface PasswordStrength {
-    level: 'ضعيف' | 'متوسط' | 'قوي';
+    level: PasswordStrengthLevel;
     color: string;
+    width: string;
 }
 
 const StaffProfile: React.FC = () => {
-    const { t: tCommon } = useLocalizedTranslation('common');
+    const { t, t: tCommon } = useLocalizedTranslation(['StaffProfile', 'common']);
+    const { t: tVal } = useI18nTranslation('validation');
+    const { language, isRTL } = useLanguage();
+    const { resolveJobLabel } = useStaffJobLabels(language);
+    const dateLocale = language === 'en' ? 'en-US' : 'ar-EG';
+    const fmtDate = (value?: string) => {
+        if (!value) return t('notAvailable');
+        try {
+            return new Date(value).toLocaleDateString(dateLocale, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+            });
+        } catch {
+            return value;
+        }
+    };
     const [userData, setUserData] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -99,27 +126,27 @@ const StaffProfile: React.FC = () => {
                     if (user?.role === 'ADMIN') {
                         const mappedUser: UserProfile = {
                             id: 0,
-                            fullName: user.fullName || 'Admin User',
+                            fullNameAr: user.fullName || t('adminDefaults.fullName'),
+                            fullNameEn: user.fullName || t('adminDefaults.fullName'),
                             email: '',
                             phone: '',
                             nationalId: '',
                             dateOfBirth: '',
                             address: '',
-                            department: 'الإدارة',
-                            jobTitle: 'المدير العام',
-                            role: 'المدير العام',
+                            staffTypeId: 0,
                             employeeId: 'ADMIN',
-                            accountStatus: 'نشط',
+                            accountStatusKey: 'active',
                             profilePhoto: resolveFileUrl(user?.photo) || '',
                             lastLogin: new Date().toISOString().split('T')[0],
                             accountCreated: new Date().toISOString().split('T')[0],
-                            totalActions: 0
+                            totalActions: 0,
+                            isAdminProfile: true,
                         };
                         setUserData(mappedUser);
                         setIsLoading(false);
                         return;
                     } else {
-                        setError("Could not find Staff ID. Please login again.");
+                        setError(t('errors.noStaffId'));
                         setIsLoading(false);
                         return;
                     }
@@ -155,21 +182,23 @@ const StaffProfile: React.FC = () => {
                 // Map Backend -> Frontend
                 const mappedUser: UserProfile = {
                     id: staff.id,
-                    fullName: `${staff.first_name_ar} ${staff.last_name_ar}`,
+                    fullNameAr: `${staff.first_name_ar ?? ''} ${staff.last_name_ar ?? ''}`.trim(),
+                    fullNameEn: `${staff.first_name_en ?? ''} ${staff.last_name_en ?? ''}`.trim(),
                     email: staff.email,
                     phone: staff.phone,
                     nationalId: staff.national_id,
-                    dateOfBirth: '', // Not in backend response provided
+                    dateOfBirth: '',
                     address: staff.address || '',
-                    department: 'N/A', // Not in Staff Entity
-                    jobTitle: staff.staff_type?.name_ar || 'N/A',
-                    role: staff.staff_type?.name_ar || 'Staff',
+                    staffTypeId: Number(staff.staff_type_id) || 0,
+                    staffTypeNameAr: staff.staff_type?.name_ar,
+                    staffTypeNameEn: staff.staff_type?.name_en,
+                    staffTypeCode: staff.staff_type?.code,
                     employeeId: `EMP-${staff.id}`,
-                    accountStatus: staff.is_active || staff.status === 'active' ? 'نشط' : 'غير نشط',
+                    accountStatusKey: staff.is_active || staff.status === 'active' ? 'active' : 'inactive',
                     profilePhoto: resolveFileUrl(rawPhoto) || '',
                     lastLogin: new Date().toISOString().split('T')[0],
                     accountCreated: staff.created_at ? new Date(staff.created_at).toISOString().split('T')[0] : '',
-                    totalActions: logs.count || 0
+                    totalActions: logs.count || 0,
                 };
 
                 setUserData(mappedUser);
@@ -178,27 +207,27 @@ const StaffProfile: React.FC = () => {
                 if (user?.role === 'ADMIN') {
                     const mappedUser: UserProfile = {
                         id: 0,
-                        fullName: user.fullName || 'Admin User',
+                        fullNameAr: user.fullName || t('adminDefaults.fullName'),
+                        fullNameEn: user.fullName || t('adminDefaults.fullName'),
                         email: '',
                         phone: '',
                         nationalId: '',
                         dateOfBirth: '',
                         address: '',
-                        department: 'الإدارة',
-                        jobTitle: 'المدير العام',
-                        role: 'المدير العام',
+                        staffTypeId: 0,
                         employeeId: 'ADMIN',
-                        accountStatus: 'نشط',
+                        accountStatusKey: 'active',
                         profilePhoto: resolveFileUrl(user?.photo) || '',
                         lastLogin: new Date().toISOString().split('T')[0],
                         accountCreated: new Date().toISOString().split('T')[0],
-                        totalActions: 0
+                        totalActions: 0,
+                        isAdminProfile: true,
                     };
                     setUserData(mappedUser);
                     setError(null);
                 } else {
-                    setError(err.message || "Failed to load profile");
-                    toast.error("فشل تحميل البيانات");
+                    setError(err.message || t('errors.loadProfile'));
+                    toast.error(t('toasts.loadFailed'));
                 }
             } finally {
                 setIsLoading(false);
@@ -206,7 +235,7 @@ const StaffProfile: React.FC = () => {
         };
 
         fetchProfile();
-    }, [user]);
+    }, [user, t]);
 
     const handleInputChange = (field: keyof UserProfile, value: string) => {
         if (!userData) return;
@@ -219,12 +248,12 @@ const StaffProfile: React.FC = () => {
 
     const getPasswordStrength = (password: string): PasswordStrength => {
         if (password.length < 6) {
-            return { level: 'ضعيف', color: colors.danger };
-        } else if (password.length < 10) {
-            return { level: 'متوسط', color: colors.warning };
-        } else {
-            return { level: 'قوي', color: colors.success };
+            return { level: 'weak', color: colors.danger, width: '33%' };
         }
+        if (password.length < 10) {
+            return { level: 'medium', color: colors.warning, width: '66%' };
+        }
+        return { level: 'strong', color: colors.success, width: '100%' };
     };
 
     const passwordStrength = getPasswordStrength(passwords.new);
@@ -245,10 +274,10 @@ const StaffProfile: React.FC = () => {
             await StaffService.updateProfile(userData.id, updatePayload);
 
             setIsEditMode(false);
-            toast.success('تم حفظ التغييرات بنجاح');
+            toast.success(t('toasts.saveSuccess'));
         } catch (err: any) {
             console.error("Update error:", err);
-            toast.error(err.message || 'فشل تحديث البيانات');
+            toast.error(err.message || t('toasts.saveFailed'));
         }
     };
 
@@ -261,8 +290,20 @@ const StaffProfile: React.FC = () => {
     };
 
     const handleUpdatePassword = async () => {
-        if (passwords.new !== passwords.confirm) {
-            toast.error('كلمة المرور الجديدة وتأكيد كلمة المرور غير متطابقين');
+        const passwordError = formatValidationError(
+            validatePassword(passwords.new, true, { minLength: 8, strong: true }),
+            tVal,
+        );
+        if (passwordError) {
+            toast.error(passwordError);
+            return;
+        }
+        const confirmError = formatValidationError(
+            validatePasswordMatch(passwords.new, passwords.confirm),
+            tVal,
+        );
+        if (confirmError) {
+            toast.error(confirmError);
             return;
         }
 
@@ -271,15 +312,15 @@ const StaffProfile: React.FC = () => {
                 new_email: userData?.email || '', // Use current email if not changing
                 new_password: passwords.new
             });
-            toast.success('تم تحديث كلمة المرور بنجاح');
+            toast.success(t('password.success'));
             setPasswords({ current: '', new: '', confirm: '' });
         } catch (err: any) {
-            toast.error(err.message || 'فشل تحديث كلمة المرور');
+            toast.error(err.message || t('password.fail'));
         }
     };
 
-    const getStatusBadge = (status: string) => {
-        const isActive = status === 'نشط';
+    const getStatusBadge = (statusKey: UserProfile['accountStatusKey']) => {
+        const isActive = statusKey === 'active';
         return (
             <span
                 style={{
@@ -295,12 +336,12 @@ const StaffProfile: React.FC = () => {
                 }}
             >
                 {isActive ? <CheckCircle size={14} /> : <XCircle size={14} />}
-                {status}
+                {t(`status.${statusKey}`)}
             </span>
         );
     };
 
-    const getRoleBadge = (role: string) => {
+    const getRoleBadge = (roleLabel: string) => {
         return (
             <span
                 style={{
@@ -316,10 +357,43 @@ const StaffProfile: React.FC = () => {
                 }}
             >
                 <Shield size={14} style={{ marginLeft: '6px' }} />
-                {role}
+                {roleLabel}
             </span>
         );
     };
+
+    const displayFullName = userData
+        ? getLocalizedText(userData.fullNameAr, userData.fullNameEn, language) || userData.fullNameAr || userData.fullNameEn
+        : '';
+
+    const displayJobTitle = userData
+        ? (userData.isAdminProfile
+            ? t('adminDefaults.jobTitle')
+            : resolveJobLabel({
+                staffTypeId: userData.staffTypeId,
+                staffTypeNameAr: userData.staffTypeNameAr,
+                staffTypeNameEn: userData.staffTypeNameEn,
+                staffTypeCode: userData.staffTypeCode,
+            }))
+        : '';
+
+    const displayDepartment = userData?.isAdminProfile ? t('adminDefaults.department') : t('notAvailable');
+
+    const inputFont = isRTL ? "'Cairo', sans-serif" : "'Segoe UI', sans-serif";
+
+    const personalFields: Array<
+        | { kind: 'data'; id: string; label: string; field: keyof UserProfile; type: string; readOnly?: boolean }
+        | { kind: 'display'; id: string; label: string; value: string; type: string; readOnly: true }
+    > = [
+        { kind: 'display', id: 'fullName', label: t('personalInfo.fullName'), value: displayFullName, type: 'text', readOnly: true },
+        { kind: 'data', id: 'email', label: t('personalInfo.email'), field: 'email', type: 'email', readOnly: true },
+        { kind: 'data', id: 'phone', label: t('personalInfo.phone'), field: 'phone', type: 'tel' },
+        { kind: 'data', id: 'nationalId', label: t('personalInfo.nationalId'), field: 'nationalId', type: 'text', readOnly: true },
+        { kind: 'data', id: 'dateOfBirth', label: t('personalInfo.dateOfBirth'), field: 'dateOfBirth', type: 'date', readOnly: true },
+        { kind: 'data', id: 'address', label: t('personalInfo.address'), field: 'address', type: 'text' },
+        { kind: 'display', id: 'department', label: t('personalInfo.department'), value: displayDepartment, type: 'text', readOnly: true },
+        { kind: 'display', id: 'jobTitle', label: t('personalInfo.jobTitle'), value: displayJobTitle, type: 'text', readOnly: true },
+    ];
 
     if (isLoading) return <div style={{ padding: '40px', textAlign: 'center' }}>{tCommon('loading')}</div>;
     if (error) return <div style={{ padding: '40px', textAlign: 'center', color: 'red' }}>{error}</div>;
@@ -329,8 +403,8 @@ const StaffProfile: React.FC = () => {
         <div style={{
             minHeight: '100vh',
             backgroundColor: colors.background,
-            direction: 'rtl',
-            fontFamily: "'Cairo', sans-serif"
+            direction: isRTL ? 'rtl' : 'ltr',
+            fontFamily: isRTL ? "'Cairo', sans-serif" : "'Segoe UI', sans-serif"
         }}>
             <Toaster position="top-center" />
             <div style={{ display: 'flex' }}>
@@ -351,14 +425,14 @@ const StaffProfile: React.FC = () => {
                                 color: colors.primaryDark,
                                 margin: '0 0 8px 0'
                             }}>
-                                الملف الشخصي
+                                {t('page.title')}
                             </h1>
                             <p style={{
                                 fontSize: '14px',
                                 color: colors.gray[600],
                                 margin: 0
                             }}>
-                                إدارة بيانات الحساب والمعلومات الشخصية
+                                {t('page.subtitle')}
                             </p>
                         </div>
                         <div style={{ display: 'flex', gap: '12px' }}>
@@ -374,10 +448,10 @@ const StaffProfile: React.FC = () => {
                                     fontWeight: '600',
                                     cursor: 'pointer',
                                     transition: 'all 0.2s',
-                                    fontFamily: "'Cairo', sans-serif"
+                                    fontFamily: inputFont
                                 }}
                             >
-                                {isEditMode ? 'إلغاء التعديل' : 'تعديل الملف الشخصي'}
+                                {isEditMode ? t('page.cancelEdit') : t('page.editProfile')}
                             </button>
                         </div>
                     </div>
@@ -412,11 +486,11 @@ const StaffProfile: React.FC = () => {
                                 {userData.profilePhoto ? (
                                     <img
                                         src={userData.profilePhoto}
-                                        alt={userData.fullName}
+                                        alt={displayFullName}
                                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                     />
                                 ) : (
-                                    userData.fullName.charAt(0)
+                                    displayFullName.charAt(0)
                                 )}
                             </div>
                             <button style={{
@@ -453,9 +527,9 @@ const StaffProfile: React.FC = () => {
                                     color: colors.primaryDark,
                                     margin: 0
                                 }}>
-                                    {userData.fullName}
+                                    {displayFullName}
                                 </h2>
-                                {getRoleBadge(userData.role)}
+                                {getRoleBadge(displayJobTitle)}
                             </div>
 
                             <div style={{
@@ -465,20 +539,20 @@ const StaffProfile: React.FC = () => {
                                 marginBottom: '16px'
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ fontSize: '14px', color: colors.gray[600] }}>البريد الإلكتروني:</span>
+                                    <span style={{ fontSize: '14px', color: colors.gray[600] }}>{t('overview.email')}:</span>
                                     <span style={{ fontSize: '14px', color: colors.gray[900], fontWeight: '500' }}>{userData.email}</span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ fontSize: '14px', color: colors.gray[600] }}>رقم الهاتف:</span>
-                                    <span style={{ fontSize: '14px', color: colors.gray[900], fontWeight: '500', direction: 'ltr', textAlign: 'right' }}>{userData.phone}</span>
+                                    <span style={{ fontSize: '14px', color: colors.gray[600] }}>{t('overview.phone')}:</span>
+                                    <span style={{ fontSize: '14px', color: colors.gray[900], fontWeight: '500', direction: 'ltr', textAlign: isRTL ? 'right' : 'left' }}>{userData.phone}</span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ fontSize: '14px', color: colors.gray[600] }}>رقم الموظف:</span>
+                                    <span style={{ fontSize: '14px', color: colors.gray[600] }}>{t('overview.employeeId')}:</span>
                                     <span style={{ fontSize: '14px', color: colors.gray[900], fontWeight: '500' }}>{userData.employeeId}</span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ fontSize: '14px', color: colors.gray[600] }}>حالة الحساب:</span>
-                                    {getStatusBadge(userData.accountStatus)}
+                                    <span style={{ fontSize: '14px', color: colors.gray[600] }}>{t('overview.accountStatus')}:</span>
+                                    {getStatusBadge(userData.accountStatusKey)}
                                 </div>
                             </div>
                         </div>
@@ -492,9 +566,9 @@ const StaffProfile: React.FC = () => {
                         marginBottom: '24px'
                     }}>
                         {[
-                            { label: 'إجمالي الإجراءات', value: userData.totalActions.toString(), icon: Activity, color: colors.accentBlue },
-                            { label: 'آخر تسجيل دخول', value: userData.lastLogin, icon: UserCheck, color: colors.success },
-                            { label: 'تاريخ إنشاء الحساب', value: userData.accountCreated, icon: Calendar, color: colors.info }
+                            { label: t('stats.totalActions'), value: userData.totalActions.toString(), icon: Activity, color: colors.accentBlue, isDate: false },
+                            { label: t('stats.lastLogin'), value: fmtDate(userData.lastLogin), icon: UserCheck, color: colors.success, isDate: true },
+                            { label: t('stats.accountCreated'), value: fmtDate(userData.accountCreated), icon: Calendar, color: colors.info, isDate: true }
                         ].map((stat, index) => {
                             const Icon = stat.icon;
                             return (
@@ -528,8 +602,8 @@ const StaffProfile: React.FC = () => {
                                             fontWeight: '700',
                                             color: stat.color,
                                             marginBottom: '4px',
-                                            direction: index !== 0 ? 'ltr' : 'rtl',
-                                            textAlign: 'right'
+                                            direction: stat.isDate ? 'ltr' : (isRTL ? 'rtl' : 'ltr'),
+                                            textAlign: isRTL ? 'right' : 'left'
                                         }}>
                                             {stat.value}
                                         </div>
@@ -564,21 +638,12 @@ const StaffProfile: React.FC = () => {
                                 marginBottom: '20px',
                                 margin: '0 0 20px 0'
                             }}>
-                                المعلومات الشخصية
+                                {t('personalInfo.title')}
                             </h3>
 
                             <div style={{ display: 'grid', gap: '16px' }}>
-                                {[
-                                    { label: 'الاسم الكامل', field: 'fullName' as keyof UserProfile, type: 'text', readOnly: true }, // Name not editable via simple profile
-                                    { label: 'البريد الإلكتروني', field: 'email' as keyof UserProfile, type: 'email', readOnly: true }, // Email via change credentials only
-                                    { label: 'رقم الهاتف', field: 'phone' as keyof UserProfile, type: 'tel' },
-                                    { label: 'الرقم القومي', field: 'nationalId' as keyof UserProfile, type: 'text', readOnly: true },
-                                    { label: 'تاريخ الميلاد', field: 'dateOfBirth' as keyof UserProfile, type: 'date', readOnly: true },
-                                    { label: 'العنوان', field: 'address' as keyof UserProfile, type: 'text' },
-                                    { label: 'القسم / الإدارة', field: 'department' as keyof UserProfile, type: 'text', readOnly: true },
-                                    { label: 'المسمى الوظيفي', field: 'jobTitle' as keyof UserProfile, type: 'text', readOnly: true }
-                                ].map((input) => (
-                                    <div key={input.field}>
+                                {personalFields.map((input) => (
+                                    <div key={input.id}>
                                         <label style={{
                                             display: 'block',
                                             fontSize: '14px',
@@ -590,16 +655,19 @@ const StaffProfile: React.FC = () => {
                                         </label>
                                         <input
                                             type={input.type}
-                                            value={userData[input.field] as string}
-                                            onChange={(e) => handleInputChange(input.field, e.target.value)}
+                                            value={input.kind === 'data' ? (userData[input.field] as string) : input.value}
+                                            onChange={input.kind === 'data'
+                                                ? (e) => handleInputChange(input.field, e.target.value)
+                                                : undefined}
                                             disabled={!isEditMode || input.readOnly}
+                                            readOnly={input.kind === 'display'}
                                             style={{
                                                 width: '100%',
                                                 padding: '10px 14px',
                                                 border: `1px solid ${colors.border}`,
                                                 borderRadius: '8px',
                                                 fontSize: '14px',
-                                                fontFamily: "'Cairo', sans-serif",
+                                                fontFamily: inputFont,
                                                 outline: 'none',
                                                 backgroundColor: (isEditMode && !input.readOnly) ? colors.white : colors.gray[50],
                                                 color: colors.gray[900],
@@ -634,12 +702,12 @@ const StaffProfile: React.FC = () => {
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             gap: '8px',
-                                            fontFamily: "'Cairo', sans-serif",
+                                            fontFamily: inputFont,
                                             transition: 'all 0.2s'
                                         }}
                                     >
                                         <Save size={16} />
-                                        حفظ التغييرات
+                                        {t('actions.save')}
                                     </button>
                                     <button
                                         onClick={handleCancelEdit}
@@ -657,12 +725,12 @@ const StaffProfile: React.FC = () => {
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             gap: '8px',
-                                            fontFamily: "'Cairo', sans-serif",
+                                            fontFamily: inputFont,
                                             transition: 'all 0.2s'
                                         }}
                                     >
                                         <X size={16} />
-                                        إلغاء
+                                        {t('actions.cancel')}
                                     </button>
                                 </div>
                             )}
@@ -688,7 +756,7 @@ const StaffProfile: React.FC = () => {
                                     color: colors.primaryDark,
                                     margin: 0
                                 }}>
-                                    تغيير كلمة المرور
+                                    {t('password.title')}
                                 </h3>
                             </div>
 
@@ -702,7 +770,7 @@ const StaffProfile: React.FC = () => {
                                         color: colors.gray[700],
                                         marginBottom: '8px'
                                     }}>
-                                        كلمة المرور الجديدة
+                                        {t('password.newPassword')}
                                     </label>
                                     <div style={{ position: 'relative' }}>
                                         <input
@@ -715,7 +783,7 @@ const StaffProfile: React.FC = () => {
                                                 border: `1px solid ${colors.border}`,
                                                 borderRadius: '8px',
                                                 fontSize: '14px',
-                                                fontFamily: "'Cairo', sans-serif",
+                                                fontFamily: inputFont,
                                                 outline: 'none'
                                             }}
                                         />
@@ -723,7 +791,7 @@ const StaffProfile: React.FC = () => {
                                             onClick={() => setShowNewPassword(!showNewPassword)}
                                             style={{
                                                 position: 'absolute',
-                                                left: '12px',
+                                                [isRTL ? 'left' : 'right']: '12px',
                                                 top: '50%',
                                                 transform: 'translateY(-50%)',
                                                 background: 'none',
@@ -753,7 +821,7 @@ const StaffProfile: React.FC = () => {
                                                 }}>
                                                     <div style={{
                                                         height: '100%',
-                                                        width: passwordStrength.level === 'ضعيف' ? '33%' : passwordStrength.level === 'متوسط' ? '66%' : '100%',
+                                                        width: passwordStrength.width,
                                                         backgroundColor: passwordStrength.color,
                                                         transition: 'all 0.3s'
                                                     }} />
@@ -763,7 +831,7 @@ const StaffProfile: React.FC = () => {
                                                     fontWeight: '600',
                                                     color: passwordStrength.color
                                                 }}>
-                                                    {passwordStrength.level}
+                                                    {t(`password.strength.${passwordStrength.level}`)}
                                                 </span>
                                             </div>
                                         </div>
@@ -779,7 +847,7 @@ const StaffProfile: React.FC = () => {
                                         color: colors.gray[700],
                                         marginBottom: '8px'
                                     }}>
-                                        تأكيد كلمة المرور
+                                        {t('password.confirmPassword')}
                                     </label>
                                     <div style={{ position: 'relative' }}>
                                         <input
@@ -792,7 +860,7 @@ const StaffProfile: React.FC = () => {
                                                 border: `1px solid ${colors.border}`,
                                                 borderRadius: '8px',
                                                 fontSize: '14px',
-                                                fontFamily: "'Cairo', sans-serif",
+                                                fontFamily: inputFont,
                                                 outline: 'none'
                                             }}
                                         />
@@ -800,7 +868,7 @@ const StaffProfile: React.FC = () => {
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                             style={{
                                                 position: 'absolute',
-                                                left: '12px',
+                                                [isRTL ? 'left' : 'right']: '12px',
                                                 top: '50%',
                                                 transform: 'translateY(-50%)',
                                                 background: 'none',
@@ -832,7 +900,7 @@ const StaffProfile: React.FC = () => {
                                     margin: 0,
                                     lineHeight: '1.5'
                                 }}>
-                                    تأكد من استخدام كلمة مرور قوية تحتوي على أحرف كبيرة وصغيرة وأرقام ورموز خاصة
+                                    {t('password.hint')}
                                 </p>
                             </div>
 
@@ -852,12 +920,12 @@ const StaffProfile: React.FC = () => {
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     gap: '8px',
-                                    fontFamily: "'Cairo', sans-serif",
+                                    fontFamily: inputFont,
                                     transition: 'all 0.2s'
                                 }}
                             >
                                 <Lock size={16} />
-                                تحديث كلمة المرور
+                                {t('password.update')}
                             </button>
                         </div>
                     </div>
@@ -883,7 +951,7 @@ const StaffProfile: React.FC = () => {
                                 color: colors.primaryDark,
                                 margin: 0
                             }}>
-                                الدور والصلاحيات
+                                {t('role.title')}
                             </h3>
                         </div>
 
@@ -893,9 +961,9 @@ const StaffProfile: React.FC = () => {
                                 color: colors.gray[600],
                                 marginBottom: '8px'
                             }}>
-                                الدور الحالي:
+                                {t('role.currentRole')}
                             </div>
-                            {getRoleBadge(userData.role)}
+                            {getRoleBadge(displayJobTitle)}
                         </div>
 
                         {/* Note: Dynamic privileges list can be added here using `StaffService.getPrivileges` */}
@@ -907,7 +975,7 @@ const StaffProfile: React.FC = () => {
                             fontSize: '13px',
                             color: colors.gray[600]
                         }}>
-                            لمعرفة التفاصيل الكاملة عن الصلاحيات، يرجى مراجعة صفحة الصلاحيات الإدارية.
+                            {t('role.note')}
                         </div>
                     </div>
                 </div>

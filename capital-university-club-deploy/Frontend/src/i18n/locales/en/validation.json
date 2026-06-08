@@ -1,0 +1,99 @@
+{
+  "arabicName": {
+    "required": "Arabic name is required",
+    "max": "Maximum {{max}} characters",
+    "invalid": "Arabic letters only"
+  },
+  "englishName": {
+    "required": "English name is required",
+    "max": "Maximum {{max}} characters",
+    "invalid": "English letters only"
+  },
+  "arabicText": {
+    "required": "This field is required",
+    "invalid": "Arabic text only"
+  },
+  "englishText": {
+    "required": "This field is required",
+    "invalid": "English text only"
+  },
+  "phone": {
+    "required": "Phone number is required",
+    "length": "Phone must be exactly 11 digits",
+    "invalid": "Invalid Egyptian mobile (010, 011, 012, or 015)"
+  },
+  "email": {
+    "required": "Email is required",
+    "invalid": "Invalid email address",
+    "domain": "Please use a common email provider (gmail, yahoo, hotmail, outlook, etc.)"
+  },
+  "password": {
+    "required": "Password is required",
+    "min": "Password must be at least {{min}} characters",
+    "max": "Password is too long (max {{max}} characters)",
+    "strong": "Password must include uppercase, lowercase, and a number",
+    "chars": "Password contains disallowed characters",
+    "confirmRequired": "Password confirmation is required",
+    "mismatch": "Passwords do not match"
+  },
+  "nationalId": {
+    "required": "National ID is required",
+    "length": "National ID must be exactly 14 digits",
+    "memberInvalid": "National ID must be 14 digits and cannot start with 0",
+    "staffInvalid": "National ID must be 14 digits starting with 1, 2, 3, or 4",
+    "loginInvalid": "National ID must be exactly 14 digits",
+    "inviteInvalid": "National ID must be 14 digits starting with 2 or 3"
+  },
+  "passport": {
+    "required": "Passport number is required",
+    "invalid": "Passport must be 5–20 alphanumeric characters"
+  },
+  "birthdate": {
+    "required": "Date of birth is required",
+    "invalid": "Invalid date of birth",
+    "ageRange": "Age must be between {{min}} and {{max}} years"
+  },
+  "gender": {
+    "required": "Gender is required",
+    "invalid": "Invalid gender value"
+  },
+  "category": {
+    "required": "Membership type is required"
+  },
+  "nationality": {
+    "required": "Nationality is required",
+    "max": "Maximum {{max}} characters"
+  },
+  "address": {
+    "max": "Maximum {{max}} characters"
+  },
+  "health": {
+    "max": "Maximum {{max}} characters"
+  },
+  "staffType": {
+    "required": "Staff type is required"
+  },
+  "employmentDate": {
+    "required": "Employment start date is required"
+  },
+  "code": {
+    "required": "Code is required",
+    "invalid": "Code may only contain letters, numbers, hyphens, and underscores"
+  },
+  "url": {
+    "required": "URL is required",
+    "invalid": "Invalid URL (must start with http:// or https://)"
+  },
+  "required": "This field is required",
+  "nameRequired": "Name is required",
+  "login": {
+    "identifierRequired": "Email or national ID is required"
+  },
+  "contact": {
+    "required": "Please provide phone, national ID, or email"
+  },
+  "fullName": {
+    "required": "Full name is required",
+    "parts": "Please enter full name (first and last name at minimum)"
+  }
+}

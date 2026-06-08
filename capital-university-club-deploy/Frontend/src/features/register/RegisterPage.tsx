@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useRegisterSchema } from '../../hooks/useValidation';
 import { useForm, FormProvider, useFormContext } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-import { registerSchema, type RegisterFormValues } from './schemas/validation';
+import { type RegisterFormValues } from './schemas/validation';
 import { prepareSubmissionData, debugFormData, type FileUploadMap } from './utils/submissionFactory';
 import { AuthService } from '../../services/authService';
 import Step0_RoleSelection from './components/Step0_RoleSelection';
@@ -202,6 +203,8 @@ export const RegisterPage = () => {
         };
         loadSports();
     }, []);
+
+    const registerSchema = useRegisterSchema();
 
     // ============================================================================
     // React Hook Form Setup with Zod Validator

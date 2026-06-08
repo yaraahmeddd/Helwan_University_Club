@@ -70,5 +70,20 @@
     "reports": "التقارير",
     "tasks": "المهام",
     "audit": "سجلات التدقيق"
+  },
+  "mockPrivileges": {
+    "addMember": "إضافة عضو",
+    "editMember": "تعديل بيانات عضو",
+    "deleteMember": "حذف عضو",
+    "printMemberCard": "طباعة بطاقة عضو",
+    "addTeam": "إضافة فريق",
+    "editTeam": "تعديل فريق",
+    "deleteTeam": "حذف فريق",
+    "addMedia": "إضافة وسائط",
+    "deleteMedia": "حذف وسائط",
+    "viewFinance": "عرض البيانات المالية",
+    "createTransaction": "إنشاء معاملة",
+    "editTransaction": "تعديل معاملة",
+    "deleteTransaction": "حذف معاملة"
   }
 }

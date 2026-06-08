@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useStaffFormSchema } from "../hooks/useValidation";
+import type { StaffFormValues } from "../lib/validation/schemas";
 import { StaffService } from "../services/staffService";
 
 import { Button } from "../components/StaffPagesComponents/ui/button";
@@ -340,17 +342,7 @@ export default function AddNewStaffPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const staffFormSchema = useMemo(() => z.object({
-    first_name_en: z.string().min(1, t("validation.firstNameEnReq")).max(20, t("validation.max20")).regex(/^[a-zA-Z\s]+$/, t("validation.enLettersOnly")),
-    first_name_ar: z.string().min(1, t("validation.firstNameArReq")).max(20, t("validation.max20")).regex(/^[\u0600-\u06FF\s]+$/, t("validation.arLettersOnly")),
-    last_name_en: z.string().min(1, t("validation.lastNameEnReq")).max(20, t("validation.max20")).regex(/^[a-zA-Z\s]+$/, t("validation.enLettersOnly")),
-    last_name_ar: z.string().max(20, t("validation.max20")).regex(/^[\u0600-\u06FF\s]*$/, t("validation.arLettersOnly")).optional().or(z.literal("")),
-    national_id: z.string().length(14, t("validation.nationalIdLength")).regex(/^[1-4]\d{13}$/, t("validation.nationalIdFormat")),
-    phone: z.string().length(11, t("validation.phoneLength")).regex(/^01[0125]\d{8}$/, t("validation.phoneFormat")),
-    address: z.string().max(100, t("validation.max100")).optional().or(z.literal("")),
-    staff_type_id: z.string().min(1, t("validation.staffTypeReq")),
-    employment_start_date: z.string().min(1, t("validation.employmentDateReq")),
-  }), [t]);
+  const staffFormSchema = useStaffFormSchema();
 
   // React Hook Form with Zod validation
   const {

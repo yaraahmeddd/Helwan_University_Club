@@ -1,0 +1,74 @@
+{
+  "page": {
+    "title": "My Profile",
+    "subtitle": "Manage account and personal information",
+    "editProfile": "Edit Profile",
+    "cancelEdit": "Cancel Editing"
+  },
+  "overview": {
+    "email": "Email",
+    "phone": "Phone",
+    "employeeId": "Employee ID",
+    "accountStatus": "Account Status"
+  },
+  "stats": {
+    "totalActions": "Total Actions",
+    "lastLogin": "Last Login",
+    "accountCreated": "Account Created"
+  },
+  "personalInfo": {
+    "title": "Personal Information",
+    "fullName": "Full Name",
+    "email": "Email",
+    "phone": "Phone",
+    "nationalId": "National ID",
+    "dateOfBirth": "Date of Birth",
+    "address": "Address",
+    "department": "Department",
+    "jobTitle": "Job Title"
+  },
+  "password": {
+    "title": "Change Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "hint": "Use a strong password with uppercase and lowercase letters, numbers, and special characters.",
+    "update": "Update Password",
+    "strength": {
+      "weak": "Weak",
+      "medium": "Medium",
+      "strong": "Strong"
+    },
+    "mismatch": "New password and confirmation do not match.",
+    "success": "Password updated successfully.",
+    "fail": "Failed to update password."
+  },
+  "role": {
+    "title": "Role & Privileges",
+    "currentRole": "Current Role:",
+    "note": "For full privilege details, please visit the admin privileges page."
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "adminDefaults": {
+    "department": "Administration",
+    "jobTitle": "General Manager",
+    "role": "General Manager",
+    "fullName": "Admin User"
+  },
+  "notAvailable": "N/A",
+  "toasts": {
+    "loadFailed": "Failed to load data",
+    "saveSuccess": "Changes saved successfully",
+    "saveFailed": "Failed to update data"
+  },
+  "errors": {
+    "noStaffId": "Could not find Staff ID. Please log in again.",
+    "loadProfile": "Failed to load profile"
+  },
+  "actions": {
+    "save": "Save Changes",
+    "cancel": "Cancel"
+  }
+}

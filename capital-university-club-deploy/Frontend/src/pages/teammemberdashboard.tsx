@@ -7,6 +7,15 @@ import { AuthService } from "../services/authService";
 import api from "../services/axios";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { ChevronDown } from "lucide-react";
+import {
+    firstError,
+    formatValidationError,
+    validateArabicName,
+    validateBirthdate,
+    validateEmail,
+    validateEgyptianPhone,
+    validateMemberNationalId,
+} from "../lib/validation";
 
 // ─── Dashboard Features ──────────────────────────────────────
 // ─── Dashboard Features ──────────────────────────────────────
@@ -537,6 +546,7 @@ interface ProfileTabProps {
 
 const ProfileTab = memo(({ member, setMember, dir = 'rtl' }: ProfileTabProps) => {
     const { t } = useTranslation("team");
+    const { t: tVal } = useTranslation("validation");
     const [editing, setEditing] = useState(false);
     const [form, setForm] = useState<Member>({ ...member });
     const [selectedFiles, setSelectedFiles] = useState<{ [key: string]: File }>({});
@@ -544,36 +554,20 @@ const ProfileTab = memo(({ member, setMember, dir = 'rtl' }: ProfileTabProps) =>
     const [errors, setErrors] = useState<Partial<Record<keyof Member, string>>>({});
     const [fileErrors, setFileErrors] = useState<Record<string, string>>({});
 
-    const isArabic = (value: string) => /^[\u0600-\u06FF\s]+$/.test(value.trim());
-
     const validateField = (key: keyof Member, value: string) => {
-        const trimmed = value.trim();
-
         switch (key) {
             case "firstName":
-                if (!trimmed) return t("profile.validation.first_name_required");
-                if (!isArabic(trimmed)) return t("profile.validation.first_name_arabic");
-                return "";
+                return formatValidationError(validateArabicName(value), tVal) ?? "";
             case "lastName":
-                if (!trimmed) return t("profile.validation.last_name_required");
-                if (!isArabic(trimmed)) return t("profile.validation.last_name_arabic");
-                return "";
+                return formatValidationError(validateArabicName(value), tVal) ?? "";
             case "email":
-                if (!trimmed) return t("profile.validation.email_required");
-                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return t("profile.validation.email_invalid");
-                return "";
+                return formatValidationError(validateEmail(value), tVal) ?? "";
             case "phone":
-                if (!trimmed) return t("profile.validation.phone_required");
-                if (!/^(010|011|012|015)\d{8}$/.test(trimmed)) return t("profile.validation.phone_invalid");
-                return "";
+                return formatValidationError(validateEgyptianPhone(value), tVal) ?? "";
             case "nationalId":
-                if (!trimmed) return t("profile.validation.national_id_required");
-                if (!/^[1-9]\d{13}$/.test(trimmed)) return t("profile.validation.national_id_invalid");
-                return "";
+                return formatValidationError(validateMemberNationalId(value), tVal) ?? "";
             case "birthDate":
-                if (!trimmed) return t("profile.validation.birth_date_required");
-                if (!isAtLeast16YearsOld(trimmed)) return t("profile.validation.age_min");
-                return "";
+                return formatValidationError(validateBirthdate(value), tVal) ?? "";
             default:
                 return "";
         }
@@ -1608,32 +1602,20 @@ export default function TeamMemberDashboard() {
         logout();
     };
 
-    const isArabicName = (value: string) => /^[\u0600-\u06FF\s]+$/.test(value.trim());
+    const { t: tVal } = useTranslation("validation");
 
     const handleUpdateMember = async (updated: Member, files?: { [key: string]: File }) => {
         if (!user?.team_member_id) return;
-        if (!isArabicName(updated.firstName)) {
-            alert(t("profile.validation.first_name_arabic"));
-            return;
-        }
-        if (!isArabicName(updated.lastName)) {
-            alert(t("profile.validation.last_name_arabic"));
-            return;
-        }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(updated.email.trim())) {
-            alert(t("profile.validation.email_invalid"));
-            return;
-        }
-        if (!/^(010|011|012|015)\d{8}$/.test(updated.phone.trim())) {
-            alert(t("profile.validation.phone_invalid"));
-            return;
-        }
-        if (!/^[1-9]\d{13}$/.test(updated.nationalId.trim())) {
-            alert(t("profile.validation.national_id_invalid"));
-            return;
-        }
-        if (!isAtLeast16YearsOld(updated.birthDate.trim())) {
-            alert(t("profile.validation.age_min"));
+        const validationError = firstError([
+            validateArabicName(updated.firstName),
+            validateArabicName(updated.lastName),
+            validateEmail(updated.email),
+            validateEgyptianPhone(updated.phone),
+            validateMemberNationalId(updated.nationalId),
+            validateBirthdate(updated.birthDate),
+        ], tVal);
+        if (validationError) {
+            alert(validationError);
             return;
         }
         try {

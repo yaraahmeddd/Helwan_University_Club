@@ -19,6 +19,13 @@ import api from "../services/axios";
 import { useAuth } from "../context/AuthContext";
 import { resolveFileUrl } from "../utils/fileUrl";
 import { useTranslation } from "react-i18next";
+import {
+    formatValidationError,
+    validateArabicName,
+    validateEnglishName,
+    validateEgyptianPhone,
+} from "../lib/validation";
+import i18n from "../i18n";
 
 interface MemberProfile {
     id: number;
@@ -42,9 +49,8 @@ interface MemberProfile {
 
 type ValidationErrors = Partial<Record<keyof MemberProfile, string>>;
 
-const ARABIC_REGEX = /^[\u0600-\u06FF\s\-']+$/;
-const ENGLISH_REGEX = /^[a-zA-Z\s\-']+$/;
-const NUMBERS_REGEX = /^[0-9]+$/;
+const tVal = (key: string, params?: Record<string, string | number>) =>
+    i18n.t(`validation:${key}`, params);
 
 const statusStyle = (status: string) => {
     const s = (status ?? "").toLowerCase();
@@ -136,32 +142,21 @@ async function fetchMemberProfile(): Promise<{ profile: MemberProfile }> {
 function validateForm(form: MemberProfile): ValidationErrors {
     const errors: ValidationErrors = {};
 
-    if (!form.firstNameAr.trim()) {
-        errors.firstNameAr = "هذا الحقل مطلوب";
-    } else if (!ARABIC_REGEX.test(form.firstNameAr.trim())) {
-        errors.firstNameAr = "يُسمح بالأحرف العربية فقط";
-    }
+    const firstNameArError = formatValidationError(validateArabicName(form.firstNameAr), tVal);
+    if (firstNameArError) errors.firstNameAr = firstNameArError;
 
-    if (!form.lastNameAr.trim()) {
-        errors.lastNameAr = "هذا الحقل مطلوب";
-    } else if (!ARABIC_REGEX.test(form.lastNameAr.trim())) {
-        errors.lastNameAr = "يُسمح بالأحرف العربية فقط";
-    }
+    const lastNameArError = formatValidationError(validateArabicName(form.lastNameAr), tVal);
+    if (lastNameArError) errors.lastNameAr = lastNameArError;
 
-    if (!form.firstNameEn.trim()) {
-        errors.firstNameEn = "هذا الحقل مطلوب";
-    } else if (!ENGLISH_REGEX.test(form.firstNameEn.trim())) {
-        errors.firstNameEn = "English letters only";
-    }
+    const firstNameEnError = formatValidationError(validateEnglishName(form.firstNameEn), tVal);
+    if (firstNameEnError) errors.firstNameEn = firstNameEnError;
 
-    if (!form.lastNameEn.trim()) {
-        errors.lastNameEn = "هذا الحقل مطلوب";
-    } else if (!ENGLISH_REGEX.test(form.lastNameEn.trim())) {
-        errors.lastNameEn = "English letters only";
-    }
+    const lastNameEnError = formatValidationError(validateEnglishName(form.lastNameEn), tVal);
+    if (lastNameEnError) errors.lastNameEn = lastNameEnError;
 
-    if (form.phone && !NUMBERS_REGEX.test(form.phone)) {
-        errors.phone = "أرقام فقط";
+    if (form.phone.trim()) {
+        const phoneError = formatValidationError(validateEgyptianPhone(form.phone), tVal);
+        if (phoneError) errors.phone = phoneError;
     }
 
     return errors;

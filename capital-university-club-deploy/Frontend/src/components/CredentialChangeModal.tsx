@@ -3,6 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, AlertCircle } from 'lucide-react';
 import { AuthService } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
+import {
+    formatValidationError,
+    validateEmail,
+    validatePassword,
+    validatePasswordMatch,
+} from '../lib/validation';
 
 export function CredentialChangeModal() {
     const [showModal, setShowModal] = useState(false);
@@ -19,6 +26,7 @@ export function CredentialChangeModal() {
     const [isChangingCredentials, setIsChangingCredentials] = useState(false);
 
     const { user } = useAuth();
+    const { t: tVal } = useTranslation('validation');
 
     // Check localStorage on mount
     useEffect(() => {
@@ -43,27 +51,27 @@ export function CredentialChangeModal() {
         let hasError = false;
         const newErrors = { new_email: '', new_password: '', confirm_password: '' };
 
-        if (!credentialForm.new_email) {
-            newErrors.new_email = 'البريد الإلكتروني مطلوب';
-            hasError = true;
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(credentialForm.new_email)) {
-            newErrors.new_email = 'البريد الإلكتروني غير صحيح';
+        const emailError = formatValidationError(validateEmail(credentialForm.new_email), tVal);
+        if (emailError) {
+            newErrors.new_email = emailError;
             hasError = true;
         }
 
-        if (!credentialForm.new_password) {
-            newErrors.new_password = 'كلمة المرور مطلوبة';
-            hasError = true;
-        } else if (credentialForm.new_password.length < 6) {
-            newErrors.new_password = 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+        const passwordError = formatValidationError(
+            validatePassword(credentialForm.new_password, true, { minLength: 6 }),
+            tVal,
+        );
+        if (passwordError) {
+            newErrors.new_password = passwordError;
             hasError = true;
         }
 
-        if (!credentialForm.confirm_password) {
-            newErrors.confirm_password = 'تأكيد كلمة المرور مطلوب';
-            hasError = true;
-        } else if (credentialForm.new_password !== credentialForm.confirm_password) {
-            newErrors.confirm_password = 'كلمات المرور غير متطابقة';
+        const confirmError = formatValidationError(
+            validatePasswordMatch(credentialForm.new_password, credentialForm.confirm_password),
+            tVal,
+        );
+        if (confirmError) {
+            newErrors.confirm_password = confirmError;
             hasError = true;
         }
 

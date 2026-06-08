@@ -9,6 +9,7 @@ import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
 import { getLocalizedText } from "../lib/localizedDisplay";
+import { PATTERNS } from "../lib/validation";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Input } from "../components/StaffPagesComponents/ui/input";
 import { Label } from "../components/StaffPagesComponents/ui/label";
@@ -737,10 +738,7 @@ export default function SportsPage() {
     void fetchMembersForSport(apiName);
   };
 
-  const isArabicOnly = (text: string): boolean => {
-    const arabicRegex = /^[\u0600-\u06FF\s\-.,;:!?()«»]*$/;
-    return arabicRegex.test(text);
-  };
+  const isArabicOnly = (text: string): boolean => PATTERNS.ARABIC_TEXT.test(text);
 
   const handleNameArChange = (value: string) => {
     if (value === "" || isArabicOnly(value)) {
@@ -754,10 +752,7 @@ export default function SportsPage() {
     }
   };
 
-  const isEnglishOnly = (text: string): boolean => {
-    const englishRegex = /^[a-zA-Z0-9\s\-.,;:!?()]*$/;
-    return englishRegex.test(text);
-  };
+  const isEnglishOnly = (text: string): boolean => PATTERNS.ENGLISH_TEXT.test(text);
 
   const handleNameEnChange = (value: string) => {
     if (value === "" || isEnglishOnly(value)) {

@@ -1,5 +1,12 @@
 export type DisplayLanguage = 'ar' | 'en';
 
+/** Font family for locale-appropriate name display (Cairo for Arabic UI). */
+export function localeFontFamily(language: DisplayLanguage): string {
+  return language === 'ar'
+    ? "'Cairo', sans-serif"
+    : "'Segoe UI', system-ui, sans-serif";
+}
+
 /** Normalize i18n language codes (e.g. "ar-EG") to a supported display language. */
 export function resolveDisplayLanguage(language?: string | null): DisplayLanguage {
   const code = (language ?? 'ar').split('-')[0].toLowerCase();

@@ -29,6 +29,7 @@ import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
 import { getEntityName, getLocalizedText } from "../lib/localizedDisplay";
 import api from "../services/axios";
+import { PATTERNS } from "../lib/validation";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -100,8 +101,8 @@ const emptyForm = (): TeamFormState => ({
     training: emptyTraining(),
 });
 
-const isArabicOnly = (s: string) => /^[\u0600-\u06FF\s\-.,;:!?()«»]*$/.test(s);
-const isEnglishOnly = (s: string) => /^[a-zA-Z0-9\s\-.,;:!?()]*$/.test(s);
+const isArabicOnly = (s: string) => PATTERNS.ARABIC_TEXT.test(s);
+const isEnglishOnly = (s: string) => PATTERNS.ENGLISH_TEXT.test(s);
 
 const statusLabel = (s: TeamStatus, t: any) => {
     switch (s) {

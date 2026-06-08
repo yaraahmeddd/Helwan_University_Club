@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { formatValidationError, validateLoginNationalId } from '../lib/validation';
 import {
   AlertCircle, CheckCircle2, Lock, Shield, ChevronRight, // ChevronRight is "Back" in RTL visually if pointing Right
   User, Calendar, MapPin, ArrowLeft, FileText, Home
@@ -47,7 +49,7 @@ const IdentityVerification: React.FC = () => {
   }, []);
 
   // Validation Functions
-  const validateNationalId = (id: string) => /^\d{14}$/.test(id);
+  const { t: tVal } = useTranslation('validation');
 
   const calculateAge = (dateOfBirth: string): number => {
     const today = new Date();
@@ -77,8 +79,7 @@ const IdentityVerification: React.FC = () => {
         break;
       case 'nationalId':
         if (typeof value === 'string') {
-          if (!value) error = 'رقم البطاقة القومية مطلوب';
-          else if (!validateNationalId(value)) error = 'يجب أن يتكون من 14 رقمًا';
+          error = formatValidationError(validateLoginNationalId(value), tVal) ?? '';
         }
         break;
       case 'streetAddress':

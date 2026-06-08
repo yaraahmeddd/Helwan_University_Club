@@ -70,5 +70,20 @@
     "reports": "Reports",
     "tasks": "Tasks",
     "audit": "Audit Logs"
+  },
+  "mockPrivileges": {
+    "addMember": "Add Member",
+    "editMember": "Edit Member Data",
+    "deleteMember": "Delete Member",
+    "printMemberCard": "Print Member Card",
+    "addTeam": "Add Team",
+    "editTeam": "Edit Team",
+    "deleteTeam": "Delete Team",
+    "addMedia": "Add Media",
+    "deleteMedia": "Delete Media",
+    "viewFinance": "View Financial Data",
+    "createTransaction": "Create Transaction",
+    "editTransaction": "Edit Transaction",
+    "deleteTransaction": "Delete Transaction"
   }
 }

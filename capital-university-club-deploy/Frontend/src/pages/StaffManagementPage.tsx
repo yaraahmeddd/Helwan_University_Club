@@ -26,6 +26,8 @@ import { RecordViewProfileHeader } from "../components/StaffPagesComponents/shar
 import { buildPersonName, getLocalizedText } from "../lib/localizedDisplay";
 import { useLanguage } from "../hooks/useLanguage";
 import { useLocalizedTranslation } from "../hooks/useLocalizedTranslation";
+import { useTranslation } from "react-i18next";
+import { validateStaffEdit } from "../lib/validation";
 
 const PAGE_SIZE = 12;
 
@@ -172,6 +174,7 @@ type DetailPanelProps = {
 
 function DetailPanel({ row, details, privileges, loading, roleName, onDelete, staffTypeOptions, onSave, isSaving, defaultEditing = false }: DetailPanelProps) {
     const { t } = useLocalizedTranslation("StaffManagementPage");
+    const { t: tVal } = useTranslation("validation");
     const { language } = useLanguage();
     const dateLocale = language === "en" ? "en-US" : "ar-EG";
     const fmtDate = (v?: string | null) => formatDisplayDate(v, dateLocale);
@@ -215,12 +218,15 @@ function DetailPanel({ row, details, privileges, loading, roleName, onDelete, st
     };
 
     const handleSave = async () => {
-        if (!editFirstNameAr.trim() && !editFirstNameEn.trim()) {
-            toast({ title: t("toasts.dataError.title"), description: t("toasts.dataError.desc"), variant: "destructive" });
-            return;
-        }
-        if (editPhone.trim() && !/^01[0125]\d{8}$/.test(editPhone.trim())) {
-            toast({ title: t("toasts.phoneError.title"), description: t("toasts.phoneError.desc"), variant: "destructive" });
+        const validationError = validateStaffEdit({
+            first_name_ar: editFirstNameAr,
+            last_name_ar: editLastNameAr,
+            first_name_en: editFirstNameEn,
+            last_name_en: editLastNameEn,
+            phone: editPhone,
+        }, tVal);
+        if (validationError) {
+            toast({ title: t("toasts.dataError.title"), description: validationError, variant: "destructive" });
             return;
         }
         try {
@@ -446,6 +452,7 @@ function DetailPanel({ row, details, privileges, loading, roleName, onDelete, st
 
 export default function StaffManagementPage() {
     const { t } = useLocalizedTranslation("StaffManagementPage");
+    const { t: tVal } = useTranslation("validation");
     const { language, isRTL } = useLanguage();
     const { toast } = useToast();
     const navigate = useNavigate();
@@ -584,6 +591,17 @@ export default function StaffManagementPage() {
     // Save handler passed to DetailPanel
     const handleSaveFromPanel = async (formData: EditFormData) => {
         if (!selectedRow) return;
+        const validationError = validateStaffEdit({
+            first_name_ar: formData.first_name_ar,
+            last_name_ar: formData.last_name_ar,
+            first_name_en: formData.first_name_en,
+            last_name_en: formData.last_name_en,
+            phone: formData.phone,
+        }, tVal);
+        if (validationError) {
+            toast({ title: t("toasts.dataError.title"), description: validationError, variant: "destructive" });
+            return;
+        }
         setEditSaving(true);
         try {
             await api.put(`/staff/${selectedRow.id}`, {
