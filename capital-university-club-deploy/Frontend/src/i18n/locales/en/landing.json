@@ -248,7 +248,30 @@
           }
         }
       }
-    }
+    },
+    "back_to_sports": "Back to Sports List",
+    "back_to_sports_footer": "Back to Sports List",
+    "founded_2023": "Founded in 2023 as part of the club academies",
+    "select_sport": "Select Sport:",
+    "about_academy": "About the Academy",
+    "schedule_label": "Schedule",
+    "flexible_weekly": "Flexible Weekly",
+    "fees_label": "Fees",
+    "available_branches": "Available Branches",
+    "age_groups": "Available Age Groups",
+    "subscription_steps": "Subscription Steps",
+    "required_docs": "Required Documents",
+    "subscription_benefits": "Subscription Benefits",
+    "training_schedule": "Training Schedule",
+    "head_coach": "Head Coach",
+    "monthly_fees": "Monthly Fees",
+    "register_now_cta": "Register now and secure your spot in",
+    "contact_info_label": "Contact Information",
+    "contact_academy": "Contact the Academy Management",
+    "contact_subtitle": "For inquiries about subscriptions, age groups, or schedules",
+    "academy_location": "Academy Location",
+    "hours_sat_thu": "Saturday to Thursday: 9 AM to 10 PM",
+    "hours_fri": "Friday: 2 PM to 10 PM"
   },
   "app": {
     "points_title_part1": "Earn ",
