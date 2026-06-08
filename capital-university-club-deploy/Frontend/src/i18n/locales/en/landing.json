@@ -317,9 +317,14 @@
       "name": "Full Name",
       "name_placeholder": "Enter your name",
       "phone": "Phone Number",
+      "email": "Email",
+      "email_placeholder": "example@email.com",
+      "phone_placeholder": "+20 XXX XXX XXXX",
       "subject": "Subject",
       "subject_empty": "Select Subject",
       "subj_membership": "Membership Inquiry",
+      "subj_academies": "Sports Academy Subscription",
+      "subj_kids": "Kids Enrollment",
       "subj_vendor": "Become a Supplier",
       "subj_reservation": "Court/Activity Reservation",
       "subj_complaint": "Complaint or Suggestion",
@@ -329,22 +334,30 @@
       "sending": "Sending...",
       "success": "✓ Sent Successfully!",
       "submit": "Send Message",
-      "msg_from_form": "Message from Contact Form"
+      "msg_from_form": "Message from Contact Form",
+      "reply_time": "We usually respond within 24 business hours",
+      "send_msg": "Send a message"
     },
     "hours": {
       "title": "Working Hours",
       "sat_thu": "Saturday - Thursday",
-      "sat_thu_time": "6:00 AM - 11:00 PM",
+      "sat_thu_time": "6:00 AM — 11:00 PM",
       "fri": "Friday",
-      "fri_time": "8:00 AM - 12:00 AM",
+      "fri_time": "8:00 AM — 12:00 AM",
       "offers": "🎉 Special offers available on weekends"
     },
     "social": {
-      "title": "Follow us on"
+      "title": "Follow Us"
     },
     "faq_section": {
-      "title": "FAQ",
-      "subtitle": "Quick answers to common questions"
+      "quick_help": "Quick Help",
+      "title": "Frequently Asked Questions",
+      "subtitle": "Comprehensive answers to the most common questions regarding memberships, sports academies, kids enrollment, court reservations, and payments",
+      "search_placeholder": "Search FAQs...",
+      "no_results": "No results matching your search in this category. Try another category or different keywords.",
+      "not_found": "Didn't find your answer?",
+      "customer_service": "Our customer service team is ready to help with any inquiry",
+      "email_us": "Email Us"
     },
     "cta": {
       "title": "Ready to Join?",
