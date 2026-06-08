@@ -69,7 +69,6 @@ export class BranchSportTeamController {
         max_participants: max_participants ? Number(max_participants) : 20,
         status: TeamStatus.ACTIVE,
         visibility_type: req.body.visibility_type ?? 'BOTH',
-        price: req.body.price ? Number(req.body.price) : 0,
       });
 
       res.status(201).json({

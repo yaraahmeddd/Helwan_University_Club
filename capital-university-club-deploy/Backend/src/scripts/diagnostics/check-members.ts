@@ -1,6 +1,6 @@
-import { AppDataSource } from './database/data-source';
-import { TeamMember } from './entities/TeamMember';
-import { TeamMemberTeam } from './entities/TeamMemberTeam';
+import { AppDataSource } from '../../database/data-source';
+import { TeamMember } from '../../entities/TeamMember';
+import { TeamMemberTeam } from '../../entities/TeamMemberTeam';
 
 async function check() {
     await AppDataSource.initialize();

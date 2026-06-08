@@ -1,5 +1,5 @@
-import { AppDataSource } from './database/data-source';
-import { Sport } from './entities/Sport';
+import { AppDataSource } from '../../database/data-source';
+import { Sport } from '../../entities/Sport';
 
 async function checkSports() {
     await AppDataSource.initialize();
