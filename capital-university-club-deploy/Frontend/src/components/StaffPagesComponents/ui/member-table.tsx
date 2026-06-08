@@ -22,11 +22,9 @@
 import React from "react";
 import {
     Trophy,
-    Eye,
     Pencil,
     Shield,
     Trash2,
-    MoreHorizontal,
     ChevronUp,
     ChevronDown,
     ChevronsUpDown,
@@ -38,17 +36,13 @@ import {
 import { DataTable, ColumnDef } from "./data-table";
 import { Button } from "./button";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "./dropdown-menu";
-import {
-    Tooltip,
-    TooltipContent,
     TooltipProvider,
-    TooltipTrigger,
 } from "./tooltip";
+import {
+    AdminActionButton,
+    AdminRowActions,
+    AdminViewButton,
+} from "../shared/AdminRowActions";
 import { RoleGuard } from "../RoleGuard";
 import { ProfileAvatar } from "../shared/ProfileAvatar";
 
@@ -219,65 +213,18 @@ type ActionCellProps = {
 
 function ActionCell({ row, onView, onEdit, onChangeStatus, onDelete }: ActionCellProps) {
     return (
-        <div className="flex items-center justify-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            {/* View */}
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => onView(row)}
-                    >
-                        <Eye className="w-3.5 h-3.5 text-blue-600" />
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">عرض التفاصيل</TooltipContent>
-            </Tooltip>
-
-            {/* Edit */}
+        <AdminRowActions>
+            <AdminViewButton tooltip="عرض التفاصيل" onClick={() => onView(row)} />
             <RoleGuard privilege="UPDATE_MEMBER">
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => onEdit(row)}
-                        >
-                            <Pencil className="w-3.5 h-3.5 text-emerald-600" />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs">تعديل</TooltipContent>
-                </Tooltip>
+                <AdminActionButton tooltip="تعديل" icon={Pencil} variant="edit" onClick={() => onEdit(row)} />
             </RoleGuard>
-
-            {/* More */}
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7">
-                        <MoreHorizontal className="w-3.5 h-3.5" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="text-xs">
-                    <RoleGuard privilege="MANAGE_MEMBER_BLOCK">
-                        <DropdownMenuItem onClick={() => onChangeStatus(row)} className="gap-2">
-                            <Shield className="w-3.5 h-3.5" />
-                            تغيير الحالة
-                        </DropdownMenuItem>
-                    </RoleGuard>
-                    <RoleGuard privilege="DELETE_MEMBER">
-                        <DropdownMenuItem
-                            onClick={() => onDelete(row)}
-                            className="gap-2 text-red-600 focus:text-red-600"
-                        >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            حذف العضو
-                        </DropdownMenuItem>
-                    </RoleGuard>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        </div>
+            <RoleGuard privilege="MANAGE_MEMBER_BLOCK">
+                <AdminActionButton tooltip="تغيير الحالة" icon={Shield} variant="status" onClick={() => onChangeStatus(row)} />
+            </RoleGuard>
+            <RoleGuard privilege="DELETE_MEMBER">
+                <AdminActionButton tooltip="حذف العضو" icon={Trash2} variant="delete" onClick={() => onDelete(row)} />
+            </RoleGuard>
+        </AdminRowActions>
     );
 }
 

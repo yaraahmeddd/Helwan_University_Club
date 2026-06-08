@@ -14,13 +14,14 @@ import {
   CalendarDays,
 } from "lucide-react";
 import { format } from "date-fns";
-import { ar } from "date-fns/locale";
+import { ar, enUS } from "date-fns/locale";
+import type { Locale } from "date-fns";
 
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../hooks/useLanguage";
 import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
-import { getLocalizedText } from "../lib/localizedDisplay";
+import { getLocalizedText, localeFontFamily } from "../lib/localizedDisplay";
 import { RoleGuard } from "../components/StaffPagesComponents/RoleGuard";
 
 import { useToast } from "../hooks/use-toast";
@@ -110,19 +111,20 @@ type Pagination = {
 
 function StatusBadge({ status }: { status: Invitation["status"] }) {
   const { t } = useTranslation("ManageInvitationsPage");
+  const nowrap = "whitespace-nowrap shrink-0";
   switch (status) {
     case "confirmed":
     case "payment_completed":
     case "completed":
-      return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">{t('status.confirmed')}</Badge>;
+      return <Badge className={`bg-emerald-100 text-emerald-700 border-emerald-200 ${nowrap}`}>{t('status.confirmed')}</Badge>;
     case "pending_payment":
-      return <Badge className="bg-amber-100 text-amber-700 border-amber-200">{t('status.pending_payment')}</Badge>;
+      return <Badge className={`bg-amber-100 text-amber-700 border-amber-200 ${nowrap}`}>{t('status.pending_payment')}</Badge>;
     case "cancelled":
-      return <Badge variant="outline" className="text-muted-foreground w-fit">{t('status.cancelled')}</Badge>;
+      return <Badge variant="outline" className={`text-muted-foreground ${nowrap}`}>{t('status.cancelled')}</Badge>;
     case "in_progress":
-      return <Badge className="bg-blue-100 text-blue-700 border-blue-200">{t('status.in_progress')}</Badge>;
+      return <Badge className={`bg-blue-100 text-blue-700 border-blue-200 ${nowrap}`}>{t('status.in_progress')}</Badge>;
     default:
-      return <Badge variant="outline">{status}</Badge>;
+      return <Badge variant="outline" className={nowrap}>{status}</Badge>;
   }
 }
 
@@ -131,13 +133,20 @@ function truncate(str: string, length = 8) {
   return str.length > length ? str.substring(0, length) + "..." : str;
 }
 
-function formatTime(timeStr: string) {
+function formatTime(timeStr: string, dateLocale: Locale) {
   if (!timeStr) return "";
   try {
+    // API may return ISO datetime or HH:mm
+    if (timeStr.includes("T") || (timeStr.includes("-") && timeStr.includes(":"))) {
+      const parsed = new Date(timeStr);
+      if (!Number.isNaN(parsed.getTime())) {
+        return format(parsed, "h:mm a", { locale: dateLocale });
+      }
+    }
     const [h, m] = timeStr.split(":");
     const date = new Date();
     date.setHours(parseInt(h, 10), parseInt(m, 10), 0);
-    return format(date, "h:mm a", { locale: ar });
+    return format(date, "h:mm a", { locale: dateLocale });
   } catch {
     return timeStr;
   }
@@ -146,9 +155,10 @@ function formatTime(timeStr: string) {
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export default function ManageInvitationsPage() {
-  const { t, i18n } = useTranslation("ManageInvitationsPage");
+  const { t } = useTranslation("ManageInvitationsPage");
   const { language, isRTL } = useLanguage();
   const { toast } = useToast();
+  const dateLocale = language === "ar" ? ar : enUS;
 
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 15, total: 0, pages: 1 });
@@ -177,12 +187,17 @@ export default function ManageInvitationsPage() {
       const res = await api.get<{ success: boolean; data: Invitation[]; pagination: Pagination }>(
         `/bookings/admin/invitations?${params.toString()}`
       );
-      
+
       if (res.data?.success) {
-        setInvitations(res.data.data);
-        setPagination(res.data.pagination);
+        setInvitations(res.data.data ?? []);
+        setPagination(res.data.pagination ?? { page: 1, limit: 15, total: 0, pages: 1 });
+      } else {
+        setInvitations([]);
+        setPagination({ page: 1, limit: 15, total: 0, pages: 1 });
       }
-    } catch (error) {
+    } catch {
+      setInvitations([]);
+      setPagination((prev) => ({ ...prev, total: 0, pages: 1 }));
       toast({
         title: t('toast.loadFailed'),
         description: t('toast.loadFailedDesc'),
@@ -191,7 +206,7 @@ export default function ManageInvitationsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, statusFilter, toast]);
+  }, [search, statusFilter, toast, t]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -203,16 +218,19 @@ export default function ManageInvitationsPage() {
   // Actions
   const formatShareUrl = (url: string) => {
     if (!url) return "";
-    if (url.startsWith('http')) {
+    const normalizePath = (path: string) =>
+      path.replace('/bookings/join/', '/bookings/share/');
+
+    if (url.startsWith("http")) {
       try {
         const urlObj = new URL(url);
-        const newPath = urlObj.pathname.replace('/bookings/join/', '/bookings/share/');
+        const newPath = normalizePath(urlObj.pathname);
         return `${window.location.origin}${newPath}${urlObj.search}${urlObj.hash}`;
       } catch {
         return url;
       }
     }
-    const safeUrl = url.replace('/bookings/join/', '/bookings/share/');
+    const safeUrl = normalizePath(url);
     return `${window.location.origin}${safeUrl.startsWith('/') ? '' : '/'}${safeUrl}`;
   };
 
@@ -240,7 +258,12 @@ export default function ManageInvitationsPage() {
   };
 
   return (
-    <div className="flex-1 space-y-6 p-6 min-h-screen relative" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div
+      className="flex-1 space-y-6 p-6 min-h-screen relative"
+      dir={isRTL ? 'rtl' : 'ltr'}
+      lang={language}
+      style={{ fontFamily: localeFontFamily(language) }}
+    >
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center justify-between">
         <div>
@@ -356,8 +379,8 @@ export default function ManageInvitationsPage() {
                 <TableHead className={adminHeadClass({ className: "w-[140px]" })}>{t('table.phone')}</TableHead>
                 <TableHead className={adminHeadClass({ className: "w-[180px]" })}>{t('table.dateTime')}</TableHead>
                 <TableHead className={adminHeadClass()}>{t('table.fieldSport')}</TableHead>
-                <TableHead className={adminHeadClass({ center: true, className: "w-[120px]" })}>{t('table.participants')}</TableHead>
-                <TableHead className={adminHeadClass({ className: "w-[140px]" })}>{t('table.status')}</TableHead>
+                <TableHead className={adminHeadClass({ className: "w-[1%] whitespace-nowrap" })}>{t('table.status')}</TableHead>
+                <TableHead className={adminHeadClass({ center: true, className: "w-[1%] whitespace-nowrap" })}>{t('table.participants')}</TableHead>
                 <TableHead className={adminHeadClass({ center: true, className: "w-[140px]" })}>{t('table.actions')}</TableHead>
               </TableRow>
             </TableHeader>
@@ -409,12 +432,12 @@ export default function ManageInvitationsPage() {
                         <div className="flex items-center gap-1.5 text-slate-800 font-bold bg-slate-50 rounded-md px-2 py-1 w-fit border border-slate-100">
                           <CalendarDays className="h-3.5 w-3.5 text-primary" />
                           <span className="text-sm">
-                            {inv.booking_date ? format(new Date(inv.booking_date), "d MMM yyyy", { locale: ar }) : "—"}
+                            {inv.booking_date ? format(new Date(inv.booking_date), "d MMM yyyy", { locale: dateLocale }) : "—"}
                           </span>
                         </div>
                         <span className="text-xs font-semibold text-slate-500 flex items-center gap-1.5 px-1">
                           <CalendarCheck className="h-3.5 w-3.5 text-slate-400" />
-                          {formatTime(inv.booking_time?.start)} - {formatTime(inv.booking_time?.end)}
+                          {formatTime(inv.booking_time?.start, dateLocale)} - {formatTime(inv.booking_time?.end, dateLocale)}
                         </span>
                       </div>
                     </TableCell>
@@ -434,15 +457,15 @@ export default function ManageInvitationsPage() {
                       </div>
                     </TableCell>
 
-                    <TableCell className={adminCellClass({ center: true })}>
-                      <div className="inline-flex items-center gap-1.5 bg-white border shadow-sm rounded-full px-3 py-1.5 text-sm font-bold text-slate-700 group-hover:border-primary/30 group-hover:shadow transition-all">
-                        <User className="h-4 w-4 text-primary" />
-                        <span>{inv.stats?.registered_count} <span className="text-slate-400 font-medium">/</span> {inv.stats?.expected_participants}</span>
-                      </div>
+                    <TableCell className={adminCellClass({ className: "whitespace-nowrap" })}>
+                      <StatusBadge status={inv.status} />
                     </TableCell>
 
-                    <TableCell className={adminCellClass()}>
-                      <StatusBadge status={inv.status} />
+                    <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
+                      <div className="inline-flex items-center gap-1.5 bg-white border shadow-sm rounded-full px-3 py-1.5 text-sm font-bold text-slate-700 group-hover:border-primary/30 group-hover:shadow transition-all">
+                        <User className="h-4 w-4 text-primary shrink-0" />
+                        <span dir="ltr">{inv.stats?.registered_count}<span className="text-slate-400 font-medium">/</span>{inv.stats?.expected_participants}</span>
+                      </div>
                     </TableCell>
 
                     <TableCell className={adminCellClass({ center: true })}>
@@ -524,7 +547,7 @@ export default function ManageInvitationsPage() {
                       <span className="text-xs font-medium">{t('panel.date')}</span>
                     </div>
                     <div className="font-semibold text-sm">
-                      {selectedInv.booking_date ? format(new Date(selectedInv.booking_date), "d MMM yyyy", { locale: i18n.language === 'en' ? undefined : ar }) : "—"}
+                      {selectedInv.booking_date ? format(new Date(selectedInv.booking_date), "d MMM yyyy", { locale: dateLocale }) : "—"}
                     </div>
                   </div>
                   <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
@@ -532,8 +555,8 @@ export default function ManageInvitationsPage() {
                       <CalendarCheck className="h-3.5 w-3.5" />
                       <span className="text-xs font-medium">{t('panel.time')}</span>
                     </div>
-                    <div className="font-semibold text-sm">
-                      {formatTime(selectedInv.booking_time?.start)} - {formatTime(selectedInv.booking_time?.end)}
+                    <div className="font-semibold text-sm" dir="ltr">
+                      {formatTime(selectedInv.booking_time?.start, dateLocale)} - {formatTime(selectedInv.booking_time?.end, dateLocale)}
                     </div>
                   </div>
                 </div>
@@ -547,11 +570,15 @@ export default function ManageInvitationsPage() {
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{t('panel.field')}</span>
-                      <span className="font-medium text-start">{selectedInv.field?.name_ar || "—"}</span>
+                      <span className="font-medium text-start">
+                        {getLocalizedText(selectedInv.field?.name_ar, selectedInv.field?.name_en, language) || "—"}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{t('panel.sport')}</span>
-                      <span className="font-medium text-start">{selectedInv.sport?.name_ar || "—"}</span>
+                      <span className="font-medium text-start">
+                        {getLocalizedText(selectedInv.sport?.name_ar, selectedInv.sport?.name_en, language) || "—"}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">{t('panel.shareLink')}</span>
@@ -653,7 +680,7 @@ export default function ManageInvitationsPage() {
 
       {/* Cancel Confirmation Dialog */}
       <Dialog open={!!cancelDialog} onOpenChange={(open) => !open && setCancelDialog(null)}>
-        <DialogContent dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>
+        <DialogContent dir={isRTL ? 'rtl' : 'ltr'} lang={language}>
           <DialogHeader>
             <DialogTitle className="text-destructive flex items-center gap-2">
               <ShieldAlert className="h-5 w-5" />
@@ -665,7 +692,10 @@ export default function ManageInvitationsPage() {
           </DialogHeader>
           <div className="py-2">
             <p className="text-sm font-semibold border-s-2 border-border ps-2 bg-slate-50 py-1 rounded-sm">
-              {t('cancelDialog.booking')} {cancelDialog?.field?.name_ar} {t('cancelDialog.day')} {cancelDialog?.booking_date ? format(new Date(cancelDialog.booking_date), "d MMM yyyy", { locale: i18n.language === 'en' ? undefined : ar }) : ""}
+              {t('cancelDialog.booking')}{" "}
+              {getLocalizedText(cancelDialog?.field?.name_ar, cancelDialog?.field?.name_en, language)}{" "}
+              {t('cancelDialog.day')}{" "}
+              {cancelDialog?.booking_date ? format(new Date(cancelDialog.booking_date), "d MMM yyyy", { locale: dateLocale }) : ""}
             </p>
           </div>
           <DialogFooter className="flex gap-2 sm:justify-start">

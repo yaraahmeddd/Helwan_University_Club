@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, Printer, Search, Eye, FileText, UserX, Loader2, RefreshCw, Filter, Users, Award, Globe, Phone, CreditCard, User, MapPin, Calendar, Mail, Clock, Activity, FileBadge, MoreHorizontal } from "lucide-react";
+import { Check, Printer, Search, Eye, FileText, UserX, Loader2, RefreshCw, Filter, Users, Award, Globe, Phone, CreditCard, User, MapPin, Calendar, Mail, Clock, Activity, FileBadge } from "lucide-react";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Input } from "../components/StaffPagesComponents/ui/input";
 import { Badge } from "../components/StaffPagesComponents/ui/badge";
@@ -22,11 +22,13 @@ import {
 import { buildPersonName, getLocalizedText } from "../lib/localizedDisplay";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 import {
-    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "../components/StaffPagesComponents/ui/dropdown-menu";
-import {
-    Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+    TooltipProvider,
 } from "../components/StaffPagesComponents/ui/tooltip";
+import {
+    AdminActionButton,
+    AdminRowActions,
+    AdminViewButton,
+} from "../components/StaffPagesComponents/shared/AdminRowActions";
 
 // ─── Unified record type ────────────────────────────────────────────────────
 interface RegistrationRecord {
@@ -81,7 +83,7 @@ export default function RegistrationManagementPage() {
     const [selectedRecord, setSelectedRecord] = useState<RegistrationRecord | null>(null);
     const [printDialogOpen, setPrintDialogOpen] = useState(false);
     const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
-    const [reviewTab, setReviewTab] = useState<'data' | 'photos'>('data');
+    const [reviewTab, setReviewTab] = useState<'info' | 'photos'>('info');
 
     const [newMember, setNewMember] = useState({
         name_ar: "",
@@ -243,7 +245,7 @@ export default function RegistrationManagementPage() {
 
     const openPrint = (record: RegistrationRecord) => { setSelectedRecord(record); setPrintDialogOpen(true); };
     const handlePrint = () => { window.print(); };
-    const openReview = (record: RegistrationRecord) => { setSelectedRecord(record); setReviewTab('data'); setReviewDialogOpen(true); };
+    const openReview = (record: RegistrationRecord) => { setSelectedRecord(record); setReviewTab('info'); setReviewDialogOpen(true); };
 
     const getFileUrl = (filename: string | undefined) => {
         if (!filename) return "/placeholder-image.png";
@@ -494,50 +496,30 @@ export default function RegistrationManagementPage() {
 
                                         {/* Actions */}
                                         <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
-                                            <div className={adminTableStyles.actions}>
+                                            <AdminRowActions>
                                                 <RoleGuard privilege="VIEW_MEMBERS">
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600"
-                                                                onClick={() => openReview(record)}
-                                                            >
-                                                                <Eye className="w-4 h-4 text-blue-600" />
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent side="top" className="text-xs">{t('rowActions.viewDetails')}</TooltipContent>
-                                                    </Tooltip>
+                                                    <AdminViewButton
+                                                        tooltip={t('rowActions.viewDetails')}
+                                                        onClick={() => openReview(record)}
+                                                    />
                                                 </RoleGuard>
-
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted">
-                                                            <MoreHorizontal className="w-4 h-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end" className="text-xs w-40">
-                                                        <RoleGuard privilege="MANAGE_MEMBERSHIP_REQUEST">
-                                                            <DropdownMenuItem
-                                                                onClick={() => void handleApprove(record)}
-                                                                disabled={isActive || isApproving}
-                                                                className="gap-2 cursor-pointer text-emerald-700 focus:text-emerald-700"
-                                                            >
-                                                                {isApproving
-                                                                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                                    : <Check className="w-3.5 h-3.5" />
-                                                                }
-                                                                {isApproving ? t('actions.processing') : t('actions.approve')}
-                                                            </DropdownMenuItem>
-                                                        </RoleGuard>
-                                                        <DropdownMenuItem onClick={() => openPrint(record)} className="gap-2 cursor-pointer">
-                                                            <Printer className="w-3.5 h-3.5" />
-                                                            {t('actions.print')}
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </div>
+                                                <RoleGuard privilege="MANAGE_MEMBERSHIP_REQUEST">
+                                                    <AdminActionButton
+                                                        tooltip={isApproving ? t('actions.processing') : t('actions.approve')}
+                                                        icon={Check}
+                                                        variant="approve"
+                                                        onClick={() => void handleApprove(record)}
+                                                        disabled={isActive || isApproving}
+                                                        loading={isApproving}
+                                                    />
+                                                </RoleGuard>
+                                                <AdminActionButton
+                                                    tooltip={t('actions.print')}
+                                                    icon={Printer}
+                                                    variant="print"
+                                                    onClick={() => openPrint(record)}
+                                                />
+                                            </AdminRowActions>
                                         </TableCell>
                                     </TableRow>
                                 );
@@ -761,65 +743,56 @@ export default function RegistrationManagementPage() {
                 </DialogContent>
             </Dialog>
 
-            {/* Review Record Details Dialog — 2 Tabs */}
+            {/* Review Record Details Dialog — matches MemberManagement DetailPanel layout */}
             <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
-                <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
-                    <DialogHeader className="shrink-0 pb-0">
-                        <div className="flex items-center justify-between">
-                            <DialogTitle className="text-lg font-bold flex items-center gap-2">
-                                {t('review.title')}
-                                {selectedRecord?.memberType === 'team_member' ? (
-                                    <span className="text-xs font-normal bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">{t('memberTypes.teamMember')}</span>
-                                ) : (
-                                    <span className="text-xs font-normal bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">{t('memberTypes.member')}</span>
-                                )}
-                            </DialogTitle>
-                        </div>
-                        <DialogDescription className="sr-only">{t('review.title')}</DialogDescription>
-
-                        <div className="mt-3">
-                            <RecordViewTabs
-                                tabs={[
-                                    { key: 'data' as const, label: t('review.memberData') },
-                                    { key: 'photos' as const, label: t('review.documents') },
-                                ]}
-                                active={reviewTab}
-                                onChange={setReviewTab}
-                            />
-                        </div>
+                <DialogContent className="max-w-3xl w-full p-0 overflow-hidden" style={{ maxHeight: '88vh' }} dir={isRTL ? 'rtl' : 'ltr'}>
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>{t('review.title')}</DialogTitle>
+                        <DialogDescription>{t('review.title')}</DialogDescription>
                     </DialogHeader>
+
+                    {selectedRecord && (
+                    <div className="flex flex-col" style={{ maxHeight: '88vh' }}>
+                        <div className="px-6 pt-5 pb-0 border-b border-border shrink-0">
+                            <RecordViewProfileHeader
+                                photoUrl={selectedRecord.photo ? getFileUrl(selectedRecord.photo) : null}
+                                photoAlt={t('review.personalPhoto')}
+                                name={getDisplayName(selectedRecord)}
+                                badges={
+                                    <>
+                                        {selectedRecord.memberType === 'team_member' ? (
+                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800">
+                                                <Award className="w-3 h-3" />
+                                                {t('memberTypes.teamMember')}
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-800">
+                                                <Users className="w-3 h-3" />
+                                                {t('memberTypes.member')}
+                                            </span>
+                                        )}
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${selectedRecord.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800'}`}>
+                                            {selectedRecord.status === 'active' ? t('status.active') : t('status.pending')}
+                                        </span>
+                                    </>
+                                }
+                            />
+                            <div className="mt-3">
+                                <RecordViewTabs
+                                    tabs={[
+                                        { key: 'info' as const, label: t('review.memberData') },
+                                        { key: 'photos' as const, label: t('review.documents') },
+                                    ]}
+                                    active={reviewTab}
+                                    onChange={setReviewTab}
+                                />
+                            </div>
+                        </div>
 
                     <div className="flex-1 overflow-y-auto">
 
-                        {/* ══ TAB 1: User Data ══════════════════════════════════════ */}
-                        {reviewTab === 'data' && (
-                            <div className="p-5 space-y-5">
-                                {/* Profile header */}
-                                <RecordViewProfileHeader
-                                    photoUrl={selectedRecord?.photo ? getFileUrl(selectedRecord.photo) : null}
-                                    photoAlt={t('review.personalPhoto')}
-                                    name={getDisplayName(selectedRecord!)}
-                                    badges={
-                                        <>
-                                            {selectedRecord?.memberType === 'team_member' ? (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800">
-                                                    <Award className="w-3 h-3" />
-                                                    {t('memberTypes.teamMember')}
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-800">
-                                                    <Users className="w-3 h-3" />
-                                                    {t('memberTypes.member')}
-                                                </span>
-                                            )}
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${selectedRecord?.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800'}`}>
-                                                {selectedRecord?.status === 'active' ? t('status.active') : t('status.pending')}
-                                            </span>
-                                        </>
-                                    }
-                                />
-
-                                <div className="space-y-4">
+                        {reviewTab === 'info' && (
+                            <div className="p-5 space-y-4">
                                     <RecordViewSection icon={Mail} title={t('review.accountInfo', 'Account Information')}>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <RecordViewField icon={Mail} label={t('review.email', 'Email')} value={selectedRecord?.email} fallback={t('common.notAvailable')} />
@@ -935,11 +908,9 @@ export default function RegistrationManagementPage() {
                                             )}
                                         </div>
                                     </RecordViewSection>
-                                </div>
                             </div>
                         )}
 
-                        {/* ══ TAB 2: Documents / Photos ═════════════════════════════ */}
                         {reviewTab === 'photos' && (
                             <div className="p-5 space-y-5">
 
@@ -1017,27 +988,39 @@ export default function RegistrationManagementPage() {
                         )}
                     </div>
 
-                    <DialogFooter className="shrink-0 border-t pt-4">
-                        <RoleGuard privilege="MANAGE_MEMBERSHIP_REQUEST">
-                            <Button
-                                className="bg-green-600 hover:bg-green-700 text-white gap-2 px-8"
-                                onClick={() => {
-                                    if (selectedRecord) {
+                    <div className="border-t border-border px-5 py-3 bg-muted/20 shrink-0 flex items-center gap-2">
+                        <AdminActionButton
+                            tooltip={t('actions.print')}
+                            icon={Printer}
+                            variant="print"
+                            onClick={() => openPrint(selectedRecord)}
+                        />
+                        <div className="flex gap-2 ms-auto">
+                            <Button variant="outline" size="sm" onClick={() => setReviewDialogOpen(false)}>
+                                {t('actions.close')}
+                            </Button>
+                            <RoleGuard privilege="MANAGE_MEMBERSHIP_REQUEST">
+                                <Button
+                                    size="sm"
+                                    className="gap-1.5 bg-green-600 hover:bg-green-700 text-white"
+                                    onClick={() => {
                                         void handleApprove(selectedRecord);
                                         setReviewDialogOpen(false);
-                                    }
-                                }}
-                                disabled={selectedRecord?.status === 'active' || approvingId === `${selectedRecord?.memberType}-${selectedRecord?.id}`}
-                            >
-                                {approvingId === `${selectedRecord?.memberType}-${selectedRecord?.id}` ? (
-                                    <><Loader2 className="h-4 w-4 animate-spin" aria-hidden />{t('review.approving')}</>
-                                ) : (
-                                    <><Check className="h-4 w-4" />{t('actions.approve')}</>
-                                )}
-                            </Button>
-                        </RoleGuard>
-                        <Button variant="outline" onClick={() => setReviewDialogOpen(false)} className="px-8">{t('actions.close')}</Button>
-                    </DialogFooter>
+                                    }}
+                                    disabled={selectedRecord.status === 'active' || approvingId === `${selectedRecord.memberType}-${selectedRecord.id}`}
+                                >
+                                    {approvingId === `${selectedRecord.memberType}-${selectedRecord.id}` ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Check className="w-4 h-4" />
+                                    )}
+                                    {approvingId === `${selectedRecord.memberType}-${selectedRecord.id}` ? t('review.approving') : t('actions.approve')}
+                                </Button>
+                            </RoleGuard>
+                        </div>
+                    </div>
+                    </div>
+                    )}
                 </DialogContent>
             </Dialog>
 

@@ -8,9 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/StaffPagesComponents/ui/select";
 import { RoleGuard } from "../components/StaffPagesComponents/RoleGuard";
 import { Pencil, Search, Trash2, Power, Plus } from "lucide-react";
-import { DropdownMenuItem } from "../components/StaffPagesComponents/ui/dropdown-menu";
 import { TooltipProvider } from "../components/StaffPagesComponents/ui/tooltip";
-import { AdminRowActions, AdminViewButton } from "../components/StaffPagesComponents/shared/AdminRowActions";
+import { AdminActionButton, AdminRowActions, AdminViewButton } from "../components/StaffPagesComponents/shared/AdminRowActions";
 import { useToast } from "../hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../hooks/useLanguage";
@@ -369,35 +368,35 @@ export default function MembershipsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
-                      <AdminRowActions
-                        view={<AdminViewButton tooltip={t("rowActions.viewDetails")} onClick={() => setSelectedPlan(m)} />}
-                        menu={
-                          <>
-                            <RoleGuard privilege="UPDATE_MEMBERSHIP_PLAN">
-                              <DropdownMenuItem onClick={() => openEdit(m)} className="gap-2 cursor-pointer">
-                                <Pencil className="w-3.5 h-3.5 text-emerald-600" />
-                                {t("action.edit")}
-                              </DropdownMenuItem>
-                            </RoleGuard>
-                            <RoleGuard privilege="CHANGE_MEMBERSHIP_PLAN_STATUS">
-                              <DropdownMenuItem
-                                onClick={() => void toggleStatus(m)}
-                                disabled={toggling === m.id}
-                                className="gap-2 cursor-pointer"
-                              >
-                                <Power className="w-3.5 h-3.5" />
-                                {toggling === m.id ? "..." : (m.is_active ? t("action.deactivate") : t("action.activate"))}
-                              </DropdownMenuItem>
-                            </RoleGuard>
-                            <RoleGuard privilege="DELETE_MEMBERSHIP_PLAN">
-                              <DropdownMenuItem onClick={() => setDeletePlan(m)} className="gap-2 text-red-600 focus:text-red-600 cursor-pointer">
-                                <Trash2 className="w-3.5 h-3.5" />
-                                {t("action.delete")}
-                              </DropdownMenuItem>
-                            </RoleGuard>
-                          </>
-                        }
-                      />
+                      <AdminRowActions>
+                        <AdminViewButton tooltip={t("rowActions.viewDetails")} onClick={() => setSelectedPlan(m)} />
+                        <RoleGuard privilege="UPDATE_MEMBERSHIP_PLAN">
+                          <AdminActionButton
+                            tooltip={t("action.edit")}
+                            icon={Pencil}
+                            variant="edit"
+                            onClick={() => openEdit(m)}
+                          />
+                        </RoleGuard>
+                        <RoleGuard privilege="CHANGE_MEMBERSHIP_PLAN_STATUS">
+                          <AdminActionButton
+                            tooltip={toggling === m.id ? "..." : (m.is_active ? t("action.deactivate") : t("action.activate"))}
+                            icon={Power}
+                            variant="status"
+                            onClick={() => void toggleStatus(m)}
+                            disabled={toggling === m.id}
+                            loading={toggling === m.id}
+                          />
+                        </RoleGuard>
+                        <RoleGuard privilege="DELETE_MEMBERSHIP_PLAN">
+                          <AdminActionButton
+                            tooltip={t("action.delete")}
+                            icon={Trash2}
+                            variant="delete"
+                            onClick={() => setDeletePlan(m)}
+                          />
+                        </RoleGuard>
+                      </AdminRowActions>
                     </TableCell>
                   </TableRow>
                 ))

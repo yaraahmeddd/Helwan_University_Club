@@ -15,7 +15,7 @@ import {
 
     AlertTriangle, CheckCircle,
 
-    XCircle, Clock, Filter, MoreHorizontal,
+    XCircle, Clock, Filter,
     Mail, Phone, MapPin, Calendar, Globe, User, Award, Hash, HeartPulse, Medal, FileBadge, CreditCard
 } from "lucide-react";
 
@@ -56,10 +56,10 @@ import {
 } from "../components/StaffPagesComponents/ui/popover";
 
 import {
-
-    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-
-} from "../components/StaffPagesComponents/ui/dropdown-menu";
+    AdminActionButton,
+    AdminRowActions,
+    AdminViewButton,
+} from "../components/StaffPagesComponents/shared/AdminRowActions";
 
 import {
 
@@ -2383,81 +2383,36 @@ export default function MemberManagementPage() {
                                                 </TableCell>
 
                                                 <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
-                                                    <div className={adminTableStyles.actions}>
-
-                                                        <Tooltip>
-
-                                                            <TooltipTrigger asChild>
-
-                                                                <Button
-
-                                                                    variant="ghost"
-
-                                                                    size="icon"
-
-                                                                    className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600"
-
-                                                                    onClick={() => void openDetail(row)}
-
-                                                                >
-
-                                                                    <Eye className="w-4 h-4 text-blue-600" />
-
-                                                                </Button>
-
-                                                            </TooltipTrigger>
-
-                                                            <TooltipContent side="top" className="text-xs">{t('rowActions.viewDetails')}</TooltipContent>
-
-                                                        </Tooltip>
-
-
-
-                                                        <DropdownMenu>
-
-                                                            <DropdownMenuTrigger asChild>
-
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted">
-
-                                                                    <MoreHorizontal className="w-4 h-4" />
-
-                                                                </Button>
-
-                                                            </DropdownMenuTrigger>
-
-                                                            <DropdownMenuContent align="end" className="text-xs w-40">
-
-                                                                <RoleGuard privilege="UPDATE_MEMBER">
-                                                                    <DropdownMenuItem onClick={() => openEdit(row)} className="gap-2 cursor-pointer">
-                                                                        <Pencil className="w-3.5 h-3.5 text-emerald-600" />
-                                                                        {t('rowActions.edit')}
-                                                                    </DropdownMenuItem>
-                                                                </RoleGuard>
-
-                                                                <RoleGuard privilege="MANAGE_MEMBER_BLOCK">
-                                                                    <DropdownMenuItem onClick={() => openStatus(row)} className="gap-2 cursor-pointer">
-
-                                                                        <Shield className="w-3.5 h-3.5 text-amber-600" />
-                                                                        {t('rowActions.changeStatus')}
-
-                                                                    </DropdownMenuItem>
-                                                                </RoleGuard>
-
-                                                                <RoleGuard privilege="DELETE_MEMBER">
-                                                                    <DropdownMenuItem onClick={() => openDelete(row)} className="gap-2 text-red-600 focus:text-red-600 cursor-pointer">
-
-                                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                                        {t('rowActions.deleteMember')}
-
-                                                                    </DropdownMenuItem>
-                                                                </RoleGuard>
-
-                                                            </DropdownMenuContent>
-
-                                                        </DropdownMenu>
-
-                                                    </div>
-
+                                                    <AdminRowActions>
+                                                        <AdminViewButton
+                                                            tooltip={t('rowActions.viewDetails')}
+                                                            onClick={() => void openDetail(row)}
+                                                        />
+                                                        <RoleGuard privilege="UPDATE_MEMBER">
+                                                            <AdminActionButton
+                                                                tooltip={t('rowActions.edit')}
+                                                                icon={Pencil}
+                                                                variant="edit"
+                                                                onClick={() => openEdit(row)}
+                                                            />
+                                                        </RoleGuard>
+                                                        <RoleGuard privilege="MANAGE_MEMBER_BLOCK">
+                                                            <AdminActionButton
+                                                                tooltip={t('rowActions.changeStatus')}
+                                                                icon={Shield}
+                                                                variant="status"
+                                                                onClick={() => openStatus(row)}
+                                                            />
+                                                        </RoleGuard>
+                                                        <RoleGuard privilege="DELETE_MEMBER">
+                                                            <AdminActionButton
+                                                                tooltip={t('rowActions.deleteMember')}
+                                                                icon={Trash2}
+                                                                variant="delete"
+                                                                onClick={() => openDelete(row)}
+                                                            />
+                                                        </RoleGuard>
+                                                    </AdminRowActions>
                                                 </TableCell>
 
                                             </TableRow>

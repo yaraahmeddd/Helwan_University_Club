@@ -170,16 +170,27 @@ export function AppSidebar() {
     return () => window.removeEventListener("resize", handleResize);
   }, [collapsed]);
 
+  // ── Active detection ───────────────────────────────────────────────────────
+  /** Routes that must not match longer sibling paths (e.g. sports vs sports/bookings) */
+  const EXACT_ONLY_PATHS = new Set([
+    "/staff/dashboard/members/new",
+    "/staff/dashboard/members/new-team-member",
+    "/staff/dashboard/sports",
+  ]);
+
+  const isActive = (path: string) => {
+    if (currentPath === path) return true;
+    if (EXACT_ONLY_PATHS.has(path)) return false;
+    if (path === "/staff/dashboard") return false;
+    return currentPath.startsWith(`${path}/`);
+  };
+
   // ── Auto-expand group containing active route ──────────────────────────────
   useEffect(() => {
     const activeGroup = SIDEBAR_GROUPS.find(
       g =>
         g.collapsible &&
-        g.items.some(
-          item =>
-            currentPath === item.path ||
-            (item.path !== "/staff/dashboard" && currentPath.startsWith(item.path))
-        )
+        g.items.some(item => isActive(item.path))
     );
     if (activeGroup) {
       setOpenGroups(prev => new Set([...prev, activeGroup.label]));
@@ -194,21 +205,6 @@ export function AppSidebar() {
       else next.add(label);
       return next;
     });
-  };
-
-  // ── Active detection ───────────────────────────────────────────────────────
-  /** Sibling routes where one path is a prefix of another — require exact match */
-  const EXACT_ONLY_PATHS = new Set([
-    "/staff/dashboard/members/new",
-    "/staff/dashboard/members/new-team-member",
-  ]);
-
-  const isActive = (path: string) => {
-    if (EXACT_ONLY_PATHS.has(path)) return currentPath === path;
-    return (
-      currentPath === path ||
-      (path !== "/staff/dashboard" && currentPath.startsWith(path))
-    );
   };
 
   // ── Privilege filter ───────────────────────────────────────────────────────

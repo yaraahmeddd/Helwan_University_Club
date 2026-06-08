@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { BookingController } from "../controllers/BookingController";
 import { ParticipantRegistrationController } from "../controllers/ParticipantRegistrationController";
+import { authenticate } from "../middleware/auth";
+import { authorizePrivilege } from "../middleware/authorizePrivilege";
 
 const router = Router();
 const bookingController = new BookingController();
@@ -53,21 +55,36 @@ router.get("/security/bookings", bookingController.getSecurityDashboardBookings)
  *   - status: "pending_payment" | "payment_completed" | "in_progress" | "completed" | "cancelled"
  *   - search: string (search by booking ID or booker name)
  */
-router.get("/admin/invitations", participantController.getAllInvitations.bind(participantController));
+router.get(
+  "/admin/invitations",
+  authenticate,
+  authorizePrivilege("VIEW_SPORTS"),
+  participantController.getAllInvitations.bind(participantController)
+);
 
 /**
  * GET /api/bookings/:bookingId/participants
  * Get all participants for a specific booking (admin view)
  * Auth: Required (admin/staff)
  */
-router.get("/:bookingId/participants", participantController.getBookingParticipants.bind(participantController));
+router.get(
+  "/:bookingId/participants",
+  authenticate,
+  authorizePrivilege("VIEW_SPORTS"),
+  participantController.getBookingParticipants.bind(participantController)
+);
 
 /**
  * GET /api/bookings/:bookingId/invitation
  * Get detailed invitation information for a specific booking
  * Auth: Required (admin/staff)
  */
-router.get("/:bookingId/invitation", participantController.getInvitationDetails.bind(participantController));
+router.get(
+  "/:bookingId/invitation",
+  authenticate,
+  authorizePrivilege("VIEW_SPORTS"),
+  participantController.getInvitationDetails.bind(participantController)
+);
 
 /**
  * DELETE /api/bookings/:bookingId/participants/:participantId
@@ -78,7 +95,12 @@ router.get("/:bookingId/invitation", participantController.getInvitationDetails.
  *   "reason": "Optional removal reason"
  * }
  */
-router.delete("/:bookingId/participants/:participantId", participantController.removeParticipant.bind(participantController));
+router.delete(
+  "/:bookingId/participants/:participantId",
+  authenticate,
+  authorizePrivilege("VIEW_SPORTS"),
+  participantController.removeParticipant.bind(participantController)
+);
 
 /**
  * ─────────────────────────────────────────────────────────────────────────────
