@@ -287,39 +287,51 @@
       "a4": "Yes, there is a large free parking area for all members and visitors."
     },
     "form": {
-      "title": "Send us a message",
-      "subtitle": "Fill out the form and we will contact you shortly",
+      "title": "Fill out the form and we will contact you",
+      "subtitle": "We usually respond within 24 business hours",
       "name": "Full Name",
       "name_placeholder": "Enter your name",
       "phone": "Phone Number",
       "subject": "Subject",
-      "subject_empty": "Select Subject",
+      "subject_empty": "Choose the appropriate subject",
       "subj_membership": "Membership Inquiry",
       "subj_vendor": "Become a Supplier",
-      "subj_reservation": "Court/Activity Reservation",
+      "subj_reservation": "Court or Activity Reservation",
       "subj_complaint": "Complaint or Suggestion",
       "subj_other": "Other",
-      "message": "Message",
-      "message_placeholder": "Type your message here...",
+      "message": "Your Message",
+      "message_placeholder": "Type your inquiry or message here...",
       "sending": "Sending...",
       "success": "✓ Sent Successfully!",
       "submit": "Send Message",
-      "msg_from_form": "Message from Contact Form"
+      "msg_from_form": "Message from Contact Form",
+      "send_msg": "Send a message",
+      "phone_placeholder": "+20 XXX XXX XXXX",
+      "email": "Email",
+      "email_placeholder": "example@email.com",
+      "subj_academies": "Sports Academy Subscription",
+      "subj_kids": "Kids Enrollment"
     },
     "hours": {
       "title": "Working Hours",
       "sat_thu": "Saturday - Thursday",
-      "sat_thu_time": "6:00 AM - 11:00 PM",
+      "sat_thu_time": "6:00 AM — 11:00 PM",
       "fri": "Friday",
-      "fri_time": "8:00 AM - 12:00 AM",
+      "fri_time": "8:00 AM — 12:00 AM",
       "offers": "🎉 Special offers available on weekends"
     },
     "social": {
-      "title": "Follow us on"
+      "follow_us": "Follow Us"
     },
     "faq_section": {
-      "title": "FAQ",
-      "subtitle": "Quick answers to common questions"
+      "quick_help": "Quick Help",
+      "title": "Frequently Asked Questions",
+      "subtitle": "Comprehensive answers to the most common questions regarding memberships, sports academies, kids enrollment, court reservations, and payments",
+      "search_placeholder": "Search FAQs...",
+      "no_results": "No results matching your search in this category. Try another category or different keywords.",
+      "not_found": "Didn't find your answer?",
+      "customer_service": "Our customer service team is ready to help with any inquiry",
+      "email_us": "Email Us"
     },
     "cta": {
       "title": "Ready to Join?",

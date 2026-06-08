@@ -507,7 +507,7 @@ const ContactPage: React.FC = () => {
                   </FormField>
                 </div>
 
-                <FormField label={t("contact.form.email", "البريد الإلكتروني")} required>
+                <FormField label={t("contact.email", "البريد الإلكتروني")} required>
                   <input
                     type="email"
                     name="email"
@@ -722,8 +722,8 @@ const ContactPage: React.FC = () => {
             {/* Help footer */}
             <div className="mt-10 bg-gradient-to-l from-[#0e1c38] to-[#1a4d63] rounded-3xl p-8 md:p-10 text-center text-white shadow-xl">
               <HelpCircle className="w-10 h-10 mx-auto mb-3 text-[#f8941c]" />
-              <h3 className="text-xl md:text-2xl font-extrabold mb-2">{t("contact.cta.no_answer", "لم تجد إجابة سؤالك؟")}</h3>
-              <p className="text-white/85 mb-4">{t("contact.cta.support_ready", "فريق خدمة العملاء جاهز لمساعدتك في أي استفسار")}</p>
+              <h3 className="text-xl md:text-2xl font-extrabold mb-2">{t("contact.faq_section.not_found", "لم تجد إجابة سؤالك؟")}</h3>
+              <p className="text-white/85 mb-4">{t("contact.faq_section.customer_service", "فريق خدمة العملاء جاهز لمساعدتك في أي استفسار")}</p>
               <div className="flex flex-wrap justify-center gap-3">
                 <a
                   href="tel:1913641"
@@ -735,7 +735,7 @@ const ContactPage: React.FC = () => {
                   href={`mailto:${CONTACT_EMAIL}`}
                   className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-full font-bold border border-white/30 transition"
                 >
-                  <Mail className="w-4 h-4" /> {t("contact.cta.email_us", "راسلنا بالإيميل")}
+                  <Mail className="w-4 h-4" /> {t("contact.faq_section.email_us", "راسلنا بالإيميل")}
                 </a>
               </div>
             </div>
