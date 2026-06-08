@@ -186,6 +186,8 @@ const Clubs: React.FC<ClubsProps> = ({ onNavigate }) => {
     }
   }, [currentClub?.id, selectedAcademy]); // We use currentClub?.id as dependency instead of availableSports array to avoid infinite loops
 
+
+
   const servicesData = {
     social: {
       nameAr: 'منطقة اجتماعية',

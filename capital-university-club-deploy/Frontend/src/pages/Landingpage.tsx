@@ -494,12 +494,7 @@ const App = () => {
                 >
                   {(loadingBranches
                     ? []
-                    : (branches.length > 0 ? branches : [
-                        { id: 1, name_ar: 'الفرع الرئيسي', name_en: 'Main Branch', location_ar: 'جامعة حلوان', location_en: 'Helwan University', code: 'MAIN' },
-                        { id: 2, name_ar: 'فرع الهرم', name_en: 'Haram Branch', location_ar: 'الهرم', location_en: 'Haram', code: 'HARAM' },
-                        { id: 3, name_ar: 'فرع الزمالك', name_en: 'Zamalek Branch', location_ar: 'الزمالك', location_en: 'Zamalek', code: 'ZAMALEK' },
-                        { id: 4, name_ar: 'فرع المطرية', name_en: 'Mataria Branch', location_ar: 'المطرية', location_en: 'Mataria', code: 'MATARIA' }
-                      ]).map((branch, idx) => {
+                    : branches.map((branch, idx) => {
                         const routeId = toBranchRouteId(branch);
                         const branchName = isArabic
                           ? ((i18n.language === 'ar' ? (branch.name_ar || branch.name_en) : (branch.name_en || branch.name_ar)) || `#${branch.id}`)
