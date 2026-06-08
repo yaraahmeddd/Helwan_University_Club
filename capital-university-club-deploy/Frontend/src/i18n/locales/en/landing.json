@@ -93,6 +93,17 @@
     "subtitle": "Spirit of Competition.. Energy of the Future",
     "description": "Join the largest university sports community with modern facilities, professional coaches, programs for all levels, and world-class equipment serving over 5,000 members."
   },
+  "highlights": {
+    "tagline": "Our Champions in the Field",
+    "title": "Glimpses of Club Achievements",
+    "subtitle": "Watch glimpses of our players and champions' training in various sports inside the club",
+    "video1": "From Here Champions Begin",
+    "cat_training": "Training",
+    "video2": "Boxing - Power and Focus",
+    "cat_boxing": "Boxing",
+    "video3": "Badminton - Skill and Accuracy",
+    "cat_racket": "Badminton"
+  },
   "auth": {
     "register": "Register Now",
     "login": "Login",
