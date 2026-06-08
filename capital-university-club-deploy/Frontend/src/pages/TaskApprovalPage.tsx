@@ -6,6 +6,7 @@ import { Badge } from "../components/StaffPagesComponents/ui/badge";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { useToast } from "../hooks/use-toast";
 import api from "../services/axios";
+import { LoadingState } from "../components/shared/LoadingState";
 
 // Helper to translate Backend TaskType to Arabic
 const taskTypeMap: Record<string, string> = {
@@ -76,7 +77,7 @@ export default function TaskApprovalPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-10">جارٍ التحميل...</div>
+        <LoadingState className="py-10" />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {tasks.length === 0 ? (

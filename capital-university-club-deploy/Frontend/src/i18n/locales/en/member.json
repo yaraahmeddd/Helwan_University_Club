@@ -100,5 +100,42 @@
     "alreadyJoined": "You are already subscribed to this team",
     "warningTitle": "Warning",
     "errorTitle": "Error"
+  },
+  "payment": {
+    "title": "Payment Page",
+    "description_subscription": "Complete payment to finish your subscription.",
+    "description_booking": "Complete payment to confirm court booking.",
+    "invalid_data": "Incomplete payment data. Please go back and select the slot again.",
+    "labels": {
+      "sport": "Sport",
+      "time": "Time",
+      "days": "Days",
+      "court": "Court",
+      "reference": "Payment Reference",
+      "amount": "Amount",
+      "waiting_cost": "Waiting for cost determination",
+      "invite_link": "Participant Invite Link:",
+      "sportDefault": "Sport"
+    },
+    "actions": {
+      "pay_now": "Pay Now",
+      "back": "Back",
+      "processing": "Processing...",
+      "copy": "Copy Link",
+      "copied": "Copied",
+      "return_home": "Return Home"
+    },
+    "alerts": {
+      "incomplete_data": "Incomplete payment data. Please try again.",
+      "missing_booking_id": "Booking ID missing",
+      "missing_subscription": "Could not find subscription ID to complete payment.",
+      "success_booking": "Booking and payment confirmed successfully.",
+      "success_subscription": "Payment completed and subscription activated successfully.",
+      "fail": "Payment failed"
+    },
+    "success_modal": {
+      "title": "Booking Confirmed Successfully!",
+      "description": "Your booking has been registered and fees paid successfully. You can now invite your friends to join this booking via the following link."
+    }
   }
 }

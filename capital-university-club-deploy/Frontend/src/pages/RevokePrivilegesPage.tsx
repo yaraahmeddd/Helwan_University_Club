@@ -15,6 +15,7 @@ import { useLanguage } from "../hooks/useLanguage";
 import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
 import { getLocalizedText, buildPersonName } from "../lib/localizedDisplay";
+import { useStaffJobLabels } from "../lib/staffJobLabel";
 import { useTranslation } from "react-i18next";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -27,7 +28,12 @@ type StaffApiItem = {
     last_name_en?: string;
     national_id?: string;
     role?: string;
-    staff_type?: string;
+    staff_type?: string | {
+        id?: number;
+        name_ar?: string;
+        name_en?: string;
+        code?: string;
+    };
     staff_type_id?: number;
     status?: string;
     employment_start_date?: string;
@@ -45,8 +51,22 @@ type StaffRow = {
     lastNameEn?: string;
     nationalId: string;
     role: string;
+    staffTypeId: number;
+    staffTypeNameAr?: string;
+    staffTypeNameEn?: string;
+    staffTypeCode?: string;
     status: string;
     startDate: string;
+};
+
+const parseStaffTypeFields = (s: StaffApiItem) => {
+    const staffTypeObj = typeof s.staff_type === "object" && s.staff_type ? s.staff_type : null;
+    return {
+        staffTypeId: Number(s.staff_type_id ?? staffTypeObj?.id ?? 0),
+        staffTypeNameAr: staffTypeObj?.name_ar ?? (typeof s.staff_type === "string" ? s.staff_type : undefined),
+        staffTypeNameEn: staffTypeObj?.name_en,
+        staffTypeCode: staffTypeObj?.code,
+    };
 };
 
 type GrantedPrivilege = {
@@ -70,29 +90,11 @@ const PAGE_SIZE = 10;
 const isRecord = (v: unknown): v is Record<string, unknown> =>
     typeof v === "object" && v !== null;
 
-const formatDate = (v?: string | null) => {
+const formatDisplayDate = (v: string | null | undefined, locale: string) => {
     if (!v) return "—";
-    try { return new Date(v).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" }); }
-    catch { return v; }
-};
-
-const ROLE_LABELS: Record<string, string> = {
-    ADMIN: "مدير النظام",
-    SPORTS_DIRECTOR: "مدير الرياضة",
-    SPORTS_OFFICER: "موظف رياضي",
-    FINANCIAL_DIRECTOR: "المدير المالي",
-    REGISTRATION_STAFF: "موظف تسجيل",
-    TEAM_MANAGER: "مدير فريق",
-    SUPPORT: "الدعم الفني",
-    AUDITOR: "المدقق المالي",
-    STAFF: "موظف",
-};
-
-// Source labels and colors
-const SOURCE_LABELS: Record<string, { ar: string; color: string }> = {
-    direct: { ar: "مباشر", color: "emerald" },
-    package: { ar: "من حزمة", color: "blue" },
-    default: { ar: "افتراضي", color: "amber" },
+    try {
+        return new Date(v).toLocaleDateString(locale, { year: "numeric", month: "short", day: "numeric" });
+    } catch { return v; }
 };
 
 const parseGrantedPrivileges = (response: unknown): Omit<GrantedPrivilege, "markedForRevocation">[] => {
@@ -135,6 +137,12 @@ export default function RevokePrivilegesPage() {
     const { t } = useTranslation("RevokePrivilegesPage");
     const { language, isRTL } = useLanguage();
     const { toast } = useToast();
+    const { resolveJobLabel } = useStaffJobLabels(language);
+    const dateLocale = language === "en" ? "en-US" : "ar-EG";
+    const fmtDate = useCallback(
+        (v?: string | null) => formatDisplayDate(v, dateLocale),
+        [dateLocale],
+    );
 
     // ── VIEW STATE ──────────────────────────────────────────────────────────────
     const [step, setStep] = useState<"table" | "revoke">("table");
@@ -183,29 +191,33 @@ export default function RevokePrivilegesPage() {
                     });
                 }
 
-                const rows: StaffRow[] = filtered.map((s) => ({
-                    id: s.id,
-                    nameAr: `${s.first_name_ar ?? ""} ${s.last_name_ar ?? ""}`.trim(),
-                    nameEn: `${s.first_name_en ?? ""} ${s.last_name_en ?? ""}`.trim(),
-                    firstNameAr: s.first_name_ar,
-                    lastNameAr: s.last_name_ar,
-                    firstNameEn: s.first_name_en,
-                    lastNameEn: s.last_name_en,
-                    nationalId: s.national_id ?? "",
-                    role: String(s.role ?? s.staff_type ?? "STAFF").toUpperCase(),
-                    status: String(s.status ?? "").toLowerCase(),
-                    startDate: s.employment_start_date ?? s.start_date ?? s.created_at ?? "",
-                }));
+                const rows: StaffRow[] = filtered.map((s) => {
+                    const staffType = parseStaffTypeFields(s);
+                    return {
+                        id: s.id,
+                        nameAr: `${s.first_name_ar ?? ""} ${s.last_name_ar ?? ""}`.trim(),
+                        nameEn: `${s.first_name_en ?? ""} ${s.last_name_en ?? ""}`.trim(),
+                        firstNameAr: s.first_name_ar,
+                        lastNameAr: s.last_name_ar,
+                        firstNameEn: s.first_name_en,
+                        lastNameEn: s.last_name_en,
+                        nationalId: s.national_id ?? "",
+                        role: String(s.role ?? staffType.staffTypeCode ?? "STAFF").toUpperCase(),
+                        ...staffType,
+                        status: String(s.status ?? "").toLowerCase(),
+                        startDate: s.employment_start_date ?? s.start_date ?? s.created_at ?? "",
+                    };
+                });
 
                 setStaffRows(rows);
                 setTotalCount(trim || from || to ? rows.length : total);
             } catch {
-                toast({ title: t("toasts.errorTitle"), description: t("toasts.errorLoadPrivileges"), variant: "destructive" });
+                toast({ title: t("toasts.errorTitle"), description: t("toasts.errorLoad"), variant: "destructive" });
             } finally {
                 setIsLoading(false);
             }
         },
-        [toast]
+        [toast, t]
     );
 
     useEffect(() => { void fetchStaff(currentPage, search, roleFilter, dateFrom, dateTo); }, [currentPage, search, roleFilter, dateFrom, dateTo]);
@@ -234,23 +246,23 @@ export default function RevokePrivilegesPage() {
             const parsed = parseGrantedPrivileges(res);
             setGrantedPrivileges(parsed.map((p) => ({ ...p, markedForRevocation: false })));
         } catch (error: any) {
-            const errorMessage = error?.response?.data?.message 
-                || error?.response?.data?.error 
-                || error?.message 
-                || "فشل تحميل صلاحيات الموظف";
-            
+            const errorMessage = error?.response?.data?.message
+                || error?.response?.data?.error
+                || error?.message
+                || t("toasts.errorLoadPrivileges");
+
             console.error('Error fetching privileges:', error);
-            
-            toast({ 
-                title: "خطأ", 
-                description: errorMessage, 
-                variant: "destructive" 
+
+            toast({
+                title: t("toasts.errorTitle"),
+                description: errorMessage,
+                variant: "destructive",
             });
             setGrantedPrivileges([]);
         } finally {
             setLoadingPrivileges(false);
         }
-    }, [toast]);
+    }, [toast, t]);
 
     const openRevoke = (staff: StaffRow) => {
         setSelectedStaff(staff);
@@ -414,13 +426,13 @@ export default function RevokePrivilegesPage() {
                                 onClick={clearDateFilter}
                                 className="h-10 px-3 text-xs font-semibold text-rose-600 border-2 border-rose-200 rounded-xl hover:bg-rose-50 transition-colors whitespace-nowrap"
                             >
-                                مسح التاريخ
+                                {t("table.clearDate")}
                             </button>
                         )}
                     </div>
 
                     <Badge variant="outline" className="text-xs text-muted-foreground shrink-0">
-                        {totalCount} موظف
+                        {totalCount} {t("table.staffCount")}
                     </Badge>
 
                     <div className="flex-1" />
@@ -518,10 +530,15 @@ export default function RevokePrivilegesPage() {
                                         </TableCell>
                                         <TableCell className={adminCellClass({ center: true })}>
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-700">
-                                                {t(`roles.${staff.role}`, { defaultValue: staff.role })}
+                                                {resolveJobLabel({
+                                                    staffTypeId: staff.staffTypeId,
+                                                    staffTypeNameAr: staff.staffTypeNameAr,
+                                                    staffTypeNameEn: staff.staffTypeNameEn,
+                                                    staffTypeCode: staff.staffTypeCode,
+                                                })}
                                             </span>
                                         </TableCell>
-                                        <TableCell className={adminCellClass({ size: "xs", className: "tabular-nums" })}>{formatDate(staff.startDate)}</TableCell>
+                                        <TableCell className={adminCellClass({ size: "xs", className: "tabular-nums" })}>{fmtDate(staff.startDate)}</TableCell>
                                         <TableCell className={adminCellClass({ center: true })}>
                                             <Button
                                                 size="sm"
@@ -529,7 +546,7 @@ export default function RevokePrivilegesPage() {
                                                 className="h-8 px-3 gap-1.5 border-rose-300 text-rose-600 hover:bg-rose-50"
                                                 onClick={() => openRevoke(staff)}
                                             >
-                                                سحب الصلاحيات
+                                                {t("table.revokeAction")}
                                                 <ArrowRight className="w-3.5 h-3.5" />
                                             </Button>
                                         </TableCell>
@@ -569,7 +586,12 @@ export default function RevokePrivilegesPage() {
                             }, language).primary || selectedStaff.nameAr || selectedStaff.nameEn : ""}
                         </h1>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                            {selectedStaff && t(`roles.${selectedStaff.role}`, { defaultValue: selectedStaff.role })}
+                            {selectedStaff && resolveJobLabel({
+                                staffTypeId: selectedStaff.staffTypeId,
+                                staffTypeNameAr: selectedStaff.staffTypeNameAr,
+                                staffTypeNameEn: selectedStaff.staffTypeNameEn,
+                                staffTypeCode: selectedStaff.staffTypeCode,
+                            })}
                         </p>
                     </div>
                 </div>
@@ -754,7 +776,7 @@ export default function RevokePrivilegesPage() {
                     className="gap-2"
                 >
                     {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                    {isSaving ? (isRTL ? "جاري السحب..." : "Revoking...") : t("revoke.confirmRevokeBtn")}
+                    {isSaving ? t("revoke.revoking") : t("revoke.confirmRevokeBtn")}
                 </Button>
             </div>
         </div>

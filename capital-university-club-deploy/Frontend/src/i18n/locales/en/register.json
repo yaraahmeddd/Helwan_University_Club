@@ -1,9 +1,31 @@
 {
   "steps": {
+    "memberType": "Member Type",
+    "membershipType": "Membership Type",
+    "form": "Registration Form",
     "category": "Category",
     "basicInfo": "Basic Information",
-    "details": "Membership Details",
+    "details": "Details",
     "documents": "Documents"
+  },
+  "step0": {
+    "title": "Choose membership type",
+    "subtitle": "Select the membership type that suits you",
+    "roles": {
+      "social_member": {
+        "title": "Club Member",
+        "subtitle": "Social Member",
+        "description": "Enjoy all social and recreational club facilities",
+        "features": ["Social facilities", "Swimming pool", "Cafeteria", "Gardens"]
+      },
+      "sports_player": {
+        "title": "Team Player",
+        "subtitle": "Sports Player",
+        "description": "Join club sports teams and pursue your favorite sport",
+        "features": ["Training", "Competitions", "Coaches", "Tournaments"]
+      }
+    },
+    "playerNote": "You can join sports teams from your dashboard after completing registration"
   },
   "nav": {
     "prev": "Previous",
@@ -48,7 +70,9 @@
     "passwordWeak": "Weak",
     "passwordFair": "Fair",
     "passwordGood": "Good",
-    "passwordStrong": "Strong"
+    "passwordStrong": "Strong",
+    "nationalIdPlaceholder": "14 digits",
+    "passwordStrength": "Password strength"
   },
   "step3": {
     "title": "Membership Details",
@@ -83,7 +107,23 @@
       "PROF": "Faculty Member",
       "TA": "Teaching Assistant",
       "STAFF": "Administrative Staff"
-    }
+    },
+    "graduationHint": "The system automatically determines student/graduate status",
+    "selectProfession": "Select profession",
+    "salaryTierHint": "Annual subscription fees are determined by salary bracket.",
+    "retiredProf": "Retired Faculty Member",
+    "retiredStaff": "Retired Staff",
+    "duration1Month": "1 month",
+    "duration6Months": "6 months",
+    "duration12Months": "Full year",
+    "visaValid": "Valid",
+    "visaPending": "Pending",
+    "installmentHint": "Installment payment (2 payments) is available for this subscription.",
+    "relationshipSpouse": "Spouse",
+    "relationshipChild": "Child",
+    "relationshipParent": "Parent",
+    "dependentDiscountHint": "Dependent discount (40%) will apply to the subscription fee.",
+    "visitorFeeHint": "General membership — fees will be determined upon review."
   },
   "step4": {
     "title": "Attachments & Documents",
@@ -107,7 +147,8 @@
     "id_front": "ID front",
     "id_back": "ID back",
     "passport": "Passport photo",
-    "medical": "Medical report"
+    "medical": "Medical report",
+    "proof": "Proof document"
   },
   "errors": {
     "missingFiles": "Required documents not uploaded: {{list}}"

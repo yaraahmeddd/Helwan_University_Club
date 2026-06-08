@@ -281,7 +281,8 @@
       "reference": "مرجع الدفع",
       "amount": "المبلغ",
       "waiting_cost": "بانتظار تحديد التكلفة",
-      "invite_link": "رابط دعوة المشاركين:"
+      "invite_link": "رابط دعوة المشاركين:",
+      "sportDefault": "رياضة"
     },
     "actions": {
       "pay_now": "ادفع الآن",

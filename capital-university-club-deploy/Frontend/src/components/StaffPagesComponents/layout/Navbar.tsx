@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "../../../context/AuthContext";
+import type { Role } from "../../../types/auth";
 import { ROLE_LABELS } from "../../../types/auth";
 import {
   LogOut,
@@ -49,13 +50,14 @@ interface LogoutModalProps {
 
 const LogoutModal = ({ isOpen, onClose, onConfirm }: LogoutModalProps) => {
   const { t } = useTranslation(["nav", "common"]);
+  const { isRTL } = useLanguage();
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div
-        dir="rtl"
+        dir={isRTL ? "rtl" : "ltr"}
         className="bg-[#F9FAFB] rounded-[12px] shadow-xl w-full max-w-[440px] overflow-hidden"
         style={{ fontFamily: "'Cairo', 'Segoe UI', Roboto, sans-serif" }}
       >
@@ -127,6 +129,10 @@ export function Navbar() {
   const displayUserName = isEnglish
     ? (displayNameEn || displayNameAr || user.fullName)
     : (displayNameAr || displayNameEn || user.fullName);
+
+  const roleLabel = t(`roles.${user.role}`, {
+    defaultValue: ROLE_LABELS[user.role as Role] ?? user.role,
+  });
 
   const handleLogoutConfirm = () => {
     setShowLogoutModal(false);
@@ -270,7 +276,7 @@ export function Navbar() {
                 <div className="text-right hidden xl:block">
                   <p className="text-sm font-semibold text-foreground truncate max-w-[110px] sm:max-w-[180px]">{displayUserName}</p>
                   <Badge className="bg-huc-orange text-huc-orange-foreground text-[12px] px-3 py-0.5 rounded-full">
-                    {ROLE_LABELS[user.role]}
+                    {roleLabel}
                   </Badge>
                 </div>
                 {effectivePhotoUrl && !avatarFailed ? (
@@ -316,14 +322,14 @@ export function Navbar() {
                       className={`w-full flex items-center gap-3 px-4 py-3 text-start text-sm font-semibold transition-colors ${i18n.language.startsWith("ar") ? "bg-blue-50 text-[#2596be]" : "text-[#0e1c38] hover:bg-gray-50"}`}
                     >
                       <img src="https://flagcdn.com/w20/eg.png" alt="AR" className="w-5 rounded-sm shadow-sm" />
-                      {"\u0627\u0644\u0639\u0631\u0628\u064A\u0629"}
+                      {t("languageOptions.ar")}
                     </button>
                     <button
                       onClick={() => { void i18n.changeLanguage("en"); setLangDropdownOpen(false); }}
                       className={`w-full flex items-center gap-3 px-4 py-3 text-start text-sm font-semibold transition-colors ${i18n.language.startsWith("en") ? "bg-blue-50 text-[#2596be]" : "text-[#0e1c38] hover:bg-gray-50"}`}
                     >
                       <img src="https://flagcdn.com/w20/gb.png" alt="EN" className="w-5 rounded-sm shadow-sm" />
-                      English
+                      {t("languageOptions.en")}
                     </button>
                   </div>
                 )}

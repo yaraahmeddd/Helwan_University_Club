@@ -1,5 +1,6 @@
-import { Loader2, UserX } from 'lucide-react';
+import { UserX } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { LoadingState } from '../../shared/LoadingState';
 
 type AdminTableStatesProps = {
   isLoading?: boolean;
@@ -10,13 +11,7 @@ type AdminTableStatesProps = {
 };
 
 export function AdminTableLoading() {
-  const { t } = useTranslation('common');
-  return (
-    <div className="py-20 text-center text-muted-foreground">
-      <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-primary" />
-      <p className="text-sm">{t('loading')}</p>
-    </div>
-  );
+  return <LoadingState namespace="common" messageKey="loading" />;
 }
 
 export function AdminTableEmpty({

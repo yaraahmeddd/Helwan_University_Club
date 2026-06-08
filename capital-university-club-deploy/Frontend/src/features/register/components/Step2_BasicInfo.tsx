@@ -9,6 +9,7 @@ import type { RegisterFormValues } from '../schemas/validation';
 interface Step2BasicInfoProps {
     onNext: () => void;
     onPrev?: () => void;  // optional — omit when this is the first step
+    embedded?: boolean;
 }
 
 interface InputGroupProps {
@@ -121,7 +122,7 @@ const NavigationButtons = ({ onPrev, onNext }: NavigationButtonsProps) => {
  * - Foreigner: Automatically Non-Egyptian
  * - Others: Automatically Egyptian
  */
-export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
+export const Step2BasicInfo = ({ onNext, onPrev, embedded = false }: Step2BasicInfoProps) => {
     const { t } = useTranslation('register');
     const [attemptedNext, setAttemptedNext] = useState(false);
     const [passwordStrength, setPasswordStrength] = useState(0);
@@ -439,7 +440,7 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
                                     id="nationalId"
                                     {...register('nationalId')}
                                     className={`${inputClasses} tracking-wide font-mono text-lg`}
-                                    placeholder="14 رقم"
+                                    placeholder={t('step2.nationalIdPlaceholder')}
                                     maxLength={14}
                                     dir="ltr"
                                     aria-required="true"
@@ -565,7 +566,7 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
                     {password && (
                         <div className="mt-2 space-y-1">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-600">قوة كلمة المرور</span>
+                                <span className="text-xs text-gray-600">{t('step2.passwordStrength')}</span>
                                 <span className={`text-xs font-medium ${getStrengthInfo().textColor}`}>
                                     {getStrengthInfo().label}
                                 </span>
@@ -602,10 +603,12 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
                 </InputGroup>
             </div>
 
-            <NavigationButtons
-                onPrev={onPrev}
-                onNext={handleNext}
-            />
+            {!embedded && (
+                <NavigationButtons
+                    onPrev={onPrev}
+                    onNext={handleNext}
+                />
+            )}
         </motion.div>
     );
 };

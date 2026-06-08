@@ -58,6 +58,25 @@
     "logoutConfirmTitle": "هل أنت متأكد من تسجيل الخروج؟",
     "logoutConfirmDesc": "سيتم إنهاء جلستك الحالية ويمكنك تسجيل الدخول مرة أخرى لاحقًا.",
     "clubName": "نادي جامعة العاصمة"
+  },
+  "languageOptions": {
+    "ar": "العربية",
+    "en": "English"
+  },
+  "roles": {
+    "ADMIN": "مدير النظام",
+    "SPORTS_DIRECTOR": "مدير الرياضة",
+    "SPORTS_OFFICER": "مسؤول الرياضة",
+    "FINANCIAL_DIRECTOR": "المدير المالي",
+    "REGISTRATION_STAFF": "موظف التسجيل",
+    "TEAM_MANAGER": "مدير الفريق",
+    "SUPPORT": "الدعم الفني",
+    "AUDITOR": "المراجع",
+    "MEDIA": "المسؤول الإعلامي",
+    "TEAM_MEMBER": "عضو فريق رياضي",
+    "MEMBER": "عضو",
+    "STAFF": "موظف",
+    "STAFF_MEMBER": "عضو هيئة موظفين"
   }
 }
 

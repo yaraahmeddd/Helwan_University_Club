@@ -192,7 +192,7 @@ const MediaGallery: FC = () => {
   }, [selectedPost]);
 
   if (loading) {
-    return <div className="py-20 text-center">{t("media.loading", "جاري التحميل...")}</div>;
+    return <div className="py-20 text-center">{t("media.loading")}</div>;
   }
 
   return (

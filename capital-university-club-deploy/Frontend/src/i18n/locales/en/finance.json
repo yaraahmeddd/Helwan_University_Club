@@ -1,1 +1,79 @@
-{}
+{
+  "subscriptions": {
+    "title": "Subscriptions & Payments",
+    "subtitle": "Track subscription status and team membership requests",
+    "refresh": "Refresh",
+    "stats": {
+      "total": "Total Requests",
+      "pending": "Pending",
+      "approved": "Approved",
+      "active": "Active"
+    },
+    "filters": {
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "type": "Type",
+      "allMembers": "All members",
+      "endDate": "End Date",
+      "endDatePlaceholder": "Filter by end date",
+      "search": "Search",
+      "searchPlaceholder": "Name / code / team...",
+      "clearFilters": "Clear filters ×",
+      "results_one": "{{count}} result",
+      "results_other": "{{count}} results"
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "active": "Active",
+      "declined": "Declined",
+      "cancelled": "Cancelled"
+    },
+    "memberType": {
+      "member": "Club Member",
+      "team_member": "Team Player"
+    },
+    "table": {
+      "index": "#",
+      "code": "Code",
+      "name": "Name",
+      "type": "Type",
+      "team": "Team",
+      "monthlyFee": "Monthly Fee",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "status": "Status"
+    },
+    "empty": {
+      "none": "No pending subscriptions at this time",
+      "noMatch": "No subscriptions match the selected filters"
+    },
+    "fallback": {
+      "teamPlayer": "Player #{{id}}",
+      "member": "Member #{{id}}",
+      "team": "Team #{{id}}"
+    },
+    "renewal": {
+      "overdue_one": "{{count}} day overdue",
+      "overdue_other": "{{count}} days overdue",
+      "remaining_one": "{{count}} day left",
+      "remaining_other": "{{count}} days left"
+    },
+    "currency": "EGP"
+  },
+  "financePage": {
+    "title": "Financial Management",
+    "totalRevenue": "Total Revenue",
+    "pendingPayments": "Pending Payments",
+    "table": {
+      "member": "Member",
+      "sport": "Sport",
+      "amount": "Amount (EGP)",
+      "status": "Status"
+    },
+    "paymentStatus": {
+      "paid": "Paid",
+      "unpaid": "Unpaid"
+    }
+  }
+}

@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { type Role } from '../types/auth';
+import { LoadingState } from './shared/LoadingState';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -28,11 +29,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900"></div>
-            </div>
-        );
+        return <LoadingState fullScreen size="lg" />;
     }
 
     if (!user) {

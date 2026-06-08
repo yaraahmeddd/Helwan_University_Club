@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { User, Mail, Phone, Calendar, Shield, LogOut, CheckCircle } from 'lucide-react';
 import { AuthService } from '../services/authService';
 import type { UserInfo } from '../types';
+import { LoadingState } from '../components/shared/LoadingState';
 
 const Dashboard: React.FC = () => {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -22,10 +23,7 @@ const Dashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">جارٍ التحميل...</p>
-        </div>
+        <LoadingState size="lg" className="py-0" />
       </div>
     );
   }

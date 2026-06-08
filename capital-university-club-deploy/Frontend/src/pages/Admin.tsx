@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
+import { LoadingState } from "../components/shared/LoadingState";
 import {
     Users, UserPlus, Search, MoreVertical, Edit, Trash2, X, Check,
     ChevronLeft, Upload, Calendar, CreditCard, FileText,
@@ -385,7 +386,7 @@ const MembershipManagement = () => {
                 <h2 className="text-2xl font-black text-slate-900">أنواع العضويات</h2>
                 <button className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold shadow-lg hover:bg-slate-800 transition-all">+ إضافة خطة</button>
             </div>
-            {loading ? <div className="text-center py-20">جار التحميل...</div> : (
+            {loading ? <LoadingState /> : (
                 <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
                     <Table>
                         <TableHeader className="bg-slate-50/50"><TableRow>{['الاسم', 'الكود', 'السعر', 'المدة', 'الحالة'].map((h, i) => <TableHead key={i} className="px-6 py-5 text-sm font-bold text-slate-800">{h}</TableHead>)}</TableRow></TableHeader>

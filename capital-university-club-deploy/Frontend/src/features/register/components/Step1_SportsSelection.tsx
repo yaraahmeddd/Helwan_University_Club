@@ -4,6 +4,7 @@ import { AlertCircle, Check, Info, RefreshCw, Loader2, Clock3 } from 'lucide-rea
 import { useState, useEffect } from 'react';
 import { fetchActiveSports, type Sport } from '../../../services/sportsApi';
 import { AVAILABLE_SPORTS, type RegisterFormValues } from '../schemas/validation';
+import { useLocalizedTranslation } from '../../../hooks/useLocalizedTranslation';
 
 /**
  * Icon mapping for sports
@@ -84,6 +85,7 @@ const SPORT_TIME_SLOTS: TimeSlot[] = [
  * - Loading states and error handling with retry
  */
 const Step1_SportsSelection = () => {
+    const { t: tCommon } = useLocalizedTranslation('common');
     const { control, watch, setValue, formState: { errors } } = useFormContext<RegisterFormValues>();
 
     // State for sports data
@@ -226,7 +228,7 @@ const Step1_SportsSelection = () => {
                         {isLoading && (
                             <div className="flex flex-col items-center justify-center py-12 space-y-4">
                                 <Loader2 size={48} className="text-[#2596be] animate-spin" />
-                                <p className="text-gray-600 text-base">جاري تحميل الرياضات...</p>
+                                <p className="text-gray-600 text-base">{tCommon('loadingSports')}</p>
                             </div>
                         )}
 

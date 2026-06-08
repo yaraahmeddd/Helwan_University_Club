@@ -3,7 +3,7 @@ import { useFormContext } from 'react-hook-form';
 import { motion } from 'framer-motion';
 import { Check, UploadCloud, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useLanguage } from '../../../hooks/useLanguage';
+import { useLocalizedTranslation } from '../../../hooks/useLocalizedTranslation';
 import type { RegisterFormValues } from '../schemas/validation';
 import type { FileUploadMap } from '../utils/submissionFactory';
 
@@ -76,8 +76,7 @@ const FileBox = ({
  * Files are managed in parent state and passed down as props.
  */
 export const Step4Files = ({ files, onFileChange, onPrev, onSubmit, isSubmitting }: Step4FilesProps) => {
-    const { t } = useTranslation('register');
-    const { isRTL } = useLanguage();
+    const { t, isRTL } = useLocalizedTranslation('register');
     const { watch } = useFormContext<RegisterFormValues>();
     const category = watch('category');
     const memberRole = watch('memberRole');
@@ -197,7 +196,7 @@ export const Step4Files = ({ files, onFileChange, onPrev, onSubmit, isSubmitting
                         {/* Category-Specific Documents */}
                         {(category === 'staff' || category === 'retired') && (
                             <FileBox
-                                label="مفردات مرتب / بيان معاش"
+                                label={t('step4.salaryProof')}
                                 id="salary_slip"
                                 files={files}
                                 refs={fileRefs}
@@ -207,7 +206,7 @@ export const Step4Files = ({ files, onFileChange, onPrev, onSubmit, isSubmitting
 
                         {category === 'student' && (
                             <FileBox
-                                label="إثبات قيد / شهادة تخرج"
+                                label={t('step4.enrollmentProof')}
                                 id="student_proof"
                                 files={files}
                                 refs={fileRefs}
@@ -217,7 +216,7 @@ export const Step4Files = ({ files, onFileChange, onPrev, onSubmit, isSubmitting
 
                         {category === 'dependent' && (
                             <FileBox
-                                label="مستند إثبات القرابة"
+                                label={t('step4.relationProof')}
                                 id="relation_proof"
                                 files={files}
                                 refs={fileRefs}
@@ -227,7 +226,7 @@ export const Step4Files = ({ files, onFileChange, onPrev, onSubmit, isSubmitting
 
                         {/* Medical Report (Optional for All) */}
                         <FileBox
-                            label="تقرير طبي "
+                            label={t('step4.medical')}
                             id="medical"
                             files={files}
                             refs={fileRefs}
@@ -252,7 +251,7 @@ export const Step4Files = ({ files, onFileChange, onPrev, onSubmit, isSubmitting
                     type="button"
                     className="flex-1 md:flex-none px-9 py-2.5 rounded-xl bg-[#2596be] hover:bg-[#1a7a9a] text-white font-bold shadow-lg shadow-[#2596be]/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {isSubmitting ? <Loader2 className="animate-spin" /> : <Check size={24} />}
+                    {isSubmitting ? <Loader2 className="animate-spin" aria-hidden /> : <Check size={24} />}
                     {isSubmitting ? t('nav.submitting') : t('nav.submit')}
                 </button>
             </div>

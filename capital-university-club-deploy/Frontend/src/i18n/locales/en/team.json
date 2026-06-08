@@ -281,7 +281,8 @@
       "reference": "Payment Reference",
       "amount": "Amount",
       "waiting_cost": "Waiting for cost determination",
-      "invite_link": "Participant Invite Link:"
+      "invite_link": "Participant Invite Link:",
+      "sportDefault": "Sport"
     },
     "actions": {
       "pay_now": "Pay Now",

@@ -5,6 +5,7 @@ import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Input } from "../components/StaffPagesComponents/ui/input";
 import { Badge } from "../components/StaffPagesComponents/ui/badge";
 import { useLanguage } from "../hooks/useLanguage";
+import { useLocalizedTranslation } from "../hooks/useLocalizedTranslation";
 import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
 import { buildPersonName, getLocalizedText } from "../lib/localizedDisplay";
@@ -165,6 +166,7 @@ function StatusBadge({ status }: { status?: string }) {
 export default function StaffListPage() {
     const { toast } = useToast();
     const { language, isRTL } = useLanguage();
+    const { t: tCommon } = useLocalizedTranslation('common');
 
     // List state
     const [staffRows, setStaffRows] = useState<StaffRow[]>([]);
@@ -388,7 +390,7 @@ export default function StaffListPage() {
                                     <TableCell colSpan={6} className="text-center text-muted-foreground py-16">
                                         <div className="flex flex-col items-center gap-3">
                                             <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                                            جارٍ التحميل...
+                                            {tCommon('loading')}
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -482,7 +484,7 @@ export default function StaffListPage() {
                     {staffDetailsLoading ? (
                         <div className="py-16 text-center text-sm text-muted-foreground">
                             <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-3" />
-                            جارٍ تحميل التفاصيل...
+                            {tCommon('loadingDetails')}
                         </div>
                     ) : (() => {
                         const d = selectedStaffDetails;
@@ -588,7 +590,7 @@ export default function StaffListPage() {
                                             )}
                                         </p>
                                         {!d ? (
-                                            <p className="text-xs text-muted-foreground/60">جارٍ التحميل...</p>
+                                            <p className="text-xs text-muted-foreground/60">{tCommon('loading')}</p>
                                         ) : (d.assigned_packages ?? []).length === 0 ? (
                                             <div className="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-6 text-center text-sm text-muted-foreground">
                                                 <Package className="h-8 w-8 mx-auto mb-2 opacity-25" />
@@ -672,7 +674,7 @@ export default function StaffListPage() {
 
                     <DialogFooter>
                         <Button type="button" onClick={() => void handleUpdateStaff()} disabled={editSubmitting}>
-                            {editSubmitting ? "جارٍ الحفظ..." : "حفظ"}
+                            {editSubmitting ? tCommon('saving') : tCommon('save')}
                         </Button>
                         <Button type="button" variant="outline" onClick={closeEditDialog} disabled={editSubmitting}>
                             إلغاء

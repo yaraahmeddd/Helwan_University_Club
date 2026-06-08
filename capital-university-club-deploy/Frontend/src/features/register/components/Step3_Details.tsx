@@ -13,6 +13,7 @@ import { AuthService } from '../../../services/authService';
 interface Step3DetailsProps {
     onNext: () => void;
     onPrev: () => void;
+    embedded?: boolean;
 }
 
 interface Faculty {
@@ -94,7 +95,7 @@ const NavigationButtons = ({ onPrev, onNext }: { onPrev: () => void; onNext: () 
  * Renders category-specific fields based on the selected membership type.
  * Fetches dynamic data (faculties, universities, professions) from the backend.
  */
-export const Step3Details = ({ onNext, onPrev }: Step3DetailsProps) => {
+export const Step3Details = ({ onNext, onPrev, embedded = false }: Step3DetailsProps) => {
     const { t } = useTranslation('register');
     const { language } = useLanguage();
     const {
@@ -186,7 +187,7 @@ export const Step3Details = ({ onNext, onPrev }: Step3DetailsProps) => {
                                 className={inputClasses}
                                 placeholder="YYYY"
                             />
-                            <p className="text-xs text-gray-400 mt-1">يحدد النظام تلقائياً حالة (طالب/خريج)</p>
+                            <p className="text-xs text-gray-400 mt-1">{t('step3.graduationHint')}</p>
                         </InputGroup>
                     </>
                 )}
@@ -198,7 +199,7 @@ export const Step3Details = ({ onNext, onPrev }: Step3DetailsProps) => {
                     <>
                         <InputGroup label={t('step3.profession')} error={errors.professionId}>
                             <select {...register('professionId')} className={inputClasses}>
-                                <option value="">اختر المهنة</option>
+                                <option value="">{t('step3.selectProfession')}</option>
                                 {professions.map((p) => (
                                     <option key={p.id} value={p.id}>
                                         {p.name}
@@ -224,7 +225,7 @@ export const Step3Details = ({ onNext, onPrev }: Step3DetailsProps) => {
                                 </div>
                             </InputGroup>
                             <p className="text-sm text-blue-600 mt-3 flex items-center gap-2">
-                                <AlertCircle size={16} /> يتم تحديد رسوم الاشتراك السنوي بناءً على شريحة الراتب.
+                                <AlertCircle size={16} /> {t('step3.salaryTierHint')}
                             </p>
                         </div>
                     </>
@@ -249,9 +250,9 @@ export const Step3Details = ({ onNext, onPrev }: Step3DetailsProps) => {
 
                         <InputGroup label={t('step3.professionBefore')} error={errors.professionCode}>
                             <select {...register('professionCode')} className={inputClasses}>
-                                <option value="">اختر المهنة</option>
-                                <option value="RETIRED_PROF">أستاذ جامعي متقاعد</option>
-                                <option value="RETIRED_STAFF">موظف متقاعد</option>
+                                <option value="">{t('step3.selectProfession')}</option>
+                                <option value="RETIRED_PROF">{t('step3.retiredProf')}</option>
+                                <option value="RETIRED_STAFF">{t('step3.retiredStaff')}</option>
                             </select>
                         </InputGroup>
                     </>
@@ -264,23 +265,23 @@ export const Step3Details = ({ onNext, onPrev }: Step3DetailsProps) => {
                     <>
                         <InputGroup label={t('step3.seasonalDuration')} error={errors.seasonalDuration}>
                             <select {...register('seasonalDuration')} className={inputClasses}>
-                                <option value="1">شهر واحد</option>
-                                <option value="6">6 أشهر</option>
-                                <option value="12">سنة كاملة</option>
+                                <option value="1">{t('step3.duration1Month')}</option>
+                                <option value="6">{t('step3.duration6Months')}</option>
+                                <option value="12">{t('step3.duration12Months')}</option>
                             </select>
                         </InputGroup>
 
                         <InputGroup label={t('step3.visaStatus')} error={errors.visaStatus}>
                             <select {...register('visaStatus')} className={inputClasses}>
-                                <option value="valid">سارية</option>
-                                <option value="pending">قيد الإجراءات</option>
+                                <option value="valid">{t('step3.visaValid')}</option>
+                                <option value="pending">{t('step3.visaPending')}</option>
                             </select>
                         </InputGroup>
 
                         {selectedDuration === '12' && (
                             <div className="md:col-span-2 text-sm text-green-700 bg-green-50 p-4 rounded-xl border border-green-100 flex items-center gap-2">
                                 <Check size={18} className="text-green-600" />
-                                متاح الدفع بالتقسيط (دفعتين) لهذا الاشتراك.
+                                {t('step3.installmentHint')}
                             </div>
                         )}
                     </>
@@ -305,14 +306,14 @@ export const Step3Details = ({ onNext, onPrev }: Step3DetailsProps) => {
 
                         <InputGroup label={t('step3.relationshipType')} error={errors.relationshipType}>
                             <select {...register('relationshipType')} className={inputClasses}>
-                                <option value="spouse">زوج / زوجة</option>
-                                <option value="child">ابن / ابنة</option>
-                                <option value="parent">والد / والدة</option>
+                                <option value="spouse">{t('step3.relationshipSpouse')}</option>
+                                <option value="child">{t('step3.relationshipChild')}</option>
+                                <option value="parent">{t('step3.relationshipParent')}</option>
                             </select>
                         </InputGroup>
 
                         <div className="md:col-span-2 text-sm text-[#2596be] bg-[#e8f4f8] p-4 rounded-xl border border-[#2596be]/20 flex items-center gap-2">
-                            <Check size={18} /> سيتم تطبيق خصم التابع (40%) على قيمة الاشتراك.
+                            <Check size={18} /> {t('step3.dependentDiscountHint')}
                         </div>
                     </>
                 )}
@@ -323,12 +324,12 @@ export const Step3Details = ({ onNext, onPrev }: Step3DetailsProps) => {
                 {category === 'visitor' && (
                     <div className="md:col-span-2 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-200 flex items-center gap-2">
                         <Check size={18} className="text-gray-500" />
-                        عضوية عامة - سيتم تحديد الرسوم بناءً على التقييم.
+                        {t('step3.visitorFeeHint')}
                     </div>
                 )}
             </div>
 
-            <NavigationButtons onPrev={onPrev} onNext={onNext} />
+            {!embedded && <NavigationButtons onPrev={onPrev} onNext={onNext} />}
         </motion.div>
     );
 };

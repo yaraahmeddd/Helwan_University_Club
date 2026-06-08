@@ -14,6 +14,7 @@ import { useLanguage } from "../hooks/useLanguage";
 import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
 import { getLocalizedText, buildPersonName } from "../lib/localizedDisplay";
+import { useStaffJobLabels } from "../lib/staffJobLabel";
 import { useTranslation } from "react-i18next";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -26,7 +27,12 @@ type StaffApiItem = {
   last_name_en?: string;
   national_id?: string;
   role?: string;
-  staff_type?: string;       // fallback for role
+  staff_type?: string | {
+    id?: number;
+    name_ar?: string;
+    name_en?: string;
+    code?: string;
+  };
   staff_type_id?: number;
   status?: string;
   employment_start_date?: string;
@@ -44,8 +50,22 @@ type StaffRow = {
   lastNameEn?: string;
   nationalId: string;
   role: string;
+  staffTypeId: number;
+  staffTypeNameAr?: string;
+  staffTypeNameEn?: string;
+  staffTypeCode?: string;
   status: string;
-  startDate: string; // ISO date string, e.g. "2024-03-15"
+  startDate: string;
+};
+
+const parseStaffTypeFields = (s: StaffApiItem) => {
+  const staffTypeObj = typeof s.staff_type === "object" && s.staff_type ? s.staff_type : null;
+  return {
+    staffTypeId: Number(s.staff_type_id ?? staffTypeObj?.id ?? 0),
+    staffTypeNameAr: staffTypeObj?.name_ar ?? (typeof s.staff_type === "string" ? s.staff_type : undefined),
+    staffTypeNameEn: staffTypeObj?.name_en,
+    staffTypeCode: staffTypeObj?.code,
+  };
 };
 
 type PrivilegeApiItem = {
@@ -81,22 +101,11 @@ const isRecord = (v: unknown): v is Record<string, unknown> =>
 
 // ─── Helpers (same as StaffManagementPage) ───────────────────────────────────
 
-const formatDate = (v?: string | null) => {
+const formatDisplayDate = (v: string | null | undefined, locale: string) => {
   if (!v) return "—";
-  try { return new Date(v).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" }); }
-  catch { return v; }
-};
-
-const ROLE_LABELS: Record<string, string> = {
-  ADMIN: "مدير النظام",
-  SPORTS_DIRECTOR: "مدير الرياضة",
-  SPORTS_OFFICER: "موظف رياضي",
-  FINANCIAL_DIRECTOR: "المدير المالي",
-  REGISTRATION_STAFF: "موظف تسجيل",
-  TEAM_MANAGER: "مدير فريق",
-  SUPPORT: "الدعم الفني",
-  AUDITOR: "المدقق المالي",
-  STAFF: "موظف",
+  try {
+    return new Date(v).toLocaleDateString(locale, { year: "numeric", month: "short", day: "numeric" });
+  } catch { return v; }
 };
 
 const normalizePrivilegesResponse = (response: unknown): PrivilegeApiItem[] => {
@@ -134,6 +143,12 @@ export default function AssignStaffPrivilegesPage() {
   const { t } = useTranslation("AssignStaffPrivilegesPage");
   const { language, isRTL } = useLanguage();
   const { toast } = useToast();
+  const { resolveJobLabel } = useStaffJobLabels(language);
+  const dateLocale = language === "en" ? "en-US" : "ar-EG";
+  const fmtDate = useCallback(
+    (v?: string | null) => formatDisplayDate(v, dateLocale),
+    [dateLocale],
+  );
 
   // ── VIEW STATE ──────────────────────────────────────────────────────────────
   const [step, setStep] = useState<"table" | "assign">("table");
@@ -184,20 +199,23 @@ export default function AssignStaffPrivilegesPage() {
           });
         }
 
-        const rows: StaffRow[] = filtered.map((s) => ({
-          id: s.id,
-          nameAr: `${s.first_name_ar ?? ""} ${s.last_name_ar ?? ""}`.trim(),
-          nameEn: `${s.first_name_en ?? ""} ${s.last_name_en ?? ""}`.trim(),
-          firstNameAr: s.first_name_ar,
-          lastNameAr: s.last_name_ar,
-          firstNameEn: s.first_name_en,
-          lastNameEn: s.last_name_en,
-          nationalId: s.national_id ?? "",
-          // role: prefer the role field, fall back to staff_type string
-          role: String(s.role ?? s.staff_type ?? "STAFF").toUpperCase(),
-          status: String(s.status ?? "").toLowerCase(),
-          startDate: s.employment_start_date ?? s.start_date ?? s.created_at ?? "",
-        }));
+        const rows: StaffRow[] = filtered.map((s) => {
+          const staffType = parseStaffTypeFields(s);
+          return {
+            id: s.id,
+            nameAr: `${s.first_name_ar ?? ""} ${s.last_name_ar ?? ""}`.trim(),
+            nameEn: `${s.first_name_en ?? ""} ${s.last_name_en ?? ""}`.trim(),
+            firstNameAr: s.first_name_ar,
+            lastNameAr: s.last_name_ar,
+            firstNameEn: s.first_name_en,
+            lastNameEn: s.last_name_en,
+            nationalId: s.national_id ?? "",
+            role: String(s.role ?? staffType.staffTypeCode ?? "STAFF").toUpperCase(),
+            ...staffType,
+            status: String(s.status ?? "").toLowerCase(),
+            startDate: s.employment_start_date ?? s.start_date ?? s.created_at ?? "",
+          };
+        });
 
         setStaffRows(rows);
         setTotalCount(trim || from || to ? rows.length : total);
@@ -315,12 +333,6 @@ export default function AssignStaffPrivilegesPage() {
     return m;
   }, [allPrivileges]);
 
-  const privilegeIdByCode = useMemo(() => {
-    const m = new Map<string, number>();
-    allPrivileges.forEach((p) => m.set(p.code, p.id));
-    return m;
-  }, [allPrivileges]);
-
   // De-dupe extra picks covered by packages
   useEffect(() => {
     setSelectedExtraPrivilegeIds((prev) => {
@@ -383,11 +395,25 @@ export default function AssignStaffPrivilegesPage() {
       if (extraIds.length > 0)
         await StaffService.grantPrivileges(selectedStaff.id, extraIds, "Assigned from assign-privileges page");
 
-      toast({ title: "✅ تم التعيين بنجاح", description: `تم تعيين ${totalPrivilegesCount} صلاحية لـ ${selectedStaff.nameAr || selectedStaff.nameEn}` });
+      const staffName = buildPersonName({
+        firstNameAr: selectedStaff.firstNameAr,
+        lastNameAr: selectedStaff.lastNameAr,
+        firstNameEn: selectedStaff.firstNameEn,
+        lastNameEn: selectedStaff.lastNameEn,
+      }, language).primary || selectedStaff.nameAr || selectedStaff.nameEn;
+
+      toast({
+        title: t("toasts.assignSuccessTitle"),
+        description: t("toasts.assignSuccessDesc", { count: totalPrivilegesCount, name: staffName }),
+      });
       setSelectedPackageKeys([]);
       setSelectedExtraPrivilegeIds([]);
     } catch {
-      toast({ title: "فشل التعيين", description: "حدث خطأ أثناء تعيين الصلاحيات", variant: "destructive" });
+      toast({
+        title: t("toasts.assignFailedTitle"),
+        description: t("toasts.assignFailedDesc"),
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -589,11 +615,16 @@ export default function AssignStaffPrivilegesPage() {
                     </TableCell>
                     <TableCell className={adminCellClass({ center: true })}>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700">
-                        {t(`roles.${staff.role}`, { defaultValue: staff.role })}
+                        {resolveJobLabel({
+                          staffTypeId: staff.staffTypeId,
+                          staffTypeNameAr: staff.staffTypeNameAr,
+                          staffTypeNameEn: staff.staffTypeNameEn,
+                          staffTypeCode: staff.staffTypeCode,
+                        })}
                       </span>
                     </TableCell>
                     <TableCell className={adminCellClass({ size: "xs", className: "tabular-nums" })}>
-                      {formatDate(staff.startDate)}
+                      {fmtDate(staff.startDate)}
                     </TableCell>
                     <TableCell className={adminCellClass({ center: true })}>
                       <Button
@@ -639,7 +670,12 @@ export default function AssignStaffPrivilegesPage() {
               }, language).primary || selectedStaff.nameAr || selectedStaff.nameEn : ""}
             </h1>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {selectedStaff && t(`roles.${selectedStaff.role}`, { defaultValue: selectedStaff.role })}
+              {selectedStaff && resolveJobLabel({
+                staffTypeId: selectedStaff.staffTypeId,
+                staffTypeNameAr: selectedStaff.staffTypeNameAr,
+                staffTypeNameEn: selectedStaff.staffTypeNameEn,
+                staffTypeCode: selectedStaff.staffTypeCode,
+              })}
               <span className={`inline-block ${isRTL ? 'mr-2' : 'ml-2'} font-medium text-foreground`}>
                 {t("assign.selectedCount", { count: totalPrivilegesCount })}
               </span>
@@ -660,7 +696,7 @@ export default function AssignStaffPrivilegesPage() {
             </h2>
             {selectedPackageKeys.length > 0 && (
               <Badge className="bg-orange-100 text-orange-700 border-0 text-xs">
-                {selectedPackageKeys.length} محدد
+                {t("assign.selectedPackagesCount", { count: selectedPackageKeys.length })}
               </Badge>
             )}
           </div>
@@ -699,7 +735,7 @@ export default function AssignStaffPrivilegesPage() {
                         <span className={`inline-block mt-1 text-[10px] font-mono px-1.5 py-0.5 rounded ${isSelected ? "bg-orange-200 text-orange-800" : "bg-muted text-muted-foreground"}`}>{pkg.code}</span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className={`text-xs font-semibold ${isSelected ? "text-orange-700" : "text-muted-foreground"}`}>{pkg.privilegeCodes.length} صلاحية</span>
+                        <span className={`text-xs font-semibold ${isSelected ? "text-orange-700" : "text-muted-foreground"}`}>{t("assign.packagePrivilegesCount", { count: pkg.privilegeCodes.length })}</span>
                         {pkg.privilegeCodes.length > 0 && (
                           <button onClick={(e) => { e.stopPropagation(); toggleExpand(pkg.key); }} className="p-1 rounded hover:bg-muted transition-colors">
                             {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
@@ -741,8 +777,8 @@ export default function AssignStaffPrivilegesPage() {
                 <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none`} />
                 <Input
                   placeholder={t("assign.searchPrivilege")}
-                  value={privilegeSearch}
-                  onChange={(e) => setPrivilegeSearch(e.target.value)}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className={`h-9 ${isRTL ? 'pr-9' : 'pl-9'} text-sm bg-background`}
                 />
               </div>
@@ -757,7 +793,7 @@ export default function AssignStaffPrivilegesPage() {
             ) : filteredPrivileges.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Shield className="w-12 h-12 mx-auto opacity-20 mb-3" />
-                {privilegeSearch ? t("assign.noResults") : t("assign.noPrivileges")}
+                {searchQuery ? t("assign.noResults") : t("assign.noPrivileges")}
               </div>
             ) : (
               filteredPrivileges.map((group) => (
@@ -794,7 +830,7 @@ export default function AssignStaffPrivilegesPage() {
                           <span className="flex-1 min-w-0">
                             <span className={`block text-xs font-semibold truncate ${inPackage ? "text-emerald-800" : isSelected ? "text-blue-900" : "text-foreground"}`}>
                               {displayName}
-                              {inPackage && <span className={`text-[10px] font-normal text-emerald-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{isRTL ? '(في الحزمة)' : '(In Package)'}</span>}
+                              {inPackage && <span className={`text-[10px] font-normal text-emerald-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{t("assign.inPackage")}</span>}
                             </span>
                             <span className={`block text-[10px] font-mono truncate ${inPackage ? "text-emerald-700" : isSelected ? "text-blue-600" : "text-muted-foreground"}`}>
                               {privilege.code}
@@ -815,7 +851,7 @@ export default function AssignStaffPrivilegesPage() {
       <div className="shrink-0 border-t border-border bg-background px-6 py-3 flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
           {totalPrivilegesCount > 0
-            ? <><strong className="text-foreground">{totalPrivilegesCount}</strong> {t("assign.selectedCount").replace("— ", "").replace("{{count}}", "")}</>
+            ? t("assign.footerSelected", { count: totalPrivilegesCount })
             : t("assign.noPrivileges")}
         </p>
         <Button
@@ -824,7 +860,7 @@ export default function AssignStaffPrivilegesPage() {
           className="gap-2 bg-orange-500 hover:bg-orange-600 text-white"
         >
           {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          {isSaving ? (isRTL ? "جاري الحفظ..." : "Saving...") : t("table.assignAction")}
+          {isSaving ? t("assign.saving") : t("table.assignAction")}
         </Button>
       </div>
     </div>

@@ -1,1 +1,79 @@
-{}
+{
+  "subscriptions": {
+    "title": "الاشتراكات والدفع",
+    "subtitle": "متابعة حالة الاشتراكات وطلبات العضوية في الفرق",
+    "refresh": "تحديث",
+    "stats": {
+      "total": "إجمالي الطلبات",
+      "pending": "في الانتظار",
+      "approved": "موافق عليها",
+      "active": "نشطة"
+    },
+    "filters": {
+      "status": "الحالة",
+      "allStatuses": "كل الحالات",
+      "type": "النوع",
+      "allMembers": "كل الأعضاء",
+      "endDate": "تاريخ الانتهاء",
+      "endDatePlaceholder": "فلترة بتاريخ الانتهاء",
+      "search": "بحث",
+      "searchPlaceholder": "اسم / كود / فريق...",
+      "clearFilters": "مسح الفلاتر ×",
+      "results_one": "{{count}} نتيجة",
+      "results_other": "{{count}} نتائج"
+    },
+    "status": {
+      "pending": "في الانتظار",
+      "approved": "موافق عليه",
+      "active": "نشط",
+      "declined": "مرفوض",
+      "cancelled": "ملغى"
+    },
+    "memberType": {
+      "member": "عضو اجتماعي",
+      "team_member": "لاعب فريق"
+    },
+    "table": {
+      "index": "#",
+      "code": "الكود",
+      "name": "الاسم",
+      "type": "النوع",
+      "team": "الفريق",
+      "monthlyFee": "الرسوم الشهرية",
+      "startDate": "تاريخ البداية",
+      "endDate": "تاريخ الانتهاء",
+      "status": "الحالة"
+    },
+    "empty": {
+      "none": "لا توجد اشتراكات معلقة في الوقت الحالي",
+      "noMatch": "لا توجد اشتراكات تطابق الفلاتر المحددة"
+    },
+    "fallback": {
+      "teamPlayer": "لاعب #{{id}}",
+      "member": "عضو #{{id}}",
+      "team": "فريق #{{id}}"
+    },
+    "renewal": {
+      "overdue_one": "متأخر {{count}} يوم",
+      "overdue_other": "متأخر {{count}} يوم",
+      "remaining_one": "فاضل {{count}} يوم",
+      "remaining_other": "فاضل {{count}} يوم"
+    },
+    "currency": "ج.م"
+  },
+  "financePage": {
+    "title": "الإدارة المالية",
+    "totalRevenue": "إجمالي الإيرادات",
+    "pendingPayments": "المدفوعات المعلقة",
+    "table": {
+      "member": "العضو",
+      "sport": "الرياضة",
+      "amount": "المبلغ (ج.م)",
+      "status": "الحالة"
+    },
+    "paymentStatus": {
+      "paid": "مدفوع",
+      "unpaid": "غير مدفوع"
+    }
+  }
+}

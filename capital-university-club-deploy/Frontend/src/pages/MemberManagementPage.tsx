@@ -576,9 +576,9 @@ function DetailPanel({ row, details, loading, sports, onEdit, onChangeStatus, on
             <div className="flex-1 overflow-y-auto">
 
                 {loading ? (
-                    <div className="py-16 text-center">
-                        <div className="w-7 h-7 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-3" />
-                        <p className="text-sm text-muted-foreground">{t('detail.loading')}</p>
+                    <div className="py-16 text-center" role="status" aria-live="polite" lang={language}>
+                        <div className="w-7 h-7 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-3" aria-hidden />
+                        <p className="text-sm text-muted-foreground">{t('detail.loading', { lng: language })}</p>
                     </div>
                 ) : detailTab === 'info' ? (
                     <div className="p-5 space-y-4">

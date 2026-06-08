@@ -1,0 +1,30 @@
+{
+  "header": {
+    "title": "Add Team Player",
+    "subtitle": "Sports player registration — membership will be activated automatically after completion"
+  },
+  "badge": {
+    "staffRegistration": "Staff registration — membership activates upon completion"
+  },
+  "success": {
+    "title": "Team player added successfully!",
+    "description": "{{name}} has been registered on the team and activated automatically",
+    "activeBadge": "Active player — ID: {{id}}",
+    "addAnother": "Add another player",
+    "managePlayers": "Manage athletes"
+  },
+  "overlay": {
+    "title": "Registering player...",
+    "subtitle": "Activating membership automatically"
+  },
+  "toast": {
+    "added": "Player added",
+    "addedDesc": "{{name}} — activated automatically",
+    "error": "Error"
+  },
+  "errors": {
+    "basicFailed": "Basic registration failed",
+    "noMemberId": "Team member ID was not returned",
+    "generic": "An error occurred during registration"
+  }
+}

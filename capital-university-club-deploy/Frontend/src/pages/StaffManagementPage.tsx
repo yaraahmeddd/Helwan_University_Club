@@ -25,7 +25,7 @@ import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/Per
 import { RecordViewProfileHeader } from "../components/StaffPagesComponents/shared/RecordViewPrimitives";
 import { buildPersonName, getLocalizedText } from "../lib/localizedDisplay";
 import { useLanguage } from "../hooks/useLanguage";
-import { useTranslation } from "react-i18next";
+import { useLocalizedTranslation } from "../hooks/useLocalizedTranslation";
 
 const PAGE_SIZE = 12;
 
@@ -126,17 +126,21 @@ const STATIC_STAFF_TYPES: StaffType[] = [
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const formatDate = (v?: string | null) => {
+const formatDisplayDate = (
+    v: string | null | undefined,
+    locale: string,
+    month: "long" | "short" = "long",
+) => {
     if (!v) return "—";
     try {
-        return new Date(v).toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" });
+        return new Date(v).toLocaleDateString(locale, { year: "numeric", month, day: "numeric" });
     } catch { return v; }
 };
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ status, row }: { status?: string; row?: StaffRow }) {
-    const { t } = useTranslation("StaffManagementPage");
+    const { t } = useLocalizedTranslation("StaffManagementPage");
     const isActive = status === "active" && row?.isActive !== false;
     return (
         <Badge
@@ -167,8 +171,10 @@ type DetailPanelProps = {
 };
 
 function DetailPanel({ row, details, privileges, loading, roleName, onDelete, staffTypeOptions, onSave, isSaving, defaultEditing = false }: DetailPanelProps) {
-    const { t } = useTranslation("StaffManagementPage");
+    const { t } = useLocalizedTranslation("StaffManagementPage");
     const { language } = useLanguage();
+    const dateLocale = language === "en" ? "en-US" : "ar-EG";
+    const fmtDate = (v?: string | null) => formatDisplayDate(v, dateLocale);
     const { toast } = useToast();
     const [isEditing, setIsEditing] = useState(defaultEditing);
 
@@ -300,7 +306,7 @@ function DetailPanel({ row, details, privileges, loading, roleName, onDelete, st
                                     <input
                                         value={editAddress}
                                         onChange={(e) => setEditAddress(e.target.value)}
-                                        placeholder="القاهرة، مصر"
+                                        placeholder={t("detailPanel.placeholders.address")}
                                         className="flex-1 bg-transparent text-sm font-medium outline-none border-b border-transparent focus:border-primary transition-colors py-1.5 min-w-0"
                                     />
                                 </div>
@@ -352,8 +358,8 @@ function DetailPanel({ row, details, privileges, loading, roleName, onDelete, st
                             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">{t("detailPanel.sections.employment")}</p>
                             <div className="grid grid-cols-2 gap-2">
                                 {[
-                                    { icon: CalendarCheck, label: t("detailPanel.fields.startDate"), value: formatDate(details?.employment_start_date ?? row.employmentStartDate) },
-                                    { icon: CalendarX, label: t("detailPanel.fields.endDate"), value: formatDate(details?.employment_end_date ?? row.employmentEndDate) },
+                                    { icon: CalendarCheck, label: t("detailPanel.fields.startDate"), value: fmtDate(details?.employment_start_date ?? row.employmentStartDate) },
+                                    { icon: CalendarX, label: t("detailPanel.fields.endDate"), value: fmtDate(details?.employment_end_date ?? row.employmentEndDate) },
                                     { icon: Briefcase, label: t("detailPanel.fields.job"), value: roleName },
                                 ].map(({ icon: Icon, label, value }) => (
                                     <div key={label} className="rounded-xl border border-border bg-muted/30 p-3">
@@ -439,10 +445,15 @@ function DetailPanel({ row, details, privileges, loading, roleName, onDelete, st
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function StaffManagementPage() {
-    const { t } = useTranslation("StaffManagementPage");
+    const { t } = useLocalizedTranslation("StaffManagementPage");
     const { language, isRTL } = useLanguage();
     const { toast } = useToast();
     const navigate = useNavigate();
+    const dateLocale = language === "en" ? "en-US" : "ar-EG";
+    const fmtDate = useCallback(
+        (v?: string | null) => formatDisplayDate(v, dateLocale),
+        [dateLocale],
+    );
 
     // List state
     const [rows, setRows] = useState<StaffRow[]>([]);
@@ -813,7 +824,7 @@ export default function StaffManagementPage() {
                                                 </TableCell>
 
                                                 <TableCell className={adminCellClass({ className: "text-sm tabular-nums" })}>
-                                                    {formatDate(row.employmentStartDate)}
+                                                    {fmtDate(row.employmentStartDate)}
                                                 </TableCell>
 
                                                 <TableCell className={adminCellClass({ center: true })}>
@@ -892,16 +903,16 @@ export default function StaffManagementPage() {
             <Dialog open={deleteOpen} onOpenChange={(o) => { if (!o) setDeleteOpen(false); }}>
                 <DialogContent className="max-w-sm" dir={isRTL ? 'rtl' : 'ltr'}>
                     <DialogHeader>
-                        <DialogTitle>تأكيد إلغاء التفعيل</DialogTitle>
+                        <DialogTitle>{t("deactivateDialog.title")}</DialogTitle>
                         <DialogDescription>
-                            هل أنت متأكد أنك تريد إلغاء تفعيل هذا الموظف؟ يمكن إعادة تفعيله لاحقاً.
+                            {t("deactivateDialog.description")}
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
                         <Button variant="destructive" onClick={() => void handleDelete()} disabled={deleteLoading}>
-                            {deleteLoading ? "جارٍ..." : "إلغاء التفعيل"}
+                            {deleteLoading ? t("common:processing") : t("detailPanel.actions.deactivate")}
                         </Button>
-                        <Button variant="outline" onClick={() => setDeleteOpen(false)} disabled={deleteLoading}>تراجع</Button>
+                        <Button variant="outline" onClick={() => setDeleteOpen(false)} disabled={deleteLoading}>{t("deactivateDialog.cancel")}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

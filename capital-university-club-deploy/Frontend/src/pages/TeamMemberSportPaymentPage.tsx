@@ -242,7 +242,7 @@ const TeamMemberSportPaymentPage: React.FC = () => {
 
     const persistLastPaidSport = (args: { sportName: string; amount: number; teamId?: string }) => {
         const payload: LastPaidSportCache = {
-            name: args.sportName || "رياضة",
+            name: args.sportName || t("payment.labels.sportDefault"),
             amount: Number(args.amount) || 0,
             teamId: args.teamId,
             paidAt: Date.now(),

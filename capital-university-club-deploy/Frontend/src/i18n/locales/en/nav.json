@@ -58,5 +58,24 @@
     "logoutConfirmTitle": "Are you sure you want to log out?",
     "logoutConfirmDesc": "Your current session will end and you can log in again later.",
     "clubName": "Helwan University Club"
+  },
+  "languageOptions": {
+    "ar": "Arabic",
+    "en": "English"
+  },
+  "roles": {
+    "ADMIN": "System Administrator",
+    "SPORTS_DIRECTOR": "Sports Director",
+    "SPORTS_OFFICER": "Sports Officer",
+    "FINANCIAL_DIRECTOR": "Financial Director",
+    "REGISTRATION_STAFF": "Registration Staff",
+    "TEAM_MANAGER": "Team Manager",
+    "SUPPORT": "Technical Support",
+    "AUDITOR": "Auditor",
+    "MEDIA": "Media Officer",
+    "TEAM_MEMBER": "Team Player",
+    "MEMBER": "Member",
+    "STAFF": "Staff",
+    "STAFF_MEMBER": "Staff Member"
   }
 }

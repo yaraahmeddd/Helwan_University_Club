@@ -26,7 +26,8 @@
       "endDate": "End Date"
     },
     "placeholders": {
-      "selectJob": "Select Job Role"
+      "selectJob": "Select Job Role",
+      "address": "Cairo, Egypt"
     },
     "messages": {
       "noPackages": "No assigned packages"
@@ -95,5 +96,10 @@
     "loadFailed": {
       "title": "Failed to load staff list"
     }
+  },
+  "deactivateDialog": {
+    "title": "Confirm Deactivation",
+    "description": "Are you sure you want to deactivate this staff member? They can be reactivated later.",
+    "cancel": "Cancel"
   }
 }

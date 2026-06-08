@@ -197,9 +197,19 @@ export function AppSidebar() {
   };
 
   // ── Active detection ───────────────────────────────────────────────────────
-  const isActive = (path: string) =>
-    currentPath === path ||
-    (path !== "/staff/dashboard" && currentPath.startsWith(path));
+  /** Sibling routes where one path is a prefix of another — require exact match */
+  const EXACT_ONLY_PATHS = new Set([
+    "/staff/dashboard/members/new",
+    "/staff/dashboard/members/new-team-member",
+  ]);
+
+  const isActive = (path: string) => {
+    if (EXACT_ONLY_PATHS.has(path)) return currentPath === path;
+    return (
+      currentPath === path ||
+      (path !== "/staff/dashboard" && currentPath.startsWith(path))
+    );
+  };
 
   // ── Privilege filter ───────────────────────────────────────────────────────
   const filterItems = (items: SidebarItem[]): SidebarItem[] => {

@@ -43,6 +43,7 @@ import arRevokePrivilegesPage from './i18n/locales/ar/RevokePrivilegesPage.json'
 import arAddNewStaffPage from './i18n/locales/ar/AddNewStaffPage.json';
 import arRegister from './i18n/locales/ar/register.json';
 import arStaffAddMemberPage from './i18n/locales/ar/StaffAddMemberPage.json';
+import arStaffAddTeamMemberPage from './i18n/locales/ar/StaffAddTeamMemberPage.json';
 
 // ─── English namespaces ───────────────────────────────────────────────────────
 import enCommon from './i18n/locales/en/common.json';
@@ -85,6 +86,7 @@ import enRevokePrivilegesPage from './i18n/locales/en/RevokePrivilegesPage.json'
 import enAddNewStaffPage from './i18n/locales/en/AddNewStaffPage.json';
 import enRegister from './i18n/locales/en/register.json';
 import enStaffAddMemberPage from './i18n/locales/en/StaffAddMemberPage.json';
+import enStaffAddTeamMemberPage from './i18n/locales/en/StaffAddTeamMemberPage.json';
 
 const RTL_LANGUAGES = new Set(['ar']);
 
@@ -145,6 +147,7 @@ void i18n
         AddNewStaffPage: arAddNewStaffPage,
         register: arRegister,
         StaffAddMemberPage: arStaffAddMemberPage,
+        StaffAddTeamMemberPage: arStaffAddTeamMemberPage,
       },
       en: {
         common: enCommon,
@@ -187,6 +190,7 @@ void i18n
         AddNewStaffPage: enAddNewStaffPage,
         register: enRegister,
         StaffAddMemberPage: enStaffAddMemberPage,
+        StaffAddTeamMemberPage: enStaffAddTeamMemberPage,
       },
     },
 
@@ -202,7 +206,7 @@ void i18n
       'professions', 'media', 'admin', 'landing', 'team', 'member',
       'MemberManagementPage', 'ManageInvitationsPage', 'SportsPage',
       'CourtsManagementPage', 'CourtBookingsPage', 'TeamsManagementPage', 'SportsMembersPage',
-      'SportManagementPage', 'MemberShipsPage', 'PackageManagementPage', 'PrivilegePackageAdminPage', 'MediaGalleryDashboard', 'MediaManagerPage', 'FacultyManagementPage', 'BranchManagementPage', 'ProfessionManagementPage', 'AuditLogPage', 'StaffManagementPage', 'AssignStaffPrivilegesPage', 'RevokePrivilegesPage', 'AddNewStaffPage', 'register', 'StaffAddMemberPage'
+      'SportManagementPage', 'MemberShipsPage', 'PackageManagementPage', 'PrivilegePackageAdminPage', 'MediaGalleryDashboard', 'MediaManagerPage', 'FacultyManagementPage', 'BranchManagementPage', 'ProfessionManagementPage', 'AuditLogPage', 'StaffManagementPage', 'AssignStaffPrivilegesPage', 'RevokePrivilegesPage',       'AddNewStaffPage', 'register', 'StaffAddMemberPage', 'StaffAddTeamMemberPage'
     ],
 
     interpolation: { escapeValue: false },

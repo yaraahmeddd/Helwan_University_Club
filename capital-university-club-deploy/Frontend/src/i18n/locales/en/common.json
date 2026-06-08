@@ -8,6 +8,14 @@
   "search": "Search",
   "refresh": "Refresh",
   "loading": "Loading...",
+  "loadingDetails": "Loading details...",
+  "loadingSports": "Loading sports...",
+  "loadingTeams": "Loading teams...",
+  "loadingMembers": "Loading members...",
+  "loadingProfile": "Loading profile...",
+  "loadingBookings": "Fetching booking data...",
+  "saving": "Saving...",
+  "processing": "Processing...",
   "fetching": "Fetching records...",
   "noResults": "No results found",
   "noResultsFor": "No results matching \"{{query}}\"",
@@ -65,5 +73,9 @@
     "apply": "Apply",
     "clear": "Clear",
     "rangeUntil": "Until {{date}}"
+  },
+  "pageNotFound": {
+    "message": "Sorry! Page not found",
+    "goBack": "Go back to previous page"
   }
 }

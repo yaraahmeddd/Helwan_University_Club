@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useSecurityDashboardBookings, type DisplayBooking, type Guest } from '../hooks/useSecurityDashboardBookings';
 import { useSports } from '../hooks/useSports';
+import { useLocalizedTranslation } from '../hooks/useLocalizedTranslation';
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
 
@@ -145,6 +146,7 @@ function generateMockData(): DisplayBooking[] {
 // ─── COMPONENTS ──────────────────────────────────────────────────────────────
 
 export default function SecurityDashboardPage() {
+  const { t: tCommon } = useLocalizedTranslation('common');
   const [sportFilter, setSportFilter] = useState('الكل');
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 300);
@@ -272,7 +274,7 @@ export default function SecurityDashboardPage() {
             <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent pointer-events-none z-10" />
             <div className="flex items-center gap-2 overflow-x-auto pb-1.5 custom-scrollbar">
               {sportsLoading ? (
-                <div className="px-4 py-1.5 text-xs text-slate-400 font-bold whitespace-nowrap">جاري تحميل الرياضات...</div>
+                <div className="px-4 py-1.5 text-xs text-slate-400 font-bold whitespace-nowrap">{tCommon('loadingSports')}</div>
               ) : (
                 sportFilterOptions.map(sport => (
                   <button
@@ -318,8 +320,8 @@ export default function SecurityDashboardPage() {
         {loading && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center py-20 mt-4">
             <div className="w-16 h-16 rounded-full border-4 border-[#0e1c38]/10 border-t-[#0e1c38] animate-spin mb-4" />
-            <h3 className="text-lg font-bold text-[#0e1c38] mb-1">جاري التحميل...</h3>
-            <p className="text-sm text-slate-500">يتم جلب بيانات الحجوزات</p>
+            <h3 className="text-lg font-bold text-[#0e1c38] mb-1">{tCommon('loading')}</h3>
+            <p className="text-sm text-slate-500">{tCommon('loadingBookings')}</p>
           </motion.div>
         )}
 

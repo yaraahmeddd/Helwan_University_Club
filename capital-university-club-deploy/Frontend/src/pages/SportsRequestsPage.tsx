@@ -19,6 +19,7 @@ import { useToast } from "../hooks/use-toast";
 import DateRangeFilter from "../components/StaffPagesComponents/shared/DateRangeFilter";
 import type { DateRange } from "../components/StaffPagesComponents/shared/DateRangeFilter";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
+import { useLocalizedTranslation } from "../hooks/useLocalizedTranslation";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -150,6 +151,7 @@ function StatCard({
 
 export default function SportsRequestsPage() {
     const { toast } = useToast();
+    const { t: tCommon } = useLocalizedTranslation('common');
 
     const [records, setRecords] = useState<SportSubscription[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -377,7 +379,7 @@ export default function SportsRequestsPage() {
                 {isLoading ? (
                     <div className="py-20 text-center text-muted-foreground">
                         <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-3" />
-                        <p className="text-sm">جارٍ التحميل...</p>
+                        <p className="text-sm">{tCommon('loading')}</p>
                     </div>
                 ) : filtered.length === 0 ? (
                     <div className="py-20 text-center text-muted-foreground">

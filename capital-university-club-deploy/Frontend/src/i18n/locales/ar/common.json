@@ -8,6 +8,14 @@
   "search": "بحث",
   "refresh": "تحديث",
   "loading": "جارٍ التحميل...",
+  "loadingDetails": "جارٍ تحميل التفاصيل...",
+  "loadingSports": "جاري تحميل الرياضات...",
+  "loadingTeams": "جارٍ تحميل الفرق...",
+  "loadingMembers": "جارٍ تحميل الأعضاء...",
+  "loadingProfile": "جارٍ تحميل بيانات الملف الشخصي...",
+  "loadingBookings": "يتم جلب بيانات الحجوزات",
+  "saving": "جارٍ الحفظ...",
+  "processing": "جاري المعالجة...",
   "fetching": "جارٍ جلب السجلات...",
   "noResults": "لا توجد نتائج",
   "noResultsFor": "لا توجد نتائج مطابقة لـ \"{{query}}\"",
@@ -65,5 +73,9 @@
     "apply": "تطبيق",
     "clear": "مسح",
     "rangeUntil": "حتى {{date}}"
+  },
+  "pageNotFound": {
+    "message": "عذراً! الصفحة غير موجودة",
+    "goBack": "العودة للصفحة السابقة"
   }
 }

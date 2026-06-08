@@ -1,76 +1,30 @@
 /**
  * Staff-side registration for SOCIAL MEMBERS.
- * Flow: Category → Basic Info → Details → Files
+ * Flow: Category → Basic → Details → Documents
  */
 import { useState } from 'react';
-import { useForm, FormProvider, useFormContext } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Users, CheckCircle2, RotateCcw, ArrowRight, Loader2 } from 'lucide-react';
+import { Users, CheckCircle2, RotateCcw, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import { registerSchema, type RegisterFormValues } from '../features/register/schemas/validation';
 import { prepareSubmissionData, debugFormData, type FileUploadMap } from '../features/register/utils/submissionFactory';
 import { AuthService } from '../services/authService';
-import { Step1Category } from '../features/register/components/Step1_Category';
-import { Step2BasicInfo } from '../features/register/components/Step2_BasicInfo';
-import { Step3Details } from '../features/register/components/Step3_Details';
-import { Step4Files } from '../features/register/components/Step4_Files';
+import { RegisterStepIndicator } from '../features/register/components/RegisterStepIndicator';
+import { StaffRegisterWizardSteps } from '../features/register/components/StaffRegisterWizardSteps';
+import {
+    STAFF_WIZARD_STEP_FIELDS,
+    getNextStaffWizardStep,
+    getPrevStaffWizardStep,
+} from '../features/register/registerWizardConfig';
 import api from '../services/axios';
 import { useToast } from '../components/StaffPagesComponents/ui/use-toast';
 import { useLanguage } from '../hooks/useLanguage';
 import { buildPersonName } from '../lib/localizedDisplay';
-
-const STEP_KEYS = ['category', 'basicInfo', 'details', 'documents'] as const;
-
-const STEP_FIELDS: Record<number, readonly (keyof RegisterFormValues)[]> = {
-    0: [],
-    1: [
-        'first_name_ar', 'last_name_ar', 'first_name_en', 'last_name_en',
-        'email', 'password', 'confirmPassword', 'phone', 'dob', 'gender',
-        'nationality', 'nationalId', 'passportNumber',
-    ],
-    2: [
-        'address', 'facultyId', 'graduationYear',
-        'professionId', 'department', 'salary', 'professionCode',
-        'retirementDate', 'seasonalDuration', 'visaStatus',
-        'relatedMemberId', 'relationshipType',
-    ],
-    3: [],
-};
-
-const StepIndicator = ({ currentStep }: { currentStep: number }) => {
-    const { t } = useTranslation('register');
-    const { isRTL } = useLanguage();
-
-    return (
-        <div className="w-full max-w-3xl mx-auto mb-10" dir={isRTL ? 'rtl' : 'ltr'}>
-            <div className="relative flex justify-between items-center z-0">
-                <div className="absolute top-6 start-0 end-0 h-1.5 bg-muted -z-10 rounded-full" />
-                <motion.div
-                    className="absolute top-6 start-0 h-1.5 bg-primary -z-10 rounded-full"
-                    initial={{ width: '0%' }}
-                    animate={{ width: `${(currentStep / (STEP_KEYS.length - 1)) * 100}%` }}
-                    transition={{ duration: 0.5, ease: 'circOut' }}
-                />
-                {STEP_KEYS.map((key, idx) => (
-                    <div key={key} className="flex flex-col items-center gap-2">
-                        <motion.div
-                            animate={{ scale: currentStep === idx ? 1.18 : 1 }}
-                            className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-base border-4 bg-background transition-colors ${currentStep >= idx ? 'border-primary text-primary' : 'border-muted text-muted-foreground/40'}`}
-                        >
-                            {currentStep > idx ? <Check size={22} strokeWidth={3} /> : idx + 1}
-                        </motion.div>
-                        <span className={`text-xs font-bold whitespace-nowrap ${currentStep >= idx ? 'text-foreground' : 'text-muted-foreground'}`}>
-                            {t(`steps.${key}`)}
-                        </span>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-};
+import { StaffSubmittingOverlay } from '../components/StaffPagesComponents/shared/StaffSubmittingOverlay';
 
 const mapToBasicDTO = (data: RegisterFormValues) => {
     const idNumber = data.nationalId?.trim() || data.passportNumber?.trim() || '';
@@ -146,35 +100,6 @@ const SuccessScreen = ({
     );
 };
 
-const WizardBody = ({
-    step, files, onFileChange, onNext, onPrev, onSubmit, isSubmitting,
-}: {
-    step: number;
-    files: FileUploadMap;
-    onFileChange: (e: React.ChangeEvent<HTMLInputElement>, key: keyof FileUploadMap) => void;
-    onNext: () => void;
-    onPrev: () => void;
-    onSubmit: () => void;
-    isSubmitting: boolean;
-}) => {
-    const { handleSubmit } = useFormContext<RegisterFormValues>();
-    switch (step) {
-        case 0: return <Step1Category onNext={onNext} />;
-        case 1: return <Step2BasicInfo onNext={onNext} onPrev={onPrev} />;
-        case 2: return <Step3Details onNext={onNext} onPrev={onPrev} />;
-        case 3: return (
-            <Step4Files
-                files={files}
-                onFileChange={onFileChange}
-                onPrev={onPrev}
-                onSubmit={handleSubmit(onSubmit as unknown as () => void)}
-                isSubmitting={isSubmitting}
-            />
-        );
-        default: return null;
-    }
-};
-
 const StaffAddMemberPage = () => {
     const { t } = useTranslation('StaffAddMemberPage');
     const { t: tReg } = useTranslation('register');
@@ -208,12 +133,16 @@ const StaffAddMemberPage = () => {
     const { handleSubmit, trigger, reset } = methods;
 
     const nextStep = async () => {
-        const fields = STEP_FIELDS[step] ?? [];
-        if (fields.length === 0) { setStep(s => s + 1); return; }
+        const fields = STAFF_WIZARD_STEP_FIELDS[step] ?? [];
+        if (fields.length === 0) {
+            setStep(getNextStaffWizardStep);
+            return;
+        }
         const ok = await trigger(fields);
-        if (ok) setStep(s => s + 1);
+        if (ok) setStep(getNextStaffWizardStep);
     };
-    const prevStep = () => setStep(s => Math.max(0, s - 1));
+
+    const prevStep = () => setStep(getPrevStaffWizardStep);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: keyof FileUploadMap) => {
         if (e.target.files?.[0]) setFiles(prev => ({ ...prev, [key]: e.target.files![0] }));
@@ -328,9 +257,9 @@ const StaffAddMemberPage = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 pb-8">
-                <div className="max-w-4xl mx-auto">
+                <div className="max-w-5xl mx-auto">
                     <FormProvider {...methods}>
-                        <StepIndicator currentStep={step} />
+                        <RegisterStepIndicator currentStep={step} />
                         <form onSubmit={handleSubmit((d: RegisterFormValues) => onSubmit(d))}>
                             <AnimatePresence mode="wait">
                                 <motion.div
@@ -340,7 +269,7 @@ const StaffAddMemberPage = () => {
                                     exit={{ opacity: 0, x: -20 }}
                                     transition={{ duration: 0.2 }}
                                 >
-                                    <WizardBody
+                                    <StaffRegisterWizardSteps
                                         step={step}
                                         files={files}
                                         onFileChange={handleFileChange}
@@ -348,12 +277,8 @@ const StaffAddMemberPage = () => {
                                         onPrev={prevStep}
                                         onSubmit={handleSubmit((d: RegisterFormValues) => onSubmit(d)) as unknown as () => void}
                                         isSubmitting={isSubmitting}
+                                        categoryHint={tReg('step1.hint')}
                                     />
-                                    {step === 0 && (
-                                        <p className="text-center text-sm text-muted-foreground mt-6">
-                                            {tReg('step1.hint')}
-                                        </p>
-                                    )}
                                 </motion.div>
                             </AnimatePresence>
                         </form>
@@ -362,20 +287,7 @@ const StaffAddMemberPage = () => {
             </div>
 
             <AnimatePresence>
-                {isSubmitting && (
-                    <motion.div
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center"
-                    >
-                        <div className="bg-card rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-4 border border-border">
-                            <Loader2 className="w-12 h-12 text-primary animate-spin" />
-                            <div className="text-center">
-                                <p className="font-bold text-lg">{t('overlay.title')}</p>
-                                <p className="text-muted-foreground text-sm mt-1">{t('overlay.subtitle')}</p>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
+                {isSubmitting && <StaffSubmittingOverlay namespace="StaffAddMemberPage" />}
             </AnimatePresence>
         </div>
     );

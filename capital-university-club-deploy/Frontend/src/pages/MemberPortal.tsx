@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, Mail, IdCard, Calendar, Shield, LogOut, CheckCircle, Crown, HomeIcon, Wallet, Gift, UtensilsCrossed, Bookmark, Settings, ArrowRight } from 'lucide-react';
 import { AuthService } from '../services/authService';
+import { LoadingState } from '../components/shared/LoadingState';
 import type { UserInfo } from '../types';
 import { motion } from 'framer-motion';
 import { Navbar } from '../components/Navbar';
@@ -55,10 +56,7 @@ const MemberPortal: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0e1c38] to-[#1a4d63]">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[#f8941c] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-[#2596be] font-bold text-lg">جارٍ تحميل بيانات الملف الشخصي...</p>
-        </div>
+        <LoadingState messageKey="loadingProfile" size="lg" className="py-0" />
       </div>
     );
   }

@@ -1,9 +1,31 @@
 {
   "steps": {
+    "memberType": "نوع العضوية",
+    "membershipType": "نوع العضوية",
+    "form": "نموذج التسجيل",
     "category": "الفئة",
     "basicInfo": "البيانات الأساسية",
-    "details": "تفاصيل العضوية",
+    "details": "التفاصيل",
     "documents": "المستندات"
+  },
+  "step0": {
+    "title": "اختر نوع العضوية",
+    "subtitle": "حدد نوع العضوية المناسب لك",
+    "roles": {
+      "social_member": {
+        "title": "عضو بالنادي",
+        "subtitle": "Social Member",
+        "description": "استمتع بجميع مرافق النادي الاجتماعية والترفيهية",
+        "features": ["المرافق الاجتماعية", "حمام السباحة", "الكافيتريا", "الحدائق"]
+      },
+      "sports_player": {
+        "title": "لاعب",
+        "subtitle": "Sports Player",
+        "description": "انضم لفرق النادي الرياضية واحترف رياضتك المفضلة",
+        "features": ["التدريبات", "المسابقات", "المدربين", "البطولات"]
+      }
+    },
+    "playerNote": "يمكنك الانضمام للفرق الرياضية من خلال لوحة التحكم بعد إتمام التسجيل"
   },
   "nav": {
     "prev": "السابق",
@@ -48,7 +70,9 @@
     "passwordWeak": "ضعيفة",
     "passwordFair": "متوسطة",
     "passwordGood": "جيدة",
-    "passwordStrong": "قوية"
+    "passwordStrong": "قوية",
+    "nationalIdPlaceholder": "14 رقم",
+    "passwordStrength": "قوة كلمة المرور"
   },
   "step3": {
     "title": "تفاصيل العضوية",
@@ -83,7 +107,23 @@
       "PROF": "عضو هيئة تدريس",
       "TA": "معيد / مدرس مساعد",
       "STAFF": "موظف إداري"
-    }
+    },
+    "graduationHint": "يحدد النظام تلقائياً حالة (طالب/خريج)",
+    "selectProfession": "اختر المهنة",
+    "salaryTierHint": "يتم تحديد رسوم الاشتراك السنوي بناءً على شريحة الراتب.",
+    "retiredProf": "أستاذ جامعي متقاعد",
+    "retiredStaff": "موظف متقاعد",
+    "duration1Month": "شهر واحد",
+    "duration6Months": "6 أشهر",
+    "duration12Months": "سنة كاملة",
+    "visaValid": "سارية",
+    "visaPending": "قيد الإجراءات",
+    "installmentHint": "متاح الدفع بالتقسيط (دفعتين) لهذا الاشتراك.",
+    "relationshipSpouse": "زوج / زوجة",
+    "relationshipChild": "ابن / ابنة",
+    "relationshipParent": "والد / والدة",
+    "dependentDiscountHint": "سيتم تطبيق خصم التابع (40%) على قيمة الاشتراك.",
+    "visitorFeeHint": "عضوية عامة - سيتم تحديد الرسوم بناءً على التقييم."
   },
   "step4": {
     "title": "المرفقات والمستندات",
@@ -107,7 +147,8 @@
     "id_front": "صورة البطاقة (أمام)",
     "id_back": "صورة البطاقة (خلف)",
     "passport": "صورة جواز السفر",
-    "medical": "التقرير الطبي"
+    "medical": "التقرير الطبي",
+    "proof": "مستند إثبات"
   },
   "errors": {
     "missingFiles": "مستندات مطلوبة غير مرفوعة: {{list}}"

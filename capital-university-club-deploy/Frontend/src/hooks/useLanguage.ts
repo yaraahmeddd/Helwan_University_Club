@@ -1,12 +1,11 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { normalizeAppLanguage } from '../lib/normalizeLanguage';
 
 export function useLanguage() {
   const { i18n } = useTranslation();
 
-  // resolvedLanguage is the actual matched resource key ("ar" / "en"),
-  // whereas i18n.language can be a raw browser locale like "ar-EG".
-  const language = (i18n.resolvedLanguage ?? i18n.language ?? 'ar') as 'ar' | 'en';
+  const language = normalizeAppLanguage(i18n.resolvedLanguage ?? i18n.language);
   const isRTL = language === 'ar';
 
   const applyToDocument = useCallback((lang: string) => {

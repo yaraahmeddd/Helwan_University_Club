@@ -8,6 +8,7 @@ import { StaffService, type StaffProfileData } from '../services/staffService';
 import { Toaster, toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { resolveFileUrl } from '../utils/fileUrl';
+import { useLocalizedTranslation } from '../hooks/useLocalizedTranslation';
 
 // Design System - HUC Branding
 const colors = {
@@ -67,6 +68,7 @@ interface PasswordStrength {
 }
 
 const StaffProfile: React.FC = () => {
+    const { t: tCommon } = useLocalizedTranslation('common');
     const [userData, setUserData] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -319,7 +321,7 @@ const StaffProfile: React.FC = () => {
         );
     };
 
-    if (isLoading) return <div style={{ padding: '40px', textAlign: 'center' }}>جاري التحميل...</div>;
+    if (isLoading) return <div style={{ padding: '40px', textAlign: 'center' }}>{tCommon('loading')}</div>;
     if (error) return <div style={{ padding: '40px', textAlign: 'center', color: 'red' }}>{error}</div>;
     if (!userData) return null;
 

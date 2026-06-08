@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import type { UserToken } from '../types/auth';
+import { LoadingState } from './shared/LoadingState';
 
 interface PublicOnlyRouteProps {
     children: React.ReactNode;
@@ -51,11 +52,7 @@ const PublicOnlyRoute: React.FC<PublicOnlyRouteProps> = ({ children }) => {
     const { user, loading } = useAuth();
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900"></div>
-            </div>
-        );
+        return <LoadingState fullScreen size="lg" />;
     }
 
     if (user) {

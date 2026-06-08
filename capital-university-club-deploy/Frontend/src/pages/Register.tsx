@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, User, Phone, AlertCircle } from 'lucide-react';
+import { useLocalizedTranslation } from '../hooks/useLocalizedTranslation';
 
 const SignUp: React.FC = () => {
+  const { t: tCommon } = useLocalizedTranslation('common');
   const asset = (name: string) => `/assets/${name}`;
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -322,7 +324,7 @@ const SignUp: React.FC = () => {
             disabled={isLoading}
             className="w-full bg-[#22c55e] hover:bg-[#16a34a] disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-4 md:py-5 rounded-2xl font-bold text-lg mb-4 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
           >
-            {isLoading ? 'جاري التحميل...' : 'إنشاء حساب'}
+            {isLoading ? tCommon('loading') : 'إنشاء حساب'}
           </button>
 
           <div className="relative my-6">

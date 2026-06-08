@@ -4,16 +4,20 @@ import api from "../services/axios";
 import { useAuth } from "../context/AuthContext";
 import bookingService from "../services/bookingService";
 import { CheckCircle, Copy } from "lucide-react";
+import { useLocalizedTranslation } from "../hooks/useLocalizedTranslation";
 
 const MemberSportPaymentPage: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [searchParams] = useSearchParams();
+    const { t, isRTL, language } = useLocalizedTranslation("member");
     const [processing, setProcessing] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [shareUrl, setShareUrl] = useState<string>("");
+
+    const dateLocale = language === "en" ? "en-US" : "ar-EG";
 
     const paymentData = useMemo(() => {
         const type = searchParams.get("type") || "subscription";
@@ -23,7 +27,7 @@ const MemberSportPaymentPage: React.FC = () => {
         const amountStr = searchParams.get("amount");
         const amount = amountStr && Number(amountStr) > 0 ? Number(amountStr) : 0;
         const currency = searchParams.get("currency") || "EGP";
-        const sportName = searchParams.get("sportName") || "Sport";
+        const sportName = searchParams.get("sportName") || "";
         const slotTime = searchParams.get("slotTime") || searchParams.get("time") || "-";
         const slotDays = searchParams.get("slotDays") || searchParams.get("date") || "-";
         const court = searchParams.get("court") || searchParams.get("courtName") || "-";
@@ -56,13 +60,14 @@ const MemberSportPaymentPage: React.FC = () => {
         };
     }, [searchParams]);
 
+    const displaySportName = paymentData.sportName || t("payment.labels.sportDefault");
+
     const handleBack = async () => {
         if (paymentData.isBooking) {
             navigate("/member/dashboard?tab=courts", { replace: true });
             return;
         }
 
-        // If user leaves payment before paying, cancel the pending subscription draft.
         if (paymentData.subscriptionId > 0) {
             try {
                 await api.patch(`/member-subscriptions/${paymentData.subscriptionId}/cancel`, {
@@ -82,14 +87,14 @@ const MemberSportPaymentPage: React.FC = () => {
         const btn = document.getElementById("member-copy-btn");
         if (btn) {
             const originalText = btn.innerText;
-            btn.innerText = "✅ تم النسخ";
+            btn.innerText = t("payment.actions.copied");
             setTimeout(() => { btn.innerText = originalText; }, 2000);
         }
     };
 
     const handlePayNow = async () => {
         if (!paymentData.isValid) {
-            setErrorMessage("بيانات الدفع غير مكتملة. برجاء إعادة المحاولة.");
+            setErrorMessage(t("payment.alerts.incomplete_data"));
             return;
         }
 
@@ -98,10 +103,9 @@ const MemberSportPaymentPage: React.FC = () => {
 
         try {
             if (paymentData.isBooking) {
-                if (!paymentData.bookingId) throw new Error("رقم الحجز مفقود");
+                if (!paymentData.bookingId) throw new Error(t("payment.alerts.missing_booking_id"));
                 const booking = await bookingService.confirmPayment(paymentData.bookingId, paymentData.paymentReference);
 
-                // Save confirmed booking to localStorage so calendar shows it
                 try {
                     const userId = user?.member_id || user?.team_member_id;
                     if (userId) {
@@ -122,7 +126,6 @@ const MemberSportPaymentPage: React.FC = () => {
 
                 let token = booking?.share_token;
 
-                // Fallback: fetch booking details if link is missing for any reason
                 if (!token && paymentData.bookingId) {
                     try {
                         const details = await bookingService.getBookingDetails(paymentData.bookingId);
@@ -138,12 +141,12 @@ const MemberSportPaymentPage: React.FC = () => {
                     setShareUrl("");
                 }
 
-                setSuccessMessage("✅ تم تأكيد الحجز والدفع بنجاح.");
+                setSuccessMessage(t("payment.alerts.success_booking"));
                 setShowSuccessModal(true);
             } else {
                 const subscriptionId = paymentData.subscriptionId;
                 if (!subscriptionId) {
-                    setErrorMessage("لا يمكن العثور على رقم الاشتراك لإتمام الدفع.");
+                    setErrorMessage(t("payment.alerts.missing_subscription"));
                     return;
                 }
 
@@ -154,7 +157,7 @@ const MemberSportPaymentPage: React.FC = () => {
                     gateway_response: "member_payment_page",
                 });
 
-                setSuccessMessage("تم إتمام الدفع وتفعيل الاشتراك بنجاح.");
+                setSuccessMessage(t("payment.alerts.success_subscription"));
                 setTimeout(() => {
                     navigate("/member/dashboard?tab=sports", { replace: true });
                 }, 1500);
@@ -165,56 +168,60 @@ const MemberSportPaymentPage: React.FC = () => {
                 error?.response?.data?.message ||
                 error?.response?.data?.error ||
                 error?.message ||
-                "فشل إتمام الدفع"
+                t("payment.alerts.fail")
             );
         } finally {
             setProcessing(false);
         }
     };
 
+    const currencyLabel = paymentData.currency === "EGP"
+        ? t("sports.currency")
+        : paymentData.currency;
+
     return (
         <div className="min-h-screen bg-[#F4F6F9] flex items-center justify-center p-4">
-            <div dir="rtl" className="w-full max-w-[520px] bg-white border border-ds-border rounded-2xl shadow-ds-card p-6">
-                <h1 className="text-2xl font-black text-ds-text-primary mb-2">صفحة الدفع</h1>
+            <div dir={isRTL ? "rtl" : "ltr"} className="w-full max-w-[520px] bg-white border border-ds-border rounded-2xl shadow-ds-card p-6">
+                <h1 className="text-2xl font-black text-ds-text-primary mb-2">{t("payment.title")}</h1>
                 <p className="text-sm text-ds-text-secondary mb-6">
                     {paymentData.isBooking
-                        ? "اكمل الدفع لتأكيد حجز الملعب."
-                        : "اكمل الدفع لإتمام الاشتراك."}
+                        ? t("payment.description_booking")
+                        : t("payment.description_subscription")}
                 </p>
 
                 {!paymentData.isValid ? (
                     <div className="rounded-lg border border-red-200 bg-red-50 text-red-700 px-4 py-3 text-sm mb-5">
-                        بيانات الدفع غير مكتملة. ارجع واختر الموعد مرة اخرى.
+                        {t("payment.invalid_data")}
                     </div>
                 ) : null}
 
                 <div className="space-y-3 mb-6">
                     <div className="flex items-center justify-between text-sm">
-                        <span className="text-ds-text-secondary">الرياضة</span>
-                        <span className="font-bold text-ds-text-primary">{paymentData.sportName}</span>
+                        <span className="text-ds-text-secondary">{t("payment.labels.sport")}</span>
+                        <span className="font-bold text-ds-text-primary">{displaySportName}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                        <span className="text-ds-text-secondary">الوقت</span>
+                        <span className="text-ds-text-secondary">{t("payment.labels.time")}</span>
                         <span className="font-bold text-ds-text-primary">{paymentData.slotTime}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                        <span className="text-ds-text-secondary">الأيام</span>
+                        <span className="text-ds-text-secondary">{t("payment.labels.days")}</span>
                         <span className="font-bold text-ds-text-primary">{paymentData.slotDays}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                        <span className="text-ds-text-secondary">الملعب</span>
+                        <span className="text-ds-text-secondary">{t("payment.labels.court")}</span>
                         <span className="font-bold text-ds-text-primary">{paymentData.court}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                        <span className="text-ds-text-secondary">مرجع الدفع</span>
+                        <span className="text-ds-text-secondary">{t("payment.labels.reference")}</span>
                         <span dir="ltr" className="font-mono text-xs text-ds-text-primary">{paymentData.paymentReference || "-"}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                        <span className="text-ds-text-secondary">المبلغ</span>
+                        <span className="text-ds-text-secondary">{t("payment.labels.amount")}</span>
                         <span className="font-black text-xl text-ds-orange">
                             {paymentData.amount > 0
-                                ? `${paymentData.amount.toLocaleString("ar-EG")} ${paymentData.currency === "EGP" ? "ج.م" : paymentData.currency}`
-                                : "بانتظار تحديد التكلفة"}
+                                ? `${paymentData.amount.toLocaleString(dateLocale)} ${currencyLabel}`
+                                : t("payment.labels.waiting_cost")}
                         </span>
                     </div>
                 </div>
@@ -238,7 +245,7 @@ const MemberSportPaymentPage: React.FC = () => {
                         disabled={!paymentData.isValid || processing}
                         className="flex-1 h-11 rounded-lg bg-ds-primary text-white font-bold hover:opacity-95 disabled:opacity-60"
                     >
-                        {processing ? "جاري الدفع..." : "ادفع الآن"}
+                        {processing ? t("payment.actions.processing") : t("payment.actions.pay_now")}
                     </button>
                     <button
                         type="button"
@@ -246,31 +253,30 @@ const MemberSportPaymentPage: React.FC = () => {
                         disabled={processing}
                         className="flex-1 h-11 rounded-lg border border-ds-border text-ds-text-primary font-bold hover:bg-gray-50 disabled:opacity-60"
                     >
-                        رجوع
+                        {t("payment.actions.back")}
                     </button>
                 </div>
             </div>
 
-            {/* Success Modal for booking with invite link */}
             {showSuccessModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                    <div dir="rtl" className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden">
+                    <div dir={isRTL ? "rtl" : "ltr"} className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden">
                         <div className="p-8 text-center">
                             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <CheckCircle className="w-12 h-12 text-green-600" />
                             </div>
 
                             <h2 className="text-2xl font-black text-ds-text-primary mb-2">
-                                تم تأكيد الحجز بنجاح!
+                                {t("payment.success_modal.title")}
                             </h2>
                             <p className="text-ds-text-secondary mb-8">
-                                تم تسجيل حجزك ودفع الرسوم بنجاح. يمكنك الآن دعوة أصدقائك للانضمام لهذا الحجز عبر الرابط التالي.
+                                {t("payment.success_modal.description")}
                             </p>
 
                             {shareUrl && (
-                                <div className="space-y-4 mb-8 text-right">
+                                <div className={`space-y-4 mb-8 ${isRTL ? "text-right" : "text-left"}`}>
                                     <label className="block text-xs font-bold text-ds-text-muted mb-1 px-1">
-                                        رابط دعوة المشاركين:
+                                        {t("payment.labels.invite_link")}
                                     </label>
                                     <div className="flex items-center gap-2 p-2 bg-gray-50 border border-gray-200 rounded-xl">
                                         <div className="flex-1 overflow-hidden">
@@ -288,7 +294,7 @@ const MemberSportPaymentPage: React.FC = () => {
                                             className="flex items-center gap-2 px-4 py-2 bg-ds-primary text-white text-xs font-bold rounded-lg hover:bg-ds-primary-dark transition-colors shrink-0"
                                         >
                                             <Copy className="w-3 h-3" />
-                                            نسخ الرابط
+                                            {t("payment.actions.copy")}
                                         </button>
                                     </div>
                                 </div>
@@ -300,7 +306,7 @@ const MemberSportPaymentPage: React.FC = () => {
                                     onClick={() => navigate("/member/dashboard?tab=home", { replace: true })}
                                     className="w-full h-12 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition-colors"
                                 >
-                                    العودة للرئيسية
+                                    {t("payment.actions.return_home")}
                                 </button>
                             </div>
                         </div>
@@ -312,4 +318,3 @@ const MemberSportPaymentPage: React.FC = () => {
 };
 
 export default MemberSportPaymentPage;
-

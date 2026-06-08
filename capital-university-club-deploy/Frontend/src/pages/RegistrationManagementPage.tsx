@@ -10,8 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../components/StaffPage
 import { useToast } from "../hooks/use-toast";
 import { RoleGuard } from "../components/StaffPagesComponents/RoleGuard";
 import api from "../services/axios";
-import { useTranslation } from "react-i18next";
-import { useLanguage } from "../hooks/useLanguage";
+import { useLocalizedTranslation } from "../hooks/useLocalizedTranslation";
 import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
 import {
@@ -66,8 +65,7 @@ const toArabicDigits = (str: string | undefined | null) => {
 };
 
 export default function RegistrationManagementPage() {
-    const { t } = useTranslation(["RegistrationManagementPage", "common"]);
-    const { language, isRTL } = useLanguage();
+    const { t, language, isRTL } = useLocalizedTranslation(["RegistrationManagementPage", "common"]);
     const { toast } = useToast();
     const [records, setRecords] = useState<RegistrationRecord[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -394,8 +392,14 @@ export default function RegistrationManagementPage() {
             {/* ── Table ── */}
             <div className={adminTableStyles.container}>
                 {isLoading ? (
-                    <div className="py-20 text-center text-muted-foreground">
-                        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-3" />
+                    <div
+                        className="py-20 text-center text-muted-foreground"
+                        dir={isRTL ? 'rtl' : 'ltr'}
+                        lang={language}
+                        role="status"
+                        aria-live="polite"
+                    >
+                        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-3" aria-hidden />
                         <p className="text-sm">{t('registration.loading')}</p>
                     </div>
                 ) : filteredRecords.length === 0 ? (
@@ -1026,7 +1030,7 @@ export default function RegistrationManagementPage() {
                                 disabled={selectedRecord?.status === 'active' || approvingId === `${selectedRecord?.memberType}-${selectedRecord?.id}`}
                             >
                                 {approvingId === `${selectedRecord?.memberType}-${selectedRecord?.id}` ? (
-                                    <><Loader2 className="h-4 w-4 animate-spin" />{t('review.approving')}</>
+                                    <><Loader2 className="h-4 w-4 animate-spin" aria-hidden />{t('review.approving')}</>
                                 ) : (
                                     <><Check className="h-4 w-4" />{t('actions.approve')}</>
                                 )}

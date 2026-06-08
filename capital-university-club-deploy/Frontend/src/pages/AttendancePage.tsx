@@ -18,6 +18,7 @@ import {
 } from "../components/StaffPagesComponents/ui/dialog";
 import { useToast } from "../hooks/use-toast";
 import api from "../services/axios";
+import { useLocalizedTranslation } from "../hooks/useLocalizedTranslation";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 
 // ─── API shape types ────────────────────────────────────────────────────────
@@ -86,6 +87,7 @@ const AttendanceToggle = ({
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
 export default function AttendancePage() {
+    const { t: tCommon } = useLocalizedTranslation('common');
     const { toast } = useToast();
     const [activeTab, setActiveTab] = useState("register");
 
@@ -389,7 +391,7 @@ export default function AttendancePage() {
                                 >
                                     <SelectTrigger className="h-8 w-48 text-sm">
                                         <SelectValue placeholder={
-                                            teamsLoading ? "جارٍ التحميل..." :
+                                            teamsLoading ? tCommon('loading') :
                                                 sportFilter1 ? "اختر الفريق" : "اختر الرياضة أولاً"
                                         } />
                                     </SelectTrigger>
@@ -448,7 +450,7 @@ export default function AttendancePage() {
                         {sportFilter1 && !sessionFilter && teamsLoading && (
                             <div className="flex items-center justify-center h-48 gap-2 text-muted-foreground">
                                 <Loader2 className="w-5 h-5 animate-spin" />
-                                <span className="text-sm">جارٍ تحميل الفرق...</span>
+                                <span className="text-sm">{tCommon('loadingTeams')}</span>
                             </div>
                         )}
 
@@ -456,7 +458,7 @@ export default function AttendancePage() {
                         {sessionFilter && membersLoading && (
                             <div className="flex items-center justify-center h-48 gap-2 text-muted-foreground">
                                 <Loader2 className="w-5 h-5 animate-spin" />
-                                <span className="text-sm">جارٍ تحميل الأعضاء...</span>
+                                <span className="text-sm">{tCommon('loadingMembers')}</span>
                             </div>
                         )}
 
@@ -494,7 +496,7 @@ export default function AttendancePage() {
                                     <div className="flex items-center gap-3">
                                         {isDirty && <p className="text-xs text-amber-600 font-medium">⚠ يوجد تغييرات غير محفوظة</p>}
                                         <Button onClick={() => void handleSaveAttendance()} disabled={!isDirty || saveLoading} size="sm" className="gap-2 min-w-[120px]">
-                                            {saveLoading ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />جارٍ الحفظ...</> : <><Save className="w-3.5 h-3.5" />حفظ الحضور</>}
+                                            {saveLoading ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />{tCommon('saving')}</> : <><Save className="w-3.5 h-3.5" />حفظ الحضور</>}
                                         </Button>
                                     </div>
                                 </div>
