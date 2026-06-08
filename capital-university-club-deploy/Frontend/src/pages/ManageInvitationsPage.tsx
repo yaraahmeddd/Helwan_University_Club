@@ -17,6 +17,10 @@ import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "../hooks/useLanguage";
+import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
+import { getLocalizedText } from "../lib/localizedDisplay";
 import { RoleGuard } from "../components/StaffPagesComponents/RoleGuard";
 
 import { useToast } from "../hooks/use-toast";
@@ -143,6 +147,7 @@ function formatTime(timeStr: string) {
 
 export default function ManageInvitationsPage() {
   const { t, i18n } = useTranslation("ManageInvitationsPage");
+  const { language, isRTL } = useLanguage();
   const { toast } = useToast();
 
   const [invitations, setInvitations] = useState<Invitation[]>([]);
@@ -235,7 +240,7 @@ export default function ManageInvitationsPage() {
   };
 
   return (
-    <div className="flex-1 space-y-6 p-6 min-h-screen relative" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="flex-1 space-y-6 p-6 min-h-screen relative" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center justify-between">
         <div>
@@ -342,21 +347,21 @@ export default function ManageInvitationsPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-slate-200 shadow-sm bg-white overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="rounded-xl border border-border shadow-sm bg-background overflow-hidden">
+        <div className={adminTableStyles.container}>
           <Table>
-            <TableHeader className="bg-slate-50/80 border-b border-slate-200">
+            <TableHeader className={adminTableStyles.header}>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="font-bold text-slate-700 px-5 py-4 w-[200px]">{t('table.booker')}</TableHead>
-                <TableHead className="font-bold text-slate-700 py-4 w-[140px]">{t('table.phone')}</TableHead>
-                <TableHead className="font-bold text-slate-700 py-4 w-[180px]">{t('table.dateTime')}</TableHead>
-                <TableHead className="font-bold text-slate-700 py-4">{t('table.fieldSport')}</TableHead>
-                <TableHead className="font-bold text-slate-700 py-4 text-center w-[120px]">{t('table.participants')}</TableHead>
-                <TableHead className="font-bold text-slate-700 py-4 w-[140px]">{t('table.status')}</TableHead>
-                <TableHead className="font-bold text-slate-700 py-4 text-center w-[140px]">{t('table.actions')}</TableHead>
+                <TableHead className={adminHeadClass({ className: "w-[200px]" })}>{t('table.booker')}</TableHead>
+                <TableHead className={adminHeadClass({ className: "w-[140px]" })}>{t('table.phone')}</TableHead>
+                <TableHead className={adminHeadClass({ className: "w-[180px]" })}>{t('table.dateTime')}</TableHead>
+                <TableHead className={adminHeadClass()}>{t('table.fieldSport')}</TableHead>
+                <TableHead className={adminHeadClass({ center: true, className: "w-[120px]" })}>{t('table.participants')}</TableHead>
+                <TableHead className={adminHeadClass({ className: "w-[140px]" })}>{t('table.status')}</TableHead>
+                <TableHead className={adminHeadClass({ center: true, className: "w-[140px]" })}>{t('table.actions')}</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className={adminTableStyles.body}>
               {loading && invitations.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-16 text-muted-foreground">
@@ -376,10 +381,10 @@ export default function ManageInvitationsPage() {
                 </TableRow>
               ) : (
                 invitations.map((inv) => (
-                  <TableRow key={inv.booking_id} className="hover:bg-slate-50/80 transition-colors border-b border-slate-100 last:border-0 group">
-                    <TableCell className="px-5 py-4 align-top">
+                  <TableRow key={inv.booking_id} className={adminTableStyles.row}>
+                    <TableCell className={adminCellClass()}>
                       <div className="flex flex-col gap-1.5 items-start">
-                        <span className="text-[15px] font-bold text-slate-800 leading-none">{inv.booker?.name || t('cell.unknown')}</span>
+                        <span className="text-sm font-bold leading-none">{inv.booker?.name || t('cell.unknown')}</span>
                         {inv.booker?.type && (
                           <Badge variant="secondary" className="text-[10px] uppercase font-bold text-blue-700 bg-blue-50 border-blue-200/60 shadow-sm px-2 py-0.5">
                             {inv.booker.type === "member" ? t('bookerType.member') : t('bookerType.teamPlayer')}
@@ -388,7 +393,7 @@ export default function ManageInvitationsPage() {
                       </div>
                     </TableCell>
 
-                    <TableCell className="py-4 align-top">
+                    <TableCell className={adminCellClass()}>
                       {inv.booker?.phone ? (
                         <div className="flex items-center gap-1.5 text-slate-600 font-medium bg-slate-50 px-2 py-1 rounded-md w-fit border border-slate-100">
                           <Phone className="h-3.5 w-3.5 text-slate-400" />
@@ -399,7 +404,7 @@ export default function ManageInvitationsPage() {
                       )}
                     </TableCell>
                     
-                    <TableCell className="py-4 align-top">
+                    <TableCell className={adminCellClass()}>
                       <div className="flex flex-col gap-1.5">
                         <div className="flex items-center gap-1.5 text-slate-800 font-bold bg-slate-50 rounded-md px-2 py-1 w-fit border border-slate-100">
                           <CalendarDays className="h-3.5 w-3.5 text-primary" />
@@ -414,26 +419,34 @@ export default function ManageInvitationsPage() {
                       </div>
                     </TableCell>
 
-                    <TableCell className="py-4 align-top">
+                    <TableCell className={adminCellClass()}>
                       <div className="flex flex-col gap-1">
-                        <span className="font-bold text-sm text-[#1a365d]">{inv.field?.name_ar || inv.field?.name_en || t('cell.noField')}</span>
-                        <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md w-fit">{inv.sport?.name_ar || inv.sport?.name_en || t('cell.noSport')}</span>
+                        <BilingualText
+                          ar={inv.field?.name_ar}
+                          en={inv.field?.name_en}
+                          language={language}
+                          primaryClassName="font-bold text-sm text-[#1a365d]"
+                          fallback={t('cell.noField')}
+                        />
+                        <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-md w-fit">
+                          {getLocalizedText(inv.sport?.name_ar, inv.sport?.name_en, language) || t('cell.noSport')}
+                        </span>
                       </div>
                     </TableCell>
 
-                    <TableCell className="text-center py-4 align-middle">
+                    <TableCell className={adminCellClass({ center: true })}>
                       <div className="inline-flex items-center gap-1.5 bg-white border shadow-sm rounded-full px-3 py-1.5 text-sm font-bold text-slate-700 group-hover:border-primary/30 group-hover:shadow transition-all">
                         <User className="h-4 w-4 text-primary" />
                         <span>{inv.stats?.registered_count} <span className="text-slate-400 font-medium">/</span> {inv.stats?.expected_participants}</span>
                       </div>
                     </TableCell>
 
-                    <TableCell className="py-4 align-middle">
+                    <TableCell className={adminCellClass()}>
                       <StatusBadge status={inv.status} />
                     </TableCell>
 
-                    <TableCell className="py-4 align-middle">
-                      <div className="flex items-center justify-center gap-2">
+                    <TableCell className={adminCellClass({ center: true })}>
+                      <div className={adminTableStyles.actions}>
                         <Button
                           variant="outline"
                           size="sm"
@@ -482,7 +495,7 @@ export default function ManageInvitationsPage() {
               exit={{ x: "-100%", opacity: 0.5 }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
               className="fixed top-0 bottom-0 start-0 w-full max-w-md bg-white shadow-2xl z-50 flex flex-col overflow-hidden border-e"
-              dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}
+              dir={isRTL ? 'rtl' : 'ltr'}
             >
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b bg-slate-50/80">

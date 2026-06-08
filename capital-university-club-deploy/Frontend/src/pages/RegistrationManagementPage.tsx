@@ -1,17 +1,33 @@
 import { useEffect, useState } from "react";
-import { Check, Printer, Search, Eye, FileText, UserX, Loader2, RefreshCw, Filter, Users, Award, Globe } from "lucide-react";
+import { Check, Printer, Search, Eye, FileText, UserX, Loader2, RefreshCw, Filter, Users, Award, Globe, Phone, CreditCard, User, MapPin, Calendar, Mail, Clock, Activity, FileBadge, MoreHorizontal } from "lucide-react";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Input } from "../components/StaffPagesComponents/ui/input";
 import { Badge } from "../components/StaffPagesComponents/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "../components/StaffPagesComponents/ui/dialog";
 import { Label } from "../components/StaffPagesComponents/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/StaffPagesComponents/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "../components/StaffPagesComponents/ui/popover";
 import { useToast } from "../hooks/use-toast";
 import { RoleGuard } from "../components/StaffPagesComponents/RoleGuard";
 import api from "../services/axios";
 import { useTranslation } from "react-i18next";
-import i18n from "../i18n";
+import { useLanguage } from "../hooks/useLanguage";
+import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
+import {
+    RecordViewTabs,
+    RecordViewSection,
+    RecordViewField,
+    RecordViewProfileHeader,
+} from "../components/StaffPagesComponents/shared/RecordViewPrimitives";
+import { buildPersonName, getLocalizedText } from "../lib/localizedDisplay";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
+import {
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "../components/StaffPagesComponents/ui/dropdown-menu";
+import {
+    Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from "../components/StaffPagesComponents/ui/tooltip";
 
 // ─── Unified record type ────────────────────────────────────────────────────
 interface RegistrationRecord {
@@ -36,14 +52,27 @@ interface RegistrationRecord {
     medical_report?: string;
     memberType: 'member' | 'team_member';
     teams?: string[];
+    email?: string;
+    nationality?: string;
+    membership_plan?: string;
+    membership_plan_ar?: string;
+    membership_plan_en?: string;
 }
+
+const toArabicDigits = (str: string | undefined | null) => {
+    if (!str) return '';
+    const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return String(str).replace(/[0-9]/g, w => arabicNumbers[+w]);
+};
 
 export default function RegistrationManagementPage() {
     const { t } = useTranslation(["RegistrationManagementPage", "common"]);
+    const { language, isRTL } = useLanguage();
     const { toast } = useToast();
     const [records, setRecords] = useState<RegistrationRecord[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [search, setSearch] = useState("");
+    const [dateFilter, setDateFilter] = useState("");
     const [typeFilter, setTypeFilter] = useState<'all' | 'member' | 'team_member'>('all');
 
     const [approvingId, setApprovingId] = useState<string | null>(null);
@@ -69,21 +98,16 @@ export default function RegistrationManagementPage() {
         children_count: 0
     });
 
-    const isRTL = i18n.language === 'ar';
     const getDisplayName = (m?: Pick<RegistrationRecord, 'first_name_ar' | 'last_name_ar' | 'first_name_en' | 'last_name_en'> | null) => {
         if (!m) return '';
-        const ar = `${m.first_name_ar || ''} ${m.last_name_ar || ''}`.trim();
-        const en = `${m.first_name_en || ''} ${m.last_name_en || ''}`.trim();
-        return isRTL ? (ar || en) : (en || ar);
+        return buildPersonName({
+            firstNameAr: m.first_name_ar,
+            lastNameAr: m.last_name_ar,
+            firstNameEn: m.first_name_en,
+            lastNameEn: m.last_name_en,
+        }, language).primary;
     };
     const locale = isRTL ? 'ar-EG' : 'en-US';
-
-    const toggleLanguage = () => {
-        const newLang = isRTL ? 'en' : 'ar';
-        i18n.changeLanguage(newLang);
-        document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
-        document.documentElement.lang = newLang;
-    };
 
     // ── Fetch both regular members and team members ──────────────────────────
     const fetchRecords = async () => {
@@ -99,14 +123,26 @@ export default function RegistrationManagementPage() {
                 const data = Array.isArray(membersRes.value.data)
                     ? membersRes.value.data
                     : (membersRes.value.data?.data || []);
-                regularMembers = data.map((m: any) => ({ ...m, memberType: 'member' as const }));
+                regularMembers = data.map((m: any) => ({ 
+                    ...m, 
+                    email: m.account?.email || m.email,
+                    membership_plan_ar: m.memberships?.[0]?.membership_plan?.name_ar || m.member_type?.name_ar || 'عضوية اجتماعية',
+                    membership_plan_en: m.memberships?.[0]?.membership_plan?.name_en || m.member_type?.name_en || 'Social Membership',
+                    memberType: 'member' as const 
+                }));
             }
 
             let teamMembers: RegistrationRecord[] = [];
             if (teamMembersRes.status === 'fulfilled') {
                 const raw = teamMembersRes.value.data;
                 const data = Array.isArray(raw) ? raw : (raw?.data || []);
-                teamMembers = data;
+                teamMembers = data.map((m: any) => ({
+                    ...m,
+                    email: m.account?.email || m.email,
+                    membership_plan_ar: 'عضوية رياضية',
+                    membership_plan_en: 'Sports Team Member',
+                    memberType: 'team_member' as const
+                }));
             }
 
             const combined = [...regularMembers, ...teamMembers].sort(
@@ -136,7 +172,8 @@ export default function RegistrationManagementPage() {
             m.phone?.includes(search)
         );
         const matchesType = typeFilter === 'all' || m.memberType === typeFilter;
-        return matchesSearch && matchesType;
+        const matchesDate = !dateFilter || (m.created_at && m.created_at.startsWith(dateFilter));
+        return matchesSearch && matchesType && matchesDate;
     });
 
     const memberCount = records.filter(r => r.memberType === 'member').length;
@@ -259,6 +296,7 @@ export default function RegistrationManagementPage() {
     };
 
     return (
+        <TooltipProvider>
         <div className="min-h-screen flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
 
             {/* ── Header ── */}
@@ -269,26 +307,31 @@ export default function RegistrationManagementPage() {
                             <FileText className="w-6 h-6 text-primary" />
                             {t('registration.title')}
                         </h1>
-                        <div className="flex items-center gap-4 mt-1">
-                            <p className="text-sm text-muted-foreground">
-                                {t('registration.pending')}: <strong>{records.length}</strong> {records.length === 1 ? t('registration.request_one') : t('registration.request_other')}
-                            </p>
-                            <span className="inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-medium">
+                        <div className="flex items-center gap-4 mt-1 flex-wrap">
+                            <button
+                                type="button"
+                                onClick={() => setTypeFilter('all')}
+                                className={`text-sm text-muted-foreground hover:text-foreground transition-colors ${typeFilter === 'all' ? 'font-semibold text-foreground' : ''}`}
+                            >
+                                {t('registration.pending')} <strong>{records.length}</strong> {records.length === 1 ? t('registration.request_one') : t('registration.request_other')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setTypeFilter('member')}
+                                className={`inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-medium transition-all hover:bg-blue-100 ${typeFilter === 'member' ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
+                            >
                                 <Users className="w-3 h-3" /> {t('registration.members')}: {memberCount}
-                            </span>
-                            <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-medium">
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setTypeFilter('team_member')}
+                                className={`inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-medium transition-all hover:bg-amber-100 ${typeFilter === 'team_member' ? 'ring-2 ring-amber-400 ring-offset-1' : ''}`}
+                            >
                                 <Award className="w-3 h-3" /> {t('registration.teamMembers')}: {teamMemberCount}
-                            </span>
+                            </button>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <button
-                            onClick={toggleLanguage}
-                            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border hover:bg-muted transition-colors text-sm text-muted-foreground"
-                        >
-                            <Globe className="w-4 h-4" />
-                            {isRTL ? 'English' : 'العربية'}
-                        </button>
                         <button
                             onClick={() => void fetchRecords()}
                             disabled={isLoading}
@@ -313,34 +356,43 @@ export default function RegistrationManagementPage() {
                     />
                 </div>
 
-                {/* Type filter tabs */}
-                <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
-                    {([
-                        { value: 'all' as const, label: t('registration.all') },
-                        { value: 'member' as const, label: t('registration.members') },
-                        { value: 'team_member' as const, label: t('registration.teamMembers') },
-                    ]).map(tab => (
-                        <button
-                            key={tab.value}
-                            onClick={() => setTypeFilter(tab.value)}
-                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${typeFilter === tab.value
-                                ? 'bg-white shadow-sm text-foreground'
-                                : 'text-muted-foreground hover:text-foreground'
-                                }`}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant="outline" size="icon" className={`h-8 w-8 shrink-0 relative ${dateFilter ? 'border-primary' : ''}`}>
+                            <Filter className="w-4 h-4 text-muted-foreground" />
+                            {dateFilter && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full" />}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64 p-4">
+                        <div className="space-y-3">
+                            <h4 className="font-medium text-sm">{t('registration.filterByDate', 'Filter by Date')}</h4>
+                            <Input 
+                                type="date" 
+                                value={dateFilter} 
+                                onChange={(e) => setDateFilter(e.target.value)} 
+                                className="w-full"
+                            />
+                            {dateFilter && (
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="w-full" 
+                                    onClick={() => setDateFilter("")}
+                                >
+                                    {t('actions.clear', 'Clear')}
+                                </Button>
+                            )}
+                        </div>
+                    </PopoverContent>
+                </Popover>
 
-                <Filter className="w-4 h-4 text-muted-foreground shrink-0" />
                 <Badge variant="outline" className="text-xs text-muted-foreground">
                     {filteredRecords.length} {t('registration.results')}
                 </Badge>
             </div>
 
             {/* ── Table ── */}
-            <div className="flex-1 overflow-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
+            <div className={adminTableStyles.container}>
                 {isLoading ? (
                     <div className="py-20 text-center text-muted-foreground">
                         <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-3" />
@@ -357,20 +409,20 @@ export default function RegistrationManagementPage() {
                         </p>
                     </div>
                 ) : (
-                    <Table>
-                        <TableHeader className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
+                    <Table className={adminTableStyles.table}>
+                        <TableHeader className={adminTableStyles.header}>
                             <TableRow>
-                                <TableHead className={`px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle w-10 ${isRTL ? 'text-right' : 'text-left'}`}>{t('table.index')}</TableHead>
-                                <TableHead className={`px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle ${isRTL ? 'text-right' : 'text-left'}`}>{t('table.name')}</TableHead>
-                                <TableHead className={`px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle ${isRTL ? 'text-right' : 'text-left'}`}>{t('table.phone')}</TableHead>
-                                <TableHead className={`px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle ${isRTL ? 'text-right' : 'text-left'}`}>{t('table.nationalId')}</TableHead>
-                                <TableHead className={`px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle ${isRTL ? 'text-right' : 'text-left'}`}>{t('table.registrationDate')}</TableHead>
-                                <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">{t('table.type')}</TableHead>
-                                <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">{t('table.status')}</TableHead>
-                                <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">{t('table.actions')}</TableHead>
+                                <TableHead className={adminHeadClass({ className: "w-10" })}>{t('table.index')}</TableHead>
+                                <TableHead className={adminHeadClass()}>{t('table.name')}</TableHead>
+                                <TableHead className={adminHeadClass()}>{t('table.phone')}</TableHead>
+                                <TableHead className={adminHeadClass()}>{t('table.nationalId')}</TableHead>
+                                <TableHead className={adminHeadClass()}>{t('table.registrationDate')}</TableHead>
+                                <TableHead className={adminHeadClass({ center: true })}>{t('table.type')}</TableHead>
+                                <TableHead className={adminHeadClass({ center: true })}>{t('table.status')}</TableHead>
+                                        <TableHead className={adminHeadClass({ center: true, className: "w-[1%] whitespace-nowrap" })}>{t('table.actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
-                        <TableBody className="divide-y divide-border">
+                        <TableBody className={adminTableStyles.body}>
                             {filteredRecords.map((record, idx) => {
                                 const key = `${record.memberType}-${record.id}`;
                                 const isApproving = approvingId === key;
@@ -381,33 +433,38 @@ export default function RegistrationManagementPage() {
                                 return (
                                     <TableRow
                                         key={key}
-                                        className={`transition-colors hover:bg-muted/40 ${isJustApproved ? 'bg-emerald-500/10' : ''}`}
+                                        className={`${adminTableStyles.row} ${isJustApproved ? 'bg-emerald-500/10' : ''}`}
                                     >
-                                        <TableCell className="px-4 py-3 text-sm text-muted-foreground font-mono align-middle">{idx + 1}</TableCell>
+                                        <TableCell className={adminCellClass({ size: "muted", className: "font-mono" })}>{idx + 1}</TableCell>
 
-                                        <TableCell className="px-4 py-3 align-middle">
-                                            <p className="font-semibold leading-tight">{getDisplayName(record)}</p>
-                                            {((isRTL && (record.first_name_en || record.last_name_en)) || (!isRTL && (record.first_name_ar || record.last_name_ar))) && (
-                                                <p className="text-[11px] text-muted-foreground/70 italic tracking-wide" dir={isRTL ? 'ltr' : undefined}>
-                                                    {isRTL ? `${record.first_name_en || ''} ${record.last_name_en || ''}` : `${record.first_name_ar || ''} ${record.last_name_ar || ''}`}
-                                                </p>
-                                            )}
+                                        <TableCell className={adminCellClass()}>
+                                            <PersonNameDisplay
+                                                id={record.id}
+                                                names={{
+                                                    firstNameAr: record.first_name_ar,
+                                                    lastNameAr: record.last_name_ar,
+                                                    firstNameEn: record.first_name_en,
+                                                    lastNameEn: record.last_name_en,
+                                                }}
+                                                language={language}
+                                                showAvatar={false}
+                                            />
                                         </TableCell>
 
-                                        <TableCell className={`px-4 py-3 tabular-nums text-sm align-middle ${isRTL ? 'text-right' : 'text-left'}`}>
+                                        <TableCell className={adminCellClass({ size: 'phone' })}>
                                             <span dir="ltr">{record.phone}</span>
                                         </TableCell>
 
-                                        <TableCell className={`px-4 py-3 font-mono text-xs align-middle ${isRTL ? 'text-right' : 'text-left'}`}>
+                                        <TableCell className={adminCellClass({ size: "xs", className: "font-mono" })}>
                                             <span dir="ltr">{record.national_id}</span>
                                         </TableCell>
 
-                                        <TableCell className="px-4 py-3 text-sm text-muted-foreground tabular-nums align-middle">
+                                        <TableCell className={adminCellClass({ size: "muted", className: "tabular-nums" })}>
                                             {new Date(record.created_at).toLocaleDateString(locale)}
                                         </TableCell>
 
                                         {/* Member type badge */}
-                                        <TableCell className="px-4 py-3 text-center align-middle">
+                                        <TableCell className={adminCellClass({ center: true })}>
                                             {isTeamMember ? (
                                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800">
                                                     <Award className="w-3 h-3" />
@@ -422,7 +479,7 @@ export default function RegistrationManagementPage() {
                                         </TableCell>
 
                                         {/* Status badge */}
-                                        <TableCell className="px-4 py-3 text-center align-middle">
+                                        <TableCell className={adminCellClass({ center: true })}>
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${isActive
                                                 ? 'bg-emerald-100 text-emerald-700'
                                                 : 'bg-amber-100 text-amber-800'
@@ -432,45 +489,50 @@ export default function RegistrationManagementPage() {
                                         </TableCell>
 
                                         {/* Actions */}
-                                        <TableCell className="px-4 py-3 align-middle">
-                                            <div className="flex items-center justify-center gap-1.5">
+                                        <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
+                                            <div className={adminTableStyles.actions}>
                                                 <RoleGuard privilege="VIEW_MEMBERS">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        className="h-8 px-3 gap-1.5 border-primary/40 text-primary hover:bg-primary/10"
-                                                        onClick={() => openReview(record)}
-                                                    >
-                                                        <Eye className="h-3.5 w-3.5" />
-                                                        {t('actions.review')}
-                                                    </Button>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600"
+                                                                onClick={() => openReview(record)}
+                                                            >
+                                                                <Eye className="w-4 h-4 text-blue-600" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="top" className="text-xs">{t('rowActions.viewDetails')}</TooltipContent>
+                                                    </Tooltip>
                                                 </RoleGuard>
 
-                                                <RoleGuard privilege="MANAGE_MEMBERSHIP_REQUEST">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        className="h-8 px-3 gap-1.5 border-emerald-500/40 text-emerald-700 hover:bg-emerald-50 disabled:opacity-40"
-                                                        onClick={() => void handleApprove(record)}
-                                                        disabled={isActive || isApproving}
-                                                    >
-                                                        {isApproving
-                                                            ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                                            : <Check className="h-3.5 w-3.5" />
-                                                        }
-                                                        {isApproving ? t('actions.processing') : t('actions.approve')}
-                                                    </Button>
-                                                </RoleGuard>
-
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="h-8 px-3 gap-1.5"
-                                                    onClick={() => openPrint(record)}
-                                                >
-                                                    <Printer className="h-3.5 w-3.5" />
-                                                    {t('actions.print')}
-                                                </Button>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted">
+                                                            <MoreHorizontal className="w-4 h-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="text-xs w-40">
+                                                        <RoleGuard privilege="MANAGE_MEMBERSHIP_REQUEST">
+                                                            <DropdownMenuItem
+                                                                onClick={() => void handleApprove(record)}
+                                                                disabled={isActive || isApproving}
+                                                                className="gap-2 cursor-pointer text-emerald-700 focus:text-emerald-700"
+                                                            >
+                                                                {isApproving
+                                                                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                                    : <Check className="w-3.5 h-3.5" />
+                                                                }
+                                                                {isApproving ? t('actions.processing') : t('actions.approve')}
+                                                            </DropdownMenuItem>
+                                                        </RoleGuard>
+                                                        <DropdownMenuItem onClick={() => openPrint(record)} className="gap-2 cursor-pointer">
+                                                            <Printer className="w-3.5 h-3.5" />
+                                                            {t('actions.print')}
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -711,20 +773,15 @@ export default function RegistrationManagementPage() {
                         </div>
                         <DialogDescription className="sr-only">{t('review.title')}</DialogDescription>
 
-                        {/* ── Tab bar ── */}
-                        <div className="flex gap-0 mt-3 border-b border-border">
-                            {(['data', 'photos'] as const).map(tab => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setReviewTab(tab)}
-                                    className={`px-5 py-2.5 text-sm font-semibold transition-all border-b-2 -mb-px ${reviewTab === tab
-                                        ? 'border-primary text-primary'
-                                        : 'border-transparent text-muted-foreground hover:text-foreground'
-                                        }`}
-                                >
-                                    {tab === 'data' ? t('review.memberData') : t('review.documents')}
-                                </button>
-                            ))}
+                        <div className="mt-3">
+                            <RecordViewTabs
+                                tabs={[
+                                    { key: 'data' as const, label: t('review.memberData') },
+                                    { key: 'photos' as const, label: t('review.documents') },
+                                ]}
+                                active={reviewTab}
+                                onChange={setReviewTab}
+                            />
                         </div>
                     </DialogHeader>
 
@@ -734,122 +791,146 @@ export default function RegistrationManagementPage() {
                         {reviewTab === 'data' && (
                             <div className="p-5 space-y-5">
                                 {/* Profile header */}
-                                <div className="flex items-center gap-4 p-4 bg-muted/40 rounded-xl">
-                                    <div className="w-20 h-24 rounded-xl border-2 border-border bg-background overflow-hidden shadow flex items-center justify-center shrink-0">
-                                        {selectedRecord?.photo ? (
-                                            <img src={getFileUrl(selectedRecord.photo)} alt={t('review.personalPhoto')} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <span className="text-xs text-muted-foreground text-center px-1">{t('review.noPhoto')}</span>
-                                        )}
-                                    </div>
-                                    <div className="flex-1 space-y-1">
-                                        <h3 className="text-xl font-bold">{getDisplayName(selectedRecord!)}</h3>
-                                        {((isRTL && (selectedRecord?.first_name_en || selectedRecord?.last_name_en)) || (!isRTL && (selectedRecord?.first_name_ar || selectedRecord?.last_name_ar))) && (
-                                            <p className="text-sm text-muted-foreground italic" dir={isRTL ? 'ltr' : undefined}>
-                                                {isRTL ? `${selectedRecord?.first_name_en || ''} ${selectedRecord?.last_name_en || ''}` : `${selectedRecord?.first_name_ar || ''} ${selectedRecord?.last_name_ar || ''}`}
-                                            </p>
-                                        )}
-                                        <div className="flex flex-wrap gap-2 mt-1">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${selectedRecord?.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800'
-                                                }`}>
+                                <RecordViewProfileHeader
+                                    photoUrl={selectedRecord?.photo ? getFileUrl(selectedRecord.photo) : null}
+                                    photoAlt={t('review.personalPhoto')}
+                                    name={getDisplayName(selectedRecord!)}
+                                    badges={
+                                        <>
+                                            {selectedRecord?.memberType === 'team_member' ? (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800">
+                                                    <Award className="w-3 h-3" />
+                                                    {t('memberTypes.teamMember')}
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-800">
+                                                    <Users className="w-3 h-3" />
+                                                    {t('memberTypes.member')}
+                                                </span>
+                                            )}
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${selectedRecord?.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800'}`}>
                                                 {selectedRecord?.status === 'active' ? t('status.active') : t('status.pending')}
                                             </span>
-                                            <span className="text-xs bg-muted px-2.5 py-0.5 rounded-full text-muted-foreground">
-                                                {t('review.registered')}: {selectedRecord?.created_at ? new Date(selectedRecord.created_at).toLocaleDateString(locale) : t('common.notAvailable')}
-                                            </span>
+                                        </>
+                                    }
+                                />
+
+                                <div className="space-y-4">
+                                    <RecordViewSection icon={Mail} title={t('review.accountInfo', 'Account Information')}>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <RecordViewField icon={Mail} label={t('review.email', 'Email')} value={selectedRecord?.email} fallback={t('common.notAvailable')} />
+                                            <RecordViewField
+                                                icon={Clock}
+                                                label={t('review.registerTime', 'Register Time')}
+                                                value={selectedRecord?.created_at ? (() => {
+                                                    const d = new Date(selectedRecord.created_at);
+                                                    const day = d.getDate().toString().padStart(2, '0');
+                                                    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+                                                    const year = d.getFullYear().toString();
+                                                    const baseDate = `${day}/${month}/${year}`;
+                                                    let hours = d.getHours();
+                                                    const minutes = d.getMinutes().toString().padStart(2, '0');
+                                                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                                                    hours = hours % 12;
+                                                    hours = hours ? hours : 12;
+                                                    const hoursStr = hours.toString().padStart(2, '0');
+                                                    const baseTime = `${hoursStr}:${minutes} ${ampm}`;
+                                                    const displayDate = isRTL ? toArabicDigits(baseDate) : baseDate;
+                                                    const displayTime = isRTL ? toArabicDigits(baseTime).replace('AM', 'ص').replace('PM', 'م').replace('am', 'ص').replace('pm', 'م') : baseTime;
+                                                    return (
+                                                        <>
+                                                            <span>{displayDate}</span>
+                                                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-xs font-normal text-muted-foreground`}>{displayTime}</span>
+                                                        </>
+                                                    );
+                                                })() : undefined}
+                                                fallback={t('common.notAvailable')}
+                                            />
                                         </div>
-                                    </div>
-                                </div>
+                                    </RecordViewSection>
 
-                                {/* Data fields grid */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-
-                                    {/* Identity */}
-                                    <div className="bg-background border border-border rounded-lg px-4 py-2.5">
-                                        <p className="text-[11px] text-muted-foreground font-medium mb-0.5">{t('table.nationalId')}</p>
-                                        <p className="text-sm font-semibold font-mono" dir="ltr">{selectedRecord?.national_id || t('common.notAvailable')}</p>
-                                    </div>
-                                    <div className="bg-background border border-border rounded-lg px-4 py-2.5">
-                                        <p className="text-[11px] text-muted-foreground font-medium mb-0.5">{t('table.phone')}</p>
-                                        <p className="text-sm font-semibold" dir="ltr">{selectedRecord?.phone || t('common.notAvailable')}</p>
-                                    </div>
-
-                                    {/* Birthday with age */}
-                                    <div className="bg-background border border-border rounded-lg px-4 py-2.5">
-                                        <p className="text-[11px] text-muted-foreground font-medium mb-0.5">{t('addMember.birthDate')}</p>
-                                        {(() => {
-                                            const raw = selectedRecord?.birthdate || selectedRecord?.birth_date;
-                                            if (!raw) return <p className="text-sm font-semibold">{t('common.notAvailable')}</p>;
-                                            const dob = new Date(raw);
-                                            if (isNaN(dob.getTime())) return <p className="text-sm font-semibold">{String(raw)}</p>;
-                                            const age = Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
-                                            return (
-                                                <p className="text-sm font-semibold">
-                                                    {dob.toLocaleDateString(locale)}
-                                                    <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-xs font-normal text-primary`}>({age} {t('review.age')})</span>
-                                                </p>
-                                            );
-                                        })()}
-                                    </div>
-
-                                    {/* Registration date */}
-                                    <div className="bg-background border border-border rounded-lg px-4 py-2.5">
-                                        <p className="text-[11px] text-muted-foreground font-medium mb-0.5">{t('table.registrationDate')}</p>
-                                        {selectedRecord?.created_at ? (() => {
-                                            const d = new Date(selectedRecord.created_at);
-                                            return (
-                                                <p className="text-sm font-semibold">
-                                                    {d.toLocaleDateString(locale)}
-                                                    <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-xs font-normal text-muted-foreground`}>{d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}</span>
-                                                </p>
-                                            );
-                                        })() : <p className="text-sm font-semibold">{t('common.notAvailable')}</p>}
-                                    </div>
-
-                                    {/* Gender */}
-                                    <div className="bg-background border border-border rounded-lg px-4 py-2.5">
-                                        <p className="text-[11px] text-muted-foreground font-medium mb-0.5">{t('addMember.gender')}</p>
-                                        <p className="text-sm font-semibold">
-                                            {getGenderLabel(selectedRecord?.gender)}
-                                        </p>
-                                    </div>
-
-                                    {/* Social status */}
-                                    <div className="bg-background border border-border rounded-lg px-4 py-2.5">
-                                        <p className="text-[11px] text-muted-foreground font-medium mb-0.5">{t('addMember.socialStatus')}</p>
-                                        <p className="text-sm font-semibold">
-                                            {getSocialStatusLabel(selectedRecord?.social_status)}
-                                        </p>
-                                    </div>
-
-                                    {/* Address — full width */}
-                                    <div className="sm:col-span-2 bg-background border border-border rounded-lg px-4 py-2.5">
-                                        <p className="text-[11px] text-muted-foreground font-medium mb-0.5">{t('addMember.address')}</p>
-                                        <p className="text-sm font-semibold">{selectedRecord?.address || t('common.notAvailable')}</p>
-                                    </div>
-                                </div>
-
-                                {/* ── Special / Extra Data ── */}
-                                <div className="border border-primary/20 bg-primary/5 rounded-xl p-4 space-y-3">
-                                    <p className="text-xs font-bold text-primary tracking-wide">{t('review.specialData')}</p>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div className="bg-background border border-border rounded-lg px-4 py-2.5">
-                                            <p className="text-[11px] text-muted-foreground font-medium mb-0.5">{t('review.membershipType')}</p>
-                                            <p className="text-sm font-semibold">
-                                                {selectedRecord?.memberType === 'team_member' ? t('review.sportsTeamMember') : t('review.socialMember')}
-                                            </p>
+                                    <RecordViewSection icon={User} title={t('review.personalInfo', 'Personal Information')}>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <RecordViewField icon={User} label={t('review.name', 'Name')} value={getDisplayName(selectedRecord!)} fallback={t('common.notAvailable')} />
+                                            <RecordViewField
+                                                icon={Globe}
+                                                label={t('review.nationality', 'Nationality')}
+                                                value={(() => {
+                                                    const nat = selectedRecord?.nationality;
+                                                    if (!nat) return undefined;
+                                                    if (nat.toLowerCase() === 'egyptian') return isRTL ? 'مصرى' : 'Egyptian';
+                                                    if (nat.toLowerCase() === 'foreigner' || nat.toLowerCase() === 'non-egyptian') return isRTL ? 'أجنبى' : 'Foreigner';
+                                                    return nat;
+                                                })()}
+                                                fallback={t('common.notAvailable')}
+                                            />
+                                            <RecordViewField
+                                                icon={Calendar}
+                                                label={t('addMember.birthDate')}
+                                                value={(() => {
+                                                    const raw = selectedRecord?.birthdate || selectedRecord?.birth_date;
+                                                    if (!raw) return undefined;
+                                                    const dob = new Date(raw);
+                                                    if (isNaN(dob.getTime())) return String(raw);
+                                                    const age = Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+                                                    return (
+                                                        <>
+                                                            {dob.toLocaleDateString(locale)}
+                                                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-xs font-normal text-primary`}>({age} {t('review.age')})</span>
+                                                        </>
+                                                    );
+                                                })()}
+                                                fallback={t('common.notAvailable')}
+                                            />
+                                            <RecordViewField
+                                                icon={CreditCard}
+                                                label={t('table.nationalId')}
+                                                value={isRTL ? toArabicDigits(selectedRecord?.national_id ?? '') : selectedRecord?.national_id}
+                                                ltr
+                                                fallback={t('common.notAvailable')}
+                                            />
                                         </div>
-                                        {selectedRecord?.memberType === 'team_member' && selectedRecord.teams && selectedRecord.teams.length > 0 && (
-                                            <div className="sm:col-span-2 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2.5">
-                                                <p className="text-[11px] text-amber-700 font-medium mb-1.5">{t('review.registeredTeams')}</p>
-                                                <div className="flex flex-wrap gap-1.5">
-                                                    {selectedRecord.teams.map(t => (
-                                                        <span key={t} className="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-200">{t}</span>
-                                                    ))}
+                                    </RecordViewSection>
+
+                                    <RecordViewSection icon={Phone} title={t('review.contactDetails', 'Contact Information')}>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <RecordViewField
+                                                icon={Phone}
+                                                label={t('table.phone')}
+                                                value={isRTL ? toArabicDigits(selectedRecord?.phone ?? '') : selectedRecord?.phone}
+                                                ltr
+                                                fallback={t('common.notAvailable')}
+                                            />
+                                            <RecordViewField icon={MapPin} label={t('addMember.address')} value={selectedRecord?.address} fallback={t('common.notAvailable')} />
+                                        </div>
+                                    </RecordViewSection>
+
+                                    <RecordViewSection icon={Award} title={t('review.membershipDetails', 'Membership Details')} variant="accent">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <RecordViewField
+                                                icon={Award}
+                                                label={t('review.membershipType', 'Member Type')}
+                                                value={selectedRecord?.memberType === 'team_member' ? t('review.sportsTeamMember') : t('review.socialMember')}
+                                                fallback={t('common.notAvailable')}
+                                            />
+                                            <RecordViewField
+                                                icon={FileBadge}
+                                                label={t('review.membershipPlan', 'Membership Plan')}
+                                                value={getLocalizedText(selectedRecord?.membership_plan_ar, selectedRecord?.membership_plan_en, language) || selectedRecord?.membership_plan}
+                                                fallback={t('common.notAvailable')}
+                                            />
+                                            {selectedRecord?.memberType === 'team_member' && selectedRecord.teams && selectedRecord.teams.length > 0 && (
+                                                <div className="space-y-2 sm:col-span-2">
+                                                    <p className="text-xs text-amber-700 font-medium">{t('review.registeredTeams')}</p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {selectedRecord.teams.map(team => (
+                                                            <span key={team} className="bg-white text-amber-800 text-xs font-semibold px-3 py-1 rounded-md border border-amber-200 shadow-sm">{team}</span>
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )}
-                                    </div>
+                                            )}
+                                        </div>
+                                    </RecordViewSection>
                                 </div>
                             </div>
                         )}
@@ -932,7 +1013,7 @@ export default function RegistrationManagementPage() {
                         )}
                     </div>
 
-                    <DialogFooter className={`shrink-0 border-t pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <DialogFooter className="shrink-0 border-t pt-4">
                         <RoleGuard privilege="MANAGE_MEMBERSHIP_REQUEST">
                             <Button
                                 className="bg-green-600 hover:bg-green-700 text-white gap-2 px-8"
@@ -947,7 +1028,7 @@ export default function RegistrationManagementPage() {
                                 {approvingId === `${selectedRecord?.memberType}-${selectedRecord?.id}` ? (
                                     <><Loader2 className="h-4 w-4 animate-spin" />{t('review.approving')}</>
                                 ) : (
-                                    <><Check className="h-4 w-4" />{t('review.approveMembership', { type: selectedRecord?.memberType === 'team_member' ? t('memberTypes.teamMember') : t('memberTypes.member') })}</>
+                                    <><Check className="h-4 w-4" />{t('actions.approve')}</>
                                 )}
                             </Button>
                         </RoleGuard>
@@ -976,5 +1057,6 @@ export default function RegistrationManagementPage() {
                 }
             `}</style>
         </div>
+        </TooltipProvider>
     );
 }

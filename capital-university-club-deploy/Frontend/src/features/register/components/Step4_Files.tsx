@@ -1,7 +1,9 @@
 import { useRef } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { motion } from 'framer-motion';
-import { Check, UploadCloud, ChevronRight, Loader2 } from 'lucide-react';
+import { Check, UploadCloud, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../../hooks/useLanguage';
 import type { RegisterFormValues } from '../schemas/validation';
 import type { FileUploadMap } from '../utils/submissionFactory';
 
@@ -28,7 +30,9 @@ const FileBox = ({
     files: FileUploadMap;
     refs: React.MutableRefObject<{ [key: string]: HTMLInputElement | null }>;
     onChange: (e: React.ChangeEvent<HTMLInputElement>, key: keyof FileUploadMap) => void;
-}) => (
+}) => {
+    const { t } = useTranslation('register');
+    return (
     <div
         onClick={() => refs.current[id]?.click()}
         className={`
@@ -59,10 +63,11 @@ const FileBox = ({
         </p>
 
         <p className="text-sm text-gray-400 mt-1 max-w-[180px] truncate">
-            {files[id] ? files[id].name : 'اضغط لرفع الملف (PDF, JPG)'}
+            {files[id] ? files[id].name : t('step4.uploadHint')}
         </p>
     </div>
-);
+    );
+};
 
 /**
  * Step 4: File Uploads
@@ -71,10 +76,13 @@ const FileBox = ({
  * Files are managed in parent state and passed down as props.
  */
 export const Step4Files = ({ files, onFileChange, onPrev, onSubmit, isSubmitting }: Step4FilesProps) => {
+    const { t } = useTranslation('register');
+    const { isRTL } = useLanguage();
     const { watch } = useFormContext<RegisterFormValues>();
     const category = watch('category');
     const memberRole = watch('memberRole');
     const fileRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+    const PrevIcon = isRTL ? ChevronRight : ChevronLeft;
 
     // Check if this is a team member (sports player)
     const isTeamMember = memberRole === 'sports_player';
@@ -85,7 +93,7 @@ export const Step4Files = ({ files, onFileChange, onPrev, onSubmit, isSubmitting
             animate={{ opacity: 1 }}
             className="bg-white rounded-3xl shadow-xl p-6 md:p-7 max-w-5xl mx-auto"
         >
-            <h2 className="text-2xl font-bold text-[#1a5f7a] mb-5 text-center">المرفقات والمستندات</h2>
+            <h2 className="text-2xl font-bold text-[#1a5f7a] mb-5 text-center">{t('step4.title')}</h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* ===== TEAM MEMBER FILES (Sports Player) ===== */}
@@ -94,7 +102,7 @@ export const Step4Files = ({ files, onFileChange, onPrev, onSubmit, isSubmitting
                         {/* Personal Photo - Required */}
                         <div>
                             <FileBox
-                                label="صورة شخصية حديثة *"
+                                label={t('step4.photoRequired')}
                                 id="photo"
                                 files={files}
                                 refs={fileRefs}
@@ -105,7 +113,7 @@ export const Step4Files = ({ files, onFileChange, onPrev, onSubmit, isSubmitting
                         {/* National ID Front - Required */}
                         <div>
                             <FileBox
-                                label="صورة البطاقة (أمام) *"
+                                label={t('step4.idFrontRequired')}
                                 id="id_front"
                                 files={files}
                                 refs={fileRefs}
@@ -116,7 +124,7 @@ export const Step4Files = ({ files, onFileChange, onPrev, onSubmit, isSubmitting
                         {/* National ID Back - Required */}
                         <div>
                             <FileBox
-                                label="صورة البطاقة (خلف) *"
+                                label={t('step4.idBackRequired')}
                                 id="id_back"
                                 files={files}
                                 refs={fileRefs}
@@ -127,7 +135,7 @@ export const Step4Files = ({ files, onFileChange, onPrev, onSubmit, isSubmitting
                         {/* Proof Document - Required */}
                         <div>
                             <FileBox
-                                label="مستند إثبات *"
+                                label={t('step4.proofDoc')}
                                 id="proof"
                                 files={files}
                                 refs={fileRefs}
@@ -138,7 +146,7 @@ export const Step4Files = ({ files, onFileChange, onPrev, onSubmit, isSubmitting
                         {/* Medical Report - Optional */}
                         <div>
                             <FileBox
-                                label="تقرير طبي"
+                                label={t('step4.medical')}
                                 id="medical"
                                 files={files}
                                 refs={fileRefs}
@@ -151,7 +159,7 @@ export const Step4Files = ({ files, onFileChange, onPrev, onSubmit, isSubmitting
                         {/* ===== SOCIAL MEMBER FILES ===== */}
                         {/* Personal Photo (Required for All) */}
                         <FileBox
-                            label="صورة شخصية حديثة"
+                            label={t('step4.photo')}
                             id="photo"
                             files={files}
                             refs={fileRefs}
@@ -161,7 +169,7 @@ export const Step4Files = ({ files, onFileChange, onPrev, onSubmit, isSubmitting
                         {/* Conditional: National ID or Passport */}
                         {category === 'foreigner' ? (
                             <FileBox
-                                label="صورة جواز السفر"
+                                label={t('step4.passport')}
                                 id="passport"
                                 files={files}
                                 refs={fileRefs}
@@ -170,14 +178,14 @@ export const Step4Files = ({ files, onFileChange, onPrev, onSubmit, isSubmitting
                         ) : (
                             <>
                                 <FileBox
-                                    label="صورة البطاقة (أمام)"
+                                    label={t('step4.idFront')}
                                     id="id_front"
                                     files={files}
                                     refs={fileRefs}
                                     onChange={onFileChange}
                                 />
                                 <FileBox
-                                    label="صورة البطاقة (خلف)"
+                                    label={t('step4.idBack')}
                                     id="id_back"
                                     files={files}
                                     refs={fileRefs}
@@ -236,7 +244,7 @@ export const Step4Files = ({ files, onFileChange, onPrev, onSubmit, isSubmitting
                     type="button"
                     className="px-7 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold transition-colors flex items-center justify-center gap-2"
                 >
-                    <ChevronRight size={20} /> السابق
+                    <PrevIcon size={20} /> {t('nav.prev')}
                 </button>
                 <button
                     onClick={onSubmit}
@@ -245,7 +253,7 @@ export const Step4Files = ({ files, onFileChange, onPrev, onSubmit, isSubmitting
                     className="flex-1 md:flex-none px-9 py-2.5 rounded-xl bg-[#2596be] hover:bg-[#1a7a9a] text-white font-bold shadow-lg shadow-[#2596be]/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {isSubmitting ? <Loader2 className="animate-spin" /> : <Check size={24} />}
-                    {isSubmitting ? 'جاري المعالجة...' : 'تأكيد التسجيل'}
+                    {isSubmitting ? t('nav.submitting') : t('nav.submit')}
                 </button>
             </div>
         </motion.div>

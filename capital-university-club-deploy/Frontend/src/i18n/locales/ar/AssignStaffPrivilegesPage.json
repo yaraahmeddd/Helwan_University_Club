@@ -1,0 +1,68 @@
+{
+  "roles": {
+    "ADMIN": "مدير النظام",
+    "SPORTS_DIRECTOR": "مدير الرياضة",
+    "SPORTS_OFFICER": "موظف رياضي",
+    "FINANCIAL_DIRECTOR": "المدير المالي",
+    "REGISTRATION_STAFF": "موظف تسجيل",
+    "TEAM_MANAGER": "مدير فريق",
+    "SUPPORT": "الدعم الفني",
+    "AUDITOR": "المدقق المالي",
+    "STAFF": "موظف"
+  },
+  "filters": {
+    "all": "الكل",
+    "admin": "مدير",
+    "sportsDirector": "مدير رياضة",
+    "sportsOfficer": "موظف رياضي",
+    "financial": "مالي",
+    "registration": "تسجيل",
+    "teamManager": "مدير فريق",
+    "support": "دعم فني",
+    "auditor": "مدقق"
+  },
+  "table": {
+    "title": "تعيين صلاحيات الموظفين",
+    "description": "اختر موظفاً للانتقال إلى صفحة تعيين الصلاحيات",
+    "refresh": "تحديث",
+    "searchPlaceholder": "ابحث بالاسم أو الرقم القومي...",
+    "dateFrom": "من:",
+    "dateTo": "إلى:",
+    "clearDate": "مسح التاريخ",
+    "staffCount": "موظف",
+    "loading": "جارٍ تحميل الموظفين...",
+    "noStaffTitle": "لا يوجد موظفون",
+    "noStaffDesc": "لم يتم العثور على موظفين",
+    "noStaffSearch": "لا توجد نتائج مطابقة",
+    "headers": {
+      "number": "#",
+      "staff": "الموظف",
+      "nationalId": "الرقم القومي",
+      "job": "الوظيفة",
+      "startDate": "بداية العمل",
+      "actions": "الإجراء"
+    },
+    "assignAction": "تعيين الصلاحيات"
+  },
+  "assign": {
+    "back": "العودة للقائمة",
+    "title": "صلاحيات:",
+    "selectedCount": "— {{count}} صلاحية محددة",
+    "packagesTitle": "حزم الصلاحيات",
+    "selectedBadge": "محدد",
+    "noPackages": "لا توجد حزم متاحة",
+    "packagePrivilegesCount": "صلاحية",
+    "individualPrivilegesTitle": "صلاحيات فردية",
+    "searchPrivilege": "ابحث عن صلاحية...",
+    "noPrivileges": "لا توجد صلاحيات متاحة",
+    "noResults": "لا توجد نتائج مطابقة للبحث"
+  },
+  "toasts": {
+    "errorTitle": "خطأ",
+    "errorLoad": "فشل تحميل قائمة الموظفين",
+    "assignSuccessTitle": "✅ تم التعيين بنجاح",
+    "assignSuccessDesc": "تم تعيين {{count}} صلاحية لـ {{name}}",
+    "assignFailedTitle": "فشل التعيين",
+    "assignFailedDesc": "حدث خطأ أثناء تعيين الصلاحيات"
+  }
+}

@@ -35,7 +35,6 @@ const DialogContent = React.forwardRef<
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
-      dir="rtl"
       className={cn(
         "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
@@ -49,8 +48,7 @@ const DialogContent = React.forwardRef<
       {...props}
     >
       {children}
-      {/* X button on the LEFT in RTL since that's visually top-left */}
-      <DialogPrimitive.Close className="absolute left-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+      <DialogPrimitive.Close className="absolute end-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close>
@@ -62,16 +60,15 @@ DialogContent.displayName = DialogPrimitive.Content.displayName;
 // RTL: text-right instead of text-left
 const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn("flex flex-col space-y-1.5 text-right", className)}
+    className={cn("flex flex-col space-y-1.5 text-start pe-8", className)}
     {...props}
   />
 );
 DialogHeader.displayName = "DialogHeader";
 
-// RTL: justify-start puts buttons on the right side visually
 const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn("flex flex-col-reverse sm:flex-row sm:justify-start gap-2", className)}
+    className={cn("flex flex-col-reverse sm:flex-row sm:justify-end gap-2", className)}
     {...props}
   />
 );

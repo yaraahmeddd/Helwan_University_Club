@@ -36,7 +36,10 @@
     "actions": "Actions"
   },
   "status": {
-    "active": "Active"
+    "active": "Active",
+    "inactive": "Inactive",
+    "pending": "Pending",
+    "suspended": "Suspended"
   },
   "actions": {
     "editSports": "Edit Sports",

@@ -3,9 +3,8 @@
  *
  * Dynamic page: shows team members filtered by sport.
  *
- * Layout matches SportsMembersPage:
- *   Left panel (280px): sport cards -> GET /sports
- *   Right panel (flex): members table -> GET /sports/team-members[/sport/:name]
+ * Layout: top toolbar filters (search, sport, status) + members table.
+ * Data: GET /sports, GET /sports/team-members[/sport/:name]
  *
  * Default sort: created_at DESC (newest first)
  */
@@ -25,6 +24,10 @@ import {
 } from "../components/StaffPagesComponents/ui/select";
 import { motion } from "framer-motion";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
+import { useLanguage } from "../hooks/useLanguage";
+import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
+import { getLocalizedText, type DisplayLanguage } from "../lib/localizedDisplay";
 
 // Types
 
@@ -92,86 +95,14 @@ const fullNameAr = (m: ApiMember) =>
 const fullNameEn = (m: ApiMember) =>
     [m.first_name_en, m.last_name_en].filter(Boolean).join(" ");
 
-const getLanguage = (language?: string): Language =>
-    (language ?? "ar").split("-")[0] === "en" ? "en" : "ar";
+const getSportName = (sport: Sport, language: DisplayLanguage) =>
+    getLocalizedText(sport.nameAr, sport.nameEn, language);
 
-const fullName = (m: ApiMember, language: Language) =>
-    language === "en" ? fullNameEn(m) || fullNameAr(m) : fullNameAr(m) || fullNameEn(m);
-
-const secondaryName = (m: ApiMember, language: Language) =>
-    language === "en" ? fullNameAr(m) : fullNameEn(m);
-
-const getSportName = (sport: Sport, language: Language) =>
-    language === "en" ? sport.nameEn || sport.nameAr : sport.nameAr || sport.nameEn;
-
-const getSportSecondaryName = (sport: Sport, language: Language) =>
-    language === "en" ? sport.nameAr : sport.nameEn;
-
-const getTeamName = (team: Team | { name_ar?: string; name_en?: string }, language: Language) =>
-    language === "en" ? team.name_en || team.name_ar || "" : team.name_ar || team.name_en || "";
+const getTeamName = (team: Team | { name_ar?: string; name_en?: string }, language: DisplayLanguage) =>
+    getLocalizedText(team.name_ar, team.name_en, language);
 
 const sportTags = (m: ApiMember) =>
     m.team_member_teams ?? [];
-
-// Sport card
-
-function SportCard({
-    sport,
-    count,
-    selected,
-    onClick,
-    language,
-    isRTL,
-    allLabel,
-}: {
-    sport: Sport | null;   // null = "All"
-    count: number;
-    selected: boolean;
-    onClick: () => void;
-    language: Language;
-    isRTL: boolean;
-    allLabel: string;
-}) {
-    const isAll = sport === null;
-    const secondary = sport ? getSportSecondaryName(sport, language) : "";
-    return (
-        <button
-            onClick={onClick}
-            className={`
-        w-full ${isRTL ? "text-right" : "text-left"} rounded-xl border p-4 transition-all duration-150
-        flex items-start gap-3
-        ${selected
-                    ? "border-[#214474] bg-[#214474] text-white shadow-md"
-                    : "border-border bg-card hover:bg-muted/50 hover:border-[#214474]/40"
-                }
-      `}
-        >
-            <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg
-        ${selected ? "bg-white/20" : "bg-muted"}`}>
-                {isAll
-                    ? <Users className={`h-4 w-4 ${selected ? "text-white" : "text-muted-foreground"}`} />
-                    : <Trophy className={`h-4 w-4 ${selected ? "text-white" : "text-muted-foreground"}`} />
-                }
-            </div>
-            <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                    <p className={`text-sm font-bold leading-tight truncate ${selected ? "text-white" : "text-foreground"}`}>
-                        {isAll || !sport ? allLabel : getSportName(sport, language)}
-                    </p>
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold
-            ${selected ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"}`}>
-                        {count}
-                    </span>
-                </div>
-                {!isAll && sport && secondary && (
-                    <p className={`mt-0.5 text-[11px] ${selected ? "text-white/70" : "text-muted-foreground"}`} dir="ltr">
-                        {secondary}
-                    </p>
-                )}
-            </div>
-        </button>
-    );
-}
 
 // Sort header helper
 
@@ -195,12 +126,10 @@ function Th({
     return (
         <TableHead
             onClick={() => field && onSort(field)}
-            className={`
-        ${center ? "text-center" : isRTL ? "text-right" : "text-left"}
-        px-4 py-3 text-xs font-semibold text-muted-foreground
-        whitespace-nowrap select-none align-middle
-        ${field ? "cursor-pointer hover:text-foreground" : ""}
-      `}
+            className={adminHeadClass({
+                sortable: !!field,
+                center,
+            })}
         >
             <span className="inline-flex items-center gap-1">
                 {children}
@@ -220,9 +149,8 @@ function Th({
 
 export default function SportManagementPage() {
     const { toast } = useToast();
-    const { t, i18n } = useTranslation("SportManagementPage");
-    const language = getLanguage(i18n.resolvedLanguage ?? i18n.language);
-    const isRTL = language === "ar";
+    const { t } = useTranslation("SportManagementPage");
+    const { language, isRTL } = useLanguage();
 
     // Sports
     const [sports, setSports] = useState<Sport[]>([]);
@@ -422,42 +350,9 @@ export default function SportManagementPage() {
                 </div>
             </div>
 
-            <div className="flex flex-1 overflow-hidden">
-                <aside className={`flex w-[280px] shrink-0 flex-col ${isRTL ? "border-l" : "border-r"} border-border overflow-y-auto`}>
-                    <div className="shrink-0 px-4 pt-4 pb-2">
-                        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-                            {sportsLoading && <Loader2 className="h-3 w-3 animate-spin" />}
-                            {t("sidebar.sports")}
-                        </p>
-                    </div>
-                    <div className="flex flex-col gap-2 px-3 pb-6">
-                        <SportCard
-                            sport={null}
-                            count={selectedSport ? 0 : members.length}
-                            selected={selectedSport === null}
-                            onClick={() => handleSelectSport(null)}
-                            language={language}
-                            isRTL={isRTL}
-                            allLabel={t("sidebar.all")}
-                        />
-                        {sports.map((sport) => (
-                            <SportCard
-                                key={sport.id}
-                                sport={sport}
-                                count={selectedSport?.id === sport.id ? members.length : sport.membersCount}
-                                selected={selectedSport?.id === sport.id}
-                                onClick={() => handleSelectSport(sport)}
-                                language={language}
-                                isRTL={isRTL}
-                                allLabel={t("sidebar.all")}
-                            />
-                        ))}
-                    </div>
-                </aside>
-
-                <main className="flex flex-1 flex-col overflow-hidden">
-                    <div className="shrink-0 flex items-center gap-3 px-6 py-3 border-b border-border bg-muted/20">
-                        <div className="relative flex-1 max-w-sm">
+            <div className="flex flex-1 flex-col overflow-hidden">
+                    <div className="shrink-0 flex items-center gap-3 px-6 py-3 border-b border-border bg-muted/20 flex-wrap">
+                        <div className="relative w-full sm:w-72 md:w-80">
                             <Search className={`absolute ${isRTL ? "right-3" : "left-3"} top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none`} />
                             <Input
                                 value={search}
@@ -466,19 +361,50 @@ export default function SportManagementPage() {
                                 className={`${isRTL ? "pr-9" : "pl-9"} h-9`}
                             />
                         </div>
-                        <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
-                        <Select value={filterStatus} onValueChange={setFilterStatus}>
-                            <SelectTrigger className="w-40 h-9">
-                                <SelectValue placeholder={t("toolbar.allStatuses")} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">{t("toolbar.allStatuses")}</SelectItem>
-                                {Object.keys(STATUS_CLASSES).map((status) => (
-                                    <SelectItem key={status} value={status}>{t(`status.${status}`)}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full border border-border text-xs text-muted-foreground">
+
+                        <div className="flex items-center gap-2 shrink-0">
+                            <Trophy className="h-4 w-4 text-muted-foreground" />
+                            <Select
+                                value={selectedSport ? String(selectedSport.id) : "all"}
+                                onValueChange={(val) => {
+                                    if (val === "all") handleSelectSport(null);
+                                    else {
+                                        const sport = sports.find((s) => String(s.id) === val);
+                                        if (sport) handleSelectSport(sport);
+                                    }
+                                }}
+                                disabled={sportsLoading}
+                            >
+                                <SelectTrigger className="w-44 sm:w-52 h-9">
+                                    <SelectValue placeholder={t("toolbar.allSports")} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{t("toolbar.allSports")}</SelectItem>
+                                    {sports.map((sport) => (
+                                        <SelectItem key={sport.id} value={String(sport.id)}>
+                                            {getSportName(sport, language)}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                            <Filter className="h-4 w-4 text-muted-foreground" />
+                            <Select value={filterStatus} onValueChange={setFilterStatus}>
+                                <SelectTrigger className="w-36 sm:w-40 h-9">
+                                    <SelectValue placeholder={t("toolbar.allStatuses")} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{t("toolbar.allStatuses")}</SelectItem>
+                                    {Object.keys(STATUS_CLASSES).map((status) => (
+                                        <SelectItem key={status} value={status}>{t(`status.${status}`)}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full border border-border text-xs text-muted-foreground shrink-0">
                             {t("toolbar.results", { count: processed.length })}
                         </span>
                     </div>
@@ -533,7 +459,7 @@ export default function SportManagementPage() {
                         </div>
                     )}
 
-                    <div className="flex-1 overflow-auto">
+                    <div className={adminTableStyles.container}>
                         {membersLoading ? (
                             <div className="py-20 flex flex-col items-center gap-3 text-muted-foreground">
                                 <Loader2 className="h-8 w-8 animate-spin text-primary opacity-60" />
@@ -552,7 +478,7 @@ export default function SportManagementPage() {
                             </div>
                         ) : (
                             <Table>
-                                <TableHeader className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
+                                <TableHeader className={adminTableStyles.header}>
                                     <TableRow>
                                         <Th field="name" {...thProps}>{t("table.member")}</Th>
                                         <Th {...thProps}>{t("table.phone")}</Th>
@@ -562,26 +488,29 @@ export default function SportManagementPage() {
                                         <Th field="status" {...thProps} center>{t("table.status")}</Th>
                                     </TableRow>
                                 </TableHeader>
-                                <TableBody className="divide-y divide-border">
-                                    {pageRows.map((m) => {
-                                        const secondary = secondaryName(m, language);
-                                        return (
-                                            <TableRow key={m.id} className="hover:bg-muted/20 transition-colors">
-                                                <TableCell className="px-4 py-3 font-semibold align-middle">
-                                                    <div>{fullName(m, language)}</div>
-                                                    {secondary && (
-                                                        <div className="text-xs text-muted-foreground font-normal" dir={language === "en" ? "rtl" : "ltr"}>
-                                                            {secondary}
-                                                        </div>
-                                                    )}
+                                <TableBody className={adminTableStyles.body}>
+                                    {pageRows.map((m) => (
+                                            <TableRow key={m.id} className={adminTableStyles.row}>
+                                                <TableCell className={adminCellClass()}>
+                                                    <PersonNameDisplay
+                                                        id={m.id}
+                                                        names={{
+                                                            firstNameAr: m.first_name_ar,
+                                                            lastNameAr: m.last_name_ar,
+                                                            firstNameEn: m.first_name_en,
+                                                            lastNameEn: m.last_name_en,
+                                                        }}
+                                                        language={language}
+                                                        showAvatar={false}
+                                                    />
                                                 </TableCell>
-                                                <TableCell className={`${isRTL ? "text-right" : "text-left"} px-4 py-3 tabular-nums align-middle`}>
+                                                <TableCell className={adminCellClass({ className: "tabular-nums" })}>
                                                     <span dir="ltr">{m.phone ?? "-"}</span>
                                                 </TableCell>
-                                                <TableCell className={`${isRTL ? "text-right" : "text-left"} px-4 py-3 font-mono text-xs align-middle`}>
+                                                <TableCell className={adminCellClass({ size: "xs", className: "font-mono" })}>
                                                     <span dir="ltr">{m.national_id}</span>
                                                 </TableCell>
-                                                <TableCell className="px-4 py-3 align-middle">
+                                                <TableCell className={adminCellClass()}>
                                                     <div className="flex flex-wrap gap-1">
                                                         {sportTags(m).length > 0
                                                             ? sportTags(m).map((tag) => (
@@ -596,21 +525,20 @@ export default function SportManagementPage() {
                                                         }
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className={`${isRTL ? "text-right" : "text-left"} px-4 py-3 text-xs text-muted-foreground tabular-nums align-middle`}>
+                                                <TableCell className={adminCellClass({ size: "muted", className: "tabular-nums" })}>
                                                     <span dir="ltr">
                                                         {m.created_at
                                                             ? new Date(m.created_at).toLocaleDateString(language === "ar" ? "ar-EG" : "en-US")
                                                             : "-"}
                                                     </span>
                                                 </TableCell>
-                                                <TableCell className="px-4 py-3 text-center align-middle">
+                                                <TableCell className={adminCellClass({ center: true })}>
                                                     <span className={`inline-flex text-[11px] font-semibold rounded-full px-2.5 py-0.5 ${STATUS_CLASSES[m.status] ?? "bg-muted text-muted-foreground"}`}>
                                                         {t(`status.${m.status}`, { defaultValue: m.status })}
                                                     </span>
                                                 </TableCell>
                                             </TableRow>
-                                        );
-                                    })}
+                                    ))}
                                 </TableBody>
                             </Table>
                         )}
@@ -657,7 +585,6 @@ export default function SportManagementPage() {
                             </div>
                         </div>
                     )}
-                </main>
             </div>
         </div>
     );

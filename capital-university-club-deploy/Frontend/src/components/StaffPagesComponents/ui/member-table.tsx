@@ -50,6 +50,7 @@ import {
     TooltipTrigger,
 } from "./tooltip";
 import { RoleGuard } from "../RoleGuard";
+import { ProfileAvatar } from "../shared/ProfileAvatar";
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -90,17 +91,6 @@ export type SortDir = "asc" | "desc";
 
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const AVATAR_PALETTE = [
-    "#1F3A5F", "#7C3AED", "#065F46", "#92400E", "#9D174D",
-    "#1E40AF", "#0369A1", "#6B21A8", "#0F766E", "#B45309",
-];
-
-export const getAvatarColor = (id: string) =>
-    AVATAR_PALETTE[parseInt(id, 10) % AVATAR_PALETTE.length];
-
-export const getInitials = (ar: string, en: string) =>
-    (ar || en || "?").split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 
 export const fmtDateShort = (v?: string | null) => {
     if (!v) return "—";
@@ -185,12 +175,7 @@ function MemberCell({ row }: { row: MemberRow }) {
 
     return (
         <div className="flex items-center gap-2.5">
-            <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0"
-                style={{ background: getAvatarColor(row.id) }}
-            >
-                {getInitials(nameAr, nameEn)}
-            </div>
+            <ProfileAvatar size="xs" />
             <div className="min-w-0">
                 <p className="font-semibold leading-tight truncate max-w-[160px] text-xs">
                     {nameAr || "—"}

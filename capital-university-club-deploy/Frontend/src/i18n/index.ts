@@ -20,6 +20,7 @@ import arAdmin from './locales/ar/admin.json';
 import arLanding from './locales/ar/landing.json';
 import arTeam from './locales/ar/team.json';
 import arMember from './locales/ar/member.json';
+import arAuditLogPage from './locales/ar/AuditLogPage.json';
 
 // ─── English namespaces ───────────────────────────────────────────────────────
 import enCommon from './locales/en/common.json';
@@ -39,6 +40,7 @@ import enAdmin from './locales/en/admin.json';
 import enLanding from './locales/en/landing.json';
 import enTeam from './locales/en/team.json';
 import enMember from './locales/en/member.json';
+import enAuditLogPage from './locales/en/AuditLogPage.json';
 
 // ─── Namespace list (single source of truth) ──────────────────────────────────
 export const NS = [
@@ -59,6 +61,7 @@ export const NS = [
   'landing',
   'team',
   'member',
+  'AuditLogPage',
 ] as const;
 
 export type Namespace = (typeof NS)[number];
@@ -87,6 +90,7 @@ i18n
         landing: arLanding,
         team: arTeam,
         member: arMember,
+        AuditLogPage: arAuditLogPage,
       },
       en: {
         common: enCommon,
@@ -106,6 +110,7 @@ i18n
         landing: enLanding,
         team: enTeam,
         member: enMember,
+        AuditLogPage: enAuditLogPage,
       },
     },
 

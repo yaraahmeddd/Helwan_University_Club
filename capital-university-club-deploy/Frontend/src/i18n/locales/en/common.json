@@ -45,6 +45,10 @@
   "status": "Status",
   "active": "Active",
   "inactive": "Inactive",
+  "table": {
+    "noData": "No Data Available",
+    "noDataDesc": "No data found"
+  },
   "dateRange": {
     "placeholder": "Filter by date",
     "today": "Today",

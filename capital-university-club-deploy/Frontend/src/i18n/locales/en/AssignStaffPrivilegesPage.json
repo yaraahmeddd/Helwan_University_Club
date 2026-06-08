@@ -1,0 +1,68 @@
+{
+  "roles": {
+    "ADMIN": "System Admin",
+    "SPORTS_DIRECTOR": "Sports Director",
+    "SPORTS_OFFICER": "Sports Officer",
+    "FINANCIAL_DIRECTOR": "Financial Director",
+    "REGISTRATION_STAFF": "Registration Staff",
+    "TEAM_MANAGER": "Team Manager",
+    "SUPPORT": "Technical Support",
+    "AUDITOR": "Financial Auditor",
+    "STAFF": "Staff"
+  },
+  "filters": {
+    "all": "All",
+    "admin": "Admin",
+    "sportsDirector": "Sports Director",
+    "sportsOfficer": "Sports Officer",
+    "financial": "Financial",
+    "registration": "Registration",
+    "teamManager": "Team Manager",
+    "support": "Support",
+    "auditor": "Auditor"
+  },
+  "table": {
+    "title": "Assign Staff Privileges",
+    "description": "Select a staff member to proceed to the privileges assignment page",
+    "refresh": "Refresh",
+    "searchPlaceholder": "Search by name or national ID...",
+    "dateFrom": "From:",
+    "dateTo": "To:",
+    "clearDate": "Clear Date",
+    "staffCount": "Staff",
+    "loading": "Loading staff members...",
+    "noStaffTitle": "No staff members",
+    "noStaffDesc": "No staff members found",
+    "noStaffSearch": "No matching results",
+    "headers": {
+      "number": "#",
+      "staff": "Staff",
+      "nationalId": "National ID",
+      "job": "Job Role",
+      "startDate": "Start Date",
+      "actions": "Action"
+    },
+    "assignAction": "Assign Privileges"
+  },
+  "assign": {
+    "back": "Back to list",
+    "title": "Privileges:",
+    "selectedCount": "— {{count}} privileges selected",
+    "packagesTitle": "Privilege Packages",
+    "selectedBadge": "Selected",
+    "noPackages": "No packages available",
+    "packagePrivilegesCount": "Privileges",
+    "individualPrivilegesTitle": "Individual Privileges",
+    "searchPrivilege": "Search for a privilege...",
+    "noPrivileges": "No privileges available",
+    "noResults": "No matching results"
+  },
+  "toasts": {
+    "errorTitle": "Error",
+    "errorLoad": "Failed to load staff list",
+    "assignSuccessTitle": "✅ Assigned Successfully",
+    "assignSuccessDesc": "{{count}} privileges assigned to {{name}}",
+    "assignFailedTitle": "Assignment Failed",
+    "assignFailedDesc": "An error occurred while assigning privileges"
+  }
+}

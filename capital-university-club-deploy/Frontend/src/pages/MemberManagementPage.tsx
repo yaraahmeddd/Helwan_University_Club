@@ -16,7 +16,7 @@ import {
     AlertTriangle, CheckCircle,
 
     XCircle, Clock, Filter, MoreHorizontal,
-
+    Mail, Phone, MapPin, Calendar, Globe, User, Award, Hash, HeartPulse, Medal, FileBadge, CreditCard
 } from "lucide-react";
 
 import api from "../services/axios";
@@ -75,6 +75,17 @@ import {
 } from "../data/paymentsData";
 import { BACKEND_ORIGIN } from "../config/backend";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
+import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
+import {
+    RecordViewTabs,
+    RecordViewSection,
+    RecordViewField,
+    RecordViewProfileHeader,
+    RecordViewDocPlaceholder,
+} from "../components/StaffPagesComponents/shared/RecordViewPrimitives";
+import { buildPersonName, getLocalizedText, getEntityName } from "../lib/localizedDisplay";
+import { useLanguage } from "../hooks/useLanguage";
 
 
 
@@ -245,6 +256,8 @@ type TeamMemberApiItem = {
 
 type MemberRow = {
 
+    uniqueId: string;
+
     id: string;
 
     firstNameAr: string; firstNameEn: string;
@@ -301,11 +314,11 @@ type MemberRow = {
 
 
 
-type SortField = "name" | "memberType" | "status" | "points" | "createdAt";
+type SortField = "name" | "memberType" | "status" | "createdAt" | "nationalId";
 
 type SortDir = "asc" | "desc";
 
-type TabKey = "all" | "members" | "players";
+type TabKey = "all" | "members" | "teamMembers";
 
 
 
@@ -381,42 +394,33 @@ const PAGE_SIZE = 50;
 
 
 
-const palette = [
-
-    "#1F3A5F", "#7C3AED", "#065F46", "#92400E", "#9D174D",
-
-    "#1E40AF", "#0369A1", "#6B21A8", "#0F766E", "#B45309",
-
-];
-
-const getColor = (id: string) => palette[parseInt(id, 10) % palette.length];
-
-const getInitials = (ar: string, en: string) =>
-
-    (ar || en || "?").split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
-
-
-
-const fmtDate = (v?: string | null) => {
-
-    if (!v) return "—";
-
-    try { return new Date(v).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" }); }
-
-    catch { return v; }
-
+const toArabicDigits = (str: string) => {
+    const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return str.replace(/[0-9]/g, (w) => arabicDigits[+w]);
 };
 
-
-
-const fmtDateShort = (v?: string | null) => {
-
+const fmtDate = (v?: string | null, isRTL = false) => {
     if (!v) return "—";
+    try {
+        const d = new Date(v);
+        const day = d.getDate().toString().padStart(2, '0');
+        const month = (d.getMonth() + 1).toString().padStart(2, '0');
+        const year = d.getFullYear().toString();
+        const baseDate = `${day}/${month}/${year}`;
+        return isRTL ? toArabicDigits(baseDate) : baseDate;
+    } catch { return v; }
+};
 
-    try { return new Date(v).toLocaleDateString("ar-EG", { year: "2-digit", month: "numeric", day: "numeric" }); }
-
-    catch { return v; }
-
+const fmtDateShort = (v?: string | null, isRTL = false) => {
+    if (!v) return "—";
+    try {
+        const d = new Date(v);
+        const day = d.getDate().toString().padStart(2, '0');
+        const month = (d.getMonth() + 1).toString().padStart(2, '0');
+        const year = d.getFullYear().toString().slice(-2);
+        const baseDate = `${day}/${month}/${year}`;
+        return isRTL ? toArabicDigits(baseDate) : baseDate;
+    } catch { return v; }
 };
 
 
@@ -523,94 +527,49 @@ type PanelProps = {
 
 
 function DetailPanel({ row, details, loading, sports, onEdit, onChangeStatus, onDelete }: PanelProps) {
-    const { t, i18n } = useTranslation('MemberManagementPage');
-    const isRTL = i18n.language === 'ar';
+    const { t } = useTranslation('MemberManagementPage');
+    const { language, isRTL } = useLanguage();
     const d = details;
-    const nameAr = `${row.firstNameAr} ${row.lastNameAr}`.trim();
-    const nameEn = `${row.firstNameEn} ${row.lastNameEn}`.trim();
-    const displayName = isRTL ? (nameAr || nameEn) : (nameEn || nameAr);
-    const subtitleName = isRTL ? nameEn : nameAr;
+    const { primary: displayName, secondary: subtitleName } = buildPersonName(row, language);
     const [detailTab, setDetailTab] = React.useState<'info' | 'sports' | 'photos'>('info');
-
-    const Field = ({ label, value, ltr = false }: { label: string; value?: string | null; ltr?: boolean }) => (
-        <div className="py-2 border-b border-border/50 last:border-0">
-            <p className="text-[10px] text-muted-foreground mb-0.5 font-medium">{label}</p>
-            <p className="text-sm font-semibold truncate" dir={ltr ? 'ltr' : undefined}>
-                {value || <span className="text-muted-foreground/40 font-normal">{t('common.notAvailable', { defaultValue: '—' })}</span>}
-            </p>
-        </div>
-    );
-
-
+    const notAvailable = t('common.notAvailable', { defaultValue: '—' });
 
     return (
-
-        <div className="flex flex-col" style={{ maxHeight: '88vh' }} dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>
-
-
-
-            {/* ── Header ── */}
-
-            <div className="px-6 pt-5 pb-0 border-b border-border bg-gradient-to-r from-primary/5 to-transparent shrink-0">
-
-                <div className="flex items-start gap-4 pb-4">
-
-                    <div
-
-                        className="w-14 h-14 rounded-2xl flex items-center justify-center text-base font-bold text-white shadow shrink-0"
-
-                        style={{ background: getColor(row.id) }}
-
-                    >
-
-                        {getInitials(nameAr, nameEn)}
-
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-
-                        <h2 className="text-lg font-bold leading-tight truncate">{displayName || '—'}</h2>
-
-                        {subtitleName && <p className="text-xs text-muted-foreground" dir={isRTL ? 'ltr' : undefined}>{subtitleName}</p>}
-
-                        <div className="flex flex-wrap items-center gap-2 mt-2">
-
-                            <StatusBadge status={row.status} />
-
-                            <Badge variant="secondary" className="text-[10px]">{row.memberTypeLabel}</Badge>
-
-                            {row.isTeamPlayer && (
-                                <Badge className="text-[10px] bg-amber-100 text-amber-700 hover:bg-amber-100 border-0">
-                                    <Trophy className="w-3 h-3 me-1" /> {t('detail.playerBadge')}
-                                </Badge>
+        <div className="flex flex-col" style={{ maxHeight: '88vh' }} dir={isRTL ? 'rtl' : 'ltr'}>
+            <div className="px-6 pt-5 pb-0 border-b border-border shrink-0">
+                <RecordViewProfileHeader
+                    photoUrl={getFileUrl(d?.photo) || null}
+                    photoAlt={t('detail.photos.personalPhoto')}
+                    name={displayName}
+                    subtitle={subtitleName}
+                    badges={
+                        <>
+                            {row.isTeamPlayer ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800">
+                                    <Award className="w-3 h-3" />
+                                    {t('memberTypes.teamMember')}
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-800">
+                                    <Users className="w-3 h-3" />
+                                    {t('memberTypes.member')}
+                                </span>
                             )}
-
-                        </div>
-
-                    </div>
-
+                            <StatusBadge status={row.status} />
+                        </>
+                    }
+                />
+                <div className="mt-3">
+                    <RecordViewTabs
+                        tabs={[
+                            { key: 'info' as const, label: t('detail.tabInfo') },
+                            { key: 'sports' as const, label: t('detail.tabSports') },
+                            { key: 'photos' as const, label: t('detail.tabPhotos') },
+                        ]}
+                        active={detailTab}
+                        onChange={setDetailTab}
+                    />
                 </div>
-
-                {/* Tab bar */}
-                <div className="flex items-center gap-0 -mb-px">
-                    {([
-                        { key: 'info' as const, label: t('detail.tabInfo') },
-                        { key: 'sports' as const, label: t('detail.tabSports') },
-                        { key: 'photos' as const, label: t('detail.tabPhotos') },
-                    ]).map(tItem => (
-                        <button
-                            key={tItem.key}
-                            onClick={() => setDetailTab(tItem.key)}
-                            className={`px-4 py-2 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${detailTab === tItem.key
-                                    ? 'border-primary text-primary'
-                                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                                }`}
-                        >
-                            {tItem.label}
-                        </button>
-                    ))}
-                </div>
-
             </div>
 
             {/* Tab content */}
@@ -622,128 +581,112 @@ function DetailPanel({ row, details, loading, sports, onEdit, onChangeStatus, on
                         <p className="text-sm text-muted-foreground">{t('detail.loading')}</p>
                     </div>
                 ) : detailTab === 'info' ? (
-
-                    <div className="grid grid-cols-2 gap-0 divide-x divide-x-reverse divide-border">
-
-
-
-                        {/* Left column — personal + contact + extra */}
-
-                        <div className="p-5 space-y-5">
-                            <div>
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">{t('detail.sectionPersonal')}</p>
-                                <div className="space-y-0">
-                                    <Field label={t('detail.fieldMemberId')} value={`MEM-${String(row.id).padStart(5, '0')}`} ltr />
-                                    <Field label={t('detail.fieldNationalId')} value={d?.national_id ?? row.nationalId} ltr />
-                                    <Field label={t('detail.fieldGender')} value={t(GENDER_LABELS[d?.gender ?? row.gender ?? ''] || row.gender || '')} />
-                                    <Field label={t('detail.fieldNationality')} value={d?.nationality ?? row.nationality} />
-                                    <Field label={t('detail.fieldBirthdate')} value={fmtDate(d?.birthdate ?? row.birthdate)} />
-                                    <Field label={t('detail.fieldJoinDate')} value={fmtDate(d?.created_at ?? row.createdAt)} />
-                                </div>
+                    <div className="p-5 space-y-4">
+                        <RecordViewSection icon={Shield} title={t('detail.sectionAccount', 'Account Information')}>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <RecordViewField icon={Hash} label={t('detail.fieldMemberId')} value={`MEM-${String(row.id).padStart(5, '0')}`} ltr fallback={notAvailable} />
+                                <RecordViewField icon={Calendar} label={t('detail.fieldJoinDate')} value={fmtDate(d?.created_at ?? row.createdAt, isRTL)} fallback={notAvailable} />
+                                <RecordViewField icon={Mail} label={t('detail.fieldEmail')} value={d?.account?.email ?? row.email} ltr fallback={notAvailable} />
+                                <RecordViewField icon={Award} label={t('detail.fieldMemberType')} value={row.memberTypeLabel} fallback={notAvailable} />
                             </div>
-                            <div>
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">{t('detail.sectionContact')}</p>
-                                <div className="space-y-0">
-                                    <Field label={t('detail.fieldEmail')} value={d?.account?.email ?? row.email} ltr />
-                                    <Field label={t('detail.fieldPhone')} value={d?.phone ?? row.phone} ltr />
-                                    <Field label={t('detail.fieldAddress')} value={d?.address ?? row.address} />
-                                </div>
+                        </RecordViewSection>
+
+                        <RecordViewSection icon={User} title={t('detail.sectionPersonal', 'Personal Information')}>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <RecordViewField icon={User} label={t('detail.fieldGender')} value={t(GENDER_LABELS[d?.gender ?? row.gender ?? ''] || row.gender || '', { defaultValue: notAvailable })} fallback={notAvailable} />
+                                <RecordViewField icon={Globe} label={t('detail.fieldNationality')} value={(() => {
+                                    const nat = d?.nationality ?? row.nationality;
+                                    if (!nat) return undefined;
+                                    if (nat.toLowerCase() === 'egyptian') return isRTL ? 'مصرى' : 'Egyptian';
+                                    if (nat.toLowerCase() === 'foreigner' || nat.toLowerCase() === 'non-egyptian') return isRTL ? 'أجنبى' : 'Foreigner';
+                                    return nat;
+                                })()} fallback={notAvailable} />
+                                <RecordViewField icon={Calendar} label={t('detail.fieldBirthdate')} value={fmtDate(d?.birthdate ?? row.birthdate, isRTL)} fallback={notAvailable} />
+                                <RecordViewField icon={CreditCard} label={t('detail.fieldNationalId')} value={d?.national_id ?? row.nationalId} ltr fallback={notAvailable} />
                             </div>
-                        </div>
+                        </RecordViewSection>
 
-
-
-                        {/* Right column — additional + payment */}
-
-                        <div className="p-5 space-y-5">
-                            {/* Additional info */}
-                            <div>
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">{t('detail.sectionExtra')}</p>
-                                <div className="space-y-0">
-                                    <Field label={t('detail.fieldHealthStatus')} value={d?.health_status ?? row.healthStatus} />
-                                    <Field label={t('detail.fieldPoints')} value={(d?.points_balance ?? row.pointsBalance).toLocaleString()} />
-                                    <Field label={t('detail.fieldMemberType')} value={row.memberTypeLabel} />
-                                </div>
+                        <RecordViewSection icon={Phone} title={t('detail.sectionContact', 'Contact Information')}>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <RecordViewField icon={Phone} label={t('detail.fieldPhone')} value={d?.phone ?? row.phone} ltr fallback={notAvailable} />
+                                <RecordViewField icon={MapPin} label={t('detail.fieldAddress')} value={d?.address ?? row.address} fallback={notAvailable} />
+                                <RecordViewField icon={HeartPulse} label={t('detail.fieldHealthStatus')} value={d?.health_status ?? row.healthStatus} fallback={notAvailable} />
                             </div>
+                        </RecordViewSection>
 
+                        {/* ─── Payment Info Card ─── */}
+                        {(() => {
+                            const mType = (row.isTeamPlayer ? "team_member" : "member") as "member" | "team_member";
+                            const payment = PAYMENTS_MAP.get(`${mType}-${Number(row.id)}`);
+                            if (!payment) return null;
 
-                            {/* ─── Payment Info ─── */}
-                            {(() => {
-                                const mType = (row.isTeamPlayer ? "team_member" : "member") as "member" | "team_member";
-                                const payment = PAYMENTS_MAP.get(`${mType}-${Number(row.id)}`);
-                                if (!payment) return null;
+                            const status = computePaymentStatus(payment.nextRenewalDate);
+                            const days = getDaysUntilRenewal(payment.nextRenewalDate);
 
-                                const status = computePaymentStatus(payment.nextRenewalDate);
-                                const days = getDaysUntilRenewal(payment.nextRenewalDate);
+                            const statusConfig = {
+                                active: { label: t('detail.payment.statusActive'), cls: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+                                expiring: { label: t('detail.payment.statusExpiring'), cls: "bg-amber-100  text-amber-700  border-amber-200" },
+                                overdue: { label: t('detail.payment.statusOverdue'), cls: "bg-rose-100   text-rose-700   border-rose-200" },
+                            }[status];
 
-                                const statusConfig = {
-                                    active: { label: t('detail.payment.statusActive'), cls: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-                                    expiring: { label: t('detail.payment.statusExpiring'), cls: "bg-amber-100  text-amber-700  border-amber-200" },
-                                    overdue: { label: t('detail.payment.statusOverdue'), cls: "bg-rose-100   text-rose-700   border-rose-200" },
-                                }[status];
-
-                                return (
-                                    <section className="mt-5">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
-                                            {t('detail.sectionPayment')}
-                                        </p>
-                                        <div className="rounded-xl border border-border bg-muted/30 overflow-hidden divide-y divide-border">
-                                            <div className="flex items-center justify-between px-4 py-2.5">
-                                                <span className="text-[11px] text-muted-foreground">{t('detail.payment.subscriptionStatus')}</span>
+                            return (
+                                <div className="md:col-span-2 bg-primary/5 border border-primary/20 rounded-xl shadow-sm overflow-hidden">
+                                    <div className="bg-primary/10 px-4 py-3 border-b border-primary/10 flex items-center gap-2">
+                                        <CreditCard className="w-4 h-4 text-primary" />
+                                        <h4 className="font-semibold text-sm text-primary">{t('detail.sectionPayment', 'Financial & Subscription')}</h4>
+                                    </div>
+                                    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                        <div className="space-y-1">
+                                            <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Shield className="w-3.5 h-3.5" />{t('detail.payment.subscriptionStatus')}</p>
+                                            <p className="text-sm">
                                                 <span className={`text-[11px] font-bold rounded-full border px-2.5 py-0.5 ${statusConfig.cls}`}>
                                                     {statusConfig.label}
                                                 </span>
-                                            </div>
-                                            <div className="flex items-center justify-between px-4 py-2.5">
-                                                <span className="text-[11px] text-muted-foreground">{t('detail.payment.subscriptionType')}</span>
-                                                <span className="text-sm font-medium">{payment.subscriptionType}</span>
-                                            </div>
-                                            <div className="flex items-center justify-between px-4 py-2.5">
-                                                <span className="text-[11px] text-muted-foreground">{t('detail.payment.lastPayment')}</span>
-                                                <div className="text-left" dir="ltr">
-                                                    <p className="text-sm font-medium">
-                                                        {new Date(payment.lastPaymentDate).toLocaleDateString("ar-EG", { day: "numeric", month: "long", year: "numeric" })}
-                                                    </p>
-                                                    <p className="text-[10px] text-muted-foreground">
-                                                        {payment.lastPaymentAmount.toLocaleString("ar-EG")}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center justify-between px-4 py-2.5">
-                                                <span className="text-[11px] text-muted-foreground">{t('detail.payment.nextRenewal')}</span>
-                                                <div className="text-left" dir="ltr">
-                                                    <p className={`text-sm font-medium ${status === "overdue" ? "text-rose-600" :
-                                                        status === "expiring" ? "text-amber-600" : ""
-                                                        }`}>
-                                                        {new Date(payment.nextRenewalDate).toLocaleDateString("ar-EG", { day: "numeric", month: "long", year: "numeric" })}
-                                                    </p>
-                                                    {status !== "active" && (
-                                                        <p className={`text-[10px] font-semibold ${status === "overdue" ? "text-rose-500" : "text-amber-500"
-                                                            }`}>
-                                                            {status === "overdue"
-                                                                ? t('detail.payment.overdueDays', { count: Math.abs(days) })
-                                                                : t('detail.payment.expiringDays', { count: days })}
-                                                        </p>
-                                                    )}
-                                                </div>
+                                            </p>
+                                        </div>
+                                        <RecordViewField icon={FileBadge} label={t('detail.payment.subscriptionType')} value={payment.subscriptionType} fallback={notAvailable} />
+                                        
+                                        <div className="space-y-1">
+                                            <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" />{t('detail.payment.lastPayment')}</p>
+                                            <div className="text-sm font-semibold" dir="ltr">
+                                                <p>{new Date(payment.lastPaymentDate).toLocaleDateString("ar-EG", { day: "numeric", month: "long", year: "numeric" })}</p>
+                                                <p className="text-[10px] text-muted-foreground font-medium">EGP {payment.lastPaymentAmount.toLocaleString("ar-EG")}</p>
                                             </div>
                                         </div>
-                                        {status !== "active" && (
-                                            <div className={`mt-2 rounded-lg border px-3 py-2 text-xs font-medium flex items-center gap-2 ${status === "overdue"
+                                        
+                                        <div className="space-y-1">
+                                            <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" />{t('detail.payment.nextRenewal')}</p>
+                                            <div className="text-sm font-semibold" dir="ltr">
+                                                <p className={`${status === "overdue" ? "text-rose-600" : status === "expiring" ? "text-amber-600" : ""}`}>
+                                                    {new Date(payment.nextRenewalDate).toLocaleDateString("ar-EG", { day: "numeric", month: "long", year: "numeric" })}
+                                                </p>
+                                                {status !== "active" && (
+                                                    <p className={`text-[10px] font-bold ${status === "overdue" ? "text-rose-500" : "text-amber-500"}`}>
+                                                        {status === "overdue"
+                                                            ? t('detail.payment.overdueDays', { count: Math.abs(days) })
+                                                            : t('detail.payment.expiringDays', { count: days })}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {status !== "active" && (
+                                        <div className="px-4 pb-4">
+                                            <div className={`rounded-lg border px-3 py-2 text-xs font-medium flex items-center gap-2 ${status === "overdue"
                                                 ? "bg-rose-50 border-rose-200 text-rose-700"
                                                 : "bg-amber-50 border-amber-200 text-amber-700"
                                                 }`}>
-                                                {status === "overdue" ? "⚠" : "🔔"}
+                                                {status === "overdue" ? <AlertTriangle className="w-4 h-4" /> : "🔔"}
                                                 {status === "overdue"
                                                     ? t('detail.payment.alertOverdue', { count: Math.abs(days) })
                                                     : t('detail.payment.alertExpiring', { count: days })}
                                             </div>
-                                        )}
-                                    </section>
-                                );
-                            })()}
-
-                        </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })()}
 
                     </div>
 
@@ -944,14 +887,12 @@ const getFileUrl = (f?: string | null): string => {
 
 export default function MemberManagementPage() {
     const { t, i18n } = useTranslation('MemberManagementPage');
-    const isRTL = i18n.language === 'ar';
+    const { language, isRTL } = useLanguage();
     const { toast } = useToast();
 
     const getMemberDisplayName = useCallback((row: Pick<MemberRow, "firstNameAr" | "lastNameAr" | "firstNameEn" | "lastNameEn">) => {
-        const ar = `${row.firstNameAr} ${row.lastNameAr}`.trim();
-        const en = `${row.firstNameEn} ${row.lastNameEn}`.trim();
-        return isRTL ? (ar || en) : (en || ar);
-    }, [isRTL]);
+        return buildPersonName(row, language).primary;
+    }, [language]);
 
 
 
@@ -968,6 +909,7 @@ export default function MemberManagementPage() {
     const [tab, setTab] = useState<TabKey>("all");
 
     const [filterStatuses, setFilterStatuses] = useState<string[]>([]);
+    const [dateFilter, setDateFilter] = useState<string>("");
 
     const [statusPopoverOpen, setStatusPopoverOpen] = useState(false);
 
@@ -1045,6 +987,8 @@ export default function MemberManagementPage() {
 
     const mapItem = useCallback((item: MemberApiItem): MemberRow => ({
 
+        uniqueId: `member_${item.id}`,
+
         id: String(item.id),
 
         firstNameAr: item.first_name_ar,
@@ -1075,7 +1019,7 @@ export default function MemberManagementPage() {
 
         memberTypeId: item.member_type_id,
 
-        memberTypeLabel: isRTL ? (item.member_type?.name_ar || item.member_type?.name_en || `#${item.member_type_id}`) : (item.member_type?.name_en || item.member_type?.name_ar || `#${item.member_type_id}`),
+        memberTypeLabel: getEntityName(item.member_type, language) || `#${item.member_type_id}`,
 
         memberTypeCode: item.member_type?.code ?? "",
 
@@ -1091,7 +1035,7 @@ export default function MemberManagementPage() {
 
             id: s.id,
 
-            name: s.name_ar || s.name_en || `Sport #${s.id}`,
+            name: getEntityName(s, language) || `Sport #${s.id}`,
 
             level: s.pivot?.level,
 
@@ -1101,13 +1045,15 @@ export default function MemberManagementPage() {
 
         })),
 
-    }), []);
+    }), [language]);
 
 
 
     // ← ADDED: Map team member API item → row
 
     const mapTeamMemberItem = useCallback((item: TeamMemberApiItem): MemberRow => ({
+
+        uniqueId: `team_${item.id}`,
 
         id: String(item.id),
 
@@ -1165,7 +1111,7 @@ export default function MemberManagementPage() {
 
         })),
 
-    }), []);
+    }), [t]);
 
 
 
@@ -1463,11 +1409,11 @@ export default function MemberManagementPage() {
 
         if (tab === "members") result = result.filter((r) => !r.isTeamPlayer);
 
-        if (tab === "players") result = result.filter((r) => r.isTeamPlayer);
+        if (tab === "teamMembers") result = result.filter((r) => r.isTeamPlayer);
 
 
 
-        if (tab === "players" && filterPlayerType !== "all") {
+        if (tab === "teamMembers" && filterPlayerType !== "all") {
 
             result = result.filter((r) => r.memberTypeId === Number(filterPlayerType));
 
@@ -1507,6 +1453,10 @@ export default function MemberManagementPage() {
 
         }
 
+        if (dateFilter) {
+            result = result.filter((r) => r.createdAt && r.createdAt.startsWith(dateFilter));
+        }
+
 
 
         result.sort((a, b) => {
@@ -1515,11 +1465,11 @@ export default function MemberManagementPage() {
 
             if (sortField === "name") cmp = `${a.firstNameAr}${a.lastNameAr}`.localeCompare(`${b.firstNameAr}${b.lastNameAr}`);
 
-            if (sortField === "memberType") cmp = a.memberTypeLabel.localeCompare(b.memberTypeLabel);
+            if (sortField === "memberType") cmp = Number(a.isTeamPlayer) - Number(b.isTeamPlayer);
 
             if (sortField === "status") cmp = a.status.localeCompare(b.status);
 
-            if (sortField === "points") cmp = a.pointsBalance - b.pointsBalance;
+            if (sortField === "nationalId") cmp = a.nationalId.localeCompare(b.nationalId);
 
             if (sortField === "createdAt") cmp = (a.createdAt ?? "").localeCompare(b.createdAt ?? "");
 
@@ -1531,7 +1481,7 @@ export default function MemberManagementPage() {
 
         return result;
 
-    }, [allRows, tab, filterStatuses, filterPlayerType, search, sortField, sortDir]);
+    }, [allRows, tab, filterStatuses, filterPlayerType, search, dateFilter, sortField, sortDir]);
 
 
 
@@ -1543,7 +1493,7 @@ export default function MemberManagementPage() {
 
 
 
-    useEffect(() => { setPage(1); }, [search, tab, filterStatuses, filterPlayerType, sortField, sortDir]);
+    useEffect(() => { setPage(1); }, [search, dateFilter, tab, filterStatuses, filterPlayerType, sortField, sortDir]);
 
 
 
@@ -1551,7 +1501,7 @@ export default function MemberManagementPage() {
 
         const base = tab === "members" ? allRows.filter((r) => !r.isTeamPlayer)
 
-            : tab === "players" ? allRows.filter((r) => r.isTeamPlayer)
+            : tab === "teamMembers" ? allRows.filter((r) => r.isTeamPlayer)
 
                 : allRows;
 
@@ -2005,37 +1955,26 @@ export default function MemberManagementPage() {
 
 
     const Th = ({ field, children, center, className = "" }: { field?: SortField; children: React.ReactNode; center?: boolean; className?: string }) => (
-
         <TableHead
-
             onClick={() => field && handleSort(field)}
-
-            className={`px-4 py-3 text-xs font-semibold text-muted-foreground whitespace-nowrap select-none align-middle
-
-        ${field ? "cursor-pointer hover:text-foreground" : ""}
-
-        ${center ? "text-center" : "text-start"} ${className}`}
-
+            className={adminHeadClass({ sortable: !!field, center, className })}
         >
-
             <span className={`inline-flex items-center gap-1 ${center ? "justify-center" : ""}`}>
-
                 {children}
-
                 {field && <SortIcon field={field} active={sortField} dir={sortDir} />}
-
             </span>
-
         </TableHead>
-
     );
 
 
 
-    const TAB_CONFIG: { key: TabKey; label: string; icon: typeof Users; count: number }[] = [
-        { key: "all", label: t('tabs.all'), icon: Users, count: allRows.length },
-        { key: "members", label: t('tabs.members'), icon: UserCheck, count: allRows.filter((r) => !r.isTeamPlayer).length },
-        { key: "players", label: t('tabs.players'), icon: Trophy, count: allRows.filter((r) => r.isTeamPlayer).length },
+    const memberCount = allRows.filter((r) => !r.isTeamPlayer).length;
+    const teamMemberCount = allRows.filter((r) => r.isTeamPlayer).length;
+
+    const TAB_CONFIG: { key: TabKey; label: string; icon: typeof Users }[] = [
+        { key: "all", label: t('tabs.all'), icon: Users },
+        { key: "members", label: t('tabs.members'), icon: UserCheck },
+        { key: "teamMembers", label: t('tabs.teamMembers'), icon: Trophy },
     ];
 
 
@@ -2044,131 +1983,51 @@ export default function MemberManagementPage() {
 
         <TooltipProvider>
 
-            <div className="h-[calc(100vh-4rem)] flex flex-col" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>
+            <div className="h-[calc(100vh-4rem)] flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
 
 
 
                 {/* Header */}
 
-                <div className="px-5 py-3 border-b border-border bg-background shrink-0">
-
+                <div className="px-6 py-4 border-b border-border bg-background shrink-0">
                     <div className="flex items-center justify-between">
-
                         <div>
-
-                            <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
-                                <Users className="w-5 h-5 text-primary" />
+                            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+                                <Users className="w-6 h-6 text-primary" />
                                 {t('header.title')}
                             </h1>
-                            <div className="flex items-center gap-3 mt-0.5 flex-wrap">
-                                <p className="text-xs text-muted-foreground">
+                            <div className="flex items-center gap-4 mt-1 flex-wrap">
+                                <p className="text-sm text-muted-foreground">
                                     {t('header.totalLoaded')} <strong>{allRows.length}</strong>
-                                    {lastFetched && (
-                                        <span className="me-2 text-[10px] opacity-60">
-                                            {t('header.lastUpdated')} {lastFetched.toLocaleTimeString(i18n.language === 'en' ? 'en-US' : 'ar-EG')}
-                                        </span>
-                                    )}
                                 </p>
+                                <span className="inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-medium">
+                                    <Users className="w-3 h-3" /> {t('tabs.members')}: {memberCount}
+                                </span>
+                                <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-medium">
+                                    <Award className="w-3 h-3" /> {t('tabs.teamMembers')}: {teamMemberCount}
+                                </span>
                                 {(() => {
                                     const alertCount = allRows.filter(r => {
                                         const p = PAYMENTS_MAP.get(`${r.isTeamPlayer ? "team_member" : "member"}-${Number(r.id)}`);
                                         return p ? computePaymentStatus(p.nextRenewalDate) !== "active" : false;
                                     }).length;
                                     return alertCount > 0 ? (
-                                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-700 border border-amber-300 px-2.5 py-0.5 text-xs font-bold">
-                                            🔔 {t('header.paymentAlert', { count: alertCount })}
+                                        <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-medium">
+                                            🔔 {t(alertCount === 1 ? 'header.paymentAlert_one' : 'header.paymentAlert_other', { count: alertCount })}
                                         </span>
                                     ) : null;
                                 })()}
                             </div>
-
                         </div>
-
-
-
                         <button
                             onClick={() => void fetchAll()}
                             disabled={fetching}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border hover:bg-muted transition-colors text-xs text-muted-foreground disabled:opacity-40"
+                            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border hover:bg-muted transition-colors text-sm text-muted-foreground disabled:opacity-40"
                         >
-                            <RefreshCw className={`w-3.5 h-3.5 ${fetching ? "animate-spin" : ""}`} />
+                            <RefreshCw className={`w-4 h-4 ${fetching ? "animate-spin" : ""}`} />
                             {fetching ? t('header.refreshing') : t('header.refresh')}
                         </button>
-
                     </div>
-
-
-
-                    {/* Tabs */}
-
-                    <div className="flex items-center gap-1 mt-3">
-
-                        {TAB_CONFIG.map(({ key, label, icon: Icon, count }) => (
-
-                            <button
-
-                                key={key}
-
-                                onClick={() => setTab(key)}
-
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${tab === key
-
-                                    ? "bg-primary text-primary-foreground shadow-sm"
-
-                                    : "text-muted-foreground hover:bg-muted"
-
-                                    }`}
-
-                            >
-
-                                <Icon className="w-3.5 h-3.5" />
-
-                                {label}
-
-                                <span className={`text-[10px] rounded-full px-1.5 py-0 font-bold ${tab === key ? "bg-white/20" : "bg-muted text-muted-foreground"
-
-                                    }`}>
-
-                                    {count}
-
-                                </span>
-
-                            </button>
-
-                        ))}
-
-
-
-                        {tab === "players" && playerTypes.length > 1 && (
-
-                            <div className="me-auto flex items-center gap-2">
-
-                                <Trophy className="w-3 h-3 text-muted-foreground" />
-
-                                <Select value={filterPlayerType} onValueChange={setFilterPlayerType}>
-
-                                    <SelectTrigger className="h-7 w-36 text-xs">
-                                        <SelectValue placeholder={t('tabs.allTypesPlaceholder')} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">{t('tabs.allPlayerTypes')}</SelectItem>
-
-                                        {playerTypes.map(({ id, label }) => (
-
-                                            <SelectItem key={id} value={String(id)}>{label}</SelectItem>
-
-                                        ))}
-
-                                    </SelectContent>
-
-                                </Select>
-
-                            </div>
-
-                        )}
-
-                    </div>
-
                 </div>
 
 
@@ -2187,20 +2046,85 @@ export default function MemberManagementPage() {
 
                         {/* Toolbar */}
 
-                        <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border bg-muted/20 shrink-0 flex-wrap">
+                        <div className="flex items-center gap-3 px-6 py-3 border-b border-border bg-muted/20 shrink-0 flex-wrap">
 
-                            <div className="relative flex-1 min-w-[160px] max-w-[280px]">
-
-                                <Search className="absolute end-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-
+                            <div className="relative flex-1 max-w-sm">
+                                <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none ${isRTL ? 'right-3' : 'left-3'}`} />
                                 <Input
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     placeholder={t('toolbar.searchPlaceholder')}
-                                    className="pe-9 h-8 text-xs"
+                                    className={`${isRTL ? 'pr-9' : 'pl-9'} h-9`}
                                 />
-
                             </div>
+
+                            <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5 shrink-0">
+                                {TAB_CONFIG.map(({ key, label, icon: Icon }) => (
+                                    <button
+                                        key={key}
+                                        onClick={() => setTab(key)}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${tab === key
+                                            ? 'bg-white shadow-sm text-foreground'
+                                            : 'text-muted-foreground hover:text-foreground'
+                                            }`}
+                                    >
+                                        <Icon className="w-3.5 h-3.5" />
+                                        {label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {tab === "teamMembers" && playerTypes.length > 1 && (
+                                <Select value={filterPlayerType} onValueChange={setFilterPlayerType}>
+                                    <SelectTrigger className="h-9 w-36 text-xs shrink-0">
+                                        <SelectValue placeholder={t('tabs.allTypesPlaceholder')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">{t('tabs.allPlayerTypes')}</SelectItem>
+                                        {playerTypes.map(({ id, label }) => (
+                                            <SelectItem key={id} value={String(id)}>{label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            )}
+
+
+
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <button className={`flex items-center gap-1.5 h-8 px-3 rounded-md border text-xs transition-colors
+                                        ${dateFilter
+                                            ? "border-primary bg-primary/5 text-primary"
+                                            : "border-border bg-background text-muted-foreground hover:bg-muted"}`}>
+                                        <Calendar className="w-3 h-3" />
+                                        {t('toolbar.dateFilter', 'Date Filter')}
+                                        {dateFilter && (
+                                            <span className="inline-flex items-center justify-center w-2 h-2 rounded-full bg-primary" />
+                                        )}
+                                    </button>
+                                </PopoverTrigger>
+                                <PopoverContent align="end" className="w-64 p-4" dir={isRTL ? 'rtl' : 'ltr'}>
+                                    <div className="space-y-3">
+                                        <h4 className="font-medium text-sm">{t('toolbar.filterByDate', 'Filter by Date')}</h4>
+                                        <Input 
+                                            type="date" 
+                                            value={dateFilter} 
+                                            onChange={(e) => setDateFilter(e.target.value)} 
+                                            className="w-full text-xs h-8"
+                                        />
+                                        {dateFilter && (
+                                            <Button 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                className="w-full text-xs h-8" 
+                                                onClick={() => setDateFilter("")}
+                                            >
+                                                {t('actions.clear', 'Clear')}
+                                            </Button>
+                                        )}
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
 
 
 
@@ -2232,7 +2156,7 @@ export default function MemberManagementPage() {
 
                                 </PopoverTrigger>
 
-                                <PopoverContent align="end" className="w-52 p-0" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>
+                                <PopoverContent align="end" className="w-52 p-0" dir={isRTL ? 'rtl' : 'ltr'}>
 
                                     <div className="py-1">
 
@@ -2314,7 +2238,7 @@ export default function MemberManagementPage() {
 
 
 
-                            <span className="text-xs text-muted-foreground me-auto">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full border border-border text-xs text-muted-foreground shrink-0">
                                 {totalFiltered} {t('toolbar.results')}
                             </span>
 
@@ -2324,20 +2248,21 @@ export default function MemberManagementPage() {
 
                         {/* Table */}
 
-                        <div className="flex-1 overflow-auto">
+                        <div className={adminTableStyles.container}>
 
-                            <Table>
+                            <Table className={adminTableStyles.table}>
 
-                                <TableHeader className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
+                                <TableHeader className={adminTableStyles.header}>
 
                                     <TableRow>
-                                        <Th field="name" className="w-[200px]">{t('table.colMember')}</Th>
-                                        <Th field="memberType">{t('table.colType')}</Th>
-                                        <Th>{t('table.colPhone')}</Th>
-                                        <Th field="points" center>{t('table.colPoints')}</Th>
-                                        <Th field="status" center>{t('table.colStatus')}</Th>
-                                        <Th field="createdAt" center>{t('table.colRegistration')}</Th>
-                                        <Th center className="w-[100px]">{t('table.colActions')}</Th>
+                                        <Th className="w-10">{t('table.index')}</Th>
+                                        <Th field="name">{t('table.name')}</Th>
+                                        <Th>{t('table.phone')}</Th>
+                                        <Th field="nationalId">{t('table.nationalId')}</Th>
+                                        <Th field="createdAt">{t('table.registrationDate')}</Th>
+                                        <Th field="memberType" center>{t('table.type')}</Th>
+                                        <Th field="status" center>{t('table.status')}</Th>
+                                        <Th center className="w-[1%] whitespace-nowrap">{t('table.actions')}</Th>
                                     </TableRow>
 
                                 </TableHeader>
@@ -2368,7 +2293,7 @@ export default function MemberManagementPage() {
 
                                                 </TableCell>
 
-                                                {[1, 2, 3, 4, 5, 6].map(j => <TableCell key={j} className="px-4 py-3"><div className="h-2.5 w-12 bg-muted rounded mx-auto" /></TableCell>)}
+                                                {[1, 2, 3, 4, 5, 6, 7].map(j => <TableCell key={j} className={adminCellClass()}><div className="h-2.5 w-12 bg-muted rounded mx-auto" /></TableCell>)}
 
                                             </TableRow>
 
@@ -2378,109 +2303,64 @@ export default function MemberManagementPage() {
 
                                         <TableRow>
 
-                                            <TableCell colSpan={7} className="text-center py-12 text-muted-foreground text-sm">
+                                            <TableCell colSpan={8} className="text-center py-12 text-muted-foreground text-sm">
                                                 {search ? t('table.noResults', { query: search }) : t('table.noMembers')}
                                             </TableCell>
 
                                         </TableRow>
 
-                                    ) : pageRows.map((row) => {
-
-                                        const nameAr = `${row.firstNameAr} ${row.lastNameAr}`.trim();
-
-                                        const nameEn = `${row.firstNameEn} ${row.lastNameEn}`.trim();
-
-                                        return (
-
+                                    ) : pageRows.map((row, idx) => (
                                             <TableRow
-
-                                                key={row.id}
-
-                                                className="transition-colors hover:bg-muted/40 group"
-
+                                                key={row.uniqueId}
+                                                className={adminTableStyles.row}
                                             >
-
-                                                <TableCell className="px-4 py-3 align-middle">
-
-                                                    <div className="flex items-center gap-2.5">
-
-                                                        <div
-
-                                                            className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0"
-
-                                                            style={{ background: getColor(row.id) }}
-
-                                                        >
-
-                                                            {getInitials(nameAr, nameEn)}
-
-                                                        </div>
-
-                                                        <div className="min-w-0">
-
-                                                            <div className="flex items-center gap-1.5 flex-wrap">
-                                                                <p className="font-semibold leading-tight truncate max-w-[160px] text-xs">{getMemberDisplayName(row) || "-"}</p>
-                                                                <PaymentBadge
-                                                                    memberId={Number(row.id)}
-                                                                    memberType={row.isTeamPlayer ? "team_member" : "member"}
-                                                                />
-                                                            </div>
-
-                                                            {((isRTL && nameEn) || (!isRTL && nameAr)) && (
-                                                                <p className="text-[10px] text-muted-foreground truncate max-w-[160px]" dir={isRTL ? "ltr" : undefined}>
-                                                                    {isRTL ? nameEn : nameAr}
-                                                                </p>
-                                                            )}
-
-                                                        </div>
-
-                                                    </div>
-
+                                                <TableCell className={adminCellClass({ size: "muted", className: "font-mono w-10" })}>
+                                                    {(page - 1) * PAGE_SIZE + idx + 1}
                                                 </TableCell>
 
-                                                <TableCell className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap align-middle">
-
-                                                    <div className="flex items-center gap-1">
-
-                                                        {row.isTeamPlayer && <Trophy className="w-3 h-3 text-amber-500 shrink-0" />}
-
-                                                        <span className="truncate max-w-[100px]">{row.memberTypeLabel}</span>
-
-                                                    </div>
-
+                                                <TableCell className={adminCellClass()}>
+                                                    <PersonNameDisplay
+                                                        id={row.id}
+                                                        names={row}
+                                                        language={language}
+                                                        showAvatar={false}
+                                                    />
                                                 </TableCell>
 
-                                                <TableCell className="px-4 py-3 text-xs tabular-nums text-start align-middle">
-
-                                                    <span dir="ltr" className="text-muted-foreground">{row.phone || "—"}</span>
-
+                                                <TableCell className={adminCellClass({ size: 'phone' })}>
+                                                    <span dir="ltr">{row.phone || "—"}</span>
                                                 </TableCell>
 
-                                                <TableCell className="px-4 py-3 text-center align-middle">
-
-                                                    <span className={`font-semibold tabular-nums text-xs ${row.pointsBalance > 0 ? "text-amber-600" : "text-muted-foreground"}`}>
-
-                                                        {row.pointsBalance.toLocaleString()}
-
-                                                    </span>
-
+                                                <TableCell className={adminCellClass({ size: "xs", className: "font-mono" })}>
+                                                    <span dir="ltr">{row.nationalId || "—"}</span>
                                                 </TableCell>
 
-                                                <TableCell className="px-4 py-3 text-center align-middle">
+                                                <TableCell className={adminCellClass({ size: "muted", className: "tabular-nums whitespace-nowrap" })}>
+                                                    {row.createdAt
+                                                        ? new Date(row.createdAt).toLocaleDateString(isRTL ? 'ar-EG' : 'en-US')
+                                                        : "—"}
+                                                </TableCell>
 
+                                                <TableCell className={adminCellClass({ center: true })}>
+                                                    {row.isTeamPlayer ? (
+                                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800">
+                                                            <Award className="w-3 h-3" />
+                                                            {t('memberTypes.teamMember')}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-800">
+                                                            <Users className="w-3 h-3" />
+                                                            {t('memberTypes.member')}
+                                                        </span>
+                                                    )}
+                                                </TableCell>
+
+                                                <TableCell className={adminCellClass({ center: true })}>
                                                     <StatusBadge status={row.status} compact />
-
                                                 </TableCell>
 
-                                                <TableCell className="px-4 py-3 text-center text-[10px] text-muted-foreground whitespace-nowrap align-middle">
-
-                                                    {fmtDateShort(row.createdAt)}
-
-                                                </TableCell>
-
-                                                <TableCell className="px-4 py-3 text-center align-middle">
-
-                                                    <div className="flex items-center justify-center gap-0.5">
+                                                <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
+                                                    <div className={adminTableStyles.actions}>
 
                                                         <Tooltip>
 
@@ -2492,13 +2372,13 @@ export default function MemberManagementPage() {
 
                                                                     size="icon"
 
-                                                                    className="h-7 w-7"
+                                                                    className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600"
 
                                                                     onClick={() => void openDetail(row)}
 
                                                                 >
 
-                                                                    <Eye className="w-3.5 h-3.5 text-blue-600" />
+                                                                    <Eye className="w-4 h-4 text-blue-600" />
 
                                                                 </Button>
 
@@ -2510,61 +2390,38 @@ export default function MemberManagementPage() {
 
 
 
-                                                        <RoleGuard privilege="UPDATE_MEMBER">
-                                                            <Tooltip>
-
-                                                                <TooltipTrigger asChild>
-
-                                                                    <Button
-
-                                                                        variant="ghost"
-
-                                                                        size="icon"
-
-                                                                        className="h-7 w-7"
-
-                                                                        onClick={() => openEdit(row)}
-
-                                                                    >
-
-                                                                        <Pencil className="w-3.5 h-3.5 text-emerald-600" />
-
-                                                                    </Button>
-
-                                                                </TooltipTrigger>
-
-                                                                <TooltipContent side="top" className="text-xs">{t('rowActions.edit')}</TooltipContent>
-
-                                                            </Tooltip>
-                                                        </RoleGuard>
-
-
-
                                                         <DropdownMenu>
 
                                                             <DropdownMenuTrigger asChild>
 
-                                                                <Button variant="ghost" size="icon" className="h-7 w-7">
+                                                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted">
 
-                                                                    <MoreHorizontal className="w-3.5 h-3.5" />
+                                                                    <MoreHorizontal className="w-4 h-4" />
 
                                                                 </Button>
 
                                                             </DropdownMenuTrigger>
 
-                                                            <DropdownMenuContent align="end" className="text-xs">
+                                                            <DropdownMenuContent align="end" className="text-xs w-40">
+
+                                                                <RoleGuard privilege="UPDATE_MEMBER">
+                                                                    <DropdownMenuItem onClick={() => openEdit(row)} className="gap-2 cursor-pointer">
+                                                                        <Pencil className="w-3.5 h-3.5 text-emerald-600" />
+                                                                        {t('rowActions.edit')}
+                                                                    </DropdownMenuItem>
+                                                                </RoleGuard>
 
                                                                 <RoleGuard privilege="MANAGE_MEMBER_BLOCK">
-                                                                    <DropdownMenuItem onClick={() => openStatus(row)} className="gap-2">
+                                                                    <DropdownMenuItem onClick={() => openStatus(row)} className="gap-2 cursor-pointer">
 
-                                                                        <Shield className="w-3.5 h-3.5" />
+                                                                        <Shield className="w-3.5 h-3.5 text-amber-600" />
                                                                         {t('rowActions.changeStatus')}
 
                                                                     </DropdownMenuItem>
                                                                 </RoleGuard>
 
                                                                 <RoleGuard privilege="DELETE_MEMBER">
-                                                                    <DropdownMenuItem onClick={() => openDelete(row)} className="gap-2 text-red-600 focus:text-red-600">
+                                                                    <DropdownMenuItem onClick={() => openDelete(row)} className="gap-2 text-red-600 focus:text-red-600 cursor-pointer">
 
                                                                         <Trash2 className="w-3.5 h-3.5" />
                                                                         {t('rowActions.deleteMember')}
@@ -2581,10 +2438,7 @@ export default function MemberManagementPage() {
                                                 </TableCell>
 
                                             </TableRow>
-
-                                        );
-
-                                    })}
+                                    ))}
 
                                 </TableBody>
 
@@ -2641,7 +2495,7 @@ export default function MemberManagementPage() {
 
                 <Dialog open={!!selectedRow && !editOpen && !statusOpen && !deleteOpen} onOpenChange={(o) => !o && setSelectedRow(null)}>
 
-                    <DialogContent className="max-w-3xl w-full p-0 overflow-hidden" style={{ maxHeight: '88vh' }} dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>
+                    <DialogContent className="max-w-3xl w-full p-0 overflow-hidden" style={{ maxHeight: '88vh' }} dir={isRTL ? 'rtl' : 'ltr'}>
 
                         <DialogHeader className="sr-only">
 
@@ -2684,11 +2538,11 @@ export default function MemberManagementPage() {
 
                 <Dialog open={editOpen} onOpenChange={(o) => !o && setEditOpen(false)}>
 
-                    <DialogContent className="max-w-xl" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>
+                    <DialogContent className="max-w-xl" dir={isRTL ? 'rtl' : 'ltr'}>
 
                         <DialogHeader>
-                            <DialogTitle>{t('editModal.title')}</DialogTitle>
-                            <DialogDescription>{t('editModal.description')}</DialogDescription>
+                            <DialogTitle className="text-lg">{t('editModal.title')}</DialogTitle>
+                            <DialogDescription className="text-sm">{t('editModal.description')}</DialogDescription>
                         </DialogHeader>
 
                         {/* ── Tab bar ── */}
@@ -2714,7 +2568,7 @@ export default function MemberManagementPage() {
 
                         {/* ── TAB 1: Personal Info ── */}
                         {editTab === 'info' && (
-                            <div className="grid grid-cols-2 gap-3 py-2">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 py-4">
                                 <div>
                                     <Label className="text-xs">{t('editModal.fields.firstNameAr')}</Label>
                                     <Input value={editFirstNameAr} onChange={(e) => setEditFirstNameAr(e.target.value)} className="mt-1 h-8 text-xs" placeholder={t('editModal.placeholders.firstNameAr')} />
@@ -2766,8 +2620,8 @@ export default function MemberManagementPage() {
 
                         {/* ── TAB 2: Documents & Photos ── */}
                         {editTab === 'docs' && (
-                            <div className="py-2">
-                                <div className="grid grid-cols-2 gap-4">
+                            <div className="py-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     {([
                                         { label: t('editModal.docs.photo'), file: photoFile, setter: setPhotoFile, existing: selectedDetail?.photo, span: 'col-span-2', height: 'h-36' },
                                         { label: t('editModal.docs.idFront'), file: idFrontFile, setter: setIdFrontFile, existing: selectedDetail?.national_id_front, span: '', height: 'h-24' },
@@ -2830,7 +2684,7 @@ export default function MemberManagementPage() {
 
                 <Dialog open={statusOpen} onOpenChange={(o) => !o && setStatusOpen(false)}>
 
-                    <DialogContent className="max-w-sm" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>
+                    <DialogContent className="max-w-sm" dir={isRTL ? 'rtl' : 'ltr'}>
 
                         <DialogHeader>
 
@@ -2844,7 +2698,7 @@ export default function MemberManagementPage() {
 
                         </DialogHeader>
 
-                        <div className="space-y-3 py-2">
+                        <div className="space-y-4 py-4">
 
                             <div>
 
@@ -2908,7 +2762,7 @@ export default function MemberManagementPage() {
 
                 <Dialog open={deleteOpen} onOpenChange={(o) => !o && setDeleteOpen(false)}>
 
-                    <DialogContent className="max-w-sm" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>
+                    <DialogContent className="max-w-sm" dir={isRTL ? 'rtl' : 'ltr'}>
 
                         <DialogHeader>
 

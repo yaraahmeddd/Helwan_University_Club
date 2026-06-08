@@ -693,6 +693,7 @@ export class TeamMemberService {
     async getPendingTeamMembers() {
         const teamMembers = await this.teamMemberRepo.createQueryBuilder('team_member')
             .leftJoinAndSelect('team_member.team_member_teams', 'teams')
+            .leftJoinAndSelect('teams.team', 'team')
             .leftJoinAndSelect('team_member.account', 'account')
             .where('team_member.status = :status', { status: 'pending' })
             .orderBy('team_member.created_at', 'DESC')
@@ -718,6 +719,9 @@ export class TeamMemberService {
             medical_report: tm.medical_report || undefined,
             memberType: 'team_member' as const,
             teams: tm.team_member_teams?.map(t => t.team?.name_en || t.team_id) || [],
+            email: tm.account?.email,
+            nationality: tm.nationality,
+            membership_plan: 'Sports Team Member'
         }));
     }
 

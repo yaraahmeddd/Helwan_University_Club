@@ -10,8 +10,12 @@ import {
 import DateRangeFilter from "../components/StaffPagesComponents/shared/DateRangeFilter";
 import type { DateRange } from "../components/StaffPagesComponents/shared/DateRangeFilter";
 import api from "../services/axios";
+import { useLanguage } from "../hooks/useLanguage";
+import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
+import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
+import { buildPersonName, getLocalizedText } from "../lib/localizedDisplay";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
-import i18n from "../i18n";
 
 // ─── Types from API ───────────────────────────────────────────────────────────
 
@@ -68,8 +72,11 @@ interface SubRow {
     id: string;
     memberType: "member" | "team_member";
     memberCode: string;
-    memberName: string;
-    teamName: string;
+    memberId: number;
+    memberNameAr: string;
+    memberNameEn: string;
+    teamNameAr: string;
+    teamNameEn: string;
     status: string;
     paymentStatus: string;
     monthlyFee: number;
@@ -107,6 +114,7 @@ const statusLabelMap: Record<string, { label: string; cls: string }> = {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function SubscriptionsPage() {
+    const { language, isRTL } = useLanguage();
     // ── State ─────────────────────────────────────────────────────────────────
     const [rows, setRows] = useState<SubRow[]>([]);
     const [stats, setStats] = useState<SubscriptionStats>({});
@@ -148,10 +156,11 @@ export default function SubscriptionsPage() {
                 memberCode: s.member?.national_id
                     ? `MEM-${String(s.member.national_id).slice(-4)}`
                     : `MEM-${s.member_id}`,
-                memberName: s.member
-                    ? `${s.member.first_name_ar ?? ""} ${s.member.last_name_ar ?? ""}`.trim()
-                    : `عضو #${s.member_id}`,
-                teamName: (i18n.language === 'ar' ? (s.team?.name_ar || s.team?.name_en) : (s.team?.name_en || s.team?.name_ar)) || `فريق #${s.team_id}`,
+                memberId: s.member_id,
+                memberNameAr: `${s.member?.first_name_ar ?? ""} ${s.member?.last_name_ar ?? ""}`.trim(),
+                memberNameEn: "",
+                teamNameAr: s.team?.name_ar ?? "",
+                teamNameEn: s.team?.name_en ?? "",
                 status: s.status,
                 paymentStatus: s.payment_status ?? "unpaid",
                 monthlyFee: Number(s.monthly_fee) || 0,
@@ -167,10 +176,11 @@ export default function SubscriptionsPage() {
                 memberCode: s.team_member?.national_id
                     ? `TM-${String(s.team_member.national_id).slice(-4)}`
                     : `TM-${s.team_member_id}`,
-                memberName: s.team_member
-                    ? `${s.team_member.first_name_ar ?? ""} ${s.team_member.last_name_ar ?? ""}`.trim()
-                    : `لاعب #${s.team_member_id}`,
-                teamName: (i18n.language === 'ar' ? (s.team?.name_ar || s.team?.name_en) : (s.team?.name_en || s.team?.name_ar)) || `فريق #${s.team_id}`,
+                memberId: s.team_member_id,
+                memberNameAr: `${s.team_member?.first_name_ar ?? ""} ${s.team_member?.last_name_ar ?? ""}`.trim(),
+                memberNameEn: "",
+                teamNameAr: s.team?.name_ar ?? "",
+                teamNameEn: s.team?.name_en ?? "",
                 status: s.status,
                 paymentStatus: s.payment_status ?? "unpaid",
                 monthlyFee: Number(s.monthly_fee) || 0,
@@ -220,8 +230,13 @@ export default function SubscriptionsPage() {
             if (typeFilter !== "all" && r.memberType !== typeFilter) return false;
             if (searchQuery.trim()) {
                 const q = searchQuery.trim().toLowerCase();
+                const memberLabel = getLocalizedText(r.memberNameAr, r.memberNameEn, language);
+                const teamLabel = getLocalizedText(r.teamNameAr, r.teamNameEn, language);
                 const match = r.memberCode.toLowerCase().includes(q) ||
-                    r.memberName.includes(q) || r.teamName.includes(q);
+                    memberLabel.includes(searchQuery.trim()) ||
+                    memberLabel.toLowerCase().includes(q) ||
+                    teamLabel.includes(searchQuery.trim()) ||
+                    teamLabel.toLowerCase().includes(q);
                 if (!match) return false;
             }
             if (dateRange.from && r.endDate && r.endDate < dateRange.from) return false;
@@ -231,12 +246,12 @@ export default function SubscriptionsPage() {
             const order: Record<string, number> = { pending: 0, approved: 1, active: 2, declined: 3, cancelled: 4 };
             return (order[a.status] ?? 5) - (order[b.status] ?? 5);
         });
-    }, [rows, statusFilter, typeFilter, searchQuery, dateRange]);
+    }, [rows, statusFilter, typeFilter, searchQuery, dateRange, language]);
 
     // ── Render ────────────────────────────────────────────────────────────────
 
     return (
-        <div className="h-full flex flex-col overflow-hidden" dir="rtl">
+        <div className="h-full flex flex-col overflow-hidden" dir={isRTL ? "rtl" : "ltr"}>
 
             {/* ── Page Header ── */}
             <div className="px-6 py-4 border-b border-border bg-background shrink-0 flex items-center justify-between">
@@ -352,23 +367,23 @@ export default function SubscriptionsPage() {
             </div>
 
             {/* ── Table ── */}
-            <div className="flex-1 overflow-auto px-6 pb-6">
+            <div className={`flex-1 px-6 pb-6 ${adminTableStyles.container}`}>
                 <div className="rounded-xl border border-border overflow-hidden">
                     <Table>
-                        <TableHeader className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
+                        <TableHeader className={adminTableStyles.header}>
                             <TableRow>
-                                <TableHead className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground w-10">#</TableHead>
-                                <TableHead className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground">الكود</TableHead>
-                                <TableHead className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground">الاسم</TableHead>
-                                <TableHead className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground">النوع</TableHead>
-                                <TableHead className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground">الفريق</TableHead>
-                                <TableHead className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground">الرسوم الشهرية</TableHead>
-                                <TableHead className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground">تاريخ البداية</TableHead>
-                                <TableHead className="px-4 py-3 text-right font-semibold text-xs text-muted-foreground">تاريخ الانتهاء</TableHead>
-                                <TableHead className="px-4 py-3 text-center font-semibold text-xs text-muted-foreground">الحالة</TableHead>
+                                <TableHead className={adminHeadClass({ className: "w-10" })}>#</TableHead>
+                                <TableHead className={adminHeadClass()}>الكود</TableHead>
+                                <TableHead className={adminHeadClass()}>الاسم</TableHead>
+                                <TableHead className={adminHeadClass()}>النوع</TableHead>
+                                <TableHead className={adminHeadClass()}>الفريق</TableHead>
+                                <TableHead className={adminHeadClass()}>الرسوم الشهرية</TableHead>
+                                <TableHead className={adminHeadClass()}>تاريخ البداية</TableHead>
+                                <TableHead className={adminHeadClass()}>تاريخ الانتهاء</TableHead>
+                                <TableHead className={adminHeadClass({ center: true })}>الحالة</TableHead>
                             </TableRow>
                         </TableHeader>
-                        <TableBody className="divide-y divide-border">
+                        <TableBody className={adminTableStyles.body}>
                             {loading ? (
                                 <TableRow>
                                     <TableCell colSpan={9} className="text-center py-16">
@@ -394,19 +409,29 @@ export default function SubscriptionsPage() {
                                         statusLabelMap[r.status] ?? { label: r.status, cls: "border-gray-200 bg-gray-100 text-gray-600" };
 
                                     return (
-                                        <TableRow key={r.id} className="hover:bg-muted/30 transition-colors">
-                                            <TableCell className="px-4 py-3 text-xs text-muted-foreground">{idx + 1}</TableCell>
+                                        <TableRow key={r.id} className={adminTableStyles.row}>
+                                            <TableCell className={adminCellClass({ size: "muted" })}>{idx + 1}</TableCell>
 
-                                            {/* Code */}
-                                            <TableCell className="px-4 py-3">
+                                            <TableCell className={adminCellClass()}>
                                                 <span className="font-mono text-xs font-semibold">{r.memberCode}</span>
                                             </TableCell>
 
-                                            {/* Name */}
-                                            <TableCell className="px-4 py-3 text-sm">{r.memberName || "—"}</TableCell>
+                                            <TableCell className={adminCellClass()}>
+                                                <PersonNameDisplay
+                                                    id={r.memberId}
+                                                    names={{
+                                                        firstNameAr: r.memberNameAr.split(" ")[0],
+                                                        lastNameAr: r.memberNameAr.split(" ").slice(1).join(" "),
+                                                        firstNameEn: r.memberNameEn.split(" ")[0],
+                                                        lastNameEn: r.memberNameEn.split(" ").slice(1).join(" "),
+                                                    }}
+                                                    language={language}
+                                                    showAvatar={false}
+                                                    fallback={r.memberType === "team_member" ? `لاعب #${r.memberId}` : `عضو #${r.memberId}`}
+                                                />
+                                            </TableCell>
 
-                                            {/* Type badge */}
-                                            <TableCell className="px-4 py-3">
+                                            <TableCell className={adminCellClass()}>
                                                 {r.memberType === "team_member" ? (
                                                     <span className="inline-flex items-center rounded-full border border-purple-200 bg-purple-50 text-purple-700 px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap">
                                                         لاعب فريق
@@ -418,21 +443,24 @@ export default function SubscriptionsPage() {
                                                 )}
                                             </TableCell>
 
-                                            {/* Team */}
-                                            <TableCell className="px-4 py-3 text-sm text-muted-foreground">{r.teamName}</TableCell>
+                                            <TableCell className={adminCellClass({ size: "muted" })}>
+                                                <BilingualText
+                                                    ar={r.teamNameAr}
+                                                    en={r.teamNameEn}
+                                                    language={language}
+                                                    fallback={`فريق #${r.memberId}`}
+                                                />
+                                            </TableCell>
 
-                                            {/* Monthly fee */}
-                                            <TableCell className="px-4 py-3 text-sm font-semibold tabular-nums" dir="ltr">
+                                            <TableCell className={adminCellClass({ className: "font-semibold tabular-nums" })} dir="ltr">
                                                 {r.monthlyFee > 0 ? `${r.monthlyFee.toLocaleString("ar-EG")} ج.م` : "—"}
                                             </TableCell>
 
-                                            {/* Start date */}
-                                            <TableCell className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
+                                            <TableCell className={adminCellClass({ size: "muted", className: "whitespace-nowrap" })}>
                                                 {fmtDate(r.startDate)}
                                             </TableCell>
 
-                                            {/* End date with alert */}
-                                            <TableCell className="px-4 py-3">
+                                            <TableCell className={adminCellClass()}>
                                                 {r.endDate ? (
                                                     <div>
                                                         <p className={`text-sm font-medium whitespace-nowrap ${alertStatus === "overdue" ? "text-rose-600" :
@@ -454,8 +482,7 @@ export default function SubscriptionsPage() {
                                                 )}
                                             </TableCell>
 
-                                            {/* Status badge */}
-                                            <TableCell className="px-4 py-3 text-center">
+                                            <TableCell className={adminCellClass({ center: true })}>
                                                 <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold whitespace-nowrap ${statusCls}`}>
                                                     {statusLabel}
                                                 </span>

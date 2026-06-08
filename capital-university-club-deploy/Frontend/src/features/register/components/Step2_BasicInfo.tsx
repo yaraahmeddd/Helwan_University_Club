@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IdCard, AlertCircle, ChevronRight, ChevronLeft, User, Mail, Phone, Lock, Calendar, Users, Check, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../../hooks/useLanguage';
 import type { RegisterFormValues } from '../schemas/validation';
 
 interface Step2BasicInfoProps {
@@ -78,30 +80,37 @@ interface NavigationButtonsProps {
 /**
  * Navigation Buttons Component
  */
-const NavigationButtons = ({ onPrev, onNext }: NavigationButtonsProps) => (
-    <div className={`flex mt-8 pt-5 border-t border-gray-200 ${onPrev ? 'justify-between' : 'justify-end'}`}>
-        {onPrev && (
+const NavigationButtons = ({ onPrev, onNext }: NavigationButtonsProps) => {
+    const { t } = useTranslation('register');
+    const { isRTL } = useLanguage();
+    const PrevIcon = isRTL ? ChevronRight : ChevronLeft;
+    const NextIcon = isRTL ? ChevronLeft : ChevronRight;
+
+    return (
+        <div className={`flex mt-8 pt-5 border-t border-gray-200 ${onPrev ? 'justify-between' : 'justify-end'}`}>
+            {onPrev && (
+                <button
+                    onClick={onPrev}
+                    type="button"
+                    className="group px-7 py-3 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 text-gray-700 font-bold transition-all duration-300 flex items-center gap-2 shadow-sm hover:shadow-md border border-gray-200"
+                    aria-label={t('nav.prevAria')}
+                >
+                    <PrevIcon size={20} className="transition-transform group-hover:translate-x-1" />
+                    {t('nav.prev')}
+                </button>
+            )}
             <button
-                onClick={onPrev}
+                onClick={onNext}
                 type="button"
-                className="group px-7 py-3 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 text-gray-700 font-bold transition-all duration-300 flex items-center gap-2 shadow-sm hover:shadow-md border border-gray-200"
-                aria-label="العودة للخطوة السابقة"
+                className="group px-7 py-3 rounded-xl bg-gradient-to-br from-[#2596be] to-[#1a7a9a] hover:from-[#1a7a9a] hover:to-[#156280] text-white font-bold shadow-lg shadow-[#2596be]/20 hover:shadow-xl hover:shadow-[#2596be]/30 transition-all duration-300 flex items-center gap-2"
+                aria-label={t('nav.nextAria')}
             >
-                <ChevronRight size={20} className="transition-transform group-hover:translate-x-1" />
-                السابق
+                {t('nav.next')}
+                <NextIcon size={20} className="transition-transform group-hover:-translate-x-1" />
             </button>
-        )}
-        <button
-            onClick={onNext}
-            type="button"
-            className="group px-7 py-3 rounded-xl bg-gradient-to-br from-[#2596be] to-[#1a7a9a] hover:from-[#1a7a9a] hover:to-[#156280] text-white font-bold shadow-lg shadow-[#2596be]/20 hover:shadow-xl hover:shadow-[#2596be]/30 transition-all duration-300 flex items-center gap-2"
-            aria-label="الانتقال للخطوة التالية"
-        >
-            التالي
-            <ChevronLeft size={20} className="transition-transform group-hover:-translate-x-1" />
-        </button>
-    </div>
-);
+        </div>
+    );
+};
 
 /**
  * Step 2: Basic Information
@@ -113,7 +122,7 @@ const NavigationButtons = ({ onPrev, onNext }: NavigationButtonsProps) => (
  * - Others: Automatically Egyptian
  */
 export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
-    // Local state to track if user clicked Next button
+    const { t } = useTranslation('register');
     const [attemptedNext, setAttemptedNext] = useState(false);
     const [passwordStrength, setPasswordStrength] = useState(0);
 
@@ -184,13 +193,13 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
         switch (passwordStrength) {
             case 0:
             case 1:
-                return { color: 'bg-red-500', label: 'ضعيفة', textColor: 'text-red-500' };
+                return { color: 'bg-red-500', label: t('step2.passwordWeak'), textColor: 'text-red-500' };
             case 2:
-                return { color: 'bg-orange-500', label: 'متوسطة', textColor: 'text-orange-500' };
+                return { color: 'bg-orange-500', label: t('step2.passwordFair'), textColor: 'text-orange-500' };
             case 3:
-                return { color: 'bg-yellow-500', label: 'جيدة', textColor: 'text-yellow-500' };
+                return { color: 'bg-yellow-500', label: t('step2.passwordGood'), textColor: 'text-yellow-500' };
             case 4:
-                return { color: 'bg-green-500', label: 'قوية', textColor: 'text-green-500' };
+                return { color: 'bg-green-500', label: t('step2.passwordStrong'), textColor: 'text-green-500' };
             default:
                 return { color: 'bg-gray-300', label: '', textColor: 'text-gray-400' };
         }
@@ -282,10 +291,10 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
                         <IdCard className="text-white" size={28} />
                     </div>
                     <h3 className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#2596be] to-[#1a7a9a]">
-                        البيانات الأساسية
+                        {t('step2.title')}
                     </h3>
                 </div>
-                <p className="text-gray-600 text-sm mr-14">يرجى ملء جميع الحقول المطلوبة بدقة</p>
+                <p className="text-gray-600 text-sm ms-14">{t('step2.subtitle')}</p>
             </div>
 
             {/* Form Grid */}
@@ -293,7 +302,7 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
                 {/* Arabic Names Section */}
                 <InputGroup
                     id="first_name_ar"
-                    label="الاسم الأول (عربي)"
+                    label={t('step2.firstNameAr')}
                     error={getError('first_name_ar')}
                     icon={<User size={16} />}
                     required
@@ -304,7 +313,7 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
                         id="first_name_ar"
                         {...register('first_name_ar')}
                         className={inputClasses}
-                        placeholder="مثال: أحمد"
+                        placeholder={t('step2.firstNameArPlaceholder')}
                         maxLength={20}
                         dir="rtl"
                         aria-required="true"
@@ -315,7 +324,7 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
 
                 <InputGroup
                     id="last_name_ar"
-                    label="اسم العائلة (عربي)"
+                    label={t('step2.lastNameAr')}
                     error={getError('last_name_ar')}
                     icon={<User size={16} />}
                     required
@@ -326,7 +335,7 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
                         id="last_name_ar"
                         {...register('last_name_ar')}
                         className={inputClasses}
-                        placeholder="مثال: محمد"
+                        placeholder={t('step2.lastNameArPlaceholder')}
                         maxLength={20}
                         dir="rtl"
                         aria-required="true"
@@ -337,7 +346,7 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
                 {/* English Names Section */}
                 <InputGroup
                     id="first_name_en"
-                    label="First Name (En)"
+                    label={t('step2.firstNameEn')}
                     className="text-left"
                     error={getError('first_name_en')}
                     icon={<User size={16} />}
@@ -347,7 +356,7 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
                         id="first_name_en"
                         {...register('first_name_en')}
                         className={`${inputClasses} text-left`}
-                        placeholder="e.g. Ahmed"
+                        placeholder={t('step2.firstNameEnPlaceholder')}
                         dir="ltr"
                         maxLength={20}
                         aria-required="true"
@@ -357,7 +366,7 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
 
                 <InputGroup
                     id="last_name_en"
-                    label="Last Name (En)"
+                    label={t('step2.lastNameEn')}
                     className="text-left"
                     error={getError('last_name_en')}
                     icon={<User size={16} />}
@@ -367,7 +376,7 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
                         id="last_name_en"
                         {...register('last_name_en')}
                         className={`${inputClasses} text-left`}
-                        placeholder="e.g. Mohamed"
+                        placeholder={t('step2.lastNameEnPlaceholder')}
                         dir="ltr"
                         maxLength={20}
                         aria-required="true"
@@ -393,7 +402,7 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
                         >
                             <InputGroup
                                 id="passportNumber"
-                                label="رقم جواز السفر"
+                                label={t('step2.passport')}
                                 error={getError('passportNumber')}
                                 icon={<IdCard size={16} />}
                                 required
@@ -421,7 +430,7 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
                         >
                             <InputGroup
                                 id="nationalId"
-                                label="الرقم القومي"
+                                label={t('step2.nationalId')}
                                 error={getError('nationalId')}
                                 icon={<IdCard size={16} />}
                                 required
@@ -444,7 +453,7 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
                 {/* Date of Birth */}
                 <InputGroup
                     id="dob"
-                    label="تاريخ الميلاد"
+                    label={t('step2.birthDate')}
                     error={getError('dob')}
                     icon={<Calendar size={16} />}
                     required
@@ -462,7 +471,7 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
                 {/* Gender */}
                 <InputGroup
                     id="gender"
-                    label="الجنس"
+                    label={t('step2.gender')}
                     error={getError('gender')}
                     icon={<Users size={16} />}
                     required
@@ -474,8 +483,8 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
                         aria-required="true"
                         aria-invalid={!!getError('gender')}
                     >
-                        <option value="male">ذكر</option>
-                        <option value="female">أنثى</option>
+                        <option value="male">{t('step2.male')}</option>
+                        <option value="female">{t('step2.female')}</option>
                     </select>
                 </InputGroup>
 
@@ -485,7 +494,7 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
                 {/* Phone */}
                 <InputGroup
                     id="phone"
-                    label="رقم الهاتف"
+                    label={t('step2.phone')}
                     error={getError('phone')}
                     icon={<Phone size={16} />}
                     required
@@ -512,7 +521,7 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
                 {/* Email */}
                 <InputGroup
                     id="email"
-                    label="البريد الإلكتروني"
+                    label={t('step2.email')}
                     error={getError('email')}
                     icon={<Mail size={16} />}
                     required
@@ -537,7 +546,7 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
                 {/* Password */}
                 <InputGroup
                     id="password"
-                    label="كلمة المرور"
+                    label={t('step2.password')}
                     error={getError('password')}
                     icon={<Lock size={16} />}
                     required
@@ -574,7 +583,7 @@ export const Step2BasicInfo = ({ onNext, onPrev }: Step2BasicInfoProps) => {
                 {/* Confirm Password */}
                 <InputGroup
                     id="confirmPassword"
-                    label="تأكيد كلمة المرور"
+                    label={t('step2.confirmPassword')}
                     error={getError('confirmPassword')}
                     icon={<Lock size={16} />}
                     required

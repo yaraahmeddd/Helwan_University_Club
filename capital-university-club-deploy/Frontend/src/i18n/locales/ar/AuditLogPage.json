@@ -1,0 +1,68 @@
+{
+  "header": {
+    "title": "سجل العمليات",
+    "subtitle": "عرض جميع العمليات التي تمت داخل النظام"
+  },
+  "actions": {
+    "clearFilters": "مسح الفلاتر",
+    "exportLog": "تصدير السجل",
+    "viewDetails": "عرض التفاصيل"
+  },
+  "stats": {
+    "totalLogs": "إجمالي السجلات",
+    "successful": "العمليات الناجحة",
+    "failed": "العمليات الفاشلة",
+    "today": "سجلات اليوم"
+  },
+  "filters": {
+    "title": "تصفية السجلات",
+    "logId": {
+      "label": "رقم السجل",
+      "placeholder": "مثال: LOG-001"
+    },
+    "userName": {
+      "label": "اسم المستخدم",
+      "placeholder": "ابحث باسم المستخدم"
+    },
+    "role": {
+      "label": "الدور",
+      "allRoles": "جميع الأدوار"
+    },
+    "action": {
+      "label": "العملية",
+      "allActions": "جميع العمليات"
+    },
+    "module": {
+      "label": "القسم",
+      "allModules": "جميع الأقسام"
+    }
+  },
+  "table": {
+    "headers": {
+      "logId": "رقم السجل",
+      "userName": "اسم المستخدم",
+      "role": "الدور",
+      "action": "العملية",
+      "module": "القسم",
+      "description": "الوصف",
+      "status": "الحالة",
+      "dateTime": "التاريخ والوقت",
+      "actions": "الإجراءات"
+    },
+    "states": {
+      "loading": "جاري التحميل...",
+      "noLogs": "لا توجد سجلات",
+      "noMatchingLogs": "لا توجد سجلات مطابقة"
+    },
+    "status": {
+      "success": "نجح",
+      "failed": "فشل"
+    }
+  },
+  "pagination": {
+    "info": "عرض {{start}} إلى {{end}} من {{total}} سجل"
+  },
+  "modal": {
+    "title": "تفاصيل العملية"
+  }
+}

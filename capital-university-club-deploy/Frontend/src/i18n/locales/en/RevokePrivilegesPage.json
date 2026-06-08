@@ -1,0 +1,81 @@
+{
+  "roles": {
+    "ADMIN": "System Admin",
+    "SPORTS_DIRECTOR": "Sports Director",
+    "SPORTS_OFFICER": "Sports Officer",
+    "FINANCIAL_DIRECTOR": "Financial Director",
+    "REGISTRATION_STAFF": "Registration Staff",
+    "TEAM_MANAGER": "Team Manager",
+    "SUPPORT": "Technical Support",
+    "AUDITOR": "Financial Auditor",
+    "STAFF": "Staff"
+  },
+  "filters": {
+    "all": "All",
+    "admin": "Admin",
+    "sportsDirector": "Sports Director",
+    "sportsOfficer": "Sports Officer",
+    "financial": "Financial",
+    "registration": "Registration",
+    "teamManager": "Team Manager",
+    "support": "Support",
+    "auditor": "Auditor"
+  },
+  "sources": {
+    "direct": "Direct",
+    "package": "From Package",
+    "default": "Default"
+  },
+  "table": {
+    "title": "Revoke Staff Privileges",
+    "description": "Select a staff member to view their current privileges and revoke them",
+    "refresh": "Refresh",
+    "searchPlaceholder": "Search by name or national ID...",
+    "dateFrom": "From:",
+    "dateTo": "To:",
+    "clearDate": "Clear Date",
+    "staffCount": "Staff",
+    "loading": "Loading staff members...",
+    "noStaffTitle": "No staff members",
+    "noStaffDesc": "No staff members found",
+    "noStaffSearch": "No matching results",
+    "headers": {
+      "number": "#",
+      "staff": "Staff",
+      "nationalId": "National ID",
+      "job": "Job Role",
+      "startDate": "Start Date",
+      "actions": "Action"
+    },
+    "revokeAction": "Revoke Privileges"
+  },
+  "revoke": {
+    "back": "Back to list",
+    "title": "Revoke Privileges:",
+    "totalPrivileges": "Total Privileges:",
+    "toRevoke": "To Revoke:",
+    "searchPrivilege": "Search for a privilege...",
+    "markAll": "Mark all to revoke",
+    "undo": "Undo",
+    "noGrantedPrivilegesTitle": "No Granted Privileges",
+    "noGrantedPrivilegesDesc": "This staff member does not currently have any privileges",
+    "noResults": "No matching results",
+    "privilegeCount": "Privilege(s)",
+    "failedAttemptsTitle": "⚠️ Could not revoke {{count}} privilege(s):",
+    "footerTextSelected": "privilege(s) selected for revocation",
+    "footerTextNone": "No privileges selected for revocation",
+    "confirmRevokeBtn": "Confirm Revocation",
+    "revoking": "Revoking..."
+  },
+  "toasts": {
+    "errorTitle": "Error",
+    "errorLoad": "Failed to load staff list",
+    "errorLoadPrivileges": "Failed to load staff privileges",
+    "partialRevokeTitle": "Partially Revoked",
+    "partialRevokeDesc": "Successfully revoked {{success}} privileges. {{failed}} privileges could not be directly revoked.",
+    "revokeSuccessTitle": "Privileges Revoked",
+    "revokeSuccessDesc": "Successfully revoked {{count}} privileges from {{name}}.",
+    "revokeErrorTitle": "Revocation Failed",
+    "revokeErrorDesc": "An error occurred while revoking privileges"
+  }
+}

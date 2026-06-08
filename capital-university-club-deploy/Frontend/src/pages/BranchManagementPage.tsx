@@ -11,6 +11,10 @@ import { useToast } from "../hooks/use-toast";
 import api from "../services/axios";
 import { useTranslation } from "react-i18next";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
+import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
+import { getLocalizedText } from "../lib/localizedDisplay";
+import { useLanguage } from "../hooks/useLanguage";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -42,8 +46,8 @@ const PAGE_SIZE = 10;
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function BranchManagementPage() {
-    const { t, i18n } = useTranslation('BranchManagementPage');
-    const isRTL = i18n.language === 'ar';
+    const { t } = useTranslation('BranchManagementPage');
+    const { language, isRTL } = useLanguage();
     const { toast } = useToast();
     
     // State
@@ -448,7 +452,7 @@ export default function BranchManagementPage() {
                     </div>
 
                     {/* Native HTML Table */}
-                    <div className="flex-1 overflow-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
+                    <div className={adminTableStyles.container} style={{ scrollbarWidth: "none" }}>
                         {loading ? (
                             <div className="py-24 text-center text-zinc-400">
                                 <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-4" />
@@ -466,45 +470,45 @@ export default function BranchManagementPage() {
                             </div>
                         ) : (
                             <Table>
-                                <TableHeader className="sticky top-0 bg-white z-10 before:absolute before:inset-0 before:border-b before:border-zinc-100 before:pointer-events-none">
+                                <TableHeader className={adminTableStyles.header}>
                                     <TableRow>
-                                        <TableHead className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle w-12">{t('table.columns.serial')}</TableHead>
-                                        <TableHead className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle">{t('table.columns.name')}</TableHead>
-                                        <TableHead className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle">{t('table.columns.code')}</TableHead>
-                                        <TableHead className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle">{t('table.columns.location')}</TableHead>
-                                        <TableHead className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle">{t('table.columns.status')}</TableHead>
-                                        <TableHead className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle text-center">{t('table.columns.sportsCount')}</TableHead>
-                                        <TableHead className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle text-center">{t('table.columns.actions')}</TableHead>
+                                        <TableHead className={adminHeadClass({ className: "w-12" })}>{t('table.columns.serial')}</TableHead>
+                                        <TableHead className={adminHeadClass()}>{t('table.columns.name')}</TableHead>
+                                        <TableHead className={adminHeadClass()}>{t('table.columns.code')}</TableHead>
+                                        <TableHead className={adminHeadClass()}>{t('table.columns.location')}</TableHead>
+                                        <TableHead className={adminHeadClass()}>{t('table.columns.status')}</TableHead>
+                                        <TableHead className={adminHeadClass({ center: true })}>{t('table.columns.sportsCount')}</TableHead>
+                                        <TableHead className={adminHeadClass({ center: true })}>{t('table.columns.actions')}</TableHead>
                                     </TableRow>
                                 </TableHeader>
-                                <TableBody className="divide-y divide-zinc-100">
+                                <TableBody className={adminTableStyles.body}>
                                     {pagedRows.map((branch, idx) => (
                                         <React.Fragment key={branch.id}>
-                                            <TableRow className="transition-colors hover:bg-zinc-50/80 group">
-                                                {/* Serial */}
-                                                <TableCell className="px-6 py-3.5 text-[13px] text-zinc-400 font-mono align-middle">
+                                            <TableRow className={adminTableStyles.row}>
+                                                <TableCell className={adminCellClass({ size: "muted", className: "font-mono w-12" })}>
                                                     {(page - 1) * PAGE_SIZE + idx + 1}
                                                 </TableCell>
 
-                                                {/* Name */}
-                                                <TableCell className="px-6 py-3.5 align-middle font-bold text-zinc-900 border-e-2 border-transparent group-hover:border-primary/40 transition-all">
-                                                    {isRTL ? (branch.name_ar || branch.name_en || "—") : (branch.name_en || branch.name_ar || "—")}
+                                                <TableCell className={adminCellClass()}>
+                                                    <BilingualText
+                                                        ar={branch.name_ar}
+                                                        en={branch.name_en}
+                                                        language={language}
+                                                        primaryClassName="font-semibold text-xs"
+                                                    />
                                                 </TableCell>
 
-                                                {/* Code */}
-                                                <TableCell className="px-6 py-3.5 align-middle">
+                                                <TableCell className={adminCellClass()}>
                                                     {branch.code ? (
-                                                        <span className="text-[11px] font-mono font-bold text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded border border-zinc-200">{branch.code}</span>
+                                                        <span className="text-[11px] font-mono font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded border border-border" dir="ltr">{branch.code}</span>
                                                     ) : "—"}
                                                 </TableCell>
 
-                                                {/* Location */}
-                                                <TableCell className="px-6 py-3.5 align-middle text-zinc-500 font-medium tracking-wide">
-                                                    {isRTL ? (branch.location_ar || branch.location_en || "—") : (branch.location_en || branch.location_ar || "—")}
+                                                <TableCell className={adminCellClass({ size: "muted" })}>
+                                                    {getLocalizedText(branch.location_ar, branch.location_en, language) || "—"}
                                                 </TableCell>
 
-                                                {/* Status */}
-                                                <TableCell className="px-6 py-3.5 align-middle">
+                                                <TableCell className={adminCellClass()}>
                                                     {branch.status ? (
                                                         <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-widest border ${
                                                             branch.status === 'active' 
@@ -518,16 +522,14 @@ export default function BranchManagementPage() {
                                                     ) : "—"}
                                                 </TableCell>
 
-                                                {/* Sports Count */}
-                                                <TableCell className="px-6 py-3.5 align-middle text-center">
-                                                    <span className="bg-zinc-100/80 text-zinc-600 px-2.5 py-1 rounded-md text-[11px] font-mono font-bold uppercase tracking-widest border border-zinc-200/60 shadow-sm">
+                                                <TableCell className={adminCellClass({ center: true })}>
+                                                    <span className="bg-muted text-muted-foreground px-2.5 py-1 rounded-md text-[11px] font-mono font-bold border border-border">
                                                         {branch.sports_count ?? "—"}
                                                     </span>
                                                 </TableCell>
 
-                                                {/* Actions */}
-                                                <TableCell className="px-6 py-3.5 align-middle">
-                                                    <div className="flex items-center justify-center gap-2  transition-opacity">
+                                                <TableCell className={adminCellClass({ center: true })}>
+                                                    <div className={`${adminTableStyles.actions} transition-opacity`}>
                                                         
                                                         <RoleGuard privilege="UPDATE_BRANCH">
                                                             <button
@@ -580,7 +582,7 @@ export default function BranchManagementPage() {
                                                             <div className="flex items-center justify-between mb-4">
                                                                 <h4 className="text-[13px] font-bold text-zinc-800 flex items-center gap-2">
                                                                     <Link className="w-4 h-4 text-emerald-600" />
-                                                                    {t('sportsPanel.title')} {branch.name_ar || branch.name_en}
+                                                                    {t('sportsPanel.title')} {getLocalizedText(branch.name_ar, branch.name_en, language)}
                                                                 </h4>
                                                                 <RoleGuard privilege="CREATE_BRANCH">
                                                                     <Button size="sm" onClick={() => openAddSport(branch.id)} className="h-8 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm font-bold rounded-lg px-4">
@@ -601,18 +603,25 @@ export default function BranchManagementPage() {
                                                             ) : (
                                                                 <div className="bg-white rounded-xl border border-zinc-200/60 shadow-sm overflow-hidden border-t-0">
                                                                     <Table>
-                                                                        <TableHeader className="bg-zinc-50/50 border-b border-zinc-100">
+                                                                        <TableHeader className={adminTableStyles.header}>
                                                                             <TableRow>
-                                                                                <TableHead className="px-5 py-3 font-bold text-zinc-500">{t('sportsPanel.columns.sportName')}</TableHead>
-                                                                                <TableHead className="px-5 py-3 font-bold text-zinc-500 text-center w-28">{t('sportsPanel.columns.status')}</TableHead>
-                                                                                <TableHead className="px-5 py-3 font-bold text-zinc-500 text-center w-24">{t('sportsPanel.columns.actions')}</TableHead>
+                                                                                <TableHead className={adminHeadClass()}>{t('sportsPanel.columns.sportName')}</TableHead>
+                                                                                <TableHead className={adminHeadClass({ center: true, className: "w-28" })}>{t('sportsPanel.columns.status')}</TableHead>
+                                                                                <TableHead className={adminHeadClass({ center: true, className: "w-24" })}>{t('sportsPanel.columns.actions')}</TableHead>
                                                                             </TableRow>
                                                                         </TableHeader>
-                                                                        <TableBody className="divide-y divide-zinc-100">
+                                                                        <TableBody className={adminTableStyles.body}>
                                                                             {branchSports[branch.id].map(bs => (
-                                                                                <TableRow key={bs.id} className="hover:bg-zinc-50/30 transition-colors">
-                                                                                    <TableCell className="px-5 py-3 font-bold text-zinc-700">{bs.sport?.name_ar || "—"}</TableCell>
-                                                                                    <TableCell className="px-5 py-3 text-center">
+                                                                                <TableRow key={bs.id} className={adminTableStyles.row}>
+                                                                                    <TableCell className={adminCellClass()}>
+                                                                                        <BilingualText
+                                                                                            ar={bs.sport?.name_ar}
+                                                                                            en={bs.sport?.name_en}
+                                                                                            language={language}
+                                                                                            primaryClassName="font-semibold text-xs"
+                                                                                        />
+                                                                                    </TableCell>
+                                                                                    <TableCell className={adminCellClass({ center: true })}>
                                                                                         <RoleGuard privilege="UPDATE_BRANCH" fallback={
                                                                                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${bs.status === 'active' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-zinc-100 text-zinc-600 border border-zinc-200'}`}>
                                                                                                 {bs.status === 'active' ? t('table.status.active') : t('table.status.inactive')}
@@ -626,7 +635,7 @@ export default function BranchManagementPage() {
                                                                                             </div>
                                                                                         </RoleGuard>
                                                                                     </TableCell>
-                                                                                    <TableCell className="px-5 py-3 text-center">
+                                                                                    <TableCell className={adminCellClass({ center: true })}>
                                                                                         <RoleGuard privilege="DELETE_BRANCH">
                                                                                             <div className="flex justify-center">
                                                                                                 <button onClick={() => setDeleteBranchSportId(bs.id)} className="p-1.5 rounded-md text-zinc-400 hover:bg-rose-100 hover:text-rose-600 transition-colors" title={t('sportsPanel.actions.remove')}>

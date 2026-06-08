@@ -1,0 +1,30 @@
+{
+  "header": {
+    "title": "Add Club Member",
+    "subtitle": "Membership will be activated automatically after registration is complete"
+  },
+  "badge": {
+    "staffRegistration": "Staff registration — membership activates upon completion"
+  },
+  "success": {
+    "title": "Member added successfully!",
+    "description": "{{name}} has been registered and activated automatically",
+    "activeBadge": "Active member — ID: {{id}}",
+    "addAnother": "Add another member",
+    "manageMembers": "Manage members"
+  },
+  "overlay": {
+    "title": "Registering member...",
+    "subtitle": "Activating membership automatically"
+  },
+  "toast": {
+    "added": "Member added",
+    "addedDesc": "{{name}} — activated automatically",
+    "error": "Error"
+  },
+  "errors": {
+    "basicFailed": "Basic registration failed",
+    "noMemberId": "Member ID was not returned",
+    "generic": "An error occurred during registration"
+  }
+}

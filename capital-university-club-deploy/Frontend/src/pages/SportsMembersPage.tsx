@@ -20,11 +20,15 @@ import {
 } from "../components/StaffPagesComponents/ui/select";
 import api from "../services/api";
 import { useToast } from "../hooks/use-toast";
+import { useLanguage } from "../hooks/useLanguage";
+import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
+import { getLocalizedText, type DisplayLanguage } from "../lib/localizedDisplay";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 
 // Types
 
-type Language = "ar" | "en";
+type Language = DisplayLanguage;
 
 type SportItem = { id: number; name: string; nameAr?: string; nameEn?: string };
 
@@ -80,44 +84,31 @@ const MAX_SPORTS_PER_MEMBER = 4;
 
 const isActiveStatus = (status: string) => status === "active";
 
-const getLanguage = (language?: string): Language =>
-  (language ?? "ar").split("-")[0] === "en" ? "en" : "ar";
 
 const getSportApiName = (
   sport: { name?: string; name_ar?: string; name_en?: string },
   language: Language
-) =>
-  language === "en"
-    ? sport.name_en || sport.name_ar || sport.name || ""
-    : sport.name_ar || sport.name_en || sport.name || "";
+) => getLocalizedText(sport.name_ar, sport.name_en ?? sport.name, language);
 
 const getSportName = (sport: SportItem, language: Language) =>
-  language === "en"
-    ? sport.nameEn || sport.nameAr || sport.name
-    : sport.nameAr || sport.nameEn || sport.name;
+  getLocalizedText(sport.nameAr, sport.nameEn ?? sport.name, language);
 
-const getMemberDisplayName = (member: MemberRow, language: Language) => {
-  const arabicName = `${member.firstNameAr} ${member.lastNameAr}`.trim();
-  const englishName = `${member.firstNameEn} ${member.lastNameEn}`.trim();
-  return language === "en" ? englishName || arabicName : arabicName || englishName;
-};
-
-const getMemberSecondaryName = (member: MemberRow, language: Language) => {
-  const arabicName = `${member.firstNameAr} ${member.lastNameAr}`.trim();
-  const englishName = `${member.firstNameEn} ${member.lastNameEn}`.trim();
-  return language === "en" ? arabicName : englishName;
-};
+const getMemberDisplayName = (member: MemberRow, language: Language) =>
+  getLocalizedText(
+    `${member.firstNameAr} ${member.lastNameAr}`.trim(),
+    `${member.firstNameEn} ${member.lastNameEn}`.trim(),
+    language,
+  );
 
 const getTeamName = (team: { name_ar?: string; name_en?: string }, language: Language) =>
-  language === "en" ? team.name_en || team.name_ar || "" : team.name_ar || team.name_en || "";
+  getLocalizedText(team.name_ar, team.name_en, language);
 
 // Component
 
 export default function SportsMembersPage() {
   const { toast } = useToast();
-  const { t, i18n } = useTranslation("SportsMembersPage");
-  const language = getLanguage(i18n.resolvedLanguage ?? i18n.language);
-  const isRTL = language === "ar";
+  const { t } = useTranslation("SportsMembersPage");
+  const { language, isRTL } = useLanguage();
 
   const [memberTab, setMemberTab] = useState<"members" | "team-members">("members");
 
@@ -685,10 +676,7 @@ export default function SportsMembersPage() {
         )}
       </div>
 
-      <div
-        className="flex-1 overflow-auto [&::-webkit-scrollbar]:hidden"
-        style={{ scrollbarWidth: "none" }}
-      >
+      <div className={adminTableStyles.container}>
         {isLoading ? (
           <div className="py-20 text-center text-muted-foreground">
             <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-3" />
@@ -708,39 +696,44 @@ export default function SportsMembersPage() {
           </div>
         ) : (
           <Table>
-            <TableHeader className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
+            <TableHeader className={adminTableStyles.header}>
               <TableRow>
-                <TableHead className={`${isRTL ? "text-right" : "text-left"} px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle w-10`}>#</TableHead>
-                <TableHead className={`${isRTL ? "text-right" : "text-left"} px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle`}>{t("table.name")}</TableHead>
-                <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">{t("table.status")}</TableHead>
-                <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">{t("table.sports")}</TableHead>
-                <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">{t("table.actions")}</TableHead>
+                <TableHead className={adminHeadClass({ className: "w-10" })}>#</TableHead>
+                <TableHead className={adminHeadClass()}>{t("table.name")}</TableHead>
+                <TableHead className={adminHeadClass({ center: true })}>{t("table.status")}</TableHead>
+                <TableHead className={adminHeadClass({ center: true })}>{t("table.sports")}</TableHead>
+                <TableHead className={adminHeadClass({ center: true })}>{t("table.actions")}</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody className="divide-y divide-border">
-              {members.map((member, idx) => {
-                const secondaryName = getMemberSecondaryName(member, language);
-                return (
-                  <TableRow key={member.id} className="transition-colors hover:bg-muted/40">
-                    <TableCell className="px-4 py-3 text-sm text-muted-foreground font-mono align-middle">
+            <TableBody className={adminTableStyles.body}>
+              {members.map((member, idx) => (
+                  <TableRow key={member.id} className={adminTableStyles.row}>
+                    <TableCell className={adminCellClass({ size: "muted", className: "font-mono" })}>
                       {(currentPage - 1) * PAGE_SIZE + idx + 1}
                     </TableCell>
-                    <TableCell className="px-4 py-3 align-middle">
-                      <p className="font-semibold leading-tight">{getMemberDisplayName(member, language)}</p>
-                      {secondaryName && (
-                        <p className="text-[11px] text-muted-foreground/70 italic tracking-wide">{secondaryName}</p>
-                      )}
+                    <TableCell className={adminCellClass()}>
+                      <PersonNameDisplay
+                        id={member.id}
+                        names={{
+                          firstNameAr: member.firstNameAr,
+                          lastNameAr: member.lastNameAr,
+                          firstNameEn: member.firstNameEn,
+                          lastNameEn: member.lastNameEn,
+                        }}
+                        language={language}
+                        showAvatar={false}
+                      />
                     </TableCell>
-                    <TableCell className="px-4 py-3 text-center align-middle">
+                    <TableCell className={adminCellClass({ center: true })}>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${isActiveStatus(member.status)
                         ? "bg-emerald-100 text-emerald-700"
                         : "bg-amber-100 text-amber-800"
                         }`}
                       >
-                        {isActiveStatus(member.status) ? t("status.active") : member.status}
+                        {t(`status.${member.status}`, { defaultValue: t("status.inactive") })}
                       </span>
                     </TableCell>
-                    <TableCell className="px-4 py-3 text-center align-middle">
+                    <TableCell className={adminCellClass({ center: true })}>
                       <span className={`inline-flex items-center gap-1 text-xs font-medium ${member.sports.length >= MAX_SPORTS_PER_MEMBER
                         ? "text-amber-600 font-semibold"
                         : "text-muted-foreground"
@@ -750,8 +743,8 @@ export default function SportsMembersPage() {
                         {member.sports.length} / {MAX_SPORTS_PER_MEMBER}
                       </span>
                     </TableCell>
-                    <TableCell className="px-4 py-3 align-middle text-center">
-                      <div className="flex items-center justify-center gap-2">
+                    <TableCell className={adminCellClass({ center: true })}>
+                      <div className={adminTableStyles.actions}>
                         <Button
                           size="sm"
                           variant="outline"
@@ -771,8 +764,7 @@ export default function SportsMembersPage() {
                       </div>
                     </TableCell>
                   </TableRow>
-                );
-              })}
+              ))}
             </TableBody>
           </Table>
         )}

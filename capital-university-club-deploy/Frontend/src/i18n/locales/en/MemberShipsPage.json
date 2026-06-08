@@ -16,6 +16,9 @@
     "loading": "Loading...",
     "noResults": "No membership plans match your search"
   },
+  "rowActions": {
+    "viewDetails": "View details"
+  },
   "action": {
     "view": "View",
     "edit": "Edit",

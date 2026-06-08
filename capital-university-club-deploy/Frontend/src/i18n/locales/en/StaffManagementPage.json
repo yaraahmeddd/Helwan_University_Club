@@ -1,0 +1,99 @@
+{
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "detailPanel": {
+    "loading": "Loading...",
+    "sections": {
+      "name": "Name",
+      "contact": "Contact Information",
+      "employment": "Employment Information",
+      "assignedPackages": "Assigned Packages",
+      "privileges": "Individual Privileges"
+    },
+    "fields": {
+      "firstNameAr": "First Name (Arabic)",
+      "lastNameAr": "Last Name (Arabic)",
+      "firstNameEn": "First Name (English)",
+      "lastNameEn": "Last Name (English)",
+      "phone": "Phone Number",
+      "address": "Address",
+      "email": "Email",
+      "nationalId": "National ID",
+      "job": "Job Role",
+      "startDate": "Start Date",
+      "endDate": "End Date"
+    },
+    "placeholders": {
+      "selectJob": "Select Job Role"
+    },
+    "messages": {
+      "noPackages": "No assigned packages"
+    },
+    "actions": {
+      "viewPrivileges": "View Privileges",
+      "saveChanges": "Save Changes",
+      "saving": "Saving...",
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "deactivate": "Deactivate"
+    }
+  },
+  "page": {
+    "title": "Staff Management",
+    "totalStaff": "Total Staff",
+    "newStaff": "New Staff"
+  },
+  "list": {
+    "searchPlaceholder": "Search by name...",
+    "prevPage": "Previous Page",
+    "nextPage": "Next Page"
+  },
+  "table": {
+    "headers": {
+      "number": "#",
+      "staff": "Staff",
+      "job": "Job Role",
+      "startDate": "Start Date",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "states": {
+      "noStaff": "No staff found",
+      "addFirstStaff": "Add first staff"
+    },
+    "actions": {
+      "view": "View",
+      "edit": "Edit",
+      "deactivate": "Deactivate"
+    }
+  },
+  "toasts": {
+    "dataError": {
+      "title": "Data Error",
+      "desc": "First name in Arabic or English is required"
+    },
+    "phoneError": {
+      "title": "Invalid Phone Number",
+      "desc": "Phone number must start with 010, 011, 012, or 015"
+    },
+    "updateSuccess": {
+      "title": "Updated Successfully",
+      "desc": "Staff details updated successfully"
+    },
+    "updateFailed": {
+      "title": "Update Failed"
+    },
+    "deactivateSuccess": {
+      "title": "Deactivated Successfully",
+      "desc": "Staff deactivated successfully"
+    },
+    "deactivateFailed": {
+      "title": "Deactivation Failed"
+    },
+    "loadFailed": {
+      "title": "Failed to load staff list"
+    }
+  }
+}

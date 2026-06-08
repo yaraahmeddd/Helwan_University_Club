@@ -33,6 +33,9 @@
     "active": "Active",
     "pending": "Pending"
   },
+  "rowActions": {
+    "viewDetails": "View details"
+  },
   "actions": {
     "review": "Review",
     "approve": "Approve",
@@ -132,7 +135,18 @@
     "membershipType": "Membership Type",
     "approveMembership": "Approve {{type}} Membership",
     "approving": "Approving...",
-    "close": "Close"
+    "close": "Close",
+    "accountInfo": "Account Information",
+    "email": "Email",
+    "registerTime": "Register Time",
+    "status": "Status",
+    "personalInfo": "Personal Information",
+    "name": "Name",
+    "nationality": "Nationality",
+    "contactDetails": "Contact Information",
+    "address": "Address",
+    "membershipDetails": "Membership Details",
+    "membershipPlan": "Membership Plan"
   },
   "socialStatus": {
     "single": "Single",

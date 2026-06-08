@@ -46,6 +46,10 @@ import {
 } from "../services/fieldsApi";
 import { fetchActiveSports, type Sport } from "../services/sportsApi";
 import { Switch } from "../components/StaffPagesComponents/ui/switch";
+import { useLanguage } from "../hooks/useLanguage";
+import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
+import { getLocalizedText } from "../lib/localizedDisplay";
 
 type FieldStatus = Field["status"];
 
@@ -81,15 +85,14 @@ export default function CourtsManagementPage() {
     const [form, setForm] = useState(emptyForm());
 
     const { toast } = useToast();
-    const { t, i18n } = useTranslation("CourtsManagementPage");
-    const language = (i18n.resolvedLanguage ?? i18n.language ?? "ar").startsWith("en") ? "en" : "ar";
-    const isRTL = language === "ar";
+    const { t } = useTranslation("CourtsManagementPage");
+    const { language, isRTL } = useLanguage();
 
     const getFieldName = (field: Field) =>
-        language === "en" ? (field.name_en || field.name_ar) : (field.name_ar || field.name_en);
+        getLocalizedText(field.name_ar, field.name_en, language);
 
     const getSportName = (sport?: Sport | Field["sport"]) =>
-        sport ? (language === "en" ? (sport.name_en || sport.name_ar) : (sport.name_ar || sport.name_en)) : "";
+        sport ? getLocalizedText(sport.name_ar, sport.name_en, language) : "";
 
     useEffect(() => {
         const loadInitialData = async () => {
@@ -419,20 +422,20 @@ export default function CourtsManagementPage() {
                 </Popover>
             </div>
 
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="shadow-sm rounded-lg overflow-hidden border border-border">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`shadow-sm rounded-lg overflow-hidden border border-border ${adminTableStyles.container}`}>
                 <Table>
-                    <TableHeader>
+                    <TableHeader className={adminTableStyles.header}>
                         <TableRow>
-                            <TableHead className="w-10 text-center">#</TableHead>
-                            <TableHead>{t("table.colCourtName")}</TableHead>
-                            <TableHead>{t("table.colSport")}</TableHead>
-                            <TableHead className="text-center">{t("table.colCapacity")}</TableHead>
-                            <TableHead className="text-center">{t("table.colRequiresBooking")}</TableHead>
-                            <TableHead className="text-center">{t("table.colStatus")}</TableHead>
-                            <TableHead className="text-center">{t("table.colActions")}</TableHead>
+                            <TableHead className={adminHeadClass({ center: true, className: "w-10" })}>#</TableHead>
+                            <TableHead className={adminHeadClass()}>{t("table.colCourtName")}</TableHead>
+                            <TableHead className={adminHeadClass()}>{t("table.colSport")}</TableHead>
+                            <TableHead className={adminHeadClass({ center: true })}>{t("table.colCapacity")}</TableHead>
+                            <TableHead className={adminHeadClass({ center: true })}>{t("table.colRequiresBooking")}</TableHead>
+                            <TableHead className={adminHeadClass({ center: true })}>{t("table.colStatus")}</TableHead>
+                            <TableHead className={adminHeadClass({ center: true })}>{t("table.colActions")}</TableHead>
                         </TableRow>
                     </TableHeader>
-                    <TableBody>
+                    <TableBody className={adminTableStyles.body}>
                         <AnimatePresence>
                             {loading ? (
                                 <TableRow>
@@ -458,19 +461,21 @@ export default function CourtsManagementPage() {
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
                                             exit={{ opacity: 0 }}
-                                            className="border-b border-border transition-colors duration-200 hover:bg-accent/10"
+                                            className={adminTableStyles.row}
                                         >
-                                            <TableCell className="text-center text-muted-foreground text-sm font-mono">
+                                            <TableCell className={adminCellClass({ center: true, size: "muted", className: "font-mono" })}>
                                                 {index + 1}
                                             </TableCell>
 
-                                            <TableCell className="font-medium">{getFieldName(field)}</TableCell>
+                                            <TableCell className={adminCellClass()}>
+                                                <BilingualText ar={field.name_ar} en={field.name_en} language={language} primaryClassName="font-medium" />
+                                            </TableCell>
 
-                                            <TableCell className="text-muted-foreground">{getSportName(field.sport) || t("common.notAvailable")}</TableCell>
+                                            <TableCell className={adminCellClass({ size: "muted" })}>{getSportName(field.sport) || t("common.notAvailable")}</TableCell>
 
-                                            <TableCell className="text-center font-mono">{field.capacity || t("common.notAvailable")}</TableCell>
+                                            <TableCell className={adminCellClass({ center: true, className: "font-mono" })}>{field.capacity || t("common.notAvailable")}</TableCell>
 
-                                            <TableCell className="text-center">
+                                            <TableCell className={adminCellClass({ center: true })}>
                                                 {field.is_available_for_booking ? (
                                                     <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 gap-1">
                                                         <Check className="h-3 w-3" /> {t("common.yes")}
@@ -482,7 +487,7 @@ export default function CourtsManagementPage() {
                                                 )}
                                             </TableCell>
 
-                                            <TableCell className="text-center">
+                                            <TableCell className={adminCellClass({ center: true })}>
                                                 {isActive ? (
                                                     <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-100">
                                                         {t("status.active")}
@@ -498,8 +503,8 @@ export default function CourtsManagementPage() {
                                                 )}
                                             </TableCell>
 
-                                            <TableCell className="text-center whitespace-nowrap">
-                                                <div className="flex items-center justify-center gap-2">
+                                            <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
+                                                <div className={adminTableStyles.actions}>
                                                     <RoleGuard privilege="UPDATE_FIELD">
                                                         <Button
                                                             size="sm"

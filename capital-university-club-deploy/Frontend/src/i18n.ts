@@ -36,6 +36,13 @@ import arBranchManagementPage from './i18n/locales/ar/BranchManagementPage.json'
 import arMediaManagerPage from './i18n/locales/ar/MediaManagerPage.json';
 import arFacultyManagementPage from './i18n/locales/ar/FacultyManagementPage.json';
 import arProfessionManagementPage from './i18n/locales/ar/ProfessionManagementPage.json';
+import arAuditLogPage from './i18n/locales/ar/AuditLogPage.json';
+import arStaffManagementPage from './i18n/locales/ar/StaffManagementPage.json';
+import arAssignStaffPrivilegesPage from './i18n/locales/ar/AssignStaffPrivilegesPage.json';
+import arRevokePrivilegesPage from './i18n/locales/ar/RevokePrivilegesPage.json';
+import arAddNewStaffPage from './i18n/locales/ar/AddNewStaffPage.json';
+import arRegister from './i18n/locales/ar/register.json';
+import arStaffAddMemberPage from './i18n/locales/ar/StaffAddMemberPage.json';
 
 // ─── English namespaces ───────────────────────────────────────────────────────
 import enCommon from './i18n/locales/en/common.json';
@@ -71,6 +78,13 @@ import enBranchManagementPage from './i18n/locales/en/BranchManagementPage.json'
 import enMediaManagerPage from './i18n/locales/en/MediaManagerPage.json';
 import enFacultyManagementPage from './i18n/locales/en/FacultyManagementPage.json';
 import enProfessionManagementPage from './i18n/locales/en/ProfessionManagementPage.json';
+import enAuditLogPage from './i18n/locales/en/AuditLogPage.json';
+import enStaffManagementPage from './i18n/locales/en/StaffManagementPage.json';
+import enAssignStaffPrivilegesPage from './i18n/locales/en/AssignStaffPrivilegesPage.json';
+import enRevokePrivilegesPage from './i18n/locales/en/RevokePrivilegesPage.json';
+import enAddNewStaffPage from './i18n/locales/en/AddNewStaffPage.json';
+import enRegister from './i18n/locales/en/register.json';
+import enStaffAddMemberPage from './i18n/locales/en/StaffAddMemberPage.json';
 
 const RTL_LANGUAGES = new Set(['ar']);
 
@@ -124,6 +138,13 @@ void i18n
         MediaManagerPage: arMediaManagerPage,
         FacultyManagementPage: arFacultyManagementPage,
         ProfessionManagementPage: arProfessionManagementPage,
+        AuditLogPage: arAuditLogPage,
+        StaffManagementPage: arStaffManagementPage,
+        AssignStaffPrivilegesPage: arAssignStaffPrivilegesPage,
+        RevokePrivilegesPage: arRevokePrivilegesPage,
+        AddNewStaffPage: arAddNewStaffPage,
+        register: arRegister,
+        StaffAddMemberPage: arStaffAddMemberPage,
       },
       en: {
         common: enCommon,
@@ -159,6 +180,13 @@ void i18n
         MediaManagerPage: enMediaManagerPage,
         FacultyManagementPage: enFacultyManagementPage,
         ProfessionManagementPage: enProfessionManagementPage,
+        AuditLogPage: enAuditLogPage,
+        StaffManagementPage: enStaffManagementPage,
+        AssignStaffPrivilegesPage: enAssignStaffPrivilegesPage,
+        RevokePrivilegesPage: enRevokePrivilegesPage,
+        AddNewStaffPage: enAddNewStaffPage,
+        register: enRegister,
+        StaffAddMemberPage: enStaffAddMemberPage,
       },
     },
 
@@ -174,7 +202,7 @@ void i18n
       'professions', 'media', 'admin', 'landing', 'team', 'member',
       'MemberManagementPage', 'ManageInvitationsPage', 'SportsPage',
       'CourtsManagementPage', 'CourtBookingsPage', 'TeamsManagementPage', 'SportsMembersPage',
-      'SportManagementPage', 'MemberShipsPage', 'PackageManagementPage', 'PrivilegePackageAdminPage', 'MediaGalleryDashboard', 'MediaManagerPage', 'FacultyManagementPage', 'BranchManagementPage', 'ProfessionManagementPage'
+      'SportManagementPage', 'MemberShipsPage', 'PackageManagementPage', 'PrivilegePackageAdminPage', 'MediaGalleryDashboard', 'MediaManagerPage', 'FacultyManagementPage', 'BranchManagementPage', 'ProfessionManagementPage', 'AuditLogPage', 'StaffManagementPage', 'AssignStaffPrivilegesPage', 'RevokePrivilegesPage', 'AddNewStaffPage', 'register', 'StaffAddMemberPage'
     ],
 
     interpolation: { escapeValue: false },

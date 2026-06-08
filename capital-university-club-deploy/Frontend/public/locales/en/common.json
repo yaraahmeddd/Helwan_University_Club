@@ -61,5 +61,20 @@
     "apply": "Apply",
     "clear": "Clear",
     "rangeUntil": "Until {{date}}"
+  },
+  "review": {
+    "accountInfo": "Account Information",
+    "email": "Email",
+    "registerTime": "Register Time",
+    "status": "Status",
+    "personalInfo": "Personal Information",
+    "name": "Name",
+    "nationality": "Nationality",
+    "contactInfo": "Contact Information",
+    "address": "Address",
+    "membershipDetails": "Membership Details",
+    "memberType": "Member Type",
+    "membershipPlan": "Membership Plan",
+    "age": "years old"
   }
 }
