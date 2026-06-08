@@ -462,5 +462,18 @@
     "image_count": "Images Count:",
     "date": "Date:",
     "duration": "Duration:"
+  },
+  "register": {
+    "page_title": "Create New Membership",
+    "back_home": "Back to Home",
+    "steps": {
+      "category": "Category",
+      "membership_type": "Membership Type",
+      "basic_info": "Basic Info",
+      "details": "Details",
+      "documents": "Documents"
+    },
+    "prev": "← Previous",
+    "next": "Next →"
   }
 }

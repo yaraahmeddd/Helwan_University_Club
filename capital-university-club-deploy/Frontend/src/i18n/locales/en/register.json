@@ -16,13 +16,23 @@
         "title": "Club Member",
         "subtitle": "Social Member",
         "description": "Enjoy all social and recreational club facilities",
-        "features": ["Social facilities", "Swimming pool", "Cafeteria", "Gardens"]
+        "features": [
+          "Social facilities",
+          "Swimming pool",
+          "Cafeteria",
+          "Gardens"
+        ]
       },
       "sports_player": {
         "title": "Team Player",
         "subtitle": "Sports Player",
         "description": "Join club sports teams and pursue your favorite sport",
-        "features": ["Training", "Competitions", "Coaches", "Tournaments"]
+        "features": [
+          "Training",
+          "Competitions",
+          "Coaches",
+          "Tournaments"
+        ]
       }
     },
     "playerNote": "You can join sports teams from your dashboard after completing registration"
@@ -33,17 +43,36 @@
     "prevAria": "Go to previous step",
     "nextAria": "Go to next step",
     "submit": "Confirm Registration",
-    "submitting": "Processing..."
+    "submitting": "Processing...",
+    "backHome": "Back to Home"
   },
   "step1": {
     "hint": "Select a category to continue automatically",
     "categories": {
-      "staff": { "title": "University Employee", "desc": "Faculty and administrative staff" },
-      "student": { "title": "Student / Graduate", "desc": "Students and alumni" },
-      "retired": { "title": "Retired", "desc": "Retired faculty and staff" },
-      "dependent": { "title": "Dependent Member", "desc": "Family of members (spouse/children)" },
-      "foreigner": { "title": "Foreigner / Seasonal", "desc": "Non-Egyptians (limited duration)" },
-      "visitor": { "title": "Visitor Member", "desc": "General memberships" }
+      "staff": {
+        "title": "University Employee",
+        "desc": "Faculty and administrative staff"
+      },
+      "student": {
+        "title": "Student / Graduate",
+        "desc": "Students and alumni"
+      },
+      "retired": {
+        "title": "Retired",
+        "desc": "Retired faculty and staff"
+      },
+      "dependent": {
+        "title": "Dependent Member",
+        "desc": "Family of members (spouse/children)"
+      },
+      "foreigner": {
+        "title": "Foreigner / Seasonal",
+        "desc": "Non-Egyptians (limited duration)"
+      },
+      "visitor": {
+        "title": "Visitor Member",
+        "desc": "General memberships"
+      }
     }
   },
   "step2": {
@@ -152,5 +181,8 @@
   },
   "errors": {
     "missingFiles": "Required documents not uploaded: {{list}}"
+  },
+  "page": {
+    "title": "Create New Membership"
   }
 }

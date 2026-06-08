@@ -462,5 +462,18 @@
     "image_count": "عدد الصور:",
     "date": "التاريخ:",
     "duration": "المدة:"
+  },
+  "register": {
+    "page_title": "إنشاء عضوية جديدة",
+    "back_home": "العودة للرئيسية",
+    "steps": {
+      "category": "الفئة",
+      "membership_type": "نوع العضوية",
+      "basic_info": "البيانات الأساسية",
+      "details": "التفاصيل",
+      "documents": "المستندات"
+    },
+    "prev": "← السابق",
+    "next": "التالي →"
   }
 }

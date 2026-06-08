@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import { type RegisterFormValues } from './schemas/validation';
 import { prepareSubmissionData, debugFormData, type FileUploadMap } from './utils/submissionFactory';
@@ -53,25 +54,26 @@ const STEP_FIELDS: Record<number, readonly string[]> = {
 const StepIndicator = ({ currentStep }: { currentStep: number }) => {
     const { watch } = useFormContext<RegisterFormValues>();
     const memberRole = watch('memberRole');
+    const { t } = useTranslation('landing');
 
     // Define steps based on role
     const getSteps = () => {
         if (memberRole === 'sports_player') {
             // Player: Category -> Role -> Basic Info -> Files (Details skipped)
             return [
-                { id: 0, label: 'الفئة' },
-                { id: 1, label: 'نوع العضوية' },
-                { id: 2, label: 'البيانات الأساسية' },
-                { id: 4, label: 'المستندات' },
+                { id: 0, label: t('register.steps.category', 'الفئة') },
+                { id: 1, label: t('register.steps.membership_type', 'نوع العضوية') },
+                { id: 2, label: t('register.steps.basic_info', 'البيانات الأساسية') },
+                { id: 4, label: t('register.steps.documents', 'المستندات') },
             ];
         } else {
             // Member: Category -> Role -> Basic Info -> Details -> Files
             return [
-                { id: 0, label: 'الفئة' },
-                { id: 1, label: 'نوع العضوية' },
-                { id: 2, label: 'البيانات الأساسية' },
-                { id: 3, label: 'التفاصيل' },
-                { id: 4, label: 'المستندات' },
+                { id: 0, label: t('register.steps.category', 'الفئة') },
+                { id: 1, label: t('register.steps.membership_type', 'نوع العضوية') },
+                { id: 2, label: t('register.steps.basic_info', 'البيانات الأساسية') },
+                { id: 3, label: t('register.steps.details', 'التفاصيل') },
+                { id: 4, label: t('register.steps.documents', 'المستندات') },
             ];
         }
     };
@@ -176,6 +178,8 @@ export const RegisterPage = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [availableSportsList, setAvailableSportsList] = useState<Sport[]>([]);
     const navigate = useNavigate();
+    const { t, i18n } = useTranslation('landing');
+    const isAr = i18n.language?.startsWith('ar');
 
     const [toast, setToast] = useState<{ message: string; type: ToastType; isVisible: boolean }>({
         message: '',
@@ -597,7 +601,7 @@ export const RegisterPage = () => {
     const showNavButtons = step === 1; // Only Role step needs global nav (Category auto-advances on card click)
 
     return (
-        <div className="min-h-[100dvh] bg-slate-50 font-['Cairo'] text-right" dir="rtl">
+        <div className={`min-h-[100dvh] bg-slate-50 font-['Cairo'] ${isAr ? 'text-right' : 'text-left'}`} dir={isAr ? 'rtl' : 'ltr'}>
             {/* Global site navbar — same design as the rest of the site */}
             <SiteNavbar
                 activeTab="memberships"
@@ -615,7 +619,7 @@ export const RegisterPage = () => {
                         type="button"
                     >
                         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                        <span className="font-medium">العودة للرئيسية</span>
+                        <span className="font-medium">{t('register.back_home', 'العودة للرئيسية')}</span>
                     </button>
                     <motion.div
                         initial={{ opacity: 0, y: -10 }}
@@ -623,8 +627,8 @@ export const RegisterPage = () => {
                         transition={{ duration: 0.4 }}
                         className="flex flex-col items-end"
                     >
-                        <h1 className="text-2xl md:text-3xl font-extrabold text-[#0e1c38]">إنشاء عضوية جديدة</h1>
-                        <p className="text-sm text-[#2596be] font-bold mt-1">نادي جامعة العاصمة — Capital University Club</p>
+                        <h1 className="text-2xl md:text-3xl font-extrabold text-[#0e1c38]">{t('register.page_title', 'إنشاء عضوية جديدة')}</h1>
+                        <p className="text-sm text-[#2596be] font-bold mt-1">{t('common.club_name', 'نادي جامعة العاصمة')} — Capital University Club</p>
                     </motion.div>
                 </div>
 
@@ -651,7 +655,7 @@ export const RegisterPage = () => {
                                             onClick={prevStep}
                                             className="px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-600"
                                         >
-                                            ← السابق
+                                            {t('register.prev', '← السابق')}
                                         </button>
 
                                         <button
@@ -659,7 +663,7 @@ export const RegisterPage = () => {
                                             onClick={nextStep}
                                             className="px-5 py-2.5 rounded-xl bg-[#2596be] hover:bg-[#1a7a9a] text-white font-bold shadow-lg shadow-[#2596be]/20 transition-all flex items-center gap-2"
                                         >
-                                            التالي →
+                                            {t('register.next', 'التالي →')}
                                         </button>
                                     </div>
                                 )}
