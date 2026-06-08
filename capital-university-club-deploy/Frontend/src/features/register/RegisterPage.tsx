@@ -406,7 +406,7 @@ export const RegisterPage = () => {
 
             // Extract the correct ID based on role (member_id for members, team_member_id for team members)
             const memberId = basicRes.data.member_id || basicRes.data.team_member_id;
-            const accountId: number | undefined = basicRes.data.account_id; // ← stored for rollback
+            const accountId: number = basicRes.data.account_id; // ← stored for rollback
             const role = basicRes.data.role;
 
             if (!memberId) {
@@ -599,7 +599,6 @@ export const RegisterPage = () => {
             <SiteNavbar
                 activeTab="memberships"
                 showAuthButtons={false}
-                hideNavTabs={true}
                 onTabChange={(tab) => navigate(tab === 'home' ? '/' : `/?tab=${encodeURIComponent(tab)}`)}
             />
 
@@ -646,7 +645,14 @@ export const RegisterPage = () => {
                                         <button
                                             type="button"
                                             onClick={prevStep}
-                                            className="px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-600"
+                                            disabled={step === 0}
+                                            className={`
+                                                px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2
+                                                ${step === 0
+                                                    ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                                                    : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                                                }
+                                            `}
                                         >
                                             ← السابق
                                         </button>
