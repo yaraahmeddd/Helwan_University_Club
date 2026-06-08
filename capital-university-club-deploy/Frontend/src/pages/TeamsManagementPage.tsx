@@ -24,6 +24,10 @@ import {
     Pencil, Trash2, Plus, Loader2, X, Clock, Users, Filter,
 } from "lucide-react";
 import { useToast } from "../hooks/use-toast";
+import { useLanguage } from "../hooks/useLanguage";
+import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
+import { getEntityName, getLocalizedText } from "../lib/localizedDisplay";
 import api from "../services/axios";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -195,8 +199,8 @@ const TimeSlotPicker = ({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function TeamsManagementPage() {
-    const { t, i18n } = useTranslation('TeamsManagementPage');
-    const isRTL = i18n.language === 'ar';
+    const { t } = useTranslation('TeamsManagementPage');
+    const { language, isRTL } = useLanguage();
     const { toast } = useToast();
 
     // ── Data ────────────────────────────────────────────────────────────────────
@@ -488,7 +492,7 @@ export default function TeamsManagementPage() {
                                     <input type="checkbox" checked={filterSports.includes(s.id)}
                                         onChange={() => setFilterSports(prev => prev.includes(s.id) ? prev.filter(id => id !== s.id) : [...prev, s.id])}
                                         className="w-3.5 h-3.5 rounded accent-primary cursor-pointer" />
-                                    <span className="text-xs font-medium">{isRTL ? s.name_ar : (s.name_en || s.name_ar)}</span>
+                                    <span className="text-xs font-medium">{getEntityName(s, language)}</span>
                                     <span className="mr-auto text-[10px] text-muted-foreground">{teams.filter(t => t.sport_id === s.id).length}</span>
                                 </label>
                             ))}
@@ -512,24 +516,22 @@ export default function TeamsManagementPage() {
 
 
             {/* ── Table area ── */}
-            <div className="flex-1 overflow-auto pb-6">
-
-            {/* ── Table — same motion wrapper + row style as SportsPage ── */}
+            <div className={`${adminTableStyles.container} pb-6`}>
 
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="shadow-sm">
                 <Table>
-                    <TableHeader>
+                    <TableHeader className={adminTableStyles.header}>
                         <TableRow>
-                            <TableHead className="w-10">{t('table.colIndex')}</TableHead>
-                            <TableHead>{t('table.colName')}</TableHead>
-                            <TableHead>{t('table.colSport')}</TableHead>
-                            <TableHead>{t('table.colSchedule')}</TableHead>
-                            <TableHead>{t('table.colMaxParticipants')}</TableHead>
-                            <TableHead className="whitespace-nowrap">{t('table.colStatus')}</TableHead>
-                            <TableHead className="w-[200px] text-center">{t('table.colActions')}</TableHead>
+                            <TableHead className={adminHeadClass({ className: "w-10" })}>{t('table.colIndex')}</TableHead>
+                            <TableHead className={adminHeadClass()}>{t('table.colName')}</TableHead>
+                            <TableHead className={adminHeadClass()}>{t('table.colSport')}</TableHead>
+                            <TableHead className={adminHeadClass()}>{t('table.colSchedule')}</TableHead>
+                            <TableHead className={adminHeadClass()}>{t('table.colMaxParticipants')}</TableHead>
+                            <TableHead className={adminHeadClass({ className: "whitespace-nowrap" })}>{t('table.colStatus')}</TableHead>
+                            <TableHead className={adminHeadClass({ center: true, className: "w-[200px]" })}>{t('table.colActions')}</TableHead>
                         </TableRow>
                     </TableHeader>
-                    <TableBody>
+                    <TableBody className={adminTableStyles.body}>
                         <AnimatePresence>
                             {loading ? (
                                 <TableRow>
@@ -552,8 +554,11 @@ export default function TeamsManagementPage() {
                             ) : (
                                 filtered.map((team, idx) => {
                                     const sched = team.training_schedules?.[0];
+                                    const schedDays = sched
+                                        ? getLocalizedText(sched.days_ar, sched.days_en, language)
+                                        : "";
                                     const schedStr = sched
-                                        ? `${sched.days_ar} • ${sched.start_time?.slice(0, 5)} → ${sched.end_time?.slice(0, 5)}`
+                                        ? `${schedDays} • ${sched.start_time?.slice(0, 5)} → ${sched.end_time?.slice(0, 5)}`
                                         : "—";
                                     return (
                                         <motion.tr
@@ -561,29 +566,24 @@ export default function TeamsManagementPage() {
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
                                             exit={{ opacity: 0 }}
-                                            className="border-b border-border transition-colors duration-200 hover:bg-accent/10"
+                                            className={adminTableStyles.row}
                                         >
-                                            <TableCell className="text-muted-foreground text-sm">{idx + 1}</TableCell>
-                                            <TableCell className="font-medium">
-                                                <span>{isRTL ? team.name_ar : (team.name_en || team.name_ar)}</span>
-                                                {((isRTL ? team.name_en : team.name_ar)) && (
-                                                    <span className={`block text-[11px] text-muted-foreground/70 italic ${isRTL ? 'text-left' : 'text-right'}`} dir={isRTL ? 'ltr' : 'rtl'}>
-                                                        {isRTL ? team.name_en : team.name_ar}
-                                                    </span>
-                                                )}
+                                            <TableCell className={adminCellClass({ size: "muted" })}>{idx + 1}</TableCell>
+                                            <TableCell className={adminCellClass()}>
+                                                <BilingualText ar={team.name_ar} en={team.name_en} language={language} primaryClassName="font-medium" />
                                             </TableCell>
-                                            <TableCell>{(isRTL ? team.sport?.name_ar : team.sport?.name_en) ?? "—"}</TableCell>
-                                            <TableCell className="text-sm text-muted-foreground max-w-[200px]">
+                                            <TableCell className={adminCellClass()}>{getEntityName(team.sport, language) || "—"}</TableCell>
+                                            <TableCell className={adminCellClass({ size: "muted", className: "max-w-[200px]" })}>
                                                 <span className="line-clamp-2">{schedStr}</span>
                                             </TableCell>
-                                            <TableCell>{team.max_participants}</TableCell>
-                                            <TableCell className="whitespace-nowrap">
+                                            <TableCell className={adminCellClass()}>{team.max_participants}</TableCell>
+                                            <TableCell className={adminCellClass({ className: "whitespace-nowrap" })}>
                                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusClass(team.status)}`}>
                                                     {statusLabel(team.status, t)}
                                                 </span>
                                             </TableCell>
-                                            <TableCell className="whitespace-nowrap text-center">
-                                                <div className="flex items-center justify-center gap-1.5">
+                                            <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
+                                                <div className={adminTableStyles.actions}>
                                                     <RoleGuard privilege="UPDATE_TEAM">
                                                         <Button
                                                             size="icon" variant="ghost"
@@ -640,7 +640,7 @@ export default function TeamsManagementPage() {
                                         <SelectValue placeholder={t('form.sportPlaceholder')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {sports.map(s => <SelectItem key={s.id} value={String(s.id)}>{isRTL ? s.name_ar : (s.name_en || s.name_ar)}</SelectItem>)}
+                                        {sports.map(s => <SelectItem key={s.id} value={String(s.id)}>{getEntityName(s, language)}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                                 {isEdit && <p className="text-[11px] text-muted-foreground mt-1">{t('form.sportLockedNote')}</p>}
@@ -789,7 +789,7 @@ export default function TeamsManagementPage() {
                                                 <SelectItem value="none" className="text-xs text-muted-foreground">{t('form.training.fieldPlaceholder')}</SelectItem>
                                                 {fields.map(f => (
                                                     <SelectItem key={f.id} value={f.id} className="text-xs">
-                                                        {isRTL ? f.name_ar : (f.name_en || f.name_ar)}
+                                                        {getEntityName(f, language)}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>

@@ -36,7 +36,10 @@
     "actions": "الإجراءات"
   },
   "status": {
-    "active": "نشط"
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "pending": "قيد الانتظار",
+    "suspended": "موقوف"
   },
   "actions": {
     "editSports": "تعديل الرياضات",

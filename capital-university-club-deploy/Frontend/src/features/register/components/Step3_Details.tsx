@@ -4,6 +4,9 @@ import type { ReactNode } from 'react';
 import type { FieldError } from 'react-hook-form';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Building2, AlertCircle, ChevronRight, ChevronLeft, Check } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../../hooks/useLanguage';
+import { getLocalizedText } from '../../../lib/localizedDisplay';
 import type { RegisterFormValues } from '../schemas/validation';
 import { AuthService } from '../../../services/authService';
 
@@ -59,38 +62,30 @@ const InputGroup = ({ label, error, children, className = '' }: InputGroupProps)
 /**
  * Navigation Buttons Component
  */
-const NavigationButtons = ({ onPrev, onNext }: { onPrev: () => void; onNext: () => void }) => (
-    <div className="flex justify-between mt-12 pt-6 border-t border-gray-100">
-        <button
-            onClick={onPrev}
-            type="button"
-            className="px-8 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold transition-colors flex items-center gap-2"
-        >
-            <ChevronRight size={20} /> السابق
-        </button>
-        <button
-            onClick={onNext}
-            type="button"
-            className="px-8 py-3 rounded-xl bg-[#2596be] hover:bg-[#1a7a9a] text-white font-bold shadow-lg shadow-[#2596be]/20 transition-all flex items-center gap-2"
-        >
-            التالي <ChevronLeft size={20} />
-        </button>
-    </div>
-);
+const NavigationButtons = ({ onPrev, onNext }: { onPrev: () => void; onNext: () => void }) => {
+    const { t } = useTranslation('register');
+    const { isRTL } = useLanguage();
+    const PrevIcon = isRTL ? ChevronRight : ChevronLeft;
+    const NextIcon = isRTL ? ChevronLeft : ChevronRight;
 
-/**
- * Helper: Get Category Display Name
- */
-const getCategoryName = (cat: RegisterFormValues['category'] | undefined): string => {
-    switch (cat) {
-        case 'student': return 'طالب / خريج';
-        case 'staff': return 'عامل بالجامعة';
-        case 'retired': return 'متقاعد';
-        case 'foreigner': return 'أجنبي / موسمي';
-        case 'dependent': return 'عضو تابع';
-        case 'visitor': return 'عضو زائر';
-        default: return 'عضو';
-    }
+    return (
+        <div className="flex justify-between mt-12 pt-6 border-t border-gray-100">
+            <button
+                onClick={onPrev}
+                type="button"
+                className="px-8 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold transition-colors flex items-center gap-2"
+            >
+                <PrevIcon size={20} /> {t('nav.prev')}
+            </button>
+            <button
+                onClick={onNext}
+                type="button"
+                className="px-8 py-3 rounded-xl bg-[#2596be] hover:bg-[#1a7a9a] text-white font-bold shadow-lg shadow-[#2596be]/20 transition-all flex items-center gap-2"
+            >
+                {t('nav.next')} <NextIcon size={20} />
+            </button>
+        </div>
+    );
 };
 
 /**
@@ -100,6 +95,8 @@ const getCategoryName = (cat: RegisterFormValues['category'] | undefined): strin
  * Fetches dynamic data (faculties, universities, professions) from the backend.
  */
 export const Step3Details = ({ onNext, onPrev }: Step3DetailsProps) => {
+    const { t } = useTranslation('register');
+    const { language } = useLanguage();
     const {
         register,
         watch,
@@ -107,6 +104,7 @@ export const Step3Details = ({ onNext, onPrev }: Step3DetailsProps) => {
     } = useFormContext<RegisterFormValues>();
 
     const category = watch('category');
+    const categoryLabel = t(`step3.categories.${category ?? 'default'}`, { defaultValue: t('step3.categories.default') });
     const selectedDuration = watch('seasonalDuration');
 
     // Dynamic Data State
@@ -123,9 +121,9 @@ export const Step3Details = ({ onNext, onPrev }: Step3DetailsProps) => {
     useEffect(() => {
         // Initialize Mock Professions
         setProfessions([
-            { id: 1, code: 'PROF', name: 'عضو هيئة تدريس' },
-            { id: 2, code: 'TA', name: 'معيد / مدرس مساعد' },
-            { id: 3, code: 'STAFF', name: 'موظف إداري' },
+            { id: 1, code: 'PROF', name: t('step3.professions.PROF') },
+            { id: 2, code: 'TA', name: t('step3.professions.TA') },
+            { id: 3, code: 'STAFF', name: t('step3.professions.STAFF') },
         ]);
 
         // Fetch Faculties from Backend
@@ -154,14 +152,13 @@ export const Step3Details = ({ onNext, onPrev }: Step3DetailsProps) => {
                 <div className="p-2 bg-[#e8f4f8] rounded-lg">
                     <Building2 className="text-[#2596be]" />
                 </div>
-                تفاصيل العضوية{' '}
-                <span className="text-gray-400 text-lg font-normal">({getCategoryName(category)})</span>
+                {t('step3.title')}{' '}
+                <span className="text-gray-400 text-lg font-normal">({categoryLabel})</span>
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Address (Common for All) */}
                 <div className="md:col-span-2">
-                    <InputGroup label="العنوان الحالي بالتفصيل" error={errors.address}>
+                    <InputGroup label={t('step3.address')} error={errors.address}>
                         <input {...register('address')} className={inputClasses} />
                     </InputGroup>
                 </div>
@@ -171,18 +168,18 @@ export const Step3Details = ({ onNext, onPrev }: Step3DetailsProps) => {
                 {/* ====================================================================== */}
                 {category === 'student' && (
                     <>
-                        <InputGroup label="الكلية" error={errors.facultyId}>
+                        <InputGroup label={t('step3.faculty')} error={errors.facultyId}>
                             <select {...register('facultyId')} className={inputClasses}>
-                                <option value="">اختر الكلية</option>
+                                <option value="">{t('step3.selectFaculty')}</option>
                                 {faculties.map((f) => (
                                     <option key={f.id} value={f.id}>
-                                        {f.name_ar}
+                                        {getLocalizedText(f.name_ar, f.name_en, language)}
                                     </option>
                                 ))}
                             </select>
                         </InputGroup>
 
-                        <InputGroup label="سنة التخرج" error={errors.graduationYear}>
+                        <InputGroup label={t('step3.graduationYear')} error={errors.graduationYear}>
                             <input
                                 type="number"
                                 {...register('graduationYear')}
@@ -199,7 +196,7 @@ export const Step3Details = ({ onNext, onPrev }: Step3DetailsProps) => {
                 {/* ====================================================================== */}
                 {category === 'staff' && (
                     <>
-                        <InputGroup label="الدرجة الوظيفية" error={errors.professionId}>
+                        <InputGroup label={t('step3.profession')} error={errors.professionId}>
                             <select {...register('professionId')} className={inputClasses}>
                                 <option value="">اختر المهنة</option>
                                 {professions.map((p) => (
@@ -210,12 +207,12 @@ export const Step3Details = ({ onNext, onPrev }: Step3DetailsProps) => {
                             </select>
                         </InputGroup>
 
-                        <InputGroup label="القسم / الإدارة" error={errors.department}>
+                        <InputGroup label={t('step3.department')} error={errors.department}>
                             <input {...register('department')} className={inputClasses} />
                         </InputGroup>
 
                         <div className="md:col-span-2 bg-blue-50/50 p-6 rounded-2xl border border-blue-100">
-                            <InputGroup label="الراتب الشهري" error={errors.salary}>
+                            <InputGroup label={t('step3.salary')} error={errors.salary}>
                                 <div className="relative">
                                     <input
                                         type="number"
@@ -238,19 +235,19 @@ export const Step3Details = ({ onNext, onPrev }: Step3DetailsProps) => {
                 {/* ====================================================================== */}
                 {category === 'retired' && (
                     <>
-                        <InputGroup label="الإدارة/القسم قبل التقاعد" error={errors.department}>
-                            <input type="text" placeholder="مثال: الهندسة الكهربائية" {...register('department')} className={inputClasses} />
+                        <InputGroup label={t('step3.departmentRetired')} error={errors.department}>
+                            <input type="text" placeholder={t('step3.departmentPlaceholder')} {...register('department')} className={inputClasses} />
                         </InputGroup>
 
-                        <InputGroup label="تاريخ التقاعد" error={errors.retirementDate}>
+                        <InputGroup label={t('step3.retirementDate')} error={errors.retirementDate}>
                             <input type="date" {...register('retirementDate')} className={inputClasses} />
                         </InputGroup>
 
-                        <InputGroup label="آخر راتب قبل التقاعد (اختياري)" error={errors.salary}>
+                        <InputGroup label={t('step3.lastSalary')} error={errors.salary}>
                             <input type="number" {...register('salary')} className={inputClasses} />
                         </InputGroup>
 
-                        <InputGroup label="المهنة قبل التقاعد (اختياري)" error={errors.professionCode}>
+                        <InputGroup label={t('step3.professionBefore')} error={errors.professionCode}>
                             <select {...register('professionCode')} className={inputClasses}>
                                 <option value="">اختر المهنة</option>
                                 <option value="RETIRED_PROF">أستاذ جامعي متقاعد</option>
@@ -265,7 +262,7 @@ export const Step3Details = ({ onNext, onPrev }: Step3DetailsProps) => {
                 {/* ====================================================================== */}
                 {category === 'foreigner' && (
                     <>
-                        <InputGroup label="مدة العضوية" error={errors.seasonalDuration}>
+                        <InputGroup label={t('step3.seasonalDuration')} error={errors.seasonalDuration}>
                             <select {...register('seasonalDuration')} className={inputClasses}>
                                 <option value="1">شهر واحد</option>
                                 <option value="6">6 أشهر</option>
@@ -273,7 +270,7 @@ export const Step3Details = ({ onNext, onPrev }: Step3DetailsProps) => {
                             </select>
                         </InputGroup>
 
-                        <InputGroup label="حالة التأشيرة" error={errors.visaStatus}>
+                        <InputGroup label={t('step3.visaStatus')} error={errors.visaStatus}>
                             <select {...register('visaStatus')} className={inputClasses}>
                                 <option value="valid">سارية</option>
                                 <option value="pending">قيد الإجراءات</option>
@@ -295,18 +292,18 @@ export const Step3Details = ({ onNext, onPrev }: Step3DetailsProps) => {
                 {category === 'dependent' && (
                     <>
                         <InputGroup
-                            label="رقم العضوية للعضو الأساسي"
+                            label={t('step3.relatedMemberId')}
                             className="md:col-span-2"
                             error={errors.relatedMemberId}
                         >
                             <input
                                 {...register('relatedMemberId')}
                                 className={inputClasses}
-                                placeholder="رقم العضوية أو الرقم القومي"
+                                placeholder={t('step3.relatedMemberPlaceholder')}
                             />
                         </InputGroup>
 
-                        <InputGroup label="صلة القرابة" error={errors.relationshipType}>
+                        <InputGroup label={t('step3.relationshipType')} error={errors.relationshipType}>
                             <select {...register('relationshipType')} className={inputClasses}>
                                 <option value="spouse">زوج / زوجة</option>
                                 <option value="child">ابن / ابنة</option>

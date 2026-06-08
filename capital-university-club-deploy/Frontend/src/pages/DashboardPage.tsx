@@ -42,6 +42,7 @@ import {
   TableHeader,
   TableRow,
 } from "../components/StaffPagesComponents/ui/table";
+import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import api from "../services/axios";
 import { useAuth } from "../context/AuthContext";
 import i18n from "../i18n";
@@ -778,23 +779,23 @@ export default function DashboardPage() {
             <p className="text-[15px] font-medium text-muted-foreground">{t("tables.noTasksFound")}</p>
           ) : (
             <Table>
-              <TableHeader>
+              <TableHeader className={adminTableStyles.header}>
                 <TableRow>
-                  <TableHead>{t("tables.columns.taskName")}</TableHead>
-                  <TableHead>{t("tables.columns.status")}</TableHead>
-                  <TableHead>{t("tables.columns.createdBy")}</TableHead>
-                  <TableHead>{t("tables.columns.createdAt")}</TableHead>
+                  <TableHead className={adminHeadClass()}>{t("tables.columns.taskName")}</TableHead>
+                  <TableHead className={adminHeadClass()}>{t("tables.columns.status")}</TableHead>
+                  <TableHead className={adminHeadClass()}>{t("tables.columns.createdBy")}</TableHead>
+                  <TableHead className={adminHeadClass()}>{t("tables.columns.createdAt")}</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className={adminTableStyles.body}>
                 {dashboard.recentTasks.map((task) => (
-                  <TableRow key={task.id}>
-                    <TableCell className="font-medium">{task.title}</TableCell>
-                    <TableCell>
+                  <TableRow key={task.id} className={adminTableStyles.row}>
+                    <TableCell className={adminCellClass({ className: "font-medium" })}>{task.title}</TableCell>
+                    <TableCell className={adminCellClass()}>
                       <Badge className={taskStatusClassName(task.status)}>{taskStatusLabel(task.status)}</Badge>
                     </TableCell>
-                    <TableCell>{task.createdBy}</TableCell>
-                    <TableCell>{task.createdAt ? new Date(task.createdAt).toLocaleDateString(language === "ar" ? "ar-EG" : "en-US") : "-"}</TableCell>
+                    <TableCell className={adminCellClass()}>{task.createdBy}</TableCell>
+                    <TableCell className={adminCellClass()}>{task.createdAt ? new Date(task.createdAt).toLocaleDateString(language === "ar" ? "ar-EG" : "en-US") : "-"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -810,25 +811,25 @@ export default function DashboardPage() {
             <p className="text-[15px] font-medium text-muted-foreground">{t("tables.noSportsFound")}</p>
           ) : (
             <Table>
-              <TableHeader>
+              <TableHeader className={adminTableStyles.header}>
                 <TableRow>
-                  <TableHead>{t("tables.columns.sportName")}</TableHead>
-                  <TableHead>{t("tables.columns.status")}</TableHead>
-                  <TableHead>{t("tables.columns.members")}</TableHead>
-                  <TableHead>{t("tables.columns.price")}</TableHead>
+                  <TableHead className={adminHeadClass()}>{t("tables.columns.sportName")}</TableHead>
+                  <TableHead className={adminHeadClass()}>{t("tables.columns.status")}</TableHead>
+                  <TableHead className={adminHeadClass()}>{t("tables.columns.members")}</TableHead>
+                  <TableHead className={adminHeadClass()}>{t("tables.columns.price")}</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className={adminTableStyles.body}>
                 {dashboard.recentSports.map((sport) => (
-                  <TableRow key={sport.id}>
-                    <TableCell className="font-medium">{sport.name}</TableCell>
-                    <TableCell>
+                  <TableRow key={sport.id} className={adminTableStyles.row}>
+                    <TableCell className={adminCellClass({ className: "font-medium" })}>{sport.name}</TableCell>
+                    <TableCell className={adminCellClass()}>
                       <Badge className={sport.status === "active" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}>
                         {sport.status === "active" ? t("status.active") : t("status.pending")}
                       </Badge>
                     </TableCell>
-                    <TableCell>{sport.membersCount}</TableCell>
-                    <TableCell>{currencyFormatter.format(sport.price)}</TableCell>
+                    <TableCell className={adminCellClass()}>{sport.membersCount}</TableCell>
+                    <TableCell className={adminCellClass()}>{currencyFormatter.format(sport.price)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

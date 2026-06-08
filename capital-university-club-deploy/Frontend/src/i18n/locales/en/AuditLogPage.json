@@ -1,0 +1,68 @@
+{
+  "header": {
+    "title": "Audit Log",
+    "subtitle": "View all operations performed within the system"
+  },
+  "actions": {
+    "clearFilters": "Clear Filters",
+    "exportLog": "Export Log",
+    "viewDetails": "View Details"
+  },
+  "stats": {
+    "totalLogs": "Total Logs",
+    "successful": "Successful Operations",
+    "failed": "Failed Operations",
+    "today": "Today's Logs"
+  },
+  "filters": {
+    "title": "Filter Logs",
+    "logId": {
+      "label": "Log ID",
+      "placeholder": "e.g., LOG-001"
+    },
+    "userName": {
+      "label": "Username",
+      "placeholder": "Search by username"
+    },
+    "role": {
+      "label": "Role",
+      "allRoles": "All Roles"
+    },
+    "action": {
+      "label": "Action",
+      "allActions": "All Actions"
+    },
+    "module": {
+      "label": "Module",
+      "allModules": "All Modules"
+    }
+  },
+  "table": {
+    "headers": {
+      "logId": "Log ID",
+      "userName": "Username",
+      "role": "Role",
+      "action": "Action",
+      "module": "Module",
+      "description": "Description",
+      "status": "Status",
+      "dateTime": "Date and Time",
+      "actions": "Actions"
+    },
+    "states": {
+      "loading": "Loading...",
+      "noLogs": "No logs found",
+      "noMatchingLogs": "No matching logs found"
+    },
+    "status": {
+      "success": "Success",
+      "failed": "Failed"
+    }
+  },
+  "pagination": {
+    "info": "Showing {{start}} to {{end}} of {{total}} logs"
+  },
+  "modal": {
+    "title": "Operation Details"
+  }
+}

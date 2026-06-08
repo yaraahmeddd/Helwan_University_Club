@@ -9,6 +9,9 @@ import { useToast } from "../hooks/use-toast";
 import api from "../services/axios";
 import { useTranslation } from "react-i18next";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
+import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
+import { useLanguage } from "../hooks/useLanguage";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -25,8 +28,8 @@ const PAGE_SIZE = 10;
 
 export default function FacultyManagementPage() {
     const { toast } = useToast();
-    const { t, i18n } = useTranslation("FacultyManagementPage");
-    const isRTL = i18n.language === 'ar';
+    const { t } = useTranslation("FacultyManagementPage");
+    const { language, isRTL } = useLanguage();
     
     // State
     const [faculties, setFaculties] = useState<Faculty[]>([]);
@@ -300,7 +303,7 @@ export default function FacultyManagementPage() {
                     </div>
 
                     {/* Native HTML Table */}
-                    <div className="flex-1 overflow-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
+                    <div className={adminTableStyles.container} style={{ scrollbarWidth: "none" }}>
                         {loading ? (
                             <div className="py-24 text-center text-zinc-400">
                                 <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-4" />
@@ -318,37 +321,38 @@ export default function FacultyManagementPage() {
                             </div>
                         ) : (
                             <Table>
-                                <TableHeader className="sticky top-0 bg-white z-10 before:absolute before:inset-0 before:border-b before:border-zinc-100 before:pointer-events-none">
+                                <TableHeader className={adminTableStyles.header}>
                                     <TableRow>
-                                        <TableHead className={`px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle w-12 ${isRTL ? "text-right" : "text-left"}`}>{t("table.serial")}</TableHead>
-                                        <TableHead className={`px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle ${isRTL ? "text-right" : "text-left"}`}>{t("table.name")}</TableHead>
-                                        <TableHead className={`px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle ${isRTL ? "text-right" : "text-left"}`}>{t("table.code")}</TableHead>
-                                        <TableHead className="px-6 py-4 font-bold text-[11px] uppercase tracking-wider text-zinc-400 whitespace-nowrap align-middle text-center">{t("table.actions")}</TableHead>
+                                        <TableHead className={adminHeadClass({ className: "w-12" })}>{t("table.serial")}</TableHead>
+                                        <TableHead className={adminHeadClass()}>{t("table.name")}</TableHead>
+                                        <TableHead className={adminHeadClass()}>{t("table.code")}</TableHead>
+                                        <TableHead className={adminHeadClass({ center: true })}>{t("table.actions")}</TableHead>
                                     </TableRow>
                                 </TableHeader>
-                                <TableBody className="divide-y divide-zinc-100">
+                                <TableBody className={adminTableStyles.body}>
                                     {pagedRows.map((faculty, idx) => (
-                                        <TableRow key={faculty.id} className="transition-colors hover:bg-zinc-50/80 group">
-                                            {/* Serial */}
-                                            <TableCell className="px-6 py-3.5 text-[13px] text-zinc-400 font-mono align-middle">
+                                        <TableRow key={faculty.id} className={adminTableStyles.row}>
+                                            <TableCell className={adminCellClass({ size: "muted", className: "font-mono w-12" })}>
                                                 {(page - 1) * PAGE_SIZE + idx + 1}
                                             </TableCell>
 
-                                            {/* Name */}
-                                            <TableCell className={`px-6 py-3.5 align-middle font-bold text-zinc-900 border-transparent group-hover:border-primary/40 transition-all ${isRTL ? "border-r-2" : "border-l-2"}`} dir={isRTL ? "rtl" : "ltr"}>
-                                                {isRTL ? faculty.name_ar : (faculty.name_en || faculty.name_ar)}
+                                            <TableCell className={adminCellClass()}>
+                                                <BilingualText
+                                                    ar={faculty.name_ar}
+                                                    en={faculty.name_en}
+                                                    language={language}
+                                                    primaryClassName="font-semibold text-xs"
+                                                />
                                             </TableCell>
 
-                                            {/* Code */}
-                                            <TableCell className="px-6 py-3.5 align-middle">
-                                                <span className="bg-zinc-100/80 text-zinc-600 px-2.5 py-1 rounded-md text-[11px] font-mono font-bold uppercase tracking-widest border border-zinc-200/60 shadow-sm" dir="ltr">
+                                            <TableCell className={adminCellClass()}>
+                                                <span className="bg-muted text-muted-foreground px-2.5 py-1 rounded-md text-[11px] font-mono font-bold uppercase tracking-widest border border-border" dir="ltr">
                                                     {faculty.code}
                                                 </span>
                                             </TableCell>
 
-                                            {/* Actions */}
-                                            <TableCell className="px-6 py-3.5 align-middle">
-                                                <div className="flex items-center justify-center gap-2  transition-opacity">
+                                            <TableCell className={adminCellClass({ center: true })}>
+                                                <div className={`${adminTableStyles.actions} transition-opacity`}>
                                                     
                                                     <RoleGuard privilege="UPDATE_FACULTY">
                                                         <button

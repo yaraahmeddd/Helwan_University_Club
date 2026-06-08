@@ -1,26 +1,19 @@
 import React from "react";
-import { UserX, Loader2 } from "lucide-react";
 import { cn } from "../../../lib/utils";
 import { useTranslation } from "react-i18next";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./table";
+import { adminTableStyles, adminHeadClass, adminCellClass } from "../shared/adminTableStyles";
+import { AdminTableLoading, AdminTableEmpty } from "../shared/AdminTableStates";
+import { AdminSortableHead, type SortDirection } from "../shared/AdminSortableHead";
 
 export interface ColumnDef<T> {
     header: React.ReactNode | string;
-    /**
-     * Optional accessor key for simple text rendering.
-     * Can be a key of the data object, or a nested path (if you implement path resolution).
-     */
     accessorKey?: keyof T | string;
-    /**
-     * Optional custom render function for complex cells (like Badges or Action buttons).
-     * If provided, this overrides `accessorKey`.
-     */
     cell?: (row: T, index: number) => React.ReactNode;
-    /**
-     * Optional Tailwind classes applied to BOTH the <th> and <td> for this column.
-     * Useful for setting text alignment (e.g., 'text-center') or widths (e.g., 'w-10').
-     */
     className?: string;
+    /** When set, column header becomes sortable */
+    sortKey?: string;
+    center?: boolean;
 }
 
 interface DataTableProps<T> {
@@ -28,69 +21,88 @@ interface DataTableProps<T> {
     columns: ColumnDef<T>[];
     isLoading?: boolean;
     emptyMessage?: string;
+    emptyTitle?: string;
+    emptyIcon?: React.ReactNode;
+    sortKey?: string;
+    sortDirection?: SortDirection;
+    onSort?: (key: string) => void;
 }
 
-export function DataTable<T>({ data, columns, isLoading, emptyMessage }: DataTableProps<T>) {
-    const { i18n } = useTranslation();
-    const isRTL = i18n.language === 'ar';
+export function DataTable<T>({
+    data,
+    columns,
+    isLoading,
+    emptyMessage,
+    emptyTitle,
+    emptyIcon,
+    sortKey,
+    sortDirection = 'asc',
+    onSort,
+}: DataTableProps<T>) {
+    const { t } = useTranslation('common');
 
     return (
-        <div 
-            className="flex-1 overflow-auto [&::-webkit-scrollbar]:hidden [&_td_button]:h-8 [&_td_button]:w-8 [&_td_button]:inline-flex [&_td_button]:items-center [&_td_button]:justify-center [&_td_button]:rounded-md [&_td_button]:transition-colors hover:[&_td_button]:bg-muted [&_td_button]:border-transparent [&_td_button]:shadow-none [&_td_button]:text-muted-foreground hover:[&_td_button]:text-foreground [&_td_button]:bg-transparent" 
+        <div
+            className={adminTableStyles.container}
             style={{ scrollbarWidth: 'none' }}
         >
             {isLoading ? (
-                <div className="py-20 text-center text-muted-foreground">
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-primary" />
-                    <p className="text-sm">{isRTL ? 'جارٍ التحميل...' : 'Loading...'}</p>
-                </div>
+                <AdminTableLoading />
             ) : data.length === 0 ? (
-                <div className="py-20 text-center text-muted-foreground">
-                    <div className="rounded-full bg-muted/30 p-6 mb-4 w-fit mx-auto">
-                        <UserX className="h-12 w-12 text-muted-foreground/50" />
-                    </div>
-                    <h3 className="text-base font-semibold text-foreground mb-1">
-                        {isRTL ? 'لا يوجد بيانات حالياً' : 'No Data Available'}
-                    </h3>
-                    <p className="text-sm">
-                        {emptyMessage || (isRTL ? 'لم يتم العثور على بيانات' : 'No data found')}
-                    </p>
-                </div>
+                <AdminTableEmpty
+                    title={emptyTitle ?? t('table.noData')}
+                    message={emptyMessage ?? t('table.noDataDesc')}
+                    icon={emptyIcon}
+                />
             ) : (
                 <Table>
-                    <TableHeader className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
+                    <TableHeader className={adminTableStyles.header}>
                         <TableRow>
-                            {columns.map((col, idx) => (
-                                <TableHead
-                                    key={idx}
-                                    className={cn(
-                                        "px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle",
-                                        col.className
-                                    )}
-                                >
-                                    {col.header}
-                                </TableHead>
-                            ))}
+                            {columns.map((col, idx) =>
+                                col.sortKey && onSort ? (
+                                    <AdminSortableHead
+                                        key={idx}
+                                        sortKey={col.sortKey}
+                                        activeSortKey={sortKey}
+                                        sortDirection={sortDirection}
+                                        onSort={onSort}
+                                        center={col.center}
+                                        className={col.className}
+                                    >
+                                        {col.header}
+                                    </AdminSortableHead>
+                                ) : (
+                                    <TableHead
+                                        key={idx}
+                                        className={adminHeadClass({
+                                            center: col.center,
+                                            className: col.className,
+                                        })}
+                                    >
+                                        {col.header}
+                                    </TableHead>
+                                )
+                            )}
                         </TableRow>
                     </TableHeader>
-                    <TableBody className="divide-y divide-border">
+                    <TableBody className={adminTableStyles.body}>
                         {data.map((row, rowIndex) => (
                             <TableRow
                                 key={rowIndex}
-                                className="transition-colors hover:bg-muted/40"
+                                className={adminTableStyles.row}
                             >
                                 {columns.map((col, colIndex) => (
                                     <TableCell
                                         key={colIndex}
-                                        className={cn(
-                                            "px-4 py-3 align-middle",
-                                            col.className
-                                        )}
+                                        className={adminCellClass({
+                                            center: col.center,
+                                            className: col.className,
+                                        })}
                                     >
                                         {col.cell
                                             ? col.cell(row, rowIndex)
                                             : col.accessorKey
-                                                ? (row as any)[col.accessorKey]
+                                                ? (row as Record<string, unknown>)[col.accessorKey as string] as React.ReactNode
                                                 : null}
                                     </TableCell>
                                 ))}
@@ -102,3 +114,13 @@ export function DataTable<T>({ data, columns, isLoading, emptyMessage }: DataTab
         </div>
     );
 }
+
+/** Re-export admin table primitives for pages with custom table layouts. */
+export {
+    adminTableStyles,
+    adminHeadClass,
+    adminCellClass,
+    AdminSortableHead,
+    AdminTableLoading,
+    AdminTableEmpty,
+};

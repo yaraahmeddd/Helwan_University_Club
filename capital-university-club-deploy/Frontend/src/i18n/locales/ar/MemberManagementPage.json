@@ -3,15 +3,16 @@
     "title": "إدارة الأعضاء",
     "totalLoaded": "إجمالي المحملين:",
     "lastUpdated": "آخر تحديث:",
-    "paymentAlert": "{{count}} تنبيه دفع",
+    "paymentAlert_one": "{{count}} تنبيه دفع",
+    "paymentAlert_other": "{{count}} تنبيهات دفع",
     "refresh": "تحديث",
     "refreshing": "جارٍ التحميل..."
   },
   "tabs": {
     "all": "الجميع",
     "members": "الأعضاء",
-    "players": "اللاعبون",
-    "allPlayerTypes": "كل أنواع اللاعبين",
+    "teamMembers": "أعضاء الفريق",
+    "allPlayerTypes": "كل أنواع أعضاء الفريق",
     "allTypesPlaceholder": "كل الأنواع"
   },
   "toolbar": {
@@ -21,10 +22,17 @@
     "results": "نتيجة"
   },
   "table": {
+    "index": "#",
+    "name": "الاسم",
+    "phone": "الهاتف",
+    "nationalId": "الرقم القومي",
+    "registrationDate": "تاريخ التسجيل",
+    "type": "النوع",
+    "status": "الحالة",
+    "actions": "الإجراءات",
     "colMember": "العضو",
     "colType": "النوع",
     "colPhone": "الهاتف",
-    "colPoints": "النقاط",
     "colStatus": "الحالة",
     "colRegistration": "التسجيل",
     "colActions": "الإجراءات",
@@ -56,6 +64,7 @@
     "tabSports": "الرياضات",
     "tabPhotos": "🖼️ الصور والمستندات",
     "sectionPersonal": "المعلومات الشخصية",
+    "sectionAccount": "بيانات الحساب",
     "sectionContact": "معلومات التواصل",
     "sectionExtra": "معلومات إضافية",
     "sectionPayment": "بيانات الاشتراك والدفع",
@@ -165,6 +174,8 @@
     "deletedByAdmin": "حُذف بواسطة الإدارة"
   },
   "memberTypes": {
+    "teamMember": "عضو فريق",
+    "member": "عضو",
     "teamPlayer": "لاعب فريق"
   },
   "rowActions": {

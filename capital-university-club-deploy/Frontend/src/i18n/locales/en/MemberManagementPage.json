@@ -3,15 +3,16 @@
     "title": "Member Management",
     "totalLoaded": "Total Loaded:",
     "lastUpdated": "Last updated:",
-    "paymentAlert": "{{count}} payment alert",
+    "paymentAlert_one": "{{count}} payment alert",
+    "paymentAlert_other": "{{count}} payment alerts",
     "refresh": "Refresh",
     "refreshing": "Loading..."
   },
   "tabs": {
     "all": "All",
     "members": "Members",
-    "players": "Players",
-    "allPlayerTypes": "All player types",
+    "teamMembers": "Team Members",
+    "allPlayerTypes": "All team member types",
     "allTypesPlaceholder": "All Types"
   },
   "toolbar": {
@@ -21,10 +22,17 @@
     "results": "results"
   },
   "table": {
+    "index": "#",
+    "name": "Name",
+    "phone": "Phone",
+    "nationalId": "National ID",
+    "registrationDate": "Reg. Date",
+    "type": "Type",
+    "status": "Status",
+    "actions": "Actions",
     "colMember": "Member",
     "colType": "Type",
     "colPhone": "Phone",
-    "colPoints": "Points",
     "colStatus": "Status",
     "colRegistration": "Registered",
     "colActions": "Actions",
@@ -56,6 +64,7 @@
     "tabSports": "Sports",
     "tabPhotos": "🖼️ Photos & Documents",
     "sectionPersonal": "Personal Information",
+    "sectionAccount": "Account Information",
     "sectionContact": "Contact Info",
     "sectionExtra": "Additional Info",
     "sectionPayment": "Subscription & Payment",
@@ -165,6 +174,8 @@
     "deletedByAdmin": "Deleted by administration"
   },
   "memberTypes": {
+    "teamMember": "Team Member",
+    "member": "Member",
     "teamPlayer": "Team Player"
   },
   "rowActions": {

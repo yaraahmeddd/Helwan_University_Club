@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import React, { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
 import api from '../../services/axios';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination } from 'swiper/modules';
@@ -122,7 +121,6 @@ interface ClubsProps {
 
 const Clubs: React.FC<ClubsProps> = ({ onNavigate }) => {
   const { t, i18n } = useTranslation("landing");
-  const location = useLocation();
   const isArabic = i18n.language?.toLowerCase().startsWith('ar');
   const asset = (name: string) => `/assets/${name}`;
   const [selectedClub, setSelectedClub] = useState<string>('');
@@ -170,23 +168,6 @@ const Clubs: React.FC<ClubsProps> = ({ onNavigate }) => {
   const currentClubLocation = currentClub
     ? (isArabic ? (currentClub.locationAr || currentClub.locationEn || "") : (currentClub.locationEn || currentClub.locationAr || ""))
     : "";
-
-  const branchSportsMap: Record<string, string[]> = {
-    "1": ["football", "tennis", "swimming", "basketball"], // Main
-    "2": ["football", "basketball", "swimming"], // Haram
-    "3": ["tennis", "swimming"], // Zamalek
-    "4": ["football", "basketball"], // Mataria
-  };
-
-  const availableSports = branchSportsMap[currentClub?.id] || ["football", "tennis", "swimming", "basketball"];
-
-  useEffect(() => {
-    if (availableSports.length > 0 && !availableSports.includes(selectedAcademy)) {
-      setSelectedAcademy(availableSports[0]);
-    }
-  }, [currentClub?.id, selectedAcademy]); // We use currentClub?.id as dependency instead of availableSports array to avoid infinite loops
-
-
 
   const servicesData = {
     social: {
@@ -323,14 +304,6 @@ const Clubs: React.FC<ClubsProps> = ({ onNavigate }) => {
       branchSwiperRef.current.slideTo(selectedIndex);
     }
   }, [selectedClub, clubsData]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const urlBranchId = params.get('branchId');
-    if (urlBranchId && clubsData.some(c => c.id === urlBranchId)) {
-      setSelectedClub(urlBranchId);
-    }
-  }, [location.search, clubsData]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -555,10 +528,10 @@ const Clubs: React.FC<ClubsProps> = ({ onNavigate }) => {
                         paddingRight: '20px'
                       }}
                     >
-                      {availableSports.includes("football") && <option value="football" style={{ backgroundColor: '#0e1c38', color: 'white' }}>{t("sports.names.football", "كرة القدم")}</option>}
-                      {availableSports.includes("tennis") && <option value="tennis" style={{ backgroundColor: '#0e1c38', color: 'white' }}>{t("sports.names.tennis", "التنس")}</option>}
-                      {availableSports.includes("swimming") && <option value="swimming" style={{ backgroundColor: '#0e1c38', color: 'white' }}>{t("sports.names.swimming", "السباحة")}</option>}
-                      {availableSports.includes("basketball") && <option value="basketball" style={{ backgroundColor: '#0e1c38', color: 'white' }}>{t("sports.names.basketball", "كرة السلة")}</option>}
+                      <option value="football" style={{ backgroundColor: '#0e1c38', color: 'white' }}>{t("sports.names.football", "كرة القدم")}</option>
+                      <option value="tennis" style={{ backgroundColor: '#0e1c38', color: 'white' }}>{t("sports.names.tennis", "التنس")}</option>
+                      <option value="swimming" style={{ backgroundColor: '#0e1c38', color: 'white' }}>{t("sports.names.swimming", "السباحة")}</option>
+                      <option value="basketball" style={{ backgroundColor: '#0e1c38', color: 'white' }}>{t("sports.names.basketball", "كرة السلة")}</option>
                     </select>
                   </div>
 
@@ -641,7 +614,7 @@ const Clubs: React.FC<ClubsProps> = ({ onNavigate }) => {
                   {t("clubs.gym.desc", "صالة الألعاب الرياضية لدينا مزودة بأحدث المعدات والمدربين الشخصيين المحترفين، جاهزة لمساعدتك على تحقيق أحلامك الصحية والبدنية والعيش بنمط حياة صحي.")}
                 </p>
 
-                <button onClick={() => window.location.href = '/re'} className="bg-[#FDBF00] hover:bg-[#e6ac00] text-[#0e1c38] px-8 py-3 rounded-lg font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl inline-block">
+                <button className="bg-[#FDBF00] hover:bg-[#e6ac00] text-[#0e1c38] px-8 py-3 rounded-lg font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl inline-block">
                   {t("clubs.subscribe_now", "اشترك الآن")}
                 </button>
               </div>

@@ -1,0 +1,115 @@
+{
+  "steps": {
+    "category": "الفئة",
+    "basicInfo": "البيانات الأساسية",
+    "details": "تفاصيل العضوية",
+    "documents": "المستندات"
+  },
+  "nav": {
+    "prev": "السابق",
+    "next": "التالي",
+    "prevAria": "العودة للخطوة السابقة",
+    "nextAria": "الانتقال للخطوة التالية",
+    "submit": "تأكيد التسجيل",
+    "submitting": "جاري المعالجة..."
+  },
+  "step1": {
+    "hint": "اختر الفئة للمتابعة تلقائياً",
+    "categories": {
+      "staff": { "title": "عامل بالجامعة", "desc": "أعضاء هيئة التدريس والموظفين" },
+      "student": { "title": "طالب / خريج", "desc": "الطلاب والخريجين" },
+      "retired": { "title": "متقاعد", "desc": "أساتذة وموظفين متقاعدين" },
+      "dependent": { "title": "عضو تابع", "desc": "أسرة الأعضاء (زوجة/أبناء)" },
+      "foreigner": { "title": "أجنبي / موسمي", "desc": "لغير المصريين (مدد محددة)" },
+      "visitor": { "title": "عضو زائر", "desc": "عضويات عامة" }
+    }
+  },
+  "step2": {
+    "title": "البيانات الأساسية",
+    "subtitle": "يرجى ملء جميع الحقول المطلوبة بدقة",
+    "firstNameAr": "الاسم الأول (عربي)",
+    "lastNameAr": "اسم العائلة (عربي)",
+    "firstNameEn": "الاسم الأول (إنجليزي)",
+    "lastNameEn": "اسم العائلة (إنجليزي)",
+    "firstNameArPlaceholder": "مثال: أحمد",
+    "lastNameArPlaceholder": "مثال: محمد",
+    "firstNameEnPlaceholder": "e.g. Ahmed",
+    "lastNameEnPlaceholder": "e.g. Mohamed",
+    "passport": "رقم جواز السفر",
+    "nationalId": "الرقم القومي",
+    "birthDate": "تاريخ الميلاد",
+    "gender": "الجنس",
+    "male": "ذكر",
+    "female": "أنثى",
+    "phone": "رقم الهاتف",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "passwordWeak": "ضعيفة",
+    "passwordFair": "متوسطة",
+    "passwordGood": "جيدة",
+    "passwordStrong": "قوية"
+  },
+  "step3": {
+    "title": "تفاصيل العضوية",
+    "subtitle": "بيانات إضافية لـ",
+    "address": "العنوان الحالي بالتفصيل",
+    "faculty": "الكلية",
+    "graduationYear": "سنة التخرج",
+    "profession": "الدرجة الوظيفية",
+    "department": "القسم / الإدارة",
+    "salary": "الراتب الشهري",
+    "departmentRetired": "الإدارة/القسم قبل التقاعد",
+    "retirementDate": "تاريخ التقاعد",
+    "lastSalary": "آخر راتب قبل التقاعد (اختياري)",
+    "professionBefore": "المهنة قبل التقاعد (اختياري)",
+    "departmentPlaceholder": "مثال: الهندسة الكهربائية",
+    "seasonalDuration": "مدة العضوية",
+    "visaStatus": "حالة التأشيرة",
+    "relatedMemberId": "رقم العضوية للعضو الأساسي",
+    "relatedMemberPlaceholder": "رقم العضوية أو الرقم القومي",
+    "relationshipType": "صلة القرابة",
+    "selectFaculty": "اختر الكلية",
+    "categories": {
+      "student": "طالب / خريج",
+      "staff": "عامل بالجامعة",
+      "retired": "متقاعد",
+      "foreigner": "أجنبي / موسمي",
+      "dependent": "عضو تابع",
+      "visitor": "عضو زائر",
+      "default": "عضو"
+    },
+    "professions": {
+      "PROF": "عضو هيئة تدريس",
+      "TA": "معيد / مدرس مساعد",
+      "STAFF": "موظف إداري"
+    }
+  },
+  "step4": {
+    "title": "المرفقات والمستندات",
+    "uploadHint": "اضغط لرفع الملف (PDF, JPG)",
+    "photo": "صورة شخصية حديثة",
+    "photoRequired": "صورة شخصية حديثة *",
+    "idFront": "صورة البطاقة (أمام)",
+    "idFrontRequired": "صورة البطاقة (أمام) *",
+    "idBack": "صورة البطاقة (خلف)",
+    "idBackRequired": "صورة البطاقة (خلف) *",
+    "proofDoc": "مستند إثبات *",
+    "medical": "تقرير طبي",
+    "medicalRequired": "تقرير طبي *",
+    "passport": "صورة جواز السفر",
+    "salaryProof": "مفردات مرتب / بيان معاش",
+    "enrollmentProof": "إثبات قيد / شهادة تخرج",
+    "relationProof": "مستند إثبات القرابة"
+  },
+  "files": {
+    "photo": "صورة شخصية",
+    "id_front": "صورة البطاقة (أمام)",
+    "id_back": "صورة البطاقة (خلف)",
+    "passport": "صورة جواز السفر",
+    "medical": "التقرير الطبي"
+  },
+  "errors": {
+    "missingFiles": "مستندات مطلوبة غير مرفوعة: {{list}}"
+  }
+}

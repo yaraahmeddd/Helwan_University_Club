@@ -1,0 +1,99 @@
+{
+  "status": {
+    "active": "نشط",
+    "inactive": "غير نشط"
+  },
+  "detailPanel": {
+    "loading": "جارٍ التحميل...",
+    "sections": {
+      "name": "الاسم",
+      "contact": "بيانات التواصل",
+      "employment": "بيانات التوظيف",
+      "assignedPackages": "الحزم المخصصة",
+      "privileges": "الصلاحيات الفردية"
+    },
+    "fields": {
+      "firstNameAr": "الاسم الأول (عربي)",
+      "lastNameAr": "اسم العائلة (عربي)",
+      "firstNameEn": "First Name (EN)",
+      "lastNameEn": "Last Name (EN)",
+      "phone": "رقم الهاتف",
+      "address": "العنوان",
+      "email": "البريد الإلكتروني",
+      "nationalId": "الرقم القومي",
+      "job": "الوظيفة",
+      "startDate": "بداية العمل",
+      "endDate": "نهاية العمل"
+    },
+    "placeholders": {
+      "selectJob": "اختر نوع الوظيفة"
+    },
+    "messages": {
+      "noPackages": "لا توجد حزم مخصصة"
+    },
+    "actions": {
+      "viewPrivileges": "عرض الصلاحيات",
+      "saveChanges": "حفظ التغييرات",
+      "saving": "جارٍ الحفظ...",
+      "cancel": "إلغاء",
+      "edit": "تعديل",
+      "deactivate": "إلغاء تفعيل"
+    }
+  },
+  "page": {
+    "title": "إدارة الموظفين",
+    "totalStaff": "إجمالي الموظفين",
+    "newStaff": "موظف جديد"
+  },
+  "list": {
+    "searchPlaceholder": "بحث بالاسم...",
+    "prevPage": "الصفحة السابقة",
+    "nextPage": "الصفحة التالية"
+  },
+  "table": {
+    "headers": {
+      "number": "#",
+      "staff": "الموظف",
+      "job": "الوظيفة",
+      "startDate": "بداية العمل",
+      "status": "الحالة",
+      "actions": "الإجراءات"
+    },
+    "states": {
+      "noStaff": "لم يتم العثور على موظفين",
+      "addFirstStaff": "إضافة الموظف الأول"
+    },
+    "actions": {
+      "view": "عرض",
+      "edit": "تعديل",
+      "deactivate": "إلغاء تفعيل"
+    }
+  },
+  "toasts": {
+    "dataError": {
+      "title": "خطأ في البيانات",
+      "desc": "يجب إدخال الاسم الأول بالعربية أو الإنجليزية"
+    },
+    "phoneError": {
+      "title": "رقم هاتف غير صحيح",
+      "desc": "يجب أن يبدأ الرقم بـ 010, 011, 012, أو 015"
+    },
+    "updateSuccess": {
+      "title": "تم التحديث",
+      "desc": "تم تحديث بيانات الموظف بنجاح"
+    },
+    "updateFailed": {
+      "title": "فشل التحديث"
+    },
+    "deactivateSuccess": {
+      "title": "تم إلغاء التفعيل",
+      "desc": "تم إلغاء تفعيل الموظف بنجاح"
+    },
+    "deactivateFailed": {
+      "title": "فشل إلغاء التفعيل"
+    },
+    "loadFailed": {
+      "title": "تعذر تحميل قائمة الموظفين"
+    }
+  }
+}

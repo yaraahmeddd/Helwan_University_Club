@@ -4,6 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { mockSports } from "../data/mockData";
 import { RoleGuard } from "../components/StaffPagesComponents/RoleGuard";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
+import { useLanguage } from "../hooks/useLanguage";
+import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
+import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
+import { getLocalizedText } from "../lib/localizedDisplay";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Input } from "../components/StaffPagesComponents/ui/input";
 import { Label } from "../components/StaffPagesComponents/ui/label";
@@ -368,8 +373,8 @@ const getSportStatus = (sport: Sport, t: any) => {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function SportsPage() {
-  const { t, i18n } = useTranslation('SportsPage');
-  const isRTL = i18n.language === 'ar';
+  const { t } = useTranslation('SportsPage');
+  const { language, isRTL } = useLanguage();
 
   const [sports, setSports] = useState<Sport[]>([]);
   const [editSport, setEditSport] = useState<Sport | null>(null);
@@ -393,8 +398,8 @@ export default function SportsPage() {
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   const sportDisplayName = useCallback((s: Pick<Sport, "nameAr" | "nameEn">) => {
-    return isRTL ? (s.nameAr || s.nameEn) : (s.nameEn || s.nameAr);
-  }, [isRTL]);
+    return getLocalizedText(s.nameAr, s.nameEn, language);
+  }, [language]);
 
   const mapApiSport = useCallback((item: SportApiItem): Sport => {
     const nameAr = item.name_ar || (item.name && !item.name_en ? item.name : "") || "";
@@ -810,19 +815,19 @@ export default function SportsPage() {
         })}
       </div>
 
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="shadow-sm">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`shadow-sm ${adminTableStyles.container}`}>
         <Table>
-          <TableHeader>
+          <TableHeader className={adminTableStyles.header}>
             <TableRow>
-              <TableHead className="w-14"></TableHead>
-              <TableHead>{t('table.name')}</TableHead>
-              <TableHead className="whitespace-nowrap">{t('table.status')}</TableHead>
-              <TableHead>{t('table.membersCount')}</TableHead>
-              <TableHead>{t('table.price')}</TableHead>
-              <TableHead className="w-[260px] text-center">{t('table.actions')}</TableHead>
+              <TableHead className={adminHeadClass({ className: "w-14" })}></TableHead>
+              <TableHead className={adminHeadClass()}>{t('table.name')}</TableHead>
+              <TableHead className={adminHeadClass({ className: "whitespace-nowrap" })}>{t('table.status')}</TableHead>
+              <TableHead className={adminHeadClass()}>{t('table.membersCount')}</TableHead>
+              <TableHead className={adminHeadClass()}>{t('table.price')}</TableHead>
+              <TableHead className={adminHeadClass({ center: true, className: "w-[260px]" })}>{t('table.actions')}</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody className={adminTableStyles.body}>
             <AnimatePresence>
               {isLoading ? (
                 <TableRow>
@@ -851,10 +856,9 @@ export default function SportsPage() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="border-b border-border transition-colors duration-200 hover:bg-accent/10"
+                      className={adminTableStyles.row}
                     >
-                      {/* Thumbnail */}
-                      <TableCell className="py-2">
+                      <TableCell className={adminCellClass({ className: "py-2" })}>
                         <SportImage
                           src={sport.imageUrl}
                           alt={sportDisplayName(sport)}
@@ -862,8 +866,10 @@ export default function SportsPage() {
                           fallbackClassName="w-10 h-10"
                         />
                       </TableCell>
-                      <TableCell className="font-medium">{sportDisplayName(sport)}</TableCell>
-                      <TableCell className="whitespace-nowrap">
+                      <TableCell className={adminCellClass()}>
+                        <BilingualText ar={sport.nameAr} en={sport.nameEn} language={language} primaryClassName="font-medium" />
+                      </TableCell>
+                      <TableCell className={adminCellClass({ className: "whitespace-nowrap" })}>
                         <span
                           title={status.isDraft ? t('status.draftTooltip') : undefined}
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${status.className}`}
@@ -871,10 +877,10 @@ export default function SportsPage() {
                           {status.label}
                         </span>
                       </TableCell>
-                      <TableCell className="font-poppins">{sport.membersCount}</TableCell>
-                      <TableCell className="font-poppins">{sport.price}</TableCell>
-                      <TableCell className="whitespace-nowrap text-center">
-                        <div className="flex items-center justify-center gap-2">
+                      <TableCell className={adminCellClass({ className: "font-poppins" })}>{sport.membersCount}</TableCell>
+                      <TableCell className={adminCellClass({ className: "font-poppins" })}>{sport.price}</TableCell>
+                      <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
+                        <div className={adminTableStyles.actions}>
                           <RoleGuard privilege="UPDATE_SPORT">
                             <Button size="sm" variant="outline" onClick={() => void openEdit(sport)} className="gap-1 text-accent border-accent hover:bg-accent hover:text-accent-foreground">
                               <Pencil className="h-3 w-3" /> {t('actions.edit')}
@@ -1272,16 +1278,16 @@ export default function SportsPage() {
             </div>
           ) : (
             <Table>
-              <TableHeader>
+              <TableHeader className={adminTableStyles.header}>
                 <TableRow>
-                  <TableHead>{t('membersTable.name')}</TableHead>
-                  <TableHead>{t('membersTable.nationalId')}</TableHead>
-                  <TableHead>{t('membersTable.phone')}</TableHead>
-                  <TableHead>{t('membersTable.status')}</TableHead>
-                  <TableHead>{t('membersTable.registrationDate')}</TableHead>
+                  <TableHead className={adminHeadClass()}>{t('membersTable.name')}</TableHead>
+                  <TableHead className={adminHeadClass()}>{t('membersTable.nationalId')}</TableHead>
+                  <TableHead className={adminHeadClass()}>{t('membersTable.phone')}</TableHead>
+                  <TableHead className={adminHeadClass()}>{t('membersTable.status')}</TableHead>
+                  <TableHead className={adminHeadClass()}>{t('membersTable.registrationDate')}</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className={adminTableStyles.body}>
                 {dialogMembers.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
@@ -1290,9 +1296,6 @@ export default function SportsPage() {
                   </TableRow>
                 ) : (
                   dialogMembers.map((m) => {
-                    const displayName = isRTL 
-                      ? [m.first_name_ar, m.last_name_ar].filter(Boolean).join(" ")
-                      : [m.first_name_en, m.last_name_en].filter(Boolean).join(" ") || [m.first_name_ar, m.last_name_ar].filter(Boolean).join(" ");
                     const statusCls =
                       m.status === "active" || m.status === "approved"
                         ? "border-emerald-200 bg-emerald-50 text-emerald-700"
@@ -1304,16 +1307,28 @@ export default function SportsPage() {
                         : m.status === "pending" ? t('memberStatus.pending')
                           : m.status === "suspended" ? t('memberStatus.suspended') : t('memberStatus.inactive');
                     return (
-                      <TableRow key={m.id}>
-                        <TableCell className="font-medium">{displayName}</TableCell>
-                        <TableCell className="font-mono text-xs" dir="ltr">{m.national_id}</TableCell>
-                        <TableCell dir="ltr">{m.phone ?? "—"}</TableCell>
-                        <TableCell>
+                      <TableRow key={m.id} className={adminTableStyles.row}>
+                        <TableCell className={adminCellClass()}>
+                          <PersonNameDisplay
+                            id={m.id}
+                            names={{
+                              firstNameAr: m.first_name_ar,
+                              lastNameAr: m.last_name_ar,
+                              firstNameEn: m.first_name_en,
+                              lastNameEn: m.last_name_en,
+                            }}
+                            language={language}
+                            showAvatar={false}
+                          />
+                        </TableCell>
+                        <TableCell className={adminCellClass({ size: "xs", className: "font-mono" })} dir="ltr">{m.national_id}</TableCell>
+                        <TableCell className={adminCellClass()} dir="ltr">{m.phone ?? "—"}</TableCell>
+                        <TableCell className={adminCellClass()}>
                           <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusCls}`}>
                             {statusLabel}
                           </span>
                         </TableCell>
-                        <TableCell dir="ltr">{m.created_at ? new Date(m.created_at).toLocaleDateString("ar-EG") : "—"}</TableCell>
+                        <TableCell className={adminCellClass({ size: "muted" })} dir="ltr">{m.created_at ? new Date(m.created_at).toLocaleDateString(language === "ar" ? "ar-EG" : "en-US") : "—"}</TableCell>
                       </TableRow>
                     );
                   })

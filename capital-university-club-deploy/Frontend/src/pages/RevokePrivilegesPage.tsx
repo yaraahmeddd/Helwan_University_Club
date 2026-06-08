@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     Search, RefreshCw, Shield, ChevronRight, ChevronLeft, Loader2,
-    Users, ArrowRight, Trash2, RotateCcw, AlertTriangle, Lock,
+    Users, ArrowRight, Trash2, RotateCcw, AlertTriangle, Lock, ShieldOff,
+    Undo, CheckSquare
 } from "lucide-react";
 import api from "../services/axios";
 import { StaffService } from "../services/staffService";
@@ -10,6 +11,11 @@ import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Badge } from "../components/StaffPagesComponents/ui/badge";
 import { useToast } from "../hooks/use-toast";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
+import { useLanguage } from "../hooks/useLanguage";
+import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
+import { getLocalizedText, buildPersonName } from "../lib/localizedDisplay";
+import { useTranslation } from "react-i18next";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,6 +39,10 @@ type StaffRow = {
     id: number;
     nameAr: string;
     nameEn: string;
+    firstNameAr?: string;
+    lastNameAr?: string;
+    firstNameEn?: string;
+    lastNameEn?: string;
     nationalId: string;
     role: string;
     status: string;
@@ -60,13 +70,6 @@ const PAGE_SIZE = 10;
 const isRecord = (v: unknown): v is Record<string, unknown> =>
     typeof v === "object" && v !== null;
 
-const PALETTE = [
-    "#1b71bc", "#e05c2a", "#2a9d60", "#7c3aed",
-    "#0891b2", "#be185d", "#ca8a04", "#475569",
-];
-const getColor = (id: number) => PALETTE[id % PALETTE.length];
-const getInitials = (ar?: string, en?: string) =>
-    (ar || en || "?").split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 const formatDate = (v?: string | null) => {
     if (!v) return "—";
     try { return new Date(v).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" }); }
@@ -129,6 +132,8 @@ const parseGrantedPrivileges = (response: unknown): Omit<GrantedPrivilege, "mark
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function RevokePrivilegesPage() {
+    const { t } = useTranslation("RevokePrivilegesPage");
+    const { language, isRTL } = useLanguage();
     const { toast } = useToast();
 
     // ── VIEW STATE ──────────────────────────────────────────────────────────────
@@ -182,6 +187,10 @@ export default function RevokePrivilegesPage() {
                     id: s.id,
                     nameAr: `${s.first_name_ar ?? ""} ${s.last_name_ar ?? ""}`.trim(),
                     nameEn: `${s.first_name_en ?? ""} ${s.last_name_en ?? ""}`.trim(),
+                    firstNameAr: s.first_name_ar,
+                    lastNameAr: s.last_name_ar,
+                    firstNameEn: s.first_name_en,
+                    lastNameEn: s.last_name_en,
                     nationalId: s.national_id ?? "",
                     role: String(s.role ?? s.staff_type ?? "STAFF").toUpperCase(),
                     status: String(s.status ?? "").toLowerCase(),
@@ -191,7 +200,7 @@ export default function RevokePrivilegesPage() {
                 setStaffRows(rows);
                 setTotalCount(trim || from || to ? rows.length : total);
             } catch {
-                toast({ title: "خطأ", description: "فشل تحميل قائمة الموظفين", variant: "destructive" });
+                toast({ title: t("toasts.errorTitle"), description: t("toasts.errorLoadPrivileges"), variant: "destructive" });
             } finally {
                 setIsLoading(false);
             }
@@ -280,25 +289,25 @@ export default function RevokePrivilegesPage() {
             const result = await StaffService.revokePrivileges(selectedStaff.id, markedIds, "Revoked from revoke-privileges page");
 
             if (result.failed_attempts && result.failed_attempts.length > 0) {
+                const failedIds = result.failed_attempts.map((f: any) => f.privilege_id);
+                const successIds = markedIds.filter(id => !failedIds.includes(id));
                 setFailedAttempts(result.failed_attempts);
-                const successCount = result.successful_revokes || 0;
                 toast({
-                    title: "تم سحب البعض",
-                    description: `تم سحب ${successCount} صلاحية بنجاح. ${result.failed_revokes} صلاحية لم يمكن سحبها مباشرة.`,
-                    variant: "destructive",
+                    title: t("toasts.partialRevokeTitle"),
+                    description: t("toasts.partialRevokeDesc", { success: successIds.length, failed: failedIds.length }),
+                    variant: "default"
                 });
             } else {
                 toast({
-                    title: "تم سحب الصلاحيات",
-                    description: `تم سحب ${markedIds.length} صلاحية من ${selectedStaff.nameAr || selectedStaff.nameEn} بنجاح.`,
+                    title: t("toasts.revokeSuccessTitle"),
+                    description: t("toasts.revokeSuccessDesc", { count: markedIds.length, name: selectedStaff.nameAr || selectedStaff.nameEn })
                 });
             }
 
             // Re-fetch to reflect changes
             await fetchPrivileges(selectedStaff.id);
         } catch (error: any) {
-            const errorMessage = error?.response?.data?.message || error?.message || "حدث خطأ أثناء سحب الصلاحيات";
-            toast({ title: "فشل السحب", description: errorMessage, variant: "destructive" });
+            toast({ title: t("toasts.revokeErrorTitle"), description: t("toasts.revokeErrorDesc"), variant: "destructive" });
         } finally {
             setIsSaving(false);
         }
@@ -320,18 +329,18 @@ export default function RevokePrivilegesPage() {
     // ─── STEP 1 RENDER: Staff Table ────────────────────────────────────────────
     if (step === "table") {
         return (
-            <div className="h-[calc(100vh-4rem)] flex flex-col" dir="rtl">
+            <div className="h-[calc(100vh-4rem)] flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
 
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-border bg-background shrink-0">
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-                                <Trash2 className="w-6 h-6 text-rose-500" />
-                                سحب صلاحيات الموظفين
+                                <ShieldOff className="w-6 h-6 text-red-500" />
+                                {t("table.title")}
                             </h1>
                             <p className="text-sm text-muted-foreground mt-0.5">
-                                اختر موظفاً لعرض صلاحياته الحالية وسحب ما تريده
+                                {t("table.description")}
                             </p>
                         </div>
                         <button
@@ -340,22 +349,22 @@ export default function RevokePrivilegesPage() {
                             className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border hover:bg-muted transition-colors text-sm text-muted-foreground disabled:opacity-40"
                         >
                             <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
-                            تحديث
+                            {t("table.refresh")}
                         </button>
                     </div>
 
                     {/* Role filter tabs */}
                     <div className="flex items-center gap-1 mt-3 flex-wrap">
                         {[
-                            { value: "", label: "الكل" },
-                            { value: "ADMIN", label: "مدير" },
-                            { value: "SPORTS_DIRECTOR", label: "مدير رياضة" },
-                            { value: "SPORTS_OFFICER", label: "موظف رياضي" },
-                            { value: "FINANCIAL_DIRECTOR", label: "مالي" },
-                            { value: "REGISTRATION_STAFF", label: "تسجيل" },
-                            { value: "TEAM_MANAGER", label: "مدير فريق" },
-                            { value: "SUPPORT", label: "دعم فني" },
-                            { value: "AUDITOR", label: "مدقق" },
+                            { value: "", label: t("filters.all") },
+                            { value: "ADMIN", label: t("filters.admin") },
+                            { value: "SPORTS_DIRECTOR", label: t("filters.sportsDirector") },
+                            { value: "SPORTS_OFFICER", label: t("filters.sportsOfficer") },
+                            { value: "FINANCIAL_DIRECTOR", label: t("filters.financial") },
+                            { value: "REGISTRATION_STAFF", label: t("filters.registration") },
+                            { value: "TEAM_MANAGER", label: t("filters.teamManager") },
+                            { value: "SUPPORT", label: t("filters.support") },
+                            { value: "AUDITOR", label: t("filters.auditor") },
                         ].map((f) => (
                             <button
                                 key={f.value}
@@ -374,17 +383,17 @@ export default function RevokePrivilegesPage() {
                 {/* Toolbar */}
                 <div className="flex items-center gap-3 px-6 py-3 border-b border-border bg-muted/20 shrink-0 flex-wrap">
                     <div className="relative w-full sm:w-72">
-                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                        <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none`} />
                         <Input
-                            placeholder="ابحث بالاسم أو الرقم القومي..."
+                            placeholder={t("table.searchPlaceholder")}
                             defaultValue={search}
                             onChange={(e) => handleSearchChange(e.target.value)}
-                            className="pr-9 h-10"
+                            className={`h-10 ${isRTL ? 'pr-9' : 'pl-9'}`}
                         />
                     </div>
 
                     <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">من:</span>
+                        <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">{t("table.dateFrom")}</span>
                         <input
                             type="date"
                             value={dateFrom}
@@ -392,7 +401,7 @@ export default function RevokePrivilegesPage() {
                             onChange={(e) => { setDateFrom(e.target.value); setCurrentPage(1); }}
                             className="h-10 px-3 text-sm border-2 border-border rounded-xl focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all bg-background text-foreground"
                         />
-                        <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">إلى:</span>
+                        <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">{t("table.dateTo")}</span>
                         <input
                             type="date"
                             value={dateTo}
@@ -423,7 +432,7 @@ export default function RevokePrivilegesPage() {
                                 disabled={currentPage === 1 || isLoading}
                                 className="p-2 rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-40"
                             >
-                                <ChevronRight className="w-4 h-4" />
+                                <ChevronRight className="w-4 h-4" style={{ transform: isRTL ? 'none' : 'rotate(180deg)' }} />
                             </button>
                             {Array.from({ length: totalPages }, (_, i) => i + 1)
                                 .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
@@ -453,71 +462,67 @@ export default function RevokePrivilegesPage() {
                                 disabled={currentPage === totalPages || isLoading}
                                 className="p-2 rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-40"
                             >
-                                <ChevronLeft className="w-4 h-4" />
+                                <ChevronLeft className="w-4 h-4" style={{ transform: isRTL ? 'none' : 'rotate(180deg)' }} />
                             </button>
                         </div>
                     )}
                 </div>
 
                 {/* Table */}
-                <div className="flex-1 overflow-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
+                <div className={adminTableStyles.container}>
                     {isLoading ? (
                         <div className="py-20 text-center text-muted-foreground">
-                            <div className="w-8 h-8 rounded-full border-2 border-rose-400 border-t-transparent animate-spin mx-auto mb-3" />
-                            <p className="text-sm">جارٍ تحميل الموظفين...</p>
+                            <div className="w-8 h-8 rounded-full border-2 border-rose-500 border-t-transparent animate-spin mx-auto mb-3" />
+                            <p className="text-sm">{t("table.loading")}</p>
                         </div>
                     ) : staffRows.length === 0 ? (
                         <div className="py-20 text-center text-muted-foreground">
                             <div className="rounded-full bg-muted/30 p-6 mb-4 w-fit mx-auto">
                                 <Users className="h-12 w-12 text-muted-foreground/50" />
                             </div>
-                            <h3 className="text-base font-semibold text-foreground mb-1">لا يوجد موظفون</h3>
-                            <p className="text-sm">{search || roleFilter ? "لا توجد نتائج مطابقة" : "لم يتم العثور على موظفين"}</p>
+                            <h3 className="text-base font-semibold text-foreground mb-1">{t("table.noStaffTitle")}</h3>
+                            <p className="text-sm">{search || roleFilter ? t("table.noStaffSearch") : t("table.noStaffDesc")}</p>
                         </div>
                     ) : (
                         <Table>
-                            <TableHeader className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
+                            <TableHeader className={adminTableStyles.header}>
                                 <TableRow>
-                                    <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground w-10">#</TableHead>
-                                    <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground">الموظف</TableHead>
-                                    <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground">الرقم القومي</TableHead>
-                                    <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground">الوظيفة</TableHead>
-                                    <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground">بداية العمل</TableHead>
-                                    <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground">الإجراء</TableHead>
+                                    <TableHead className={adminHeadClass({ className: "w-10" })}>{t("table.headers.number")}</TableHead>
+                                    <TableHead className={adminHeadClass()}>{t("table.headers.staff")}</TableHead>
+                                    <TableHead className={adminHeadClass()}>{t("table.headers.nationalId")}</TableHead>
+                                    <TableHead className={adminHeadClass({ center: true })}>{t("table.headers.job")}</TableHead>
+                                    <TableHead className={adminHeadClass()}>{t("table.headers.startDate")}</TableHead>
+                                    <TableHead className={adminHeadClass({ center: true })}>{t("table.headers.actions")}</TableHead>
                                 </TableRow>
                             </TableHeader>
-                            <TableBody className="divide-y divide-border">
+                            <TableBody className={adminTableStyles.body}>
                                 {staffRows.map((staff, idx) => (
-                                    <TableRow key={staff.id} className="transition-colors hover:bg-muted/40">
-                                        <TableCell className="px-4 py-3 text-muted-foreground font-mono text-xs">
+                                    <TableRow key={staff.id} className={adminTableStyles.row}>
+                                        <TableCell className={adminCellClass({ size: "muted", className: "font-mono" })}>
                                             {(currentPage - 1) * PAGE_SIZE + idx + 1}
                                         </TableCell>
-                                        <TableCell className="px-4 py-3">
-                                            <div className="flex items-center gap-3">
-                                                <div
-                                                    className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-                                                    style={{ backgroundColor: getColor(staff.id) }}
-                                                >
-                                                    {getInitials(staff.nameAr, staff.nameEn)}
-                                                </div>
-                                                <div>
-                                                    <p className="font-semibold leading-tight text-sm">{staff.nameAr || staff.nameEn || "—"}</p>
-                                                    {staff.nameEn && staff.nameAr && (
-                                                        <p className="text-[11px] text-muted-foreground/70 italic" dir="ltr">{staff.nameEn}</p>
-                                                    )}
-                                                </div>
-                                            </div>
+                                        <TableCell className={adminCellClass()}>
+                                            <PersonNameDisplay
+                                                id={staff.id}
+                                                names={{
+                                                    firstNameAr: staff.firstNameAr,
+                                                    lastNameAr: staff.lastNameAr,
+                                                    firstNameEn: staff.firstNameEn,
+                                                    lastNameEn: staff.lastNameEn,
+                                                }}
+                                                language={language}
+                                            />
                                         </TableCell>
-                                        <TableCell className="px-4 py-3 font-mono text-xs">
+                                        <TableCell className={adminCellClass({ size: "xs", className: "font-mono" })}>
                                             <span dir="ltr">{staff.nationalId || "—"}</span>
                                         </TableCell>
-                                        <TableCell className="px-4 py-3 text-center">
+                                        <TableCell className={adminCellClass({ center: true })}>
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-700">
-                                                {ROLE_LABELS[staff.role] ?? staff.role}
+                                                {t(`roles.${staff.role}`, { defaultValue: staff.role })}
                                             </span>
                                         </TableCell>
-                                        <TableCell className="px-4 py-3 text-xs tabular-nums">{formatDate(staff.startDate)}</TableCell>
-                                        <TableCell className="px-4 py-3 text-center">
+                                        <TableCell className={adminCellClass({ size: "xs", className: "tabular-nums" })}>{formatDate(staff.startDate)}</TableCell>
+                                        <TableCell className={adminCellClass({ center: true })}>
                                             <Button
                                                 size="sm"
                                                 variant="outline"
@@ -540,26 +545,31 @@ export default function RevokePrivilegesPage() {
 
     // ─── STEP 2 RENDER: Revoke Privileges ──────────────────────────────────────
     return (
-        <div className="h-[calc(100vh-4rem)] flex flex-col overflow-hidden" dir="rtl">
+        <div className="h-[calc(100vh-4rem)] flex flex-col overflow-hidden" dir={isRTL ? "rtl" : "ltr"}>
 
             {/* Header */}
             <div className="px-6 py-4 border-b border-border bg-background shrink-0">
                 <div className="flex items-center gap-3 flex-wrap">
                     <button
                         onClick={() => setStep("table")}
-                        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-lg hover:bg-muted"
+                        className={`flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-lg hover:bg-muted ${isRTL ? 'flex-row-reverse' : ''}`}
                     >
-                        <ChevronRight className="w-4 h-4" />
-                        العودة للقائمة
+                        <ChevronRight className="w-4 h-4" style={{ transform: isRTL ? 'none' : 'rotate(180deg)' }} />
+                        {t("revoke.back")}
                     </button>
                     <span className="text-muted-foreground/50">/</span>
                     <div>
                         <h1 className="text-xl font-bold flex items-center gap-2">
                             <Trash2 className="w-5 h-5 text-rose-500" />
-                            سحب صلاحيات: {selectedStaff?.nameAr || selectedStaff?.nameEn}
+                            {t("revoke.title")} {selectedStaff ? buildPersonName({
+                                firstNameAr: selectedStaff.firstNameAr,
+                                lastNameAr: selectedStaff.lastNameAr,
+                                firstNameEn: selectedStaff.firstNameEn,
+                                lastNameEn: selectedStaff.lastNameEn,
+                            }, language).primary || selectedStaff.nameAr || selectedStaff.nameEn : ""}
                         </h1>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                            {selectedStaff && (ROLE_LABELS[selectedStaff.role] ?? selectedStaff.role)}
+                            {selectedStaff && t(`roles.${selectedStaff.role}`, { defaultValue: selectedStaff.role })}
                         </p>
                     </div>
                 </div>
@@ -569,12 +579,12 @@ export default function RevokePrivilegesPage() {
                     <div className="flex items-center gap-4 mt-3">
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <Shield className="w-3.5 h-3.5 text-emerald-500" />
-                            <span>إجمالي الصلاحيات:</span>
+                            <span>{t("revoke.totalPrivileges")}</span>
                             <span className="font-bold text-foreground">{grantedPrivileges.length}</span>
                         </div>
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <Trash2 className="w-3.5 h-3.5 text-rose-500" />
-                            <span>سيتم سحبها:</span>
+                            <span>{t("revoke.toRevoke")}</span>
                             <span className={`font-bold ${markedIds.length > 0 ? "text-rose-600" : "text-foreground"}`}>
                                 {markedIds.length}
                             </span>
@@ -589,16 +599,16 @@ export default function RevokePrivilegesPage() {
                 {/* Search + quick actions bar */}
                 <div className="px-6 py-3 border-b border-border bg-muted/10 shrink-0 flex items-center gap-3 flex-wrap">
                     <div className="relative flex-1 min-w-[180px]">
-                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                        <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none`} />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="ابحث عن صلاحية..."
-                            className="w-full pr-10 pl-4 py-2 border-2 border-border rounded-xl focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all text-sm bg-background"
+                            placeholder={t("revoke.searchPrivilege")}
+                            className={`w-full ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-2 border-2 border-border rounded-xl focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all text-sm bg-background`}
                         />
                         {searchQuery && (
-                            <button onClick={() => setSearchQuery("")} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">✕</button>
+                            <button onClick={() => setSearchQuery("")} className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground`}>✕</button>
                         )}
                     </div>
 
@@ -609,7 +619,7 @@ export default function RevokePrivilegesPage() {
                         className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border-2 border-rose-300 text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-40"
                     >
                         <AlertTriangle className="w-3.5 h-3.5" />
-                        تحديد الكل للسحب
+                        {t("revoke.markAll")}
                     </button>
                     <button
                         onClick={clearAll}
@@ -617,7 +627,7 @@ export default function RevokePrivilegesPage() {
                         className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border-2 border-border text-muted-foreground hover:bg-muted transition-colors disabled:opacity-40"
                     >
                         <RotateCcw className="w-3.5 h-3.5" />
-                        تراجع
+                        {t("revoke.undo")}
                     </button>
                 </div>
 
@@ -630,20 +640,20 @@ export default function RevokePrivilegesPage() {
                     ) : grantedPrivileges.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-20 text-muted-foreground border-2 border-dashed border-border rounded-2xl">
                             <Shield className="h-12 w-12 mb-3 text-muted-foreground/30" />
-                            <h3 className="text-base font-semibold text-foreground mb-1">لا توجد صلاحيات ممنوحة</h3>
-                            <p className="text-sm">هذا الموظف لا يملك أي صلاحيات حالياً</p>
+                            <h3 className="text-base font-semibold text-foreground mb-1">{t("revoke.noGrantedPrivilegesTitle")}</h3>
+                            <p className="text-sm">{t("revoke.noGrantedPrivilegesDesc")}</p>
                         </div>
                     ) : filteredGroups.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-20 text-muted-foreground border-2 border-dashed border-border rounded-2xl">
                             <Search className="h-10 w-10 mb-2 text-muted-foreground/30" />
-                            <p className="text-sm">لا توجد نتائج مطابقة للبحث</p>
+                            <p className="text-sm">{t("revoke.noResults")}</p>
                         </div>
                     ) : (
                         filteredGroups.map((group) => (
                             <div key={group.module} className="rounded-xl border-2 border-border overflow-hidden">
                                 <div className="bg-muted/50 px-4 py-2.5 border-b border-border flex items-center justify-between">
                                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{group.module}</p>
-                                    <span className="text-[11px] text-muted-foreground">{group.items.length} صلاحية</span>
+                                    <span className="text-[11px] text-muted-foreground">{group.items.length} {t("revoke.privilegeCount")}</span>
                                 </div>
                                 <div className="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                                     {group.items.map((priv) => {
@@ -676,7 +686,7 @@ export default function RevokePrivilegesPage() {
                                                     <p className={`text-xs font-semibold leading-tight truncate ${
                                                         marked ? "text-rose-800 line-through" : "text-foreground"
                                                     }`}>
-                                                        {priv.nameAr || priv.nameEn || priv.code}
+                                                        {getLocalizedText(priv.nameAr, priv.nameEn, language) || priv.code}
                                                     </p>
                                                     <p className={`text-[10px] font-mono mt-0.5 truncate ${
                                                         marked ? "text-rose-500 line-through" : "text-muted-foreground"
@@ -696,7 +706,7 @@ export default function RevokePrivilegesPage() {
                                                                         : "bg-amber-100 text-amber-700 border-amber-300"
                                                             }`}
                                                         >
-                                                            {SOURCE_LABELS[priv.source]?.ar || priv.source}
+                                                            {t(`sources.${priv.source.toLowerCase()}`, { defaultValue: priv.source })}
                                                         </Badge>
 
                                                         {priv.source === "package" && priv.package_code && (
@@ -718,10 +728,10 @@ export default function RevokePrivilegesPage() {
                 {/* Failed attempts warning */}
                 {failedAttempts.length > 0 && (
                     <div className="mx-6 mb-4 p-3 rounded-lg bg-red-50 border-2 border-red-200">
-                        <p className="text-xs font-semibold text-red-800 mb-2">⚠️ لم يمكن سحب {failedAttempts.length} صلاحية:</p>
+                        <p className="text-xs font-semibold text-red-800 mb-2">{t("revoke.failedAttemptsTitle", { count: failedAttempts.length })}</p>
                         <ul className="space-y-1">
                             {failedAttempts.map((attempt, idx) => (
-                                <li key={idx} className="text-[11px] text-red-700">
+                                <li key={idx} className={`text-[11px] text-red-700 ${isRTL ? 'ml-0 mr-4' : 'mr-0 ml-4'}`}>
                                     • <span className="font-mono">{attempt.error}</span>
                                 </li>
                             ))}
@@ -734,8 +744,8 @@ export default function RevokePrivilegesPage() {
             <div className="shrink-0 border-t border-border bg-background px-6 py-3 flex items-center justify-between gap-4">
                 <p className="text-sm text-muted-foreground">
                     {markedIds.length > 0
-                        ? <><strong className="text-rose-600">{markedIds.length}</strong> صلاحية محددة للسحب</>
-                        : "لم يتم تحديد أي صلاحيات للسحب"}
+                        ? <><strong className="text-rose-600">{markedIds.length}</strong> {t("revoke.footerTextSelected")}</>
+                        : t("revoke.footerTextNone")}
                 </p>
                 <Button
                     variant="destructive"
@@ -744,7 +754,7 @@ export default function RevokePrivilegesPage() {
                     className="gap-2"
                 >
                     {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                    {isSaving ? "جاري السحب..." : "تأكيد سحب الصلاحيات"}
+                    {isSaving ? (isRTL ? "جاري السحب..." : "Revoking...") : t("revoke.confirmRevokeBtn")}
                 </Button>
             </div>
         </div>

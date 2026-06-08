@@ -28,6 +28,7 @@ import {
 } from "../components/StaffPagesComponents/ui/dialog";
 import { useToast } from "../hooks/use-toast";
 import i18n from "../i18n";
+import { useTranslation } from "react-i18next";
 
 type StaffType = {
   id: number;
@@ -133,41 +134,17 @@ const normalizePackagePrivilegeCodes = (response: unknown): string[] => {
   );
 };
 
-const staffFormSchema = z.object({
-  first_name_en: z.string()
-    .min(1, "First Name is required")
-    .max(20, "Maximum 20 characters")
-    .regex(/^[a-zA-Z\s]+$/, "English letters only"),
-  first_name_ar: z.string()
-    .min(1, "الاسم الأول بالعربية مطلوب")
-    .max(20, "الحد الأقصى 20 حرف")
-    .regex(/^[\u0600-\u06FF\s]+$/, "أحرف عربية فقط"),
-  last_name_en: z.string()
-    .min(1, "Last Name (English) is required")
-    .max(20, "Maximum 20 characters")
-    .regex(/^[a-zA-Z\s]+$/, "English letters only"),
-  last_name_ar: z.string()
-    .max(20, "الحد الأقصى 20 حرف")
-    .regex(/^[\u0600-\u06FF\s]*$/, "أحرف عربية فقط")
-    .optional()
-    .or(z.literal("")),
-  national_id: z.string()
-    .length(14, "الرقم القومي يجب أن يكون 14 رقم")
-    .regex(/^[1-4]\d{13}$/, "الرقم القومي يجب أن يبدأ بـ 1 أو 2 أو 3 أو 4، وأن يحتوي على أرقام فقط"),
-  phone: z.string()
-    .length(11, "رقم الهاتف يجب أن يكون 11 رقم")
-    .regex(/^01[0125]\d{8}$/, "رقم الهاتف غير صحيح (يجب أن يبدأ ب 010, 011, 012, أو 015)"),
-  address: z.string()
-    .max(100, "الحد الأقصى 100 حرف")
-    .optional()
-    .or(z.literal("")),
-  staff_type_id: z.string()
-    .min(1, "نوع الموظف مطلوب"),
-  employment_start_date: z.string()
-    .min(1, "تاريخ التعيين مطلوب"),
-});
-
-type StaffFormData = z.infer<typeof staffFormSchema>;
+type StaffFormData = {
+  first_name_en: string;
+  first_name_ar: string;
+  last_name_en: string;
+  last_name_ar?: string;
+  national_id: string;
+  phone: string;
+  address?: string;
+  staff_type_id: string;
+  employment_start_date: string;
+};
 
 const STATIC_STAFF_TYPES: StaffType[] = [
   { id: 1, code: "ADMIN", name_en: "Admin", name_ar: "المسئول" },
@@ -210,6 +187,7 @@ interface DocumentUploadCardProps {
 function DocumentUploadCard({
   id, label, badgeType, badgeText, warningText, file, onFileChange, error, highlightError
 }: DocumentUploadCardProps) {
+  const { t } = useTranslation("AddNewStaffPage");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -243,11 +221,11 @@ function DocumentUploadCard({
   const handleFile = (f: File) => {
     setLocalError(null);
     if (f.size > MAX_FILE_SIZE) {
-      setLocalError("حجم الملف يتجاوز 10 ميجابايت");
+      setLocalError(t("documents.maxSize"));
       return;
     }
     if (!ALLOWED_TYPES.includes(f.type)) {
-      setLocalError("نوع الملف غير مدعوم");
+      setLocalError(t("documents.unsupportedType"));
       return;
     }
     onFileChange(id, f);
@@ -260,9 +238,9 @@ function DocumentUploadCard({
   };
 
   const defaultBadgeText = {
-    required: "مطلوب",
-    optional: "اختياري",
-    conditional: "مشروط",
+    required: t("documents.required"),
+    optional: t("documents.optional"),
+    conditional: t("documents.conditional"),
   };
 
   const finalBadgeText = badgeText || defaultBadgeText[badgeType];
@@ -306,7 +284,7 @@ function DocumentUploadCard({
             onChange={handleChange}
           />
           <UploadCloud className="w-8 h-8 text-muted-foreground mb-2" />
-          <p className="text-sm font-medium text-foreground">انقر للرفع أو اسحب الملف هنا</p>
+          <p className="text-sm font-medium text-foreground">{t("documents.uploadPrompt")}</p>
           <p className="text-xs text-muted-foreground mt-1" dir="ltr">JPEG, PNG, PDF, WEBP (Max 10MB)</p>
         </div>
       ) : (
@@ -358,8 +336,21 @@ const MODULE_NAMES_AR: Record<string, string> = {
 };
 
 export default function AddNewStaffPage() {
+  const { t, i18n } = useTranslation("AddNewStaffPage");
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const staffFormSchema = useMemo(() => z.object({
+    first_name_en: z.string().min(1, t("validation.firstNameEnReq")).max(20, t("validation.max20")).regex(/^[a-zA-Z\s]+$/, t("validation.enLettersOnly")),
+    first_name_ar: z.string().min(1, t("validation.firstNameArReq")).max(20, t("validation.max20")).regex(/^[\u0600-\u06FF\s]+$/, t("validation.arLettersOnly")),
+    last_name_en: z.string().min(1, t("validation.lastNameEnReq")).max(20, t("validation.max20")).regex(/^[a-zA-Z\s]+$/, t("validation.enLettersOnly")),
+    last_name_ar: z.string().max(20, t("validation.max20")).regex(/^[\u0600-\u06FF\s]*$/, t("validation.arLettersOnly")).optional().or(z.literal("")),
+    national_id: z.string().length(14, t("validation.nationalIdLength")).regex(/^[1-4]\d{13}$/, t("validation.nationalIdFormat")),
+    phone: z.string().length(11, t("validation.phoneLength")).regex(/^01[0125]\d{8}$/, t("validation.phoneFormat")),
+    address: z.string().max(100, t("validation.max100")).optional().or(z.literal("")),
+    staff_type_id: z.string().min(1, t("validation.staffTypeReq")),
+    employment_start_date: z.string().min(1, t("validation.employmentDateReq")),
+  }), [t]);
 
   // React Hook Form with Zod validation
   const {
@@ -469,11 +460,11 @@ export default function AddNewStaffPage() {
 
   const staffTypeOptions = useMemo(
     () =>
-      staffTypes.map((t) => ({
-        id: t.id,
-        label: t.name_ar || t.title_ar || t.name_en || t.title_en || `#${t.id}`,
+      staffTypes.map((type) => ({
+        id: type.id,
+        label: (i18n.language === 'ar' ? (type.name_ar || type.title_ar || type.name_en || type.title_en) : (type.name_en || type.title_en || type.name_ar || type.title_ar)) || `#${type.id}`,
       })),
-    [staffTypes],
+    [staffTypes, i18n.language],
   );
 
   const packageOptions = useMemo<PackageOption[]>(() => {
@@ -704,8 +695,8 @@ export default function AddNewStaffPage() {
         firstMissing.scrollIntoView({ behavior: "smooth", block: "center" });
       }
       toast({
-        title: "نواقص في المستندات",
-        description: "يرجى إرفاق جميع المستندات المطلوبة (المظللة باللون الأحمر)",
+        title: t("dialogs.missingDocsTitle"),
+        description: t("dialogs.missingDocsDesc"),
         variant: "destructive",
       });
       return;
@@ -796,8 +787,8 @@ export default function AddNewStaffPage() {
       });
 
       toast({
-        title: "تم التسجيل",
-        description: "تم تسجيل الموظف بنجاح",
+        title: t("dialogs.successTitle"),
+        description: t("dialogs.successDesc"),
       });
 
       // Clear Form
@@ -822,8 +813,8 @@ export default function AddNewStaffPage() {
     } catch (error) {
       console.error("Failed to register staff", error);
       toast({
-        title: "فشل التسجيل",
-        description: "حدث خطأ أثناء محاولة تسجيل الموظف",
+        title: t("dialogs.failTitle"),
+        description: t("dialogs.failDesc"),
         variant: "destructive",
       });
     } finally {
@@ -832,14 +823,14 @@ export default function AddNewStaffPage() {
   };
 
   return (
-    <div className="min-h-screen p-6 pb-8 space-y-6">
+    <div className="min-h-screen p-6 pb-8 space-y-6" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <h1 className="text-3xl font-bold tracking-tight">إضافة موظف جديد</h1>
-        <p className="text-muted-foreground mt-1">سجل موظفاً جديداً في النظام</p>
+        <h1 className="text-3xl font-bold tracking-tight">{t("pageTitle")}</h1>
+        <p className="text-muted-foreground mt-1">{t("pageDescription")}</p>
       </motion.div>
 
       {/* STEPPER HEADER */}
@@ -848,18 +839,18 @@ export default function AddNewStaffPage() {
         <div className="flex items-center gap-24 px-4">
           <div className="flex flex-col items-center gap-2 z-10 bg-background px-4">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border-2 transition-colors ${step >= 1 ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-muted-foreground'}`}>1</div>
-            <span className={`text-sm font-medium ${step >= 1 ? 'text-foreground' : 'text-muted-foreground'}`}>البيانات الأساسية</span>
+            <span className={`text-sm font-medium ${step >= 1 ? 'text-foreground' : 'text-muted-foreground'}`}>{t("stepper.step1")}</span>
           </div>
           <div className="flex flex-col items-center gap-2 z-10 bg-background px-4">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border-2 transition-colors ${step >= 2 ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-muted-foreground'}`}>2</div>
-            <span className={`text-sm font-medium ${step >= 2 ? 'text-foreground' : 'text-muted-foreground'}`}>المستندات المطلوبة</span>
+            <span className={`text-sm font-medium ${step >= 2 ? 'text-foreground' : 'text-muted-foreground'}`}>{t("stepper.step2")}</span>
           </div>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>{step === 1 ? 'البيانات الأساسية' : 'المستندات المطلوبة'}</CardTitle>
+          <CardTitle>{step === 1 ? t("stepper.step1") : t("stepper.step2")}</CardTitle>
         </CardHeader>
 
         <CardContent>
@@ -877,7 +868,7 @@ export default function AddNewStaffPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
               <div>
-                <Label>الاسم الأول (EN) *</Label>
+                <Label>{t("form.firstNameEn")}</Label>
                 <Input
                   {...register("first_name_en")}
                   placeholder="John"
@@ -891,7 +882,7 @@ export default function AddNewStaffPage() {
               </div>
 
               <div>
-                <Label>الاسم الأول (AR) *</Label>
+                <Label>{t("form.firstNameAr")}</Label>
                 <Input
                   {...register("first_name_ar")}
                   placeholder="أحمد"
@@ -903,7 +894,7 @@ export default function AddNewStaffPage() {
               </div>
 
               <div>
-                <Label>اسم العائلة (EN)</Label>
+                <Label>{t("form.lastNameEn")}</Label>
                 <Input
                   {...register("last_name_en")}
                   placeholder="Doe"
@@ -917,7 +908,7 @@ export default function AddNewStaffPage() {
               </div>
 
               <div>
-                <Label>اسم العائلة (AR)</Label>
+                <Label>{t("form.lastNameAr")}</Label>
                 <Input
                   {...register("last_name_ar")}
                   placeholder="محمد"
@@ -929,7 +920,7 @@ export default function AddNewStaffPage() {
               </div>
 
               <div>
-                <Label>الرقم القومي *</Label>
+                <Label>{t("form.nationalId")}</Label>
                 <Input
                   {...register("national_id")}
                   placeholder="29501012345678"
@@ -945,20 +936,20 @@ export default function AddNewStaffPage() {
               </div>
 
               <div>
-                <Label>النوع *</Label>
+                <Label>{t("form.gender")}</Label>
                 <Select value={gender} onValueChange={setGender}>
                   <SelectTrigger>
-                    <SelectValue placeholder="اختر النوع" />
+                    <SelectValue placeholder={t("form.genderSelect")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ذكر">ذكر</SelectItem>
-                    <SelectItem value="أنثى">أنثى</SelectItem>
+                    <SelectItem value="ذكر">{t("form.male")}</SelectItem>
+                    <SelectItem value="أنثى">{t("form.female")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <Label>رقم الهاتف *</Label>
+                <Label>{t("form.phone")}</Label>
                 <Input
                   {...register("phone")}
                   placeholder="+201012345678"
@@ -974,7 +965,7 @@ export default function AddNewStaffPage() {
               </div>
 
               <div className="md:col-span-2">
-                <Label>العنوان</Label>
+                <Label>{t("form.address")}</Label>
                 <Input
                   {...register("address")}
                   placeholder="123 Main Street, Cairo"
@@ -986,10 +977,10 @@ export default function AddNewStaffPage() {
               </div>
 
               <div>
-                <Label>نوع الموظف *</Label>
+                <Label>{t("form.staffType")}</Label>
                 <Select value={staffTypeId} onValueChange={(v) => setValue("staff_type_id", v, { shouldValidate: true })} required>
                   <SelectTrigger>
-                    <SelectValue placeholder="اختر نوع الموظف" />
+                    <SelectValue placeholder={t("form.staffTypeSelect")} />
                   </SelectTrigger>
                   <SelectContent>
                     {staffTypeOptions.map((type) => (
@@ -1002,8 +993,8 @@ export default function AddNewStaffPage() {
                 {/* #5 — show warning when API failed and list is the static fallback */}
                 {staffTypesError && !staffTypesFromApi && (
                   <div className="flex items-center justify-between mt-1 px-2 py-1.5 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
-                    <span>⚠️ تعذر تحميل الأنواع من الخادم. تظهر قائمة افتراضية.</span>
-                    <button type="button" onClick={() => void loadStaffTypes()} className="underline font-medium mr-2">إعادة المحاولة</button>
+                    <span>{t("dialogs.staffTypesError")}</span>
+                    <button type="button" onClick={() => void loadStaffTypes()} className={`underline font-medium ${i18n.language === 'ar' ? 'mr-2' : 'ml-2'}`}>{t("packages.retry")}</button>
                   </div>
                 )}
                 {errors.staff_type_id && (
@@ -1012,7 +1003,7 @@ export default function AddNewStaffPage() {
               </div>
 
               <div>
-                <Label>تاريخ التعيين *</Label>
+                <Label>{t("form.employmentDate")}</Label>
                 <Input
                   type="date"
                   {...register("employment_start_date")}
@@ -1029,11 +1020,11 @@ export default function AddNewStaffPage() {
             <div className="pt-6 mt-2 border-t border-border space-y-4">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <Label className="text-base font-semibold block text-primary">
-                  صلاحيات النظام (Packages)
+                  {t("packages.title")}
                 </Label>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">
-                    الحزم المحددة: {selectedPackageKeys.length}
+                    {t("packages.selectedCount", { count: selectedPackageKeys.length })}
                   </span>
                   <Button
                     type="button"
@@ -1041,25 +1032,25 @@ export default function AddNewStaffPage() {
                     variant="outline"
                     onClick={() => navigate("/staff/dashboard/admin/staff/assign-privileges")}
                   >
-                    صفحة تعيين الصلاحيات
+                    {t("packages.assignBtn")}
                   </Button>
                 </div>
               </div>
 
               {loadingPackages && packageOptions.length === 0 ? (
                 <div className="text-sm text-muted-foreground bg-muted/30 p-4 rounded-lg border border-dashed text-center">
-                  جاري تحميل الحزم...
+                  {t("packages.loading")}
                 </div>
               ) : packagesError && packageOptions.length === 0 ? (
                 /* #8 — packages fetch failed, show retry */
                 <div className="flex items-center justify-between p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-                  <span>⚠️ تعذر تحميل حزم الصلاحيات.</span>
-                  <button type="button" onClick={() => void loadPackages()} className="underline font-medium">إعادة المحاولة</button>
+                  <span>{t("packages.error")}</span>
+                  <button type="button" onClick={() => void loadPackages()} className="underline font-medium">{t("packages.retry")}</button>
                 </div>
               ) : packageOptions.length === 0 ? (
                 <div className="text-sm text-muted-foreground bg-muted/30 p-6 rounded-lg text-center border border-dashed flex flex-col items-center gap-2">
                   <span className="text-muted-foreground/50">⚠️</span>
-                  <span>لا توجد حزم صلاحيات متاحة حالياً</span>
+                  <span>{t("packages.empty")}</span>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -1086,7 +1077,7 @@ export default function AddNewStaffPage() {
                                 BACKEND
                               </span>
                               <span className="text-[10px] text-muted-foreground">
-                                {pkg.privilegeCodes.length} صلاحية
+                                {t("packages.privilegeCount", { count: pkg.privilegeCodes.length })}
                               </span>
                             </div>
                             {pkg.description && (
@@ -1116,8 +1107,8 @@ export default function AddNewStaffPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-border bg-muted/30">
                   <div>
-                    <p className="text-sm font-semibold">صلاحيات فردية</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">اختر صلاحيات إضافية مباشرة</p>
+                    <p className="text-sm font-semibold">{t("privileges.title")}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{t("privileges.subtitle")}</p>
                   </div>
                   {selectedExtraPrivilegeIds.length > 0 && (
                     <span className="text-xs font-medium bg-primary/10 text-primary px-2.5 py-1 rounded-full">
@@ -1130,15 +1121,15 @@ export default function AddNewStaffPage() {
                 <div className="p-6">
                   {loadingPrivileges ? (
                     <div className="flex items-center gap-2 py-6 justify-center text-sm text-muted-foreground">
-                      <span className="animate-spin">⏳</span> جاري تحميل الصلاحيات...
+                      <span className="animate-spin">⏳</span> {t("privileges.loading")}
                     </div>
                   ) : privilegesError ? (
                     <div className="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-                      <span>⚠️ تعذر تحميل قائمة الصلاحيات.</span>
-                      <button type="button" onClick={() => void loadPrivileges()} className="underline font-medium">إعادة المحاولة</button>
+                      <span>{t("privileges.error")}</span>
+                      <button type="button" onClick={() => void loadPrivileges()} className="underline font-medium">{t("packages.retry")}</button>
                     </div>
                   ) : allPrivileges.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-6">لا توجد صلاحيات من الخادم.</p>
+                    <p className="text-sm text-muted-foreground text-center py-6">{t("privileges.empty")}</p>
                   ) : (() => {
                     // Determine the active tab — default to first group
                     const currentTab = activePrivilegeTab && groupedPrivileges.some(g => g.module === activePrivilegeTab)
@@ -1170,7 +1161,7 @@ export default function AddNewStaffPage() {
                                   }
                                 `}
                               >
-                                {MODULE_NAMES_AR[group.module] ?? group.module}
+                                {i18n.language === 'ar' ? (MODULE_NAMES_AR[group.module] ?? group.module) : group.module}
                                 {extraCount > 0 && (
                                   <span className={`
                                     text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none
@@ -1255,12 +1246,12 @@ export default function AddNewStaffPage() {
                                   {/* State badge */}
                                   {isSelected && (
                                     <span className="shrink-0 text-[9px] font-medium text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded uppercase tracking-wide">
-                                      في الحزمة
+                                      {t("privileges.inPackage")}
                                     </span>
                                   )}
                                   {isExcluded && (
                                     <span className="shrink-0 text-[9px] font-medium text-red-600 bg-red-100 px-1.5 py-0.5 rounded uppercase tracking-wide">
-                                      مستثنى
+                                      {t("privileges.excluded")}
                                     </span>
                                   )}
                                 </button>
@@ -1275,23 +1266,23 @@ export default function AddNewStaffPage() {
                             <span className="w-3 h-3 rounded border-2 border-emerald-400 bg-emerald-400 inline-flex items-center justify-center">
                               <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                             </span>
-                            مشمول في الحزمة
+                            {t("privileges.legendIncluded")}
                           </span>
                           <span className="flex items-center gap-1">
                             <span className="w-3 h-3 rounded border-2 border-red-400 bg-white inline-flex items-center justify-center">
                               <svg className="w-2 h-2 text-red-400" fill="none" viewBox="0 0 12 12"><line x1="2" y1="6" x2="10" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
                             </span>
-                            مستثنى من الحزمة
+                            {t("privileges.legendExcluded")}
                           </span>
                           <span className="flex items-center gap-1">
                             <span className="w-3 h-3 rounded border-2 border-primary bg-primary inline-flex items-center justify-center">
                               <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                             </span>
-                            محدد كصلاحية إضافية
+                            {t("privileges.legendExtra")}
                           </span>
                           <span className="flex items-center gap-1">
                             <span className="w-3 h-3 rounded border-2 border-muted-foreground/50 inline-block" />
-                            غير محدد
+                            {t("privileges.legendNone")}
                           </span>
                         </div>
 
@@ -1308,10 +1299,10 @@ export default function AddNewStaffPage() {
                     variant="outline"
                     onClick={() => navigate("/staff/dashboard/admin/staff/list")}
                   >
-                    إلغاء
+                    {t("actions.cancel")}
                   </Button>
                   <Button type="button" onClick={handleNextStep}>
-                    التالي ←
+                    {i18n.language === 'ar' ? 'التالي ←' : 'Next →'}
                   </Button>
                 </div>
               </motion.div>
@@ -1319,16 +1310,16 @@ export default function AddNewStaffPage() {
 
             {step === 2 && (() => {
               const docsConfig = [
-                { id: "academic_certificate", labelAr: "شهادة المؤهل الدراسي", required: true, badgeType: "required" as const },
-                { id: "national_id_front", labelAr: "صورة الرقم القومي", required: true, badgeType: "required" as const },
-                { id: "military_service_doc", labelAr: "الموقف من التجنيد", required: true, badgeType: "required" as const },
-                { id: "criminal_record", labelAr: "الفيش الجنائي", required: false, badgeText: "لغير العاملين بالجامعة", badgeType: "conditional" as const },
-                { id: "employer_approval_letter", labelAr: "موافقة جهة العمل", required: true, badgeType: "required" as const },
-                { id: "employment_status_statement", labelAr: "بيان الحالة الوظيفية", required: false, badgeText: "للعاملين بجهات أخرى", badgeType: "conditional" as const },
-                { id: "good_conduct_certificate", labelAr: "شهادة حسن سير وسلوك", required: false, badgeText: "لغير العاملين بجهات أخرى", badgeType: "conditional" as const },
-                { id: "personal_photo", labelAr: "صورة شخصية حديثة", required: true, badgeType: "required" as const, warningText: "النظام يقبل صورة واحدة — يُسلَّم نسختان لـ HR" },
-                { id: "personal_info_form", labelAr: "نموذج وثيقة التعارف", required: true, badgeType: "required" as const },
-                { id: "experience_certificates", labelAr: "شهادات الخبرة والدورات", required: false, badgeText: "إن وجد", badgeType: "optional" as const },
+                { id: "academic_certificate", labelAr: t("docsConfig.academicCertificate"), required: true, badgeType: "required" as const },
+                { id: "national_id_front", labelAr: t("docsConfig.nationalIdFront"), required: true, badgeType: "required" as const },
+                { id: "military_service_doc", labelAr: t("docsConfig.militaryService"), required: true, badgeType: "required" as const },
+                { id: "criminal_record", labelAr: t("docsConfig.criminalRecord"), required: false, badgeText: t("docsConfig.badgeNonUni"), badgeType: "conditional" as const },
+                { id: "employer_approval_letter", labelAr: t("docsConfig.employerApproval"), required: true, badgeType: "required" as const },
+                { id: "employment_status_statement", labelAr: t("docsConfig.employmentStatus"), required: false, badgeText: t("docsConfig.badgeOtherEntities"), badgeType: "conditional" as const },
+                { id: "good_conduct_certificate", labelAr: t("docsConfig.goodConduct"), required: false, badgeText: t("docsConfig.badgeNonOtherEntities"), badgeType: "conditional" as const },
+                { id: "personal_photo", labelAr: t("docsConfig.personalPhoto"), required: true, badgeType: "required" as const, warningText: t("docsConfig.badgeWarning") },
+                { id: "personal_info_form", labelAr: t("docsConfig.personalInfo"), required: true, badgeType: "required" as const },
+                { id: "experience_certificates", labelAr: t("docsConfig.experienceCerts"), required: false, badgeText: t("docsConfig.badgeOptional"), badgeType: "optional" as const },
               ];
 
               const visibleDocs = docsConfig.filter(doc => {
@@ -1352,9 +1343,9 @@ export default function AddNewStaffPage() {
                   {/* Progress Bar */}
                   <div className="bg-muted/10 p-5 rounded-lg border space-y-3">
                     <div className="flex items-center justify-between text-sm font-semibold">
-                      <span>نسبة إكمال المستندات المطلوبة</span>
+                      <span>{t("documents.progressTitle")}</span>
                       <span className={uploadedRequiredDocsCount === requiredDocs.length ? "text-emerald-600" : "text-muted-foreground"}>
-                        {uploadedRequiredDocsCount} من {requiredDocs.length} مستندات مرفوعة
+                        {t("documents.progressCount", { uploaded: uploadedRequiredDocsCount, total: requiredDocs.length })}
                       </span>
                     </div>
                     <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
@@ -1384,11 +1375,11 @@ export default function AddNewStaffPage() {
 
                   <div className="flex items-center justify-between pt-6 mt-4 border-t border-border">
                     <Button type="button" variant="outline" onClick={() => setStep(1)}>
-                      → السابق
+                      {i18n.language === 'ar' ? '→ السابق' : '← Previous'}
                     </Button>
                     <Button type="submit" disabled={isSubmitting || isManualSubmitting}>
-                      <Save className="w-4 h-4 ml-2" />
-                      {isSubmitting || isManualSubmitting ? "جارٍ الحفظ..." : "حفظ الموظف"}
+                      <Save className={`w-4 h-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'}`} />
+                      {isSubmitting || isManualSubmitting ? t("actions.saving") : t("actions.save")}
                     </Button>
                   </div>
                 </motion.div>
@@ -1405,15 +1396,15 @@ export default function AddNewStaffPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-amber-600">
               <AlertTriangle className="w-5 h-5" />
-              مستندات غير مكتملة
+              {t("dialogs.softWarningTitle")}
             </DialogTitle>
             <DialogDescription className="text-base pt-2 text-foreground">
-              هل أنت متأكد من المتابعة بدون هذه المستندات؟
-              <ul className="list-disc list-inside mt-3 text-sm text-muted-foreground space-y-1 text-right">
+              {t("dialogs.softWarningDesc")}
+              <ul className={`list-disc list-inside mt-3 text-sm text-muted-foreground space-y-1 text-${i18n.language === 'ar' ? 'right' : 'left'}`}>
                 {pendingSubmitData && [
-                  { id: "criminal_record", label: "الفيش الجنائي" },
-                  { id: "employment_status_statement", label: "بيان الحالة الوظيفية" },
-                  { id: "good_conduct_certificate", label: "شهادة حسن سير وسلوك" }
+                  { id: "criminal_record", label: t("docsConfig.criminalRecord") },
+                  { id: "employment_status_statement", label: t("docsConfig.employmentStatus") },
+                  { id: "good_conduct_certificate", label: t("docsConfig.goodConduct") }
                 ].filter(d => !documentFiles[d.id]).map(d => (
                   <li key={d.id}>{d.label}</li>
                 ))}
@@ -1422,14 +1413,14 @@ export default function AddNewStaffPage() {
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0 mt-4">
             <Button type="button" variant="outline" onClick={() => setSoftValidationPending(false)}>
-              رجوع
+              {t("dialogs.back")}
             </Button>
             <Button 
               type="button"
               onClick={() => pendingSubmitData && executeSubmit(pendingSubmitData)}
               disabled={isManualSubmitting}
             >
-              {isManualSubmitting ? "جارٍ الحفظ..." : "تأكيد"}
+              {isManualSubmitting ? t("actions.saving") : t("dialogs.confirm")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1441,17 +1432,17 @@ export default function AddNewStaffPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-green-600">
               <Check className="w-5 h-5" />
-              تم إنشاء الحساب بنجاح
+              {t("dialogs.accountCreated")}
             </DialogTitle>
             <DialogDescription>
-              يرجى تسليم الموظف الرقم القومي الخاص به لتسجيل الدخول.
+              {t("dialogs.accountCreatedDesc")}
             </DialogDescription>
           </DialogHeader>
 
           {createdCredentials && (
             <div className="space-y-4 py-4">
               <div className="p-4 bg-muted rounded-lg border">
-                <Label className="text-xs text-muted-foreground">كلمة المرور الأولية (= الرقم القومي)</Label>
+                <Label className="text-xs text-muted-foreground">{t("dialogs.initialPassword")}</Label>
                 <div className="flex items-center justify-between bg-background p-2 rounded border mt-1">
                   <code className="text-sm font-mono tracking-widest">{createdCredentials.national_id}</code>
                   <Button
@@ -1479,14 +1470,14 @@ export default function AddNewStaffPage() {
               </div>
 
               <div className="text-xs bg-yellow-50 text-yellow-800 p-3 rounded border border-yellow-200">
-                ⚠️ <strong>بيانات الدخول الأولية:</strong> الرقم القومي يُستخدم كلمة مرور مؤقتة. سيُطلب من الموظف تغييرها عند أول دخول.
+                {t("dialogs.passwordWarning")}
               </div>
             </div>
           )}
 
           <DialogFooter>
             <Button onClick={() => setCreatedCredentials(null)} className="w-full">
-              تم، فهمت
+              {t("dialogs.done")}
             </Button>
           </DialogFooter>
         </DialogContent>

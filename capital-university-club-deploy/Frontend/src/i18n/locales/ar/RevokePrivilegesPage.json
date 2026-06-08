@@ -1,0 +1,81 @@
+{
+  "roles": {
+    "ADMIN": "مدير النظام",
+    "SPORTS_DIRECTOR": "مدير الرياضة",
+    "SPORTS_OFFICER": "موظف رياضي",
+    "FINANCIAL_DIRECTOR": "المدير المالي",
+    "REGISTRATION_STAFF": "موظف تسجيل",
+    "TEAM_MANAGER": "مدير فريق",
+    "SUPPORT": "الدعم الفني",
+    "AUDITOR": "المدقق المالي",
+    "STAFF": "موظف"
+  },
+  "filters": {
+    "all": "الكل",
+    "admin": "مدير",
+    "sportsDirector": "مدير رياضة",
+    "sportsOfficer": "موظف رياضي",
+    "financial": "مالي",
+    "registration": "تسجيل",
+    "teamManager": "مدير فريق",
+    "support": "دعم فني",
+    "auditor": "مدقق"
+  },
+  "sources": {
+    "direct": "مباشر",
+    "package": "من حزمة",
+    "default": "افتراضي"
+  },
+  "table": {
+    "title": "سحب صلاحيات الموظفين",
+    "description": "اختر موظفاً لعرض صلاحياته الحالية وسحب ما تريده",
+    "refresh": "تحديث",
+    "searchPlaceholder": "ابحث بالاسم أو الرقم القومي...",
+    "dateFrom": "من:",
+    "dateTo": "إلى:",
+    "clearDate": "مسح التاريخ",
+    "staffCount": "موظف",
+    "loading": "جارٍ تحميل الموظفين...",
+    "noStaffTitle": "لا يوجد موظفون",
+    "noStaffDesc": "لم يتم العثور على موظفين",
+    "noStaffSearch": "لا توجد نتائج مطابقة",
+    "headers": {
+      "number": "#",
+      "staff": "الموظف",
+      "nationalId": "الرقم القومي",
+      "job": "الوظيفة",
+      "startDate": "بداية العمل",
+      "actions": "الإجراء"
+    },
+    "revokeAction": "سحب الصلاحيات"
+  },
+  "revoke": {
+    "back": "العودة للقائمة",
+    "title": "سحب صلاحيات:",
+    "totalPrivileges": "إجمالي الصلاحيات:",
+    "toRevoke": "سيتم سحبها:",
+    "searchPrivilege": "ابحث عن صلاحية...",
+    "markAll": "تحديد الكل للسحب",
+    "undo": "تراجع",
+    "noGrantedPrivilegesTitle": "لا توجد صلاحيات ممنوحة",
+    "noGrantedPrivilegesDesc": "هذا الموظف لا يملك أي صلاحيات حالياً",
+    "noResults": "لا توجد نتائج مطابقة للبحث",
+    "privilegeCount": "صلاحية",
+    "failedAttemptsTitle": "⚠️ لم يمكن سحب {{count}} صلاحية:",
+    "footerTextSelected": "صلاحية محددة للسحب",
+    "footerTextNone": "لم يتم تحديد أي صلاحيات للسحب",
+    "confirmRevokeBtn": "تأكيد سحب الصلاحيات",
+    "revoking": "جاري السحب..."
+  },
+  "toasts": {
+    "errorTitle": "خطأ",
+    "errorLoad": "فشل تحميل قائمة الموظفين",
+    "errorLoadPrivileges": "فشل تحميل صلاحيات الموظف",
+    "partialRevokeTitle": "تم سحب البعض",
+    "partialRevokeDesc": "تم سحب {{success}} صلاحية بنجاح. {{failed}} صلاحية لم يمكن سحبها مباشرة.",
+    "revokeSuccessTitle": "تم سحب الصلاحيات",
+    "revokeSuccessDesc": "تم سحب {{count}} صلاحية من {{name}} بنجاح.",
+    "revokeErrorTitle": "فشل السحب",
+    "revokeErrorDesc": "حدث خطأ أثناء سحب الصلاحيات"
+  }
+}

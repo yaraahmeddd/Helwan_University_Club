@@ -20,7 +20,12 @@ import { RoleGuard } from "../components/StaffPagesComponents/RoleGuard";
 import { useNavigate } from "react-router-dom";
 import { StaffService } from "../services/staffService";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
-import i18n from "../i18n";
+import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
+import { RecordViewProfileHeader } from "../components/StaffPagesComponents/shared/RecordViewPrimitives";
+import { buildPersonName, getLocalizedText } from "../lib/localizedDisplay";
+import { useLanguage } from "../hooks/useLanguage";
+import { useTranslation } from "react-i18next";
 
 const PAGE_SIZE = 12;
 
@@ -128,27 +133,10 @@ const formatDate = (v?: string | null) => {
     } catch { return v; }
 };
 
-const getInitials = (ar?: string, en?: string) =>
-    (ar || en || "?").split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
-
-const PALETTE = [
-    "#1b71bc", "#e05c2a", "#2a9d60", "#7c3aed",
-    "#0891b2", "#be185d", "#ca8a04", "#475569",
-];
-const getColor = (id: string) => PALETTE[parseInt(id, 10) % PALETTE.length];
-
-const avatarColors = [
-    ["#1F3A5F", "#2EA7C9"],
-    ["#7C3AED", "#A78BFA"],
-    ["#065F46", "#34D399"],
-    ["#92400E", "#FCD34D"],
-    ["#9D174D", "#F9A8D4"],
-];
-const getAvatarColors = (id: string) => avatarColors[parseInt(id, 10) % avatarColors.length];
-
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ status, row }: { status?: string; row?: StaffRow }) {
+    const { t } = useTranslation("StaffManagementPage");
     const isActive = status === "active" && row?.isActive !== false;
     return (
         <Badge
@@ -158,7 +146,7 @@ function StatusBadge({ status, row }: { status?: string; row?: StaffRow }) {
                     : "bg-rose-100 text-rose-700 hover:bg-rose-100 border-0 text-[11px]"
             }
         >
-            {isActive ? "نشط" : "غير نشط"}
+            {isActive ? t("status.active") : t("status.inactive")}
         </Badge>
     );
 }
@@ -179,8 +167,9 @@ type DetailPanelProps = {
 };
 
 function DetailPanel({ row, details, privileges, loading, roleName, onDelete, staffTypeOptions, onSave, isSaving, defaultEditing = false }: DetailPanelProps) {
+    const { t } = useTranslation("StaffManagementPage");
+    const { language } = useLanguage();
     const { toast } = useToast();
-    const [colors] = useState(() => getAvatarColors(row.id));
     const [isEditing, setIsEditing] = useState(defaultEditing);
 
     // Inline edit state
@@ -192,12 +181,20 @@ function DetailPanel({ row, details, privileges, loading, roleName, onDelete, st
     const [editAddress, setEditAddress] = useState("");
     const [editStaffTypeId, setEditStaffTypeId] = useState("");
 
-    const nameAr = details
-        ? [details.first_name_ar, details.last_name_ar].filter(Boolean).join(" ")
-        : [row.firstNameAr, row.lastNameAr].filter(Boolean).join(" ");
-    const nameEn = details
-        ? [details.first_name_en, details.last_name_en].filter(Boolean).join(" ")
-        : [row.firstNameEn, row.lastNameEn].filter(Boolean).join(" ");
+    const nameParts = details
+        ? {
+            firstNameAr: details.first_name_ar,
+            lastNameAr: details.last_name_ar,
+            firstNameEn: details.first_name_en,
+            lastNameEn: details.last_name_en,
+        }
+        : {
+            firstNameAr: row.firstNameAr,
+            lastNameAr: row.lastNameAr,
+            firstNameEn: row.firstNameEn,
+            lastNameEn: row.lastNameEn,
+        };
+    const { primary: displayName, secondary: subtitleName } = buildPersonName(nameParts, language);
     const isActive = row.isActive !== false && (details?.status ?? row.status) === "active";
 
     const startEdit = () => {
@@ -213,11 +210,11 @@ function DetailPanel({ row, details, privileges, loading, roleName, onDelete, st
 
     const handleSave = async () => {
         if (!editFirstNameAr.trim() && !editFirstNameEn.trim()) {
-            toast({ title: "خطأ في البيانات", description: "يجب إدخال الاسم الأول بالعربية أو الإنجليزية", variant: "destructive" });
+            toast({ title: t("toasts.dataError.title"), description: t("toasts.dataError.desc"), variant: "destructive" });
             return;
         }
         if (editPhone.trim() && !/^01[0125]\d{8}$/.test(editPhone.trim())) {
-            toast({ title: "رقم هاتف غير صحيح", description: "يجب أن يبدأ الرقم بـ 010, 011, 012, أو 015", variant: "destructive" });
+            toast({ title: t("toasts.phoneError.title"), description: t("toasts.phoneError.desc"), variant: "destructive" });
             return;
         }
         try {
@@ -229,23 +226,19 @@ function DetailPanel({ row, details, privileges, loading, roleName, onDelete, st
     return (
         <div className="w-full flex flex-col" style={{ maxHeight: "90vh" }}>
 
-            {/* ── Clean header — DialogContent provides the × close button ── */}
-            <div className="px-5 py-5 border-b border-border flex items-center gap-3">
-                <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0"
-                    style={{ background: `linear-gradient(135deg, ${colors[0]}, ${colors[1]})` }}
-                >
-                    {getInitials(nameAr, nameEn)}
-                </div>
-                <div className="flex-1 min-w-0">
-                    <h2 className="text-sm font-bold truncate leading-tight">{nameAr || nameEn || "—"}</h2>
-                    {nameEn && nameAr && <p className="text-[11px] text-muted-foreground truncate" dir="ltr">{nameEn}</p>}
-                    <div className="flex flex-wrap gap-1 mt-1">
-                        <span className="text-[10px] bg-muted text-muted-foreground rounded-full px-2 py-0.5 font-medium">{roleName}</span>
-                        <span className={`text-[10px] rounded-full px-2 py-0.5 font-medium ${isActive ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
-                            }`}>{isActive ? "نشط" : "غير نشط"}</span>
-                    </div>
-                </div>
+            <div className="px-5 py-5 border-b border-border">
+                <RecordViewProfileHeader
+                    name={displayName}
+                    subtitle={subtitleName}
+                    badges={
+                        <>
+                            <span className="text-[10px] bg-muted text-muted-foreground rounded-full px-2 py-0.5 font-medium">{roleName}</span>
+                            <span className={`text-[10px] rounded-full px-2 py-0.5 font-medium ${isActive ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
+                                {isActive ? t("status.active") : t("status.inactive")}
+                            </span>
+                        </>
+                    }
+                />
             </div>
 
             {/* ── Body ── */}
@@ -253,20 +246,20 @@ function DetailPanel({ row, details, privileges, loading, roleName, onDelete, st
                 {loading ? (
                     <div className="py-10 text-center text-sm text-muted-foreground">
                         <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-2" />
-                        جارٍ التحميل...
+                        {t("detailPanel.loading")}
                     </div>
                 ) : isEditing ? (
                     /* ── Edit mode: same layout as view, fields become inputs ── */
                     <>
                         {/* Names — not shown in body during view mode but needed for edit */}
                         <section>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">الاسم</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">{t("detailPanel.sections.name")}</p>
                             <div className="rounded-xl border border-border bg-muted/30 divide-y divide-border overflow-hidden">
                                 {[
-                                    { icon: Users, label: "الاسم الأول (عربي)", value: editFirstNameAr, setValue: setEditFirstNameAr, dir: "rtl" as const },
-                                    { icon: Users, label: "اسم العائلة (عربي)", value: editLastNameAr, setValue: setEditLastNameAr, dir: "rtl" as const },
-                                    { icon: Users, label: "First Name (EN)", value: editFirstNameEn, setValue: setEditFirstNameEn, dir: "ltr" as const },
-                                    { icon: Users, label: "Last Name (EN)", value: editLastNameEn, setValue: setEditLastNameEn, dir: "ltr" as const },
+                                    { icon: Users, label: t("detailPanel.fields.firstNameAr"), value: editFirstNameAr, setValue: setEditFirstNameAr, dir: "rtl" as const },
+                                    { icon: Users, label: t("detailPanel.fields.lastNameAr"), value: editLastNameAr, setValue: setEditLastNameAr, dir: "rtl" as const },
+                                    { icon: Users, label: t("detailPanel.fields.firstNameEn"), value: editFirstNameEn, setValue: setEditFirstNameEn, dir: "ltr" as const },
+                                    { icon: Users, label: t("detailPanel.fields.lastNameEn"), value: editLastNameEn, setValue: setEditLastNameEn, dir: "ltr" as const },
                                 ].map(({ icon: Icon, label, value, setValue, dir }) => (
                                     <div key={label} className="flex items-center gap-3 px-4 py-1.5">
                                         <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -285,12 +278,12 @@ function DetailPanel({ row, details, privileges, loading, roleName, onDelete, st
 
                         {/* Contact — same rows as view mode but editable */}
                         <section>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">بيانات التواصل</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">{t("detailPanel.sections.contact")}</p>
                             <div className="rounded-xl border border-border bg-muted/30 divide-y divide-border overflow-hidden">
                                 {/* Phone — editable */}
                                 <div className="flex items-center gap-3 px-4 py-1.5">
                                     <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
-                                    <span className="text-[11px] text-muted-foreground w-24 shrink-0">رقم الهاتف</span>
+                                    <span className="text-[11px] text-muted-foreground w-24 shrink-0">{t("detailPanel.fields.phone")}</span>
                                     <input
                                         value={editPhone}
                                         onChange={(e) => setEditPhone(e.target.value)}
@@ -303,7 +296,7 @@ function DetailPanel({ row, details, privileges, loading, roleName, onDelete, st
                                 {/* Address — editable */}
                                 <div className="flex items-center gap-3 px-4 py-1.5">
                                     <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
-                                    <span className="text-[11px] text-muted-foreground w-24 shrink-0">العنوان</span>
+                                    <span className="text-[11px] text-muted-foreground w-24 shrink-0">{t("detailPanel.fields.address")}</span>
                                     <input
                                         value={editAddress}
                                         onChange={(e) => setEditAddress(e.target.value)}
@@ -315,15 +308,15 @@ function DetailPanel({ row, details, privileges, loading, roleName, onDelete, st
                         </section>
 
                         <section>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">بيانات التوظيف</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">{t("detailPanel.sections.employment")}</p>
                             <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
                                 <div className="flex items-center gap-1.5 mb-1.5">
                                     <Briefcase className="w-3.5 h-3.5 text-muted-foreground" />
-                                    <p className="text-[10px] text-muted-foreground">الوظيفة</p>
+                                    <p className="text-[10px] text-muted-foreground">{t("detailPanel.fields.job")}</p>
                                 </div>
                                 <Select value={editStaffTypeId} onValueChange={setEditStaffTypeId}>
                                     <SelectTrigger className="h-8 text-sm border-0 bg-transparent p-0 shadow-none focus:ring-0">
-                                        <SelectValue placeholder="اختر نوع الوظيفة" />
+                                        <SelectValue placeholder={t("detailPanel.placeholders.selectJob")} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {staffTypeOptions.map((type) => (
@@ -338,13 +331,13 @@ function DetailPanel({ row, details, privileges, loading, roleName, onDelete, st
                     /* ── Read-only view ── */
                     <>
                         <section>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">بيانات التواصل</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">{t("detailPanel.sections.contact")}</p>
                             <div className="rounded-xl border border-border bg-muted/30 divide-y divide-border overflow-hidden">
                                 {[
-                                    { icon: Mail, label: "البريد الإلكتروني", value: details?.email ?? row.email, ltr: true },
-                                    { icon: Phone, label: "رقم الهاتف", value: details?.phone ?? row.phone, ltr: true },
-                                    { icon: CreditCard, label: "الرقم القومي", value: details?.national_id ?? row.nationalId, ltr: true },
-                                    { icon: MapPin, label: "العنوان", value: details?.address ?? row.address, ltr: false },
+                                    { icon: Mail, label: t("detailPanel.fields.email"), value: details?.email ?? row.email, ltr: true },
+                                    { icon: Phone, label: t("detailPanel.fields.phone"), value: details?.phone ?? row.phone, ltr: true },
+                                    { icon: CreditCard, label: t("detailPanel.fields.nationalId"), value: details?.national_id ?? row.nationalId, ltr: true },
+                                    { icon: MapPin, label: t("detailPanel.fields.address"), value: details?.address ?? row.address, ltr: false },
                                 ].map(({ icon: Icon, label, value, ltr }) => (
                                     <div key={label} className="flex items-center gap-3 px-4 py-2.5">
                                         <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -356,12 +349,12 @@ function DetailPanel({ row, details, privileges, loading, roleName, onDelete, st
                         </section>
 
                         <section>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">بيانات التوظيف</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">{t("detailPanel.sections.employment")}</p>
                             <div className="grid grid-cols-2 gap-2">
                                 {[
-                                    { icon: CalendarCheck, label: "بداية العمل", value: formatDate(details?.employment_start_date ?? row.employmentStartDate) },
-                                    { icon: CalendarX, label: "نهاية العمل", value: formatDate(details?.employment_end_date ?? row.employmentEndDate) },
-                                    { icon: Briefcase, label: "الوظيفة", value: roleName },
+                                    { icon: CalendarCheck, label: t("detailPanel.fields.startDate"), value: formatDate(details?.employment_start_date ?? row.employmentStartDate) },
+                                    { icon: CalendarX, label: t("detailPanel.fields.endDate"), value: formatDate(details?.employment_end_date ?? row.employmentEndDate) },
+                                    { icon: Briefcase, label: t("detailPanel.fields.job"), value: roleName },
                                 ].map(({ icon: Icon, label, value }) => (
                                     <div key={label} className="rounded-xl border border-border bg-muted/30 p-3">
                                         <div className="flex items-center gap-1.5 mb-1">
@@ -376,14 +369,14 @@ function DetailPanel({ row, details, privileges, loading, roleName, onDelete, st
 
                         {details && (
                             <section>
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">الحزم المخصصة</p>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">{t("detailPanel.sections.assignedPackages")}</p>
                                 {(details.assigned_packages ?? []).length === 0 ? (
-                                    <div className="rounded-xl border border-dashed border-border py-5 text-center text-sm text-muted-foreground">لا توجد حزم مخصصة</div>
+                                    <div className="rounded-xl border border-dashed border-border py-5 text-center text-sm text-muted-foreground">{t("detailPanel.messages.noPackages")}</div>
                                 ) : (
                                     <div className="flex flex-wrap gap-1.5">
                                         {details.assigned_packages?.map((pkg) => (
                                             <span key={pkg.id} className="inline-flex items-center gap-1 rounded-lg border border-primary/20 bg-primary/10 text-primary px-3 py-1 text-xs font-semibold">
-                                                📦 {(i18n.language === 'ar' ? (pkg.name_ar || pkg.name_en) : (pkg.name_en || pkg.name_ar)) || pkg.code}
+                                                📦 {getLocalizedText(pkg.name_ar, pkg.name_en, language) || pkg.code}
                                             </span>
                                         ))}
                                     </div>
@@ -394,12 +387,12 @@ function DetailPanel({ row, details, privileges, loading, roleName, onDelete, st
                         {privileges.length > 0 && (
                             <section>
                                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
-                                    الصلاحيات الفردية
+                                    {t("detailPanel.sections.privileges")}
                                     <span className="mr-1.5 bg-muted text-muted-foreground rounded-full px-1.5 py-0.5 text-[9px]">{privileges.length}</span>
                                 </p>
                                 <details className="rounded-xl border border-border bg-muted/30 overflow-hidden">
                                     <summary className="px-4 py-2.5 text-sm cursor-pointer select-none flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-                                        <ShieldCheck className="w-3.5 h-3.5" /> عرض الصلاحيات
+                                        <ShieldCheck className="w-3.5 h-3.5" /> {t("detailPanel.actions.viewPrivileges")}
                                     </summary>
                                     <div className="px-4 pb-3 flex flex-wrap gap-1.5 border-t border-border pt-2.5 max-h-36 overflow-y-auto">
                                         {privileges.map((p) => (
@@ -418,22 +411,22 @@ function DetailPanel({ row, details, privileges, loading, roleName, onDelete, st
                 {isEditing ? (
                     <>
                         <Button size="sm" className="flex-1 gap-1.5" onClick={() => void handleSave()} disabled={isSaving}>
-                            {isSaving ? "جارٍ الحفظ..." : <><Pencil className="w-3.5 h-3.5" /> حفظ التغييرات</>}
+                            {isSaving ? t("detailPanel.actions.saving") : <><Pencil className="w-3.5 h-3.5" /> {t("detailPanel.actions.saveChanges")}</>}
                         </Button>
                         <Button size="sm" variant="outline" className="flex-1 gap-1.5" onClick={() => setIsEditing(false)} disabled={isSaving}>
-                            <X className="w-3.5 h-3.5" /> إلغاء
+                            <X className="w-3.5 h-3.5" /> {t("detailPanel.actions.cancel")}
                         </Button>
                     </>
                 ) : (
                     <>
                         <RoleGuard privilege="UPDATE_STAFF">
                             <Button size="sm" className="flex-1 gap-1.5" onClick={startEdit}>
-                                <Pencil className="w-3.5 h-3.5" /> تعديل
+                                <Pencil className="w-3.5 h-3.5" /> {t("detailPanel.actions.edit")}
                             </Button>
                         </RoleGuard>
                         <RoleGuard privilege="TERMINATE_STAFF">
                             <Button size="sm" variant="destructive" className="flex-1 gap-1.5" onClick={onDelete}>
-                                <Trash2 className="w-3.5 h-3.5" /> إلغاء تفعيل
+                                <Trash2 className="w-3.5 h-3.5" /> {t("detailPanel.actions.deactivate")}
                             </Button>
                         </RoleGuard>
                     </>
@@ -446,6 +439,8 @@ function DetailPanel({ row, details, privileges, loading, roleName, onDelete, st
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function StaffManagementPage() {
+    const { t } = useTranslation("StaffManagementPage");
+    const { language, isRTL } = useLanguage();
     const { toast } = useToast();
     const navigate = useNavigate();
 
@@ -461,13 +456,21 @@ export default function StaffManagementPage() {
 
     const staffTypeLabelById = useMemo(() => {
         const m = new Map<number, string>();
-        staffTypes.forEach((t) => m.set(t.id, t.name_ar || t.title_ar || t.name_en || t.title_en || `#${t.id}`));
+        staffTypes.forEach((st) => {
+            m.set(
+                st.id,
+                getLocalizedText(st.name_ar || st.title_ar, st.name_en || st.title_en, language) || `#${st.id}`,
+            );
+        });
         return m;
-    }, [staffTypes]);
+    }, [staffTypes, language]);
 
     const staffTypeOptions = useMemo(() =>
-        staffTypes.map((t) => ({ id: t.id, label: t.name_ar || t.title_ar || t.name_en || t.title_en || `#${t.id}` })),
-        [staffTypes]);
+        staffTypes.map((st) => ({
+            id: st.id,
+            label: getLocalizedText(st.name_ar || st.title_ar, st.name_en || st.title_en, language) || `#${st.id}`,
+        })),
+        [staffTypes, language]);
 
     // Detail dialog
     const [selectedRow, setSelectedRow] = useState<StaffRow | null>(null);
@@ -523,7 +526,7 @@ export default function StaffManagementPage() {
             setRows(mapped);
             setTotal(mapped.length);
         } catch (err) {
-            toast({ title: "تعذر تحميل قائمة الموظفين", description: err instanceof Error ? err.message : "", variant: "destructive" });
+            toast({ title: t("toasts.loadFailed.title"), description: err instanceof Error ? err.message : "", variant: "destructive" });
         } finally {
             setLoading(false);
         }
@@ -581,11 +584,11 @@ export default function StaffManagementPage() {
                 address: formData.address.trim() || undefined,
                 staff_type_id: formData.staff_type_id ? Number(formData.staff_type_id) : undefined,
             });
-            toast({ title: "تم التحديث", description: "تم تحديث بيانات الموظف بنجاح" });
+            toast({ title: t("toasts.updateSuccess.title"), description: t("toasts.updateSuccess.desc") });
             void fetchList();
             void openDetail(selectedRow);
         } catch (err) {
-            toast({ title: "فشل التحديث", description: err instanceof Error ? err.message : "", variant: "destructive" });
+            toast({ title: t("toasts.updateFailed.title"), description: err instanceof Error ? err.message : "", variant: "destructive" });
             throw err;
         } finally {
             setEditSaving(false);
@@ -604,12 +607,12 @@ export default function StaffManagementPage() {
         setDeleteLoading(true);
         try {
             await api.patch(`/staff/${deleteTarget.id}/deactivate`);
-            toast({ title: "تم إلغاء التفعيل", description: "تم إلغاء تفعيل الموظف بنجاح" });
+            toast({ title: t("toasts.deactivateSuccess.title"), description: t("toasts.deactivateSuccess.desc") });
             setDeleteOpen(false);
             setSelectedRow(null);
             setRows((prev) => prev.filter((r) => r.id !== deleteTarget.id));
         } catch (err) {
-            toast({ title: "فشل إلغاء التفعيل", description: err instanceof Error ? err.message : "", variant: "destructive" });
+            toast({ title: t("toasts.deactivateFailed.title"), description: err instanceof Error ? err.message : "", variant: "destructive" });
         } finally {
             setDeleteLoading(false);
             setDeleteTarget(null);
@@ -638,17 +641,17 @@ export default function StaffManagementPage() {
     // ─── Render ───────────────────────────────────────────────────────────────
 
     return (
-        <div className="h-[calc(100vh-4rem)] flex flex-col gap-0" dir="rtl">
+        <div className="h-[calc(100vh-4rem)] flex flex-col gap-0" dir={isRTL ? 'rtl' : 'ltr'}>
 
             {/* ── Page Header ── */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background shrink-0">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
                         <Users className="w-6 h-6 text-primary" />
-                        إدارة الموظفين
+                        {t("page.title")}
                     </h1>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                        إجمالي الموظفين: <strong>{total}</strong>
+                        {t("page.totalStaff")}: <strong>{total}</strong>
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -659,7 +662,7 @@ export default function StaffManagementPage() {
                             onClick={() => navigate("/staff/dashboard/admin/staff/new")}
                         >
                             <UserPlus className="w-4 h-4" />
-                            موظف جديد
+                            {t("page.newStaff")}
                         </Button>
                     </RoleGuard>
                 </div>
@@ -680,9 +683,9 @@ export default function StaffManagementPage() {
                                 disabled={page <= 1 || loading}
                                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                                 className="p-2 rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-40"
-                                aria-label="الصفحة السابقة"
+                                aria-label={t("list.prevPage")}
                             >
-                                <ChevronRight className="w-4 h-4" />
+                                <ChevronRight className="w-4 h-4" style={{ transform: isRTL ? 'none' : 'rotate(180deg)' }} />
                             </button>
 
                             {Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -713,9 +716,9 @@ export default function StaffManagementPage() {
                                 disabled={page >= totalPages || loading}
                                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                                 className="p-2 rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-40"
-                                aria-label="الصفحة التالية"
+                                aria-label={t("list.nextPage")}
                             >
-                                <ChevronLeft className="w-4 h-4" />
+                                <ChevronLeft className="w-4 h-4" style={{ transform: isRTL ? 'none' : 'rotate(180deg)' }} />
                             </button>
                         </div>
 
@@ -723,12 +726,12 @@ export default function StaffManagementPage() {
 
                         {/* Search */}
                         <div className="relative w-full sm:w-80">
-                            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground`} />
                             <Input
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                placeholder="بحث بالاسم..."
-                                className="pr-9 h-9 text-sm"
+                                placeholder={t("list.searchPlaceholder")}
+                                className={`h-9 text-sm ${isRTL ? 'pr-9' : 'pl-9'}`}
                             />
                         </div>
                         <button
@@ -741,19 +744,19 @@ export default function StaffManagementPage() {
                     </div>
 
                     {/* Native HTML Table – consistent with RegistrationManagementPage style */}
-                    <div className="flex-1 overflow-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
+                    <div className={adminTableStyles.container} style={{ scrollbarWidth: "none" }}>
                         <Table>
-                            <TableHeader className="sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10">
+                            <TableHeader className={adminTableStyles.header}>
                                 <TableRow>
-                                    <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle w-10">#</TableHead>
-                                    <TableHead className="text-right pr-4 pl-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">الموظف</TableHead>
-                                    <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">الوظيفة</TableHead>
-                                    <TableHead className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">بداية العمل</TableHead>
-                                    <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">الحالة</TableHead>
-                                    <TableHead className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground whitespace-nowrap align-middle">الإجراءات</TableHead>
+                                    <TableHead className={adminHeadClass({ className: "w-10" })}>{t("table.headers.number")}</TableHead>
+                                    <TableHead className={adminHeadClass()}>{t("table.headers.staff")}</TableHead>
+                                    <TableHead className={adminHeadClass()}>{t("table.headers.job")}</TableHead>
+                                    <TableHead className={adminHeadClass()}>{t("table.headers.startDate")}</TableHead>
+                                    <TableHead className={adminHeadClass({ center: true })}>{t("table.headers.status")}</TableHead>
+                                    <TableHead className={adminHeadClass({ center: true })}>{t("table.headers.actions")}</TableHead>
                                 </TableRow>
                             </TableHeader>
-                            <TableBody className="divide-y divide-border">
+                            <TableBody className={adminTableStyles.body}>
                                 {loading ? (
                                     Array.from({ length: 8 }).map((_, i) => (
                                         <TableRow key={i} className="animate-pulse">
@@ -776,63 +779,51 @@ export default function StaffManagementPage() {
                                 ) : filteredRows.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={6} className="text-center py-16 text-muted-foreground text-sm">
-                                            {search ? "لا توجد نتائج للبحث" : "لا يوجد موظفون مسجلون"}
+                                            {search ? t("table.states.noStaff") : t("table.states.noStaff")}
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    pagedRows.map((row, idx) => {
-                                        const color = getColor(row.id);
-                                        const nameAr = [row.firstNameAr, row.lastNameAr].filter(Boolean).join(" ");
-                                        const nameEn = [row.firstNameEn, row.lastNameEn].filter(Boolean).join(" ");
-                                        return (
+                                    pagedRows.map((row, idx) => (
                                             <TableRow
                                                 key={row.id}
-                                                className="transition-colors hover:bg-muted/40 cursor-pointer"
+                                                className={`${adminTableStyles.row} cursor-pointer`}
                                                 onClick={() => { void openDetail(row); }}
                                             >
-                                                {/* # */}
-                                                <TableCell className="px-4 py-3 text-muted-foreground font-mono text-xs align-middle">
+                                                <TableCell className={adminCellClass({ size: "muted", className: "font-mono w-10" })}>
                                                     {(page - 1) * 12 + idx + 1}
                                                 </TableCell>
 
-                                                {/* Employee */}
-                                                <TableCell className="px-4 py-3 align-middle">
-                                                    <div className="flex items-center gap-3">
-                                                        <div
-                                                            className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-                                                            style={{ backgroundColor: color }}
-                                                        >
-                                                            {getInitials(nameAr, nameEn)}
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-semibold leading-tight text-sm">{nameAr || nameEn || "—"}</p>
-                                                            {nameEn && nameAr && (
-                                                                <p className="text-[11px] text-muted-foreground/70 italic" dir="ltr">{nameEn}</p>
-                                                            )}
-                                                        </div>
-                                                    </div>
+                                                <TableCell className={adminCellClass()}>
+                                                    <PersonNameDisplay
+                                                        id={row.id}
+                                                        names={{
+                                                            firstNameAr: row.firstNameAr,
+                                                            lastNameAr: row.lastNameAr,
+                                                            firstNameEn: row.firstNameEn,
+                                                            lastNameEn: row.lastNameEn,
+                                                        }}
+                                                        language={language}
+                                                        avatarSize="md"
+                                                        primaryClassName="text-sm"
+                                                    />
                                                 </TableCell>
 
-                                                {/* Role */}
-                                                <TableCell className="px-4 py-3 text-sm text-muted-foreground align-middle max-w-[180px]">
+                                                <TableCell className={adminCellClass({ size: "muted", className: "max-w-[180px]" })}>
                                                     <span className="truncate block">{roleOf(row)}</span>
                                                 </TableCell>
 
-                                                {/* Start date */}
-                                                <TableCell className="px-4 py-3 text-sm tabular-nums align-middle">
+                                                <TableCell className={adminCellClass({ className: "text-sm tabular-nums" })}>
                                                     {formatDate(row.employmentStartDate)}
                                                 </TableCell>
 
-                                                {/* Status */}
-                                                <TableCell className="px-4 py-3 text-center align-middle">
+                                                <TableCell className={adminCellClass({ center: true })}>
                                                     <StatusBadge status={row.status} row={row} />
                                                 </TableCell>
 
-                                                {/* Actions */}
-                                                <TableCell className="px-4 py-3 align-middle" onClick={(e) => e.stopPropagation()}>
-                                                    <div className="flex items-center justify-center gap-1">
+                                                <TableCell className={adminCellClass({ center: true })} onClick={(e) => e.stopPropagation()}>
+                                                    <div className={adminTableStyles.actions}>
                                                         <button
-                                                            title="عرض"
+                                                            title={t("table.actions.view")}
                                                             onClick={() => { void openDetail(row); }}
                                                             className="p-1.5 rounded-md hover:bg-primary/10 text-primary transition-colors"
                                                         >
@@ -840,7 +831,7 @@ export default function StaffManagementPage() {
                                                         </button>
                                                         <RoleGuard privilege="UPDATE_STAFF">
                                                             <button
-                                                                title="تعديل"
+                                                                title={t("table.actions.edit")}
                                                                 onClick={(e) => { e.stopPropagation(); void openDetail(row, true); }}
                                                                 className="p-1.5 rounded-md hover:bg-amber-100 text-amber-600 transition-colors"
                                                             >
@@ -849,7 +840,7 @@ export default function StaffManagementPage() {
                                                         </RoleGuard>
                                                         <RoleGuard privilege="TERMINATE_STAFF">
                                                             <button
-                                                                title="إلغاء تفعيل"
+                                                                title={t("table.actions.deactivate")}
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     setSelectedRow(row);
@@ -864,8 +855,7 @@ export default function StaffManagementPage() {
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
-                                        );
-                                    })
+                                    ))
                                 )}
                             </TableBody>
                         </Table>
@@ -877,7 +867,7 @@ export default function StaffManagementPage() {
 
             {/* ── Detail/Edit Dialog ── */}
             <Dialog open={detailOpen} onOpenChange={(o) => { if (!o) setDetailOpen(false); }}>
-                <DialogContent className="max-w-lg w-full p-0 overflow-hidden" style={{ maxHeight: "90vh" }} dir="rtl">
+                <DialogContent className="max-w-lg w-full p-0 overflow-hidden" style={{ maxHeight: "90vh" }} dir={isRTL ? 'rtl' : 'ltr'}>
                     {selectedRow && (
                         <DetailPanel
                             key={selectedRow.id}
@@ -900,7 +890,7 @@ export default function StaffManagementPage() {
 
             {/* ── Delete Confirm Dialog ── */}
             <Dialog open={deleteOpen} onOpenChange={(o) => { if (!o) setDeleteOpen(false); }}>
-                <DialogContent className="max-w-sm">
+                <DialogContent className="max-w-sm" dir={isRTL ? 'rtl' : 'ltr'}>
                     <DialogHeader>
                         <DialogTitle>تأكيد إلغاء التفعيل</DialogTitle>
                         <DialogDescription>

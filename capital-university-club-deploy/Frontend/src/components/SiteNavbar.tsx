@@ -37,15 +37,12 @@ interface SiteNavbarProps {
   onTabChange?: (tabKey: string) => void;
   /** Show or hide the login / register buttons */
   showAuthButtons?: boolean;
-  /** Hide the navigation tabs */
-  hideNavTabs?: boolean;
 }
 
 export const SiteNavbar: React.FC<SiteNavbarProps> = ({
   activeTab = "",
   onTabChange,
   showAuthButtons = true,
-  hideNavTabs = false,
 }) => {
   const { t, i18n } = useTranslation("landing");
   const navigate = useNavigate();
@@ -115,7 +112,6 @@ export const SiteNavbar: React.FC<SiteNavbarProps> = ({
             </div>
 
             {/* 2. NAVIGATION (Center) — premium pills */}
-            {!hideNavTabs && (
             <nav className="hidden xl:flex items-center gap-1 mx-auto">
               {navTabs.map((tab) => (
                 <button
@@ -140,7 +136,6 @@ export const SiteNavbar: React.FC<SiteNavbarProps> = ({
                 </button>
               ))}
             </nav>
-            )}
 
             {/* 3. ACTIONS */}
             <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
@@ -315,7 +310,7 @@ export const SiteNavbar: React.FC<SiteNavbarProps> = ({
           </div>
 
           <nav className="flex flex-col gap-2.5 flex-1">
-            {!hideNavTabs && navTabs.map((item) => (
+            {navTabs.map((item) => (
               <button
                 key={item.key}
                 onClick={() => {

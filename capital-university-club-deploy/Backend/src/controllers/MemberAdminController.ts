@@ -60,7 +60,9 @@ export class MemberController {
 
       const query = MemberController.memberRepo.createQueryBuilder('member')
         .leftJoinAndSelect('member.account', 'account')
-        .leftJoinAndSelect('member.member_type', 'member_type');
+        .leftJoinAndSelect('member.member_type', 'member_type')
+        .leftJoinAndSelect('member.memberships', 'memberships')
+        .leftJoinAndSelect('memberships.membership_plan', 'membership_plan');
 
       // Filter by status if provided
       if (status) {

@@ -16,6 +16,9 @@
     "loading": "جاري التحميل...",
     "noResults": "لا يوجد خطط عضوية مطابقة للبحث"
   },
+  "rowActions": {
+    "viewDetails": "عرض التفاصيل"
+  },
   "action": {
     "view": "عرض",
     "edit": "تعديل",

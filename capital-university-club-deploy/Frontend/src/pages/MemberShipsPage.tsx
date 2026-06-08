@@ -7,9 +7,16 @@ import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../components/StaffPagesComponents/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/StaffPagesComponents/ui/select";
 import { RoleGuard } from "../components/StaffPagesComponents/RoleGuard";
-import { Pencil, Search, Trash2, Eye, Power, Plus } from "lucide-react";
+import { Pencil, Search, Trash2, Power, Plus } from "lucide-react";
+import { DropdownMenuItem } from "../components/StaffPagesComponents/ui/dropdown-menu";
+import { TooltipProvider } from "../components/StaffPagesComponents/ui/tooltip";
+import { AdminRowActions, AdminViewButton } from "../components/StaffPagesComponents/shared/AdminRowActions";
 import { useToast } from "../hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "../hooks/useLanguage";
+import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
+import { getLocalizedText } from "../lib/localizedDisplay";
 import api from "../services/axios";
 
 type MembershipApiItem = {
@@ -55,8 +62,8 @@ type MemberTypesResponse = {
 const PAGE_SIZE = 10;
 
 export default function MembershipsPage() {
-  const { t, i18n } = useTranslation("MemberShipsPage");
-  const isRTL = i18n.language === "ar";
+  const { t } = useTranslation("MemberShipsPage");
+  const { language, isRTL } = useLanguage();
   
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -296,11 +303,12 @@ export default function MembershipsPage() {
 
   const getMemberTypeName = (id: number) => {
     const type = memberTypes.find(t => t.id === id);
-    if (!type) return id;
-    return isRTL ? type.name_ar : (type.name_en || type.name_ar);
+    if (!type) return String(id);
+    return getLocalizedText(type.name_ar, type.name_en, language);
   };
 
   return (
+    <TooltipProvider>
     <RoleGuard privilege="VIEW_MEMBERSHIP_PLANS">
       <div className="h-full flex flex-col overflow-y-auto p-6 space-y-6" dir={isRTL ? "rtl" : "ltr"}>
         <div className="flex items-center justify-between">
@@ -325,20 +333,20 @@ export default function MembershipsPage() {
           </div>
         </div>
 
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="shadow-sm">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`shadow-sm ${adminTableStyles.container}`}>
           <Table>
-            <TableHeader>
+            <TableHeader className={adminTableStyles.header}>
               <TableRow>
-                <TableHead className={isRTL ? "text-right" : "text-left"}>{t("table.code")}</TableHead>
-                <TableHead className={isRTL ? "text-right" : "text-left"}>{t("table.memberType")}</TableHead>
-                <TableHead className={isRTL ? "text-right" : "text-left"}>{t("table.name")}</TableHead>
-                <TableHead className={isRTL ? "text-right" : "text-left"}>{t("table.price")}</TableHead>
-                <TableHead className={isRTL ? "text-right" : "text-left"}>{t("table.durationMonths")}</TableHead>
-                <TableHead className={isRTL ? "text-right" : "text-left"}>{t("table.status")}</TableHead>
-                <TableHead className="w-[260px] text-center">{t("table.actions")}</TableHead>
+                <TableHead className={adminHeadClass()}>{t("table.code")}</TableHead>
+                <TableHead className={adminHeadClass()}>{t("table.memberType")}</TableHead>
+                <TableHead className={adminHeadClass()}>{t("table.name")}</TableHead>
+                <TableHead className={adminHeadClass()}>{t("table.price")}</TableHead>
+                <TableHead className={adminHeadClass()}>{t("table.durationMonths")}</TableHead>
+                <TableHead className={adminHeadClass()}>{t("table.status")}</TableHead>
+                <TableHead className={adminHeadClass({ center: true, className: "w-[260px]" })}>{t("table.actions")}</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className={adminTableStyles.body}>
               {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
@@ -347,58 +355,49 @@ export default function MembershipsPage() {
                 </TableRow>
               ) : (
                 paginated.map((m) => (
-                  <TableRow key={m.id} className="border-b border-border hover:bg-accent/10">
-                    <TableCell className="font-poppins">{m.plan_code}</TableCell>
-                    <TableCell>{getMemberTypeName(m.member_type_id)}</TableCell>
-                    <TableCell className="font-medium">{isRTL ? m.name_ar : (m.name_en || m.name_ar)}</TableCell>
-                    <TableCell className="font-poppins">{m.price} {m.currency}</TableCell>
-                    <TableCell className="font-poppins">{m.duration_months}</TableCell>
-                    <TableCell>
+                  <TableRow key={m.id} className={adminTableStyles.row}>
+                    <TableCell className={adminCellClass({ className: "font-poppins" })}>{m.plan_code}</TableCell>
+                    <TableCell className={adminCellClass()}>{getMemberTypeName(m.member_type_id)}</TableCell>
+                    <TableCell className={adminCellClass()}>
+                      <BilingualText ar={m.name_ar} en={m.name_en} language={language} primaryClassName="font-medium" />
+                    </TableCell>
+                    <TableCell className={adminCellClass({ className: "font-poppins" })}>{m.price} {m.currency}</TableCell>
+                    <TableCell className={adminCellClass({ className: "font-poppins" })}>{m.duration_months}</TableCell>
+                    <TableCell className={adminCellClass()}>
                       <Badge className={m.is_active ? "bg-success text-success-foreground" : "bg-destructive text-destructive-foreground"}>
                         {m.is_active ? t("status.active") : t("status.inactive")}
                       </Badge>
                     </TableCell>
-                    <TableCell className="whitespace-nowrap text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <Button size="sm" variant="outline" onClick={() => setSelectedPlan(m)} className="gap-1">
-                          <Eye className="h-3 w-3" /> {t("action.view")}
-                        </Button>
-
-                        <RoleGuard privilege="UPDATE_MEMBERSHIP_PLAN">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="gap-1 text-accent border-accent hover:bg-accent hover:text-accent-foreground"
-                            onClick={() => openEdit(m)}
-                          >
-                            <Pencil className="h-3 w-3" /> {t("action.edit")}
-                          </Button>
-                        </RoleGuard>
-
-                        <RoleGuard privilege="DELETE_MEMBERSHIP_PLAN">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="gap-1 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
-                            onClick={() => setDeletePlan(m)}
-                          >
-                            <Trash2 className="h-3 w-3" /> {t("action.delete")}
-                          </Button>
-                        </RoleGuard>
-
-                        <RoleGuard privilege="CHANGE_MEMBERSHIP_PLAN_STATUS">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="gap-1"
-                            onClick={() => void toggleStatus(m)}
-                            disabled={toggling === m.id}
-                          >
-                            <Power className="h-3 w-3" />
-                            {toggling === m.id ? "..." : (m.is_active ? t("action.deactivate") : t("action.activate"))}
-                          </Button>
-                        </RoleGuard>
-                      </div>
+                    <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
+                      <AdminRowActions
+                        view={<AdminViewButton tooltip={t("rowActions.viewDetails")} onClick={() => setSelectedPlan(m)} />}
+                        menu={
+                          <>
+                            <RoleGuard privilege="UPDATE_MEMBERSHIP_PLAN">
+                              <DropdownMenuItem onClick={() => openEdit(m)} className="gap-2 cursor-pointer">
+                                <Pencil className="w-3.5 h-3.5 text-emerald-600" />
+                                {t("action.edit")}
+                              </DropdownMenuItem>
+                            </RoleGuard>
+                            <RoleGuard privilege="CHANGE_MEMBERSHIP_PLAN_STATUS">
+                              <DropdownMenuItem
+                                onClick={() => void toggleStatus(m)}
+                                disabled={toggling === m.id}
+                                className="gap-2 cursor-pointer"
+                              >
+                                <Power className="w-3.5 h-3.5" />
+                                {toggling === m.id ? "..." : (m.is_active ? t("action.deactivate") : t("action.activate"))}
+                              </DropdownMenuItem>
+                            </RoleGuard>
+                            <RoleGuard privilege="DELETE_MEMBERSHIP_PLAN">
+                              <DropdownMenuItem onClick={() => setDeletePlan(m)} className="gap-2 text-red-600 focus:text-red-600 cursor-pointer">
+                                <Trash2 className="w-3.5 h-3.5" />
+                                {t("action.delete")}
+                              </DropdownMenuItem>
+                            </RoleGuard>
+                          </>
+                        }
+                      />
                     </TableCell>
                   </TableRow>
                 ))
@@ -558,7 +557,7 @@ export default function MembershipsPage() {
                   <SelectContent>
                     {memberTypes.map((type) => (
                       <SelectItem key={type.id} value={String(type.id)}>
-                        {isRTL ? type.name_ar : (type.name_en || type.name_ar)} ({type.code})
+                        {getLocalizedText(type.name_ar, type.name_en, language)} ({type.code})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -635,7 +634,7 @@ export default function MembershipsPage() {
             <DialogHeader>
               <DialogTitle className={isRTL ? "text-right" : "text-left"}>{t("delete.title")}</DialogTitle>
               <DialogDescription className={isRTL ? "text-right" : "text-left"}>
-                {t("delete.description", { name: isRTL ? deletePlan?.name_ar : (deletePlan?.name_en || deletePlan?.name_ar) })}
+                {t("delete.description", { name: getLocalizedText(deletePlan?.name_ar, deletePlan?.name_en, language) })}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -648,5 +647,6 @@ export default function MembershipsPage() {
         </Dialog>
       </div>
     </RoleGuard>
+    </TooltipProvider>
   );
 }

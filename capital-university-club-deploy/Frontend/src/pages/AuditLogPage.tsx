@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Eye,
   Download,
@@ -15,6 +16,8 @@ import {
 } from "lucide-react";
 import type { AuditLog } from "../services/auditLogApi";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
+import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { useLanguage } from "../hooks/useLanguage";
 import {
   getAuditLogs,
   getAuditLogFilters,
@@ -58,6 +61,8 @@ const colors = {
 } as const;
 
 const AuditLogPage: React.FC = () => {
+  const { t } = useTranslation("AuditLogPage");
+  const { language, isRTL } = useLanguage();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [totalLogs, setTotalLogs] = useState(0);
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
@@ -162,6 +167,7 @@ const AuditLogPage: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const isSuccess = status === "نجح";
+    const translatedStatus = isSuccess ? t("table.status.success") : t("table.status.failed");
     return (
       <span
         style={{
@@ -175,7 +181,7 @@ const AuditLogPage: React.FC = () => {
           color: isSuccess ? colors.success : colors.danger,
         }}
       >
-        {status}
+        {translatedStatus}
       </span>
     );
   };
@@ -185,7 +191,7 @@ const AuditLogPage: React.FC = () => {
       style={{
         minHeight: "100vh",
         backgroundColor: colors.background,
-        direction: "rtl",
+        direction: isRTL ? "rtl" : "ltr",
         fontFamily: "'Cairo', sans-serif",
       }}
     >
@@ -208,7 +214,7 @@ const AuditLogPage: React.FC = () => {
                   margin: "0 0 8px 0",
                 }}
               >
-                سجل العمليات
+                {t("header.title")}
               </h1>
               <p
                 style={{
@@ -217,7 +223,7 @@ const AuditLogPage: React.FC = () => {
                   margin: 0,
                 }}
               >
-                عرض جميع العمليات التي تمت داخل النظام
+                {t("header.subtitle")}
               </p>
             </div>
             <div style={{ display: "flex", gap: "12px" }}>
@@ -240,7 +246,7 @@ const AuditLogPage: React.FC = () => {
                 }}
               >
                 <RotateCcw size={16} />
-                مسح الفلاتر
+                {t("actions.clearFilters")}
               </button>
               <button
                 style={{
@@ -260,7 +266,7 @@ const AuditLogPage: React.FC = () => {
                 }}
               >
                 <Download size={16} />
-                تصدير السجل
+                {t("actions.exportLog")}
               </button>
             </div>
           </div>
@@ -274,10 +280,10 @@ const AuditLogPage: React.FC = () => {
             }}
           >
             {([
-              { label: "إجمالي السجلات", value: stats.total, icon: FileText, color: colors.accentBlue },
-              { label: "العمليات الناجحة", value: stats.successful, icon: CheckCircle, color: colors.success },
-              { label: "العمليات الفاشلة", value: stats.failed, icon: XCircle, color: colors.danger },
-              { label: "سجلات اليوم", value: stats.today, icon: Calendar, color: colors.info },
+              { label: t("stats.totalLogs"), value: stats.total, icon: FileText, color: colors.accentBlue },
+              { label: t("stats.successful"), value: stats.successful, icon: CheckCircle, color: colors.success },
+              { label: t("stats.failed"), value: stats.failed, icon: XCircle, color: colors.danger },
+              { label: t("stats.today"), value: stats.today, icon: Calendar, color: colors.info },
             ] as const).map((stat, index) => {
               const Icon = stat.icon;
               return (
@@ -343,17 +349,17 @@ const AuditLogPage: React.FC = () => {
           >
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
               <Filter size={20} color={colors.primaryDark} />
-              <h3 style={{ fontSize: "18px", fontWeight: 600, color: colors.primaryDark, margin: 0 }}>تصفية السجلات</h3>
+              <h3 style={{ fontSize: "18px", fontWeight: 600, color: colors.primaryDark, margin: 0 }}>{t("filters.title")}</h3>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px", marginBottom: "20px" }}>
               <div>
-                <label style={{ display: "block", fontSize: "14px", fontWeight: 500, color: colors.gray[700], marginBottom: "8px" }}>رقم السجل</label>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: 500, color: colors.gray[700], marginBottom: "8px" }}>{t("filters.logId.label")}</label>
                 <input
                   type="text"
                   value={filters.logId}
                   onChange={(e) => handleFilterChange("logId", e.target.value)}
-                  placeholder="مثال: LOG-001"
+                  placeholder={t("filters.logId.placeholder")}
                   style={{
                     width: "100%",
                     padding: "10px 14px",
@@ -367,16 +373,16 @@ const AuditLogPage: React.FC = () => {
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "14px", fontWeight: 500, color: colors.gray[700], marginBottom: "8px" }}>اسم المستخدم</label>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: 500, color: colors.gray[700], marginBottom: "8px" }}>{t("filters.userName.label")}</label>
                 <div style={{ position: "relative" }}>
                   <input
                     type="text"
                     value={filters.userName}
                     onChange={(e) => handleFilterChange("userName", e.target.value)}
-                    placeholder="ابحث باسم المستخدم"
+                    placeholder={t("filters.userName.placeholder")}
                     style={{
                       width: "100%",
-                      padding: "10px 38px 10px 14px",
+                      padding: isRTL ? "10px 14px 10px 38px" : "10px 38px 10px 14px",
                       border: `1px solid ${colors.border}`,
                       borderRadius: "8px",
                       fontSize: "14px",
@@ -385,14 +391,14 @@ const AuditLogPage: React.FC = () => {
                       transition: "all 0.2s",
                     }}
                   />
-                  <span style={{ position: "absolute", right: 12, top: 10, color: colors.gray[600] }}>
+                  <span style={{ position: "absolute", [isRTL ? 'left' : 'right']: 12, top: 10, color: colors.gray[600] }}>
                     <Search size={16} />
                   </span>
                 </div>
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "14px", fontWeight: 500, color: colors.gray[700], marginBottom: "8px" }}>الدور</label>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: 500, color: colors.gray[700], marginBottom: "8px" }}>{t("filters.role.label")}</label>
                 <select
                   value={filters.role}
                   onChange={(e) => handleFilterChange("role", e.target.value)}
@@ -408,7 +414,7 @@ const AuditLogPage: React.FC = () => {
                     cursor: "pointer",
                   }}
                 >
-                  <option value="">جميع الأدوار</option>
+                  <option value="">{t("filters.role.allRoles")}</option>
                   {roleOptions.map((r) => (
                     <option key={r} value={r}>
                       {r}
@@ -419,7 +425,7 @@ const AuditLogPage: React.FC = () => {
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "14px", fontWeight: 500, color: colors.gray[700], marginBottom: "8px" }}>العملية</label>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: 500, color: colors.gray[700], marginBottom: "8px" }}>{t("filters.action.label")}</label>
                 <select
                   value={filters.action}
                   onChange={(e) => handleFilterChange("action", e.target.value)}
@@ -435,7 +441,7 @@ const AuditLogPage: React.FC = () => {
                     cursor: "pointer",
                   }}
                 >
-                  <option value="">جميع العمليات</option>
+                  <option value="">{t("filters.action.allActions")}</option>
                   {actionOptions.map((a) => (
                     <option key={a} value={a}>
                       {a}
@@ -445,7 +451,7 @@ const AuditLogPage: React.FC = () => {
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "14px", fontWeight: 500, color: colors.gray[700], marginBottom: "8px" }}>القسم</label>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: 500, color: colors.gray[700], marginBottom: "8px" }}>{t("filters.module.label")}</label>
                 <select
                   value={filters.module}
                   onChange={(e) => handleFilterChange("module", e.target.value)}
@@ -461,7 +467,7 @@ const AuditLogPage: React.FC = () => {
                     cursor: "pointer",
                   }}
                 >
-                  <option value="">جميع الأقسام</option>
+                  <option value="">{t("filters.module.allModules")}</option>
                   {moduleOptions.map((m) => (
                     <option key={m} value={m}>
                       {m}
@@ -475,53 +481,44 @@ const AuditLogPage: React.FC = () => {
           <div style={{ backgroundColor: colors.white, borderRadius: "12px", boxShadow: "0 1px 3px rgba(0,0,0,0.08)", overflow: "hidden" }}>
             <div style={{ overflowX: "auto" }}>
               <Table>
-                <TableHeader>
-                  <TableRow style={{ backgroundColor: colors.gray[50], borderBottom: `2px solid ${colors.border}` }}>
-                    <TableHead style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>رقم السجل</TableHead>
-                    <TableHead style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>اسم المستخدم</TableHead>
-                    <TableHead style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>الدور</TableHead>
-                    <TableHead style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>العملية</TableHead>
-                    <TableHead style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>القسم</TableHead>
-                    <TableHead style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], minWidth: "200px" }}>الوصف</TableHead>
-                    <TableHead style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>الحالة</TableHead>
-                    <TableHead style={{ padding: "16px", textAlign: "right", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>التاريخ والوقت</TableHead>
-                    <TableHead style={{ padding: "16px", textAlign: "center", fontSize: "13px", fontWeight: 700, color: colors.gray[700], whiteSpace: "nowrap" }}>الإجراءات</TableHead>
+                <TableHeader className={adminTableStyles.header}>
+                  <TableRow>
+                    <TableHead className={adminHeadClass()}>{t("table.headers.logId")}</TableHead>
+                    <TableHead className={adminHeadClass()}>{t("table.headers.userName")}</TableHead>
+                    <TableHead className={adminHeadClass()}>{t("table.headers.role")}</TableHead>
+                    <TableHead className={adminHeadClass()}>{t("table.headers.action")}</TableHead>
+                    <TableHead className={adminHeadClass()}>{t("table.headers.module")}</TableHead>
+                    <TableHead className={adminHeadClass({ className: "min-w-[200px]" })}>{t("table.headers.description")}</TableHead>
+                    <TableHead className={adminHeadClass()}>{t("table.headers.status")}</TableHead>
+                    <TableHead className={adminHeadClass()}>{t("table.headers.dateTime")}</TableHead>
+                    <TableHead className={adminHeadClass({ center: true })}>{t("table.headers.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
+                <TableBody className={adminTableStyles.body}>
                   {isLoading ? (
                     <TableRow>
                       <TableCell colSpan={9} style={{ padding: "24px", textAlign: "center", color: colors.gray[600] }}>
-                        جاري التحميل...
+                        {t("table.states.loading")}
                       </TableCell>
                     </TableRow>
                   ) : logs.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={9} style={{ padding: "24px", textAlign: "center", color: colors.gray[600] }}>
-                        لا توجد سجلات
+                        {t("table.states.noLogs")}
                       </TableCell>
                     </TableRow>
                   ) : (
                     logs.map((log) => (
-                      <TableRow
-                        key={log.id}
-                        style={{ borderBottom: `1px solid ${colors.border}`, transition: "background-color 0.2s", cursor: "default" }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = "#F0F9FF";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = "transparent";
-                        }}
-                      >
-                        <TableCell style={{ padding: "16px", fontSize: "14px", color: colors.gray[900], fontWeight: 600 }}>{log.id}</TableCell>
-                        <TableCell style={{ padding: "16px", fontSize: "14px", color: colors.gray[900] }}>{log.userName}</TableCell>
-                        <TableCell style={{ padding: "16px", fontSize: "13px", color: colors.gray[600] }}>{log.role}</TableCell>
-                        <TableCell style={{ padding: "16px", fontSize: "13px", color: colors.gray[900], fontWeight: 500 }}>{log.action}</TableCell>
-                        <TableCell style={{ padding: "16px", fontSize: "13px", color: colors.gray[600] }}>{log.module}</TableCell>
-                        <TableCell style={{ padding: "16px", fontSize: "13px", color: colors.gray[600], maxWidth: "250px" }}>{log.description}</TableCell>
-                        <TableCell style={{ padding: "16px" }}>{getStatusBadge(log.status)}</TableCell>
-                        <TableCell style={{ padding: "16px", fontSize: "13px", color: colors.gray[600], direction: "ltr", textAlign: "right" }}>{new Date(log.dateTime).toLocaleString('en-US')}</TableCell>
-                        <TableCell style={{ padding: "16px", textAlign: "center" }}>
+                      <TableRow key={log.id} className={adminTableStyles.row}>
+                        <TableCell className={adminCellClass({ className: "font-semibold text-sm" })}>{log.id}</TableCell>
+                        <TableCell className={adminCellClass({ className: "text-sm" })}>{log.userName}</TableCell>
+                        <TableCell className={adminCellClass({ size: "muted" })}>{log.role}</TableCell>
+                        <TableCell className={adminCellClass({ className: "font-medium text-sm" })}>{log.action}</TableCell>
+                        <TableCell className={adminCellClass({ size: "muted" })}>{log.module}</TableCell>
+                        <TableCell className={adminCellClass({ size: "muted", className: "max-w-[250px]" })}>{log.description}</TableCell>
+                        <TableCell className={adminCellClass()}>{getStatusBadge(log.status)}</TableCell>
+                        <TableCell className={adminCellClass({ size: "muted", className: "tabular-nums" })} dir="ltr">{new Date(log.dateTime).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US')}</TableCell>
+                        <TableCell className={adminCellClass({ center: true })}>
                           <button
                             onClick={() => handleViewDetails(log)}
                             style={{
@@ -558,8 +555,8 @@ const AuditLogPage: React.FC = () => {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderTop: `1px solid ${colors.border}` }}>
               <div style={{ fontSize: "14px", color: colors.gray[600] }}>
                 {logs.length === 0
-                  ? "لا توجد سجلات مطابقة"
-                  : `عرض ${(currentPage - 1) * itemsPerPage + 1} إلى ${Math.min(currentPage * itemsPerPage, totalLogs)} من ${totalLogs} سجل`}
+                  ? t("table.states.noMatchingLogs")
+                  : t("pagination.info", { start: (currentPage - 1) * itemsPerPage + 1, end: Math.min(currentPage * itemsPerPage, totalLogs), total: totalLogs })}
               </div>
               <div style={{ display: "flex", gap: "8px" }}>
                 <button
@@ -576,7 +573,7 @@ const AuditLogPage: React.FC = () => {
                     alignItems: "center",
                   }}
                 >
-                  <ChevronRight size={16} />
+                  <ChevronRight size={16} style={{ transform: isRTL ? 'none' : 'rotate(180deg)' }} />
                 </button>
 
                 {[...Array(Math.min(5, totalPages))].map((_, i) => {
@@ -619,7 +616,7 @@ const AuditLogPage: React.FC = () => {
                     alignItems: "center",
                   }}
                 >
-                  <ChevronLeft size={16} />
+                  <ChevronLeft size={16} style={{ transform: isRTL ? 'none' : 'rotate(180deg)' }} />
                 </button>
               </div>
             </div>
@@ -651,7 +648,7 @@ const AuditLogPage: React.FC = () => {
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <h2 style={{ margin: 0, color: colors.primaryDark, fontSize: 18, fontWeight: 700 }}>تفاصيل العملية</h2>
+              <h2 style={{ margin: 0, color: colors.primaryDark, fontSize: 18, fontWeight: 700 }}>{t("modal.title")}</h2>
               <button
                 onClick={() => setShowModal(false)}
                 style={{ border: "none", background: "transparent", cursor: "pointer", padding: 6 }}

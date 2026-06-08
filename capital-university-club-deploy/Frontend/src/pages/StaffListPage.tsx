@@ -4,7 +4,11 @@ import api from "../services/axios";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Input } from "../components/StaffPagesComponents/ui/input";
 import { Badge } from "../components/StaffPagesComponents/ui/badge";
-import i18n from "../i18n";
+import { useLanguage } from "../hooks/useLanguage";
+import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
+import { buildPersonName, getLocalizedText } from "../lib/localizedDisplay";
+import { RecordViewProfileHeader } from "../components/StaffPagesComponents/shared/RecordViewPrimitives";
 import { Label } from "../components/StaffPagesComponents/ui/label";
 import {
     Table,
@@ -139,19 +143,6 @@ const formatDate = (value?: string | null) => {
     }
 };
 
-const PALETTE = [
-    "#1b71bc", "#e05c2a", "#2a9d60", "#7c3aed",
-    "#0891b2", "#be185d", "#ca8a04", "#475569",
-];
-const getColor = (id: string) => PALETTE[parseInt(id, 10) % PALETTE.length];
-
-const getInitials = (nameAr?: string, nameEn?: string) => {
-    const src = nameAr || nameEn || "";
-    const words = src.trim().split(/\s+/);
-    if (words.length >= 2) return `${words[0][0]}${words[1][0]}`.toUpperCase();
-    return src.slice(0, 2).toUpperCase() || "?";
-};
-
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status?: string }) {
@@ -173,6 +164,7 @@ function StatusBadge({ status }: { status?: string }) {
 
 export default function StaffListPage() {
     const { toast } = useToast();
+    const { language, isRTL } = useLanguage();
 
     // List state
     const [staffRows, setStaffRows] = useState<StaffRow[]>([]);
@@ -218,10 +210,10 @@ export default function StaffListPage() {
     const staffTypeLabelById = useMemo(() => {
         const map = new Map<number, string>();
         staffTypes.forEach((t) => {
-            map.set(t.id, i18n.language === 'ar' ? (t.name_ar || t.title_ar || t.name_en || t.title_en || `#${t.id}`) : (t.name_en || t.title_en || t.name_ar || t.title_ar || `#${t.id}`));
+            map.set(t.id, getLocalizedText(t.name_ar ?? t.title_ar, t.name_en ?? t.title_en, language) || `#${t.id}`);
         });
         return map;
-    }, [staffTypes]);
+    }, [staffTypes, language]);
 
     // ── Fetch staff list ────────────────────────────────────────────────────
 
@@ -350,7 +342,7 @@ export default function StaffListPage() {
     // ── Render ──────────────────────────────────────────────────────────────
 
     return (
-        <div className="h-full flex flex-col" dir="rtl">
+        <div className="h-full flex flex-col" dir={isRTL ? "rtl" : "ltr"}>
 
             {/* ── Header bar ── */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
@@ -371,26 +363,26 @@ export default function StaffListPage() {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="pr-10 text-right"
-                        dir="rtl"
+                        dir={isRTL ? "rtl" : "ltr"}
                     />
                 </div>
             </div>
 
             {/* ── Table ── */}
-            <div className="flex-1 overflow-auto">
+            <div className={adminTableStyles.container}>
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                     <Table>
-                        <TableHeader>
+                        <TableHeader className={adminTableStyles.header}>
                             <TableRow>
-                                <TableHead>الاسم</TableHead>
-                                <TableHead>الوظيفة</TableHead>
-                                <TableHead>رقم الهاتف</TableHead>
-                                <TableHead>الحالة</TableHead>
-                                <TableHead>تاريخ التوظيف</TableHead>
-                                <TableHead className="text-center w-[220px]">الإجراءات</TableHead>
+                                <TableHead className={adminHeadClass()}>الاسم</TableHead>
+                                <TableHead className={adminHeadClass()}>الوظيفة</TableHead>
+                                <TableHead className={adminHeadClass()}>رقم الهاتف</TableHead>
+                                <TableHead className={adminHeadClass()}>الحالة</TableHead>
+                                <TableHead className={adminHeadClass()}>تاريخ التوظيف</TableHead>
+                                <TableHead className={adminHeadClass({ center: true, className: "w-[220px]" })}>الإجراءات</TableHead>
                             </TableRow>
                         </TableHeader>
-                        <TableBody>
+                        <TableBody className={adminTableStyles.body}>
                             {staffLoading ? (
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center text-muted-foreground py-16">
@@ -408,31 +400,26 @@ export default function StaffListPage() {
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                filteredRows.map((row) => {
-                                    const nameAr = `${row.firstNameAr || ""} ${row.lastNameAr || ""}`.trim();
-                                    const nameEn = `${row.firstNameEn || ""} ${row.lastNameEn || ""}`.trim();
-                                    return (
-                                        <TableRow key={row.id} className="hover:bg-accent/10 border-b border-border">
-                                            <TableCell>
-                                                <div className="flex items-center gap-3">
-                                                    <div
-                                                        className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0"
-                                                        style={{ background: getColor(row.id) }}
-                                                    >
-                                                        {getInitials(nameAr, nameEn)}
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <p className="text-sm font-semibold truncate">{nameAr || "—"}</p>
-                                                        {nameEn && <p className="text-xs text-muted-foreground truncate" dir="ltr">{nameEn}</p>}
-                                                    </div>
-                                                </div>
+                                filteredRows.map((row) => (
+                                        <TableRow key={row.id} className={adminTableStyles.row}>
+                                            <TableCell className={adminCellClass()}>
+                                                <PersonNameDisplay
+                                                    id={row.id}
+                                                    names={{
+                                                        firstNameAr: row.firstNameAr,
+                                                        lastNameAr: row.lastNameAr,
+                                                        firstNameEn: row.firstNameEn,
+                                                        lastNameEn: row.lastNameEn,
+                                                    }}
+                                                    language={language}
+                                                />
                                             </TableCell>
-                                            <TableCell className="text-sm">{row.staffTypeLabel}</TableCell>
-                                            <TableCell dir="ltr" className="text-left text-sm tabular-nums">{row.phone}</TableCell>
-                                            <TableCell><StatusBadge status={row.status} /></TableCell>
-                                            <TableCell className="text-sm text-muted-foreground">{formatDate(row.employmentStartDate)}</TableCell>
-                                            <TableCell className="text-center">
-                                                <div className="flex items-center justify-center gap-1.5">
+                                            <TableCell className={adminCellClass({ size: "xs" })}>{row.staffTypeLabel}</TableCell>
+                                            <TableCell className={adminCellClass({ className: "tabular-nums" })} dir="ltr">{row.phone}</TableCell>
+                                            <TableCell className={adminCellClass()}><StatusBadge status={row.status} /></TableCell>
+                                            <TableCell className={adminCellClass({ size: "muted" })}>{formatDate(row.employmentStartDate)}</TableCell>
+                                            <TableCell className={adminCellClass({ center: true })}>
+                                                <div className={adminTableStyles.actions}>
                                                     <Button
                                                         size="sm" variant="outline"
                                                         className="gap-1 h-8"
@@ -457,8 +444,7 @@ export default function StaffListPage() {
                                                 </div>
                                             </TableCell>
                                         </TableRow>
-                                    );
-                                })
+                                ))
                             )}
                         </TableBody>
                     </Table>
@@ -492,7 +478,7 @@ export default function StaffListPage() {
                 View Detail Modal — MemberMembershipPage card style
             ══════════════════════════════════════════════════════ */}
             <Dialog open={showDetails} onOpenChange={setShowDetails}>
-                <DialogContent className="max-w-2xl w-full p-0 overflow-hidden" style={{ maxHeight: "90vh" }} dir="rtl">
+                <DialogContent className="max-w-2xl w-full p-0 overflow-hidden" style={{ maxHeight: "90vh" }} dir={isRTL ? "rtl" : "ltr"}>
                     {staffDetailsLoading ? (
                         <div className="py-16 text-center text-sm text-muted-foreground">
                             <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-3" />
@@ -503,10 +489,13 @@ export default function StaffListPage() {
                         const fb = selectedStaff;
                         if (!d && !fb) return null;
 
-                        const nameAr = [d?.first_name_ar, d?.last_name_ar].filter(Boolean).join(" ") ||
-                            [fb?.firstNameAr, fb?.lastNameAr].filter(Boolean).join(" ");
-                        const nameEn = [d?.first_name_en, d?.last_name_en].filter(Boolean).join(" ") ||
-                            [fb?.firstNameEn, fb?.lastNameEn].filter(Boolean).join(" ");
+                        const nameParts = {
+                            firstNameAr: d?.first_name_ar ?? fb?.firstNameAr,
+                            lastNameAr: d?.last_name_ar ?? fb?.lastNameAr,
+                            firstNameEn: d?.first_name_en ?? fb?.firstNameEn,
+                            lastNameEn: d?.last_name_en ?? fb?.lastNameEn,
+                        };
+                        const { primary: displayName, secondary: subtitleName } = buildPersonName(nameParts, language);
                         const role = (() => {
                             const id = Number(d?.staff_type_id ?? fb?.staffTypeId ?? 0);
                             return staffTypeLabelById.get(id) || fb?.staffTypeLabel || "—";
@@ -519,27 +508,17 @@ export default function StaffListPage() {
                                 {/* Gradient top stripe — matches MemberMembershipPage */}
                                 <div className="h-2 w-full shrink-0" style={{ background: "linear-gradient(90deg, #1F3A5F, #2EA7C9)" }} />
 
-                                {/* Avatar + name header */}
                                 <div className="px-6 pt-5 pb-5 border-b border-border shrink-0">
-                                    <div className="flex items-center gap-4">
-                                        <div
-                                            className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold text-white shadow-md shrink-0"
-                                            style={{ background: getColor(fb?.id ?? "0") }}
-                                        >
-                                            {getInitials(nameAr, nameEn)}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-xs text-muted-foreground mb-0.5">الموظف الحالي</p>
-                                            <h2 className="text-xl font-bold text-[#214474] truncate">{nameAr || "—"}</h2>
-                                            {nameEn && (
-                                                <span className="text-xs text-muted-foreground font-mono" dir="ltr">{nameEn}</span>
-                                            )}
-                                        </div>
-                                        <div className="flex flex-col items-end gap-2 shrink-0">
-                                            <StatusBadge status={isActive ? "active" : "inactive"} />
-                                            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full font-medium">{role}</span>
-                                        </div>
-                                    </div>
+                                    <RecordViewProfileHeader
+                                        name={displayName}
+                                        subtitle={subtitleName}
+                                        badges={
+                                            <>
+                                                <StatusBadge status={isActive ? "active" : "inactive"} />
+                                                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full font-medium">{role}</span>
+                                            </>
+                                        }
+                                    />
                                 </div>
 
                                 {/* Scrollable body */}
@@ -623,7 +602,7 @@ export default function StaffListPage() {
                                                         className="inline-flex items-center gap-1.5 rounded-lg border border-primary/25 bg-primary/8 text-primary px-3 py-1.5 text-xs font-semibold"
                                                     >
                                                         <Package className="h-3 w-3" />
-                                                        {i18n.language === 'ar' ? (pkg.name_ar || pkg.name_en || pkg.code) : (pkg.name_en || pkg.name_ar || pkg.code)}
+                                                        {getLocalizedText(pkg.name_ar, pkg.name_en, language) || pkg.code}
                                                         <span className="text-[10px] text-muted-foreground font-mono bg-muted px-1 py-0.5 rounded mr-0.5">
                                                             {pkg.code}
                                                         </span>
@@ -658,7 +637,7 @@ export default function StaffListPage() {
 
             {/* ════════════════════════════ Edit Dialog ════════════════════════════ */}
             <Dialog open={!!editTarget} onOpenChange={(open) => { if (!open) closeEditDialog(); }}>
-                <DialogContent className="max-w-xl" dir="rtl">
+                <DialogContent className="max-w-xl" dir={isRTL ? "rtl" : "ltr"}>
                     <DialogHeader>
                         <DialogTitle>تعديل بيانات الموظف</DialogTitle>
                         <DialogDescription>تعديل البيانات الشخصية للموظف</DialogDescription>
@@ -704,7 +683,7 @@ export default function StaffListPage() {
 
             {/* ════════════════════════ Deactivate Confirm ════════════════════════ */}
             <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
-                <DialogContent dir="rtl">
+                <DialogContent dir={isRTL ? "rtl" : "ltr"}>
                     <DialogHeader>
                         <DialogTitle>تأكيد إلغاء التفعيل</DialogTitle>
                         <DialogDescription>

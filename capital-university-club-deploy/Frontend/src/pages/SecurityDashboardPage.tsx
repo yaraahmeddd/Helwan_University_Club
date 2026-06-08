@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search, X, Clock, MapPin, Phone,
+  Search, X, Clock, MapPin, Phone, User,
   Download, CalendarX, LogOut
 } from 'lucide-react';
 import { useSecurityDashboardBookings, type DisplayBooking, type Guest } from '../hooks/useSecurityDashboardBookings';
@@ -32,10 +32,6 @@ function getSlotType(start: string, end: string): 'current' | 'all' | 'past' {
   if (currentMins >= endMins) return 'past';
   if (endMins > currentMins && startMins <= currentMins + 60) return 'current';
   return 'all';
-}
-
-function getAvatarColor(): string {
-  return 'bg-[#0e1c38]';
 }
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -514,8 +510,8 @@ function MemberDetailPopup({ booking, onClose, onThumbClick }: { booking: Displa
       >
         <div className="bg-[#0e1c38] px-6 py-5 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-[14px] flex items-center justify-center text-white font-extrabold text-xl border-[2px] border-white/20 ${getAvatarColor()}`}>
-              {[...booking.personName.trim()][0]}
+            <div className="w-12 h-12 rounded-[14px] flex items-center justify-center text-white/80 bg-white/10 border-[2px] border-white/20">
+              <User size={22} strokeWidth={1.75} />
             </div>
             <div>
               <h2 className="text-white font-bold text-lg leading-tight mb-1">{booking.personName}</h2>

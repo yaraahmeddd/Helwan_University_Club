@@ -33,6 +33,9 @@
     "active": "نشط",
     "pending": "قيد الانتظار"
   },
+  "rowActions": {
+    "viewDetails": "عرض التفاصيل"
+  },
   "actions": {
     "review": "مراجعة",
     "approve": "اعتماد",
@@ -132,7 +135,18 @@
     "membershipType": "نوع العضوية",
     "approveMembership": "اعتماد عضوية {{type}}",
     "approving": "جارٍ الاعتماد...",
-    "close": "إغلاق"
+    "close": "إغلاق",
+    "accountInfo": "معلومات الحساب",
+    "email": "البريد الإلكتروني",
+    "registerTime": "وقت التسجيل",
+    "status": "الحالة",
+    "personalInfo": "المعلومات الشخصية",
+    "name": "الاسم",
+    "nationality": "الجنسية",
+    "contactDetails": "معلومات الاتصال",
+    "address": "العنوان",
+    "membershipDetails": "تفاصيل العضوية",
+    "membershipPlan": "خطة العضوية"
   },
   "socialStatus": {
     "single": "أعزب",
