@@ -494,7 +494,12 @@ const App = () => {
                 >
                   {(loadingBranches
                     ? []
-                    : branches.map((branch, idx) => {
+                    : (branches.length > 0 ? branches : [
+                        { id: 1, name_ar: 'الفرع الرئيسي', name_en: 'Main Branch', location_ar: 'جامعة حلوان', location_en: 'Helwan University', code: 'MAIN' },
+                        { id: 2, name_ar: 'فرع الهرم', name_en: 'Haram Branch', location_ar: 'الهرم', location_en: 'Haram', code: 'HARAM' },
+                        { id: 3, name_ar: 'فرع الزمالك', name_en: 'Zamalek Branch', location_ar: 'الزمالك', location_en: 'Zamalek', code: 'ZAMALEK' },
+                        { id: 4, name_ar: 'فرع المطرية', name_en: 'Mataria Branch', location_ar: 'المطرية', location_en: 'Mataria', code: 'MATARIA' }
+                      ]).map((branch, idx) => {
                         const routeId = toBranchRouteId(branch);
                         const branchName = isArabic
                           ? ((i18n.language === 'ar' ? (branch.name_ar || branch.name_en) : (branch.name_en || branch.name_ar)) || `#${branch.id}`)
@@ -595,7 +600,7 @@ const App = () => {
                           </div>
 
                           <div className="flex gap-4">
-                            <button className="flex-1 bg-[#2596be] hover:bg-[#1e7e9e] text-white py-4 rounded-xl transition-all duration-300 font-bold text-lg shadow-lg hover:shadow-xl flex justify-center items-center gap-2" onClick={() => { window.location.href = `/branches/${branch.id}`; }}>
+                            <button className="flex-1 bg-[#2596be] hover:bg-[#1e7e9e] text-white py-4 rounded-xl transition-all duration-300 font-bold text-lg shadow-lg hover:shadow-xl flex justify-center items-center gap-2" onClick={() => { navigate(`/?tab=clubs&branchId=${branch.id}`); window.scrollTo(0, 0); }}>
                               {t("branches.explore_btn", "استكشف النادي")} <ArrowRight className="w-5 h-5 rtl:rotate-180" />
                             </button>
                           </div>
@@ -1255,7 +1260,7 @@ const App = () => {
                 <h4 className="font-bold text-lg mb-6 text-white">{t("footer.important_links", "روابط هامة")}</h4>
                 <ul className="space-y-4 text-gray-400">
                   <li><button onClick={() => handleTabChange("home")} className="hover:text-[#f8941c] transition-colors">{t("nav.home", "الرئيسية")}</button></li>
-                  <li><button onClick={() => handleTabChange("sports")} className="hover:text-[#f8941c] transition-colors">{t("nav.sports", "الرياضات")}</button></li>
+                  <li><button onClick={() => handleTabChange("Sports")} className="hover:text-[#f8941c] transition-colors">{t("nav.sports", "الرياضات")}</button></li>
                   <li><button onClick={() => handleTabChange("memberships")} className="hover:text-[#f8941c] transition-colors">{t("nav.memberships", "العضويات")}</button></li>
                 </ul>
               </div>
