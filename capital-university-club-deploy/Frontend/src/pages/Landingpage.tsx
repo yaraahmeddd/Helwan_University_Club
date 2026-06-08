@@ -595,7 +595,7 @@ const App = () => {
                           </div>
 
                           <div className="flex gap-4">
-                            <button className="flex-1 bg-[#2596be] hover:bg-[#1e7e9e] text-white py-4 rounded-xl transition-all duration-300 font-bold text-lg shadow-lg hover:shadow-xl flex justify-center items-center gap-2" onClick={() => { window.location.href = `/branches/${branch.id}`; }}>
+                            <button className="flex-1 bg-[#2596be] hover:bg-[#1e7e9e] text-white py-4 rounded-xl transition-all duration-300 font-bold text-lg shadow-lg hover:shadow-xl flex justify-center items-center gap-2" onClick={() => { navigate(`/?tab=clubs&branchId=${branch.id}`); window.scrollTo(0, 0); }}>
                               {t("branches.explore_btn", "استكشف النادي")} <ArrowRight className="w-5 h-5 rtl:rotate-180" />
                             </button>
                           </div>
@@ -1255,7 +1255,7 @@ const App = () => {
                 <h4 className="font-bold text-lg mb-6 text-white">{t("footer.important_links", "روابط هامة")}</h4>
                 <ul className="space-y-4 text-gray-400">
                   <li><button onClick={() => handleTabChange("home")} className="hover:text-[#f8941c] transition-colors">{t("nav.home", "الرئيسية")}</button></li>
-                  <li><button onClick={() => handleTabChange("sports")} className="hover:text-[#f8941c] transition-colors">{t("nav.sports", "الرياضات")}</button></li>
+                  <li><button onClick={() => handleTabChange("Sports")} className="hover:text-[#f8941c] transition-colors">{t("nav.sports", "الرياضات")}</button></li>
                   <li><button onClick={() => handleTabChange("memberships")} className="hover:text-[#f8941c] transition-colors">{t("nav.memberships", "العضويات")}</button></li>
                 </ul>
               </div>

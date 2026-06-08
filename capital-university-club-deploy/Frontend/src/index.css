@@ -96,6 +96,22 @@
 }
 
 /* Basic RTL-safe page styling */
+html {
+    font-size: 75%; /* Scales 1rem to 12px on large screens to fix the "zoomed in" appearance */
+}
+
+@media (max-width: 1024px) {
+    html {
+        font-size: 87.5%; /* 1rem = 14px on tablets */
+    }
+}
+
+@media (max-width: 640px) {
+    html {
+        font-size: 100%; /* 1rem = 16px on mobile devices for better readability */
+    }
+}
+
 html,
 body,
 #root {
