@@ -437,12 +437,20 @@ const LastNews: React.FC = () => {
 
                     {selectedPostDetails.category === 'فيديو' && selectedPostDetails.videoUrl && (
                         <div className="mt-12 rounded-3xl overflow-hidden bg-gray-100 aspect-video shadow-xl border border-gray-100">
-                            <iframe 
-                                src={selectedPostDetails.videoUrl.replace('watch?v=', 'embed/')} 
-                                className="w-full h-full"
-                                allowFullScreen 
-                                title="Video Player"
-                            />
+                            {selectedPostDetails.videoUrl.endsWith('.mp4') || selectedPostDetails.videoUrl.includes('uploads/news/') ? (
+                                <video 
+                                    src={`/assets/videos/${selectedPostDetails.videoUrl.split('/').pop()}`} 
+                                    className="w-full h-full object-contain bg-black"
+                                    controls
+                                />
+                            ) : (
+                                <iframe 
+                                    src={selectedPostDetails.videoUrl.replace('watch?v=', 'embed/')} 
+                                    className="w-full h-full"
+                                    allowFullScreen 
+                                    title="Video Player"
+                                />
+                            )}
                         </div>
                     )}
 
