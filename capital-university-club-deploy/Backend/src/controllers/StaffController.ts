@@ -714,8 +714,9 @@ export class StaffController {
     try {
       const page = Number(req.query.page) || 1;
       const limit = Number(req.query.limit) || 10;
+      const role = req.query.role as string | undefined;
 
-      const result = await staffService.getAllStaff(page, limit);
+      const result = await staffService.getAllStaff(page, limit, role);
 
       res.status(200).json({
         success: true,

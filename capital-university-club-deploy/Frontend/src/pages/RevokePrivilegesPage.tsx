@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     Search, RefreshCw, Shield, ChevronRight, ChevronLeft, Loader2,
-    Users, ArrowRight, Trash2, RotateCcw, AlertTriangle, Lock, ShieldOff,
-    Undo, CheckSquare
+    Users, ArrowRight, Trash2, RotateCcw, AlertTriangle, ShieldOff
 } from "lucide-react";
 import api from "../services/axios";
 import { StaffService } from "../services/staffService";
 import { Input } from "../components/StaffPagesComponents/ui/input";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Badge } from "../components/StaffPagesComponents/ui/badge";
+import {
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "../components/StaffPagesComponents/ui/select";
 import { useToast } from "../hooks/use-toast";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 import { useLanguage } from "../hooks/useLanguage";
@@ -39,6 +41,13 @@ type StaffApiItem = {
     employment_start_date?: string;
     created_at?: string;
     start_date?: string;
+};
+
+type StaffType = {
+    id: number;
+    code: string;
+    name_ar?: string;
+    name_en?: string;
 };
 
 type StaffRow = {
@@ -121,7 +130,7 @@ const parseGrantedPrivileges = (response: unknown): Omit<GrantedPrivilege, "mark
             nameAr: String(item.name_ar ?? ""),
             nameEn: String(item.name_en ?? ""),
             module: String(item.module ?? "General"),
-            source: (item.source as string) ?? "direct", // NEW
+            source: (item.source as "direct" | "package" | "default") ?? "direct", // NEW
             can_revoke: item.can_revoke !== false, // NEW - default to true if not present
             package_id: Number(item.package_id) || undefined, // NEW
             package_code: String(item.package_code ?? "") || undefined, // NEW
@@ -158,6 +167,14 @@ export default function RevokePrivilegesPage() {
     const [dateFrom, setDateFrom] = useState("");
     const [dateTo, setDateTo] = useState("");
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const [staffTypes, setStaffTypes] = useState<StaffType[]>([]);
+
+    useEffect(() => {
+        StaffService.getStaffTypes()
+            .then((res) => { if (res.success && Array.isArray(res.data)) setStaffTypes(res.data); })
+            .catch(() => {});
+    }, []);
 
     const fetchStaff = useCallback(
         async (page: number, q: string, role: string, from: string, to: string) => {
@@ -220,7 +237,7 @@ export default function RevokePrivilegesPage() {
         [toast, t]
     );
 
-    useEffect(() => { void fetchStaff(currentPage, search, roleFilter, dateFrom, dateTo); }, [currentPage, search, roleFilter, dateFrom, dateTo]);
+    useEffect(() => { void fetchStaff(currentPage, search, roleFilter, dateFrom, dateTo); }, [currentPage, search, roleFilter, dateFrom, dateTo, fetchStaff]);
 
     const handleSearchChange = (value: string) => {
         if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -245,10 +262,11 @@ export default function RevokePrivilegesPage() {
             const res = await StaffService.getPrivileges(staffId);
             const parsed = parseGrantedPrivileges(res);
             setGrantedPrivileges(parsed.map((p) => ({ ...p, markedForRevocation: false })));
-        } catch (error: any) {
-            const errorMessage = error?.response?.data?.message
-                || error?.response?.data?.error
-                || error?.message
+        } catch (error: unknown) {
+            const err = error as { response?: { data?: { message?: string, error?: string } }, message?: string };
+            const errorMessage = err?.response?.data?.message
+                || err?.response?.data?.error
+                || err?.message
                 || t("toasts.errorLoadPrivileges");
 
             console.error('Error fetching privileges:', error);
@@ -301,7 +319,7 @@ export default function RevokePrivilegesPage() {
             const result = await StaffService.revokePrivileges(selectedStaff.id, markedIds, "Revoked from revoke-privileges page");
 
             if (result.failed_attempts && result.failed_attempts.length > 0) {
-                const failedIds = result.failed_attempts.map((f: any) => f.privilege_id);
+                const failedIds = result.failed_attempts.map((f: { privilege_id: number }) => f.privilege_id);
                 const successIds = markedIds.filter(id => !failedIds.includes(id));
                 setFailedAttempts(result.failed_attempts);
                 toast({
@@ -318,7 +336,7 @@ export default function RevokePrivilegesPage() {
 
             // Re-fetch to reflect changes
             await fetchPrivileges(selectedStaff.id);
-        } catch (error: any) {
+        } catch {
             toast({ title: t("toasts.revokeErrorTitle"), description: t("toasts.revokeErrorDesc"), variant: "destructive" });
         } finally {
             setIsSaving(false);
@@ -364,37 +382,11 @@ export default function RevokePrivilegesPage() {
                             {t("table.refresh")}
                         </button>
                     </div>
-
-                    {/* Role filter tabs */}
-                    <div className="flex items-center gap-1 mt-3 flex-wrap">
-                        {[
-                            { value: "", label: t("filters.all") },
-                            { value: "ADMIN", label: t("filters.admin") },
-                            { value: "SPORTS_DIRECTOR", label: t("filters.sportsDirector") },
-                            { value: "SPORTS_OFFICER", label: t("filters.sportsOfficer") },
-                            { value: "FINANCIAL_DIRECTOR", label: t("filters.financial") },
-                            { value: "REGISTRATION_STAFF", label: t("filters.registration") },
-                            { value: "TEAM_MANAGER", label: t("filters.teamManager") },
-                            { value: "SUPPORT", label: t("filters.support") },
-                            { value: "AUDITOR", label: t("filters.auditor") },
-                        ].map((f) => (
-                            <button
-                                key={f.value}
-                                onClick={() => handleRoleFilter(f.value)}
-                                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${roleFilter === f.value
-                                    ? "bg-rose-500 text-white shadow-sm"
-                                    : "text-muted-foreground hover:bg-muted"
-                                    }`}
-                            >
-                                {f.label}
-                            </button>
-                        ))}
-                    </div>
                 </div>
 
                 {/* Toolbar */}
                 <div className="flex items-center gap-3 px-6 py-3 border-b border-border bg-muted/20 shrink-0 flex-wrap">
-                    <div className="relative w-full sm:w-72">
+                    <div className="relative w-full sm:w-64">
                         <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none`} />
                         <Input
                             placeholder={t("table.searchPlaceholder")}
@@ -402,6 +394,23 @@ export default function RevokePrivilegesPage() {
                             onChange={(e) => handleSearchChange(e.target.value)}
                             className={`h-10 ${isRTL ? 'pr-9' : 'pl-9'}`}
                         />
+                    </div>
+
+                    {/* Role filter dropdown */}
+                    <div className="w-full sm:w-56">
+                        <Select value={roleFilter || "all"} onValueChange={(val) => handleRoleFilter(val === "all" ? "" : val)}>
+                            <SelectTrigger className="h-10 bg-background border-border hover:border-rose-300 transition-colors">
+                                <SelectValue placeholder={t("filters.all")} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all" className="font-medium">{t("filters.all")}</SelectItem>
+                                {staffTypes.map((st) => (
+                                    <SelectItem key={st.code || st.id} value={st.code}>
+                                        {getLocalizedText(st.name_ar, st.name_en, language) || st.code}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     <div className="flex items-center gap-2 flex-wrap">

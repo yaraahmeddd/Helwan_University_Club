@@ -494,8 +494,14 @@ export class StaffService {
   /**
    * Get all staff members
    */
-  async getAllStaff(page: number = 1, limit: number = 10) {
+  async getAllStaff(page: number = 1, limit: number = 10, role?: string) {
+    const whereClause: any = {};
+    if (role) {
+      whereClause.staff_type = { code: role };
+    }
+
     const [staff, total] = await this.staffRepository.findAndCount({
+      where: whereClause,
       // Removed is_active filter to show all staff including inactive
       relations: ['staff_type'],
       skip: (page - 1) * limit,

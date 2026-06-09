@@ -1,7 +1,34 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Save, Check, Copy, UploadCloud, X, AlertTriangle } from "lucide-react";
+import { Save, Check, Copy, UploadCloud, X, AlertTriangle, User, IdCard, Phone, MapPin, Calendar, Briefcase, ChevronRight, ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
+interface InputGroupProps {
+  label: string | React.ReactNode;
+  error?: any;
+  children: React.ReactNode;
+  className?: string;
+}
+
+const InputGroup = ({ label, error, children, className = "" }: InputGroupProps) => (
+  <div className={`flex flex-col gap-1.5 ${className}`}>
+      <label className="text-sm font-semibold text-gray-700">{label}</label>
+      {children}
+      <AnimatePresence>
+          {error && (
+              <motion.span
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="text-red-500 text-xs flex items-center gap-1 font-medium"
+              >
+                  <AlertTriangle size={12} /> {error.message}
+              </motion.span>
+          )}
+      </AnimatePresence>
+  </div>
+);
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -10,7 +37,6 @@ import type { StaffFormValues } from "../lib/validation/schemas";
 import { StaffService } from "../services/staffService";
 
 import { Button } from "../components/StaffPagesComponents/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/StaffPagesComponents/ui/card";
 import { Input } from "../components/StaffPagesComponents/ui/input";
 import { Label } from "../components/StaffPagesComponents/ui/label";
 import {
@@ -136,17 +162,7 @@ const normalizePackagePrivilegeCodes = (response: unknown): string[] => {
   );
 };
 
-type StaffFormData = {
-  first_name_en: string;
-  first_name_ar: string;
-  last_name_en: string;
-  last_name_ar?: string;
-  national_id: string;
-  phone: string;
-  address?: string;
-  staff_type_id: string;
-  employment_start_date: string;
-};
+
 
 const STATIC_STAFF_TYPES: StaffType[] = [
   { id: 1, code: "ADMIN", name_en: "Admin", name_ar: "المسئول" },
@@ -250,65 +266,67 @@ function DocumentUploadCard({
   const ringClass = highlightError ? "ring-2 ring-red-500 ring-offset-2 bg-red-50/10 rounded-xl p-1" : "";
 
   return (
-    <div id={`doc-card-${id}`} className={`flex flex-col space-y-2 ${ringClass} transition-all`}>
-      <div className="flex items-center justify-between">
-        <Label className="font-semibold text-sm">{label}</Label>
-        <span className={`text-[10px] px-2 py-0.5 rounded border font-medium ${badgeColors[badgeType]}`}>
-          {finalBadgeText}
-        </span>
-      </div>
-      
-      {warningText && (
-        <div className="flex items-start gap-1.5 text-amber-600 bg-amber-50 p-2 rounded text-xs border border-amber-200">
-          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-          <p>{warningText}</p>
-        </div>
-      )}
-
-      {!file ? (
-        <div 
-          className={`
-            border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors
-            ${dragActive ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50"}
+    <div
+        id={`doc-card-${id}`}
+        onClick={() => !file && fileInputRef.current?.click()}
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+        className={`
+            relative border-2 border-dashed p-6 rounded-2xl cursor-pointer transition-all duration-300 group
+            flex flex-col items-center justify-center text-center h-full
+            ${file ? 'border-indigo-500 bg-indigo-50/50' : 'border-gray-200 bg-gray-50 hover:border-indigo-300 hover:bg-white'}
             ${(error || localError) ? "border-red-400 bg-red-50/50" : ""}
-          `}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <input
+            ${ringClass}
+        `}
+    >
+        <input
             ref={fileInputRef}
             type="file"
             className="hidden"
             accept=".jpg,.jpeg,.png,.pdf,.webp,.bmp,.heic"
             onChange={handleChange}
-          />
-          <UploadCloud className="w-8 h-8 text-muted-foreground mb-2" />
-          <p className="text-sm font-medium text-foreground">{t("documents.uploadPrompt")}</p>
-          <p className="text-xs text-muted-foreground mt-1" dir="ltr">JPEG, PNG, PDF, WEBP (Max 10MB)</p>
+        />
+        
+        <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
+            <span className={`text-[10px] px-2 py-0.5 rounded border font-medium ${badgeColors[badgeType]}`}>
+                {finalBadgeText}
+            </span>
+            {file && (
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="icon" 
+                className="text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0 h-6 w-6 rounded-full"
+                onClick={(e) => { e.stopPropagation(); onFileChange(id, null); }}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            )}
         </div>
-      ) : (
-        <div className="border rounded-lg p-3 flex items-center justify-between bg-card">
-          <div className="flex flex-col overflow-hidden max-w-[200px]">
-            <span className="text-sm font-medium truncate" dir="ltr">{file.name}</span>
-            <span className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
-          </div>
-          <Button 
-            type="button" 
-            variant="ghost" 
-            size="icon" 
-            className="text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0 ml-2 h-8 w-8"
-            onClick={(e) => { e.stopPropagation(); onFileChange(id, null); }}
-          >
-            <X className="w-4 h-4" />
-          </Button>
+
+        <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 mt-6 transition-colors
+             ${file ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-200 text-gray-500 group-hover:bg-indigo-100 group-hover:text-indigo-600'}`}>
+            {file ? <Check size={28} /> : <UploadCloud size={28} />}
         </div>
-      )}
-      {(error || localError) && (
-        <p className="text-xs text-red-500 font-medium mt-1">{error || localError}</p>
-      )}
+
+        <p className={`font-bold text-base ${file ? 'text-indigo-900' : 'text-gray-600'}`}>{label}</p>
+
+        <p className="text-sm text-gray-400 mt-2 max-w-[200px] truncate" dir="ltr">
+            {file ? file.name : t("documents.uploadPrompt")}
+        </p>
+
+        {warningText && (
+            <div className="flex items-center gap-1.5 text-amber-600 bg-amber-50 px-2 py-1 mt-3 rounded text-[10px] border border-amber-200">
+                <AlertTriangle className="w-3 h-3 shrink-0" />
+                <p>{warningText}</p>
+            </div>
+        )}
+        
+        {(error || localError) && (
+            <p className="text-xs text-red-500 font-medium mt-2">{error || localError}</p>
+        )}
     </div>
   );
 }
@@ -353,7 +371,7 @@ export default function AddNewStaffPage() {
     setValue,
     watch,
     trigger,
-  } = useForm<StaffFormData>({
+  } = useForm<StaffFormValues>({
     resolver: zodResolver(staffFormSchema),
     defaultValues: {
       first_name_en: "",
@@ -369,6 +387,7 @@ export default function AddNewStaffPage() {
   });
 
   const staffTypeId = watch("staff_type_id");
+  const inputClasses = "w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none placeholder:text-gray-400 text-gray-800";
 
   // Stepper & Gender State
   const [step, setStep] = useState(1);
@@ -393,7 +412,7 @@ export default function AddNewStaffPage() {
 
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [softValidationPending, setSoftValidationPending] = useState(false);
-  const [pendingSubmitData, setPendingSubmitData] = useState<StaffFormData | null>(null);
+  const [pendingSubmitData, setPendingSubmitData] = useState<StaffFormValues | null>(null);
   const [isManualSubmitting, setIsManualSubmitting] = useState(false);
 
   const handleNextStep = async () => {
@@ -665,7 +684,7 @@ export default function AddNewStaffPage() {
   }, []);
 
 
-  const onSubmit = async (data: StaffFormData) => {
+  const onSubmit = async (data: StaffFormValues) => {
       // PART A: Validation
       const hardRequiredDocs = [
         "academic_certificate", "national_id_front", "personal_photo",
@@ -705,7 +724,7 @@ export default function AddNewStaffPage() {
     await executeSubmit(data);
   };
 
-  const executeSubmit = async (data: StaffFormData) => {
+  const executeSubmit = async (data: StaffFormValues) => {
     setIsManualSubmitting(true);
     try {
       setSoftValidationPending(false);
@@ -815,7 +834,8 @@ export default function AddNewStaffPage() {
   };
 
   return (
-    <div className="min-h-screen p-6 pb-8 space-y-6" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>
+    <div className={`min-h-screen bg-slate-50 py-12 ${i18n.language === 'ar' ? 'text-right' : 'text-left'}`} dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>
+      <div className="container mx-auto px-4 max-w-6xl space-y-6">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -825,187 +845,112 @@ export default function AddNewStaffPage() {
         <p className="text-muted-foreground mt-1">{t("pageDescription")}</p>
       </motion.div>
 
-      {/* STEPPER HEADER */}
-      <div className="flex items-center justify-center mb-8 mt-4 relative">
-        <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-border -z-10 -translate-y-1/2 max-w-[200px] mx-auto"></div>
-        <div className="flex items-center gap-24 px-4">
-          <div className="flex flex-col items-center gap-2 z-10 bg-background px-4">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border-2 transition-colors ${step >= 1 ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-muted-foreground'}`}>1</div>
-            <span className={`text-sm font-medium ${step >= 1 ? 'text-foreground' : 'text-muted-foreground'}`}>{t("stepper.step1")}</span>
+      <div className="w-full max-w-3xl mx-auto mb-12 relative z-0 mt-8">
+        <div className="absolute top-1/2 left-0 right-0 h-2 bg-gray-200 -z-10 rounded-full" />
+        <motion.div
+            className={`absolute top-1/2 ${i18n.language === 'ar' ? 'right-0' : 'left-0'} h-2 bg-indigo-600 -z-10 rounded-full`}
+            initial={{ width: "0%" }}
+            animate={{ width: step === 1 ? "0%" : "100%" }}
+            transition={{ duration: 0.5, ease: "circOut" }}
+        />
+        <div className="flex justify-between items-center px-12">
+          <div className="flex flex-col items-center bg-transparent">
+              <motion.div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-4 transition-colors duration-300 bg-white
+                      ${step >= 1 ? 'border-indigo-600 text-indigo-600' : 'border-gray-300 text-gray-300'}`}
+                  animate={{ scale: step === 1 ? 1.2 : 1, borderColor: step >= 1 ? '#4f46e5' : '#d1d5db' }}
+              >
+                  {step > 1 ? <Check size={24} strokeWidth={3} /> : "1"}
+              </motion.div>
+              <span className={`mt-3 text-sm font-bold transition-colors ${step >= 1 ? 'text-indigo-900' : 'text-gray-400'}`}>
+                  {t("stepper.step1")}
+              </span>
           </div>
-          <div className="flex flex-col items-center gap-2 z-10 bg-background px-4">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border-2 transition-colors ${step >= 2 ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-muted-foreground'}`}>2</div>
-            <span className={`text-sm font-medium ${step >= 2 ? 'text-foreground' : 'text-muted-foreground'}`}>{t("stepper.step2")}</span>
+
+          <div className="flex flex-col items-center bg-transparent">
+              <motion.div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-4 transition-colors duration-300 bg-white
+                      ${step >= 2 ? 'border-indigo-600 text-indigo-600' : 'border-gray-300 text-gray-300'}`}
+                  animate={{ scale: step === 2 ? 1.2 : 1, borderColor: step >= 2 ? '#4f46e5' : '#d1d5db' }}
+              >
+                  2
+              </motion.div>
+              <span className={`mt-3 text-sm font-bold transition-colors ${step >= 2 ? 'text-indigo-900' : 'text-gray-400'}`}>
+                  {t("stepper.step2")}
+              </span>
           </div>
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{step === 1 ? t("stepper.step1") : t("stepper.step2")}</CardTitle>
-        </CardHeader>
-
-        <CardContent>
           <form onSubmit={hookFormSubmit(onSubmit)} className="space-y-6">
             <AnimatePresence mode="wait">
             {step === 1 && (
-              <motion.div
-                key="step1"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-                className="space-y-6"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} key="step1" className="bg-white rounded-3xl shadow-xl p-8 md:p-12 border border-white/50 backdrop-blur-sm space-y-8">
+                <h3 className="text-2xl font-bold text-indigo-900 mb-8 flex items-center gap-3">
+                  <div className="p-2 bg-indigo-100 rounded-lg"><IdCard className="text-indigo-600" /></div>
+                  {t("stepper.step1")}
+                </h3>
+                
+                {/* Personal Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-              <div>
-                <Label>{t("form.firstNameEn")}</Label>
-                <Input
-                  {...register("first_name_en")}
-                  placeholder="John"
-                  dir="ltr"
-                  className="text-left"
-                  maxLength={20}
-                />
-                {errors.first_name_en && (
-                  <p className="text-red-500 text-xs mt-1">{errors.first_name_en.message}</p>
-                )}
-              </div>
+                  <InputGroup label={t("form.firstNameEn")} error={errors.first_name_en}>
+                    <input {...register("first_name_en")} dir="ltr" className={`${inputClasses} text-left`} maxLength={20} />
+                  </InputGroup>
 
-              <div>
-                <Label>{t("form.firstNameAr")}</Label>
-                <Input
-                  {...register("first_name_ar")}
-                  placeholder="أحمد"
-                  maxLength={20}
-                />
-                {errors.first_name_ar && (
-                  <p className="text-red-500 text-xs mt-1">{errors.first_name_ar.message}</p>
-                )}
-              </div>
+                  <InputGroup label={t("form.firstNameAr")} error={errors.first_name_ar}>
+                    <input {...register("first_name_ar")} className={inputClasses} maxLength={20} />
+                  </InputGroup>
 
-              <div>
-                <Label>{t("form.lastNameEn")}</Label>
-                <Input
-                  {...register("last_name_en")}
-                  placeholder="Doe"
-                  dir="ltr"
-                  className="text-left"
-                  maxLength={20}
-                />
-                {errors.last_name_en && (
-                  <p className="text-red-500 text-xs mt-1">{errors.last_name_en.message}</p>
-                )}
-              </div>
+                  <InputGroup label={t("form.lastNameEn")} error={errors.last_name_en}>
+                    <input {...register("last_name_en")} dir="ltr" className={`${inputClasses} text-left`} maxLength={20} />
+                  </InputGroup>
 
-              <div>
-                <Label>{t("form.lastNameAr")}</Label>
-                <Input
-                  {...register("last_name_ar")}
-                  placeholder="محمد"
-                  maxLength={20}
-                />
-                {errors.last_name_ar && (
-                  <p className="text-red-500 text-xs mt-1">{errors.last_name_ar.message}</p>
-                )}
-              </div>
+                  <InputGroup label={t("form.lastNameAr")} error={errors.last_name_ar}>
+                    <input {...register("last_name_ar")} className={inputClasses} maxLength={20} />
+                  </InputGroup>
+                  
+                  <div className="md:col-span-2 h-px bg-gray-100 my-2" />
 
-              <div>
-                <Label>{t("form.nationalId")}</Label>
-                <Input
-                  {...register("national_id")}
-                  placeholder="29501012345678"
-                  type="text"
-                  dir="ltr"
-                  className="text-left"
-                  maxLength={14}
-                  inputMode="numeric"
-                />
-                {errors.national_id && (
-                  <p className="text-red-500 text-xs mt-1">{errors.national_id.message}</p>
-                )}
-              </div>
+                  <InputGroup label={t("form.nationalId")} className="md:col-span-2" error={errors.national_id}>
+                    <input {...register("national_id")} type="text" dir="ltr" className={`${inputClasses} font-mono tracking-widest text-lg text-left`} maxLength={14} inputMode="numeric" />
+                  </InputGroup>
 
-              <div>
-                <Label>{t("form.gender")}</Label>
-                <Select value={gender} onValueChange={setGender}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("form.genderSelect")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ذكر">{t("form.male")}</SelectItem>
-                    <SelectItem value="أنثى">{t("form.female")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                  <InputGroup label={t("form.gender")}>
+                    <select value={gender} onChange={(e) => setGender(e.target.value)} className={inputClasses}>
+                      <option value="ذكر">{t("form.male")}</option>
+                      <option value="أنثى">{t("form.female")}</option>
+                    </select>
+                  </InputGroup>
 
-              <div>
-                <Label>{t("form.phone")}</Label>
-                <Input
-                  {...register("phone")}
-                  placeholder="+201012345678"
-                  type="tel"
-                  dir="ltr"
-                  className="text-left"
-                  maxLength={11}
-                  inputMode="numeric"
-                />
-                {errors.phone && (
-                  <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>
-                )}
-              </div>
+                  <InputGroup label={t("form.phone")} error={errors.phone}>
+                    <input {...register("phone")} type="tel" dir="ltr" className={`${inputClasses} text-left font-mono`} maxLength={11} inputMode="numeric" />
+                  </InputGroup>
 
-              <div className="md:col-span-2">
-                <Label>{t("form.address")}</Label>
-                <Input
-                  {...register("address")}
-                  placeholder="123 Main Street, Cairo"
-                  maxLength={100}
-                />
-                {errors.address && (
-                  <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>
-                )}
-              </div>
+                  <div className="md:col-span-2 h-px bg-gray-100 my-2" />
 
-              <div>
-                <Label>{t("form.staffType")}</Label>
-                <Select value={staffTypeId} onValueChange={(v) => setValue("staff_type_id", v, { shouldValidate: true })} required>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("form.staffTypeSelect")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {staffTypeOptions.map((type) => (
-                      <SelectItem key={type.id} value={String(type.id)}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {/* #5 — show warning when API failed and list is the static fallback */}
-                {staffTypesError && !staffTypesFromApi && (
-                  <div className="flex items-center justify-between mt-1 px-2 py-1.5 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
-                    <span>{t("dialogs.staffTypesError")}</span>
-                    <button type="button" onClick={() => void loadStaffTypes()} className={`underline font-medium ${i18n.language === 'ar' ? 'mr-2' : 'ml-2'}`}>{t("packages.retry")}</button>
-                  </div>
-                )}
-                {errors.staff_type_id && (
-                  <p className="text-red-500 text-xs mt-1">{errors.staff_type_id.message}</p>
-                )}
-              </div>
+                  <InputGroup label={t("form.address")} className="md:col-span-2" error={errors.address}>
+                    <input {...register("address")} className={inputClasses} maxLength={100} />
+                  </InputGroup>
 
-              <div>
-                <Label>{t("form.employmentDate")}</Label>
-                <Input
-                  type="date"
-                  {...register("employment_start_date")}
-                  dir="ltr"
-                  className="text-left"
-                />
-                {errors.employment_start_date && (
-                  <p className="text-red-500 text-xs mt-1">{errors.employment_start_date.message}</p>
-                )}
-              </div>
+                  <InputGroup label={t("form.staffType")} error={errors.staff_type_id}>
+                    <select {...register("staff_type_id")} className={inputClasses} required>
+                      <option value="" disabled>{t("form.staffTypeSelect")}</option>
+                      {staffTypeOptions.map((type) => (
+                        <option key={type.id} value={String(type.id)}>{type.label}</option>
+                      ))}
+                    </select>
+                    {staffTypesError && !staffTypesFromApi && (
+                        <div className="flex items-center justify-between mt-1 px-2 py-1.5 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+                          <span>{t("dialogs.staffTypesError")}</span>
+                          <button type="button" onClick={() => void loadStaffTypes()} className={`underline font-medium ${i18n.language === 'ar' ? 'mr-2' : 'ml-2'}`}>{t("packages.retry")}</button>
+                        </div>
+                    )}
+                  </InputGroup>
+
+                  <InputGroup label={t("form.employmentDate")} error={errors.employment_start_date}>
+                    <input type="date" {...register("employment_start_date")} dir="ltr" className={`${inputClasses} text-left`} />
+                  </InputGroup>
                 </div>
 
             {/* Package Selection Section */}
@@ -1285,17 +1230,16 @@ export default function AddNewStaffPage() {
               </div>
             </div>
 
-                <div className="flex items-center justify-end gap-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => navigate("/staff/dashboard/admin/staff/list")}
-                  >
+                <div className="flex justify-between mt-12 pt-6 border-t border-gray-100">
+                  <button type="button" onClick={() => navigate("/staff/dashboard/admin/staff/list")} className="px-8 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold transition-colors flex items-center gap-2">
+                    {i18n.language === 'ar' ? <ChevronRight size={20} /> : null}
                     {t("actions.cancel")}
-                  </Button>
-                  <Button type="button" onClick={handleNextStep}>
-                    {i18n.language === 'ar' ? 'التالي ←' : 'Next →'}
-                  </Button>
+                    {i18n.language !== 'ar' ? <ChevronLeft size={20} /> : null}
+                  </button>
+                  <button type="button" onClick={handleNextStep} className="px-8 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-lg shadow-indigo-200 transition-all flex items-center gap-2">
+                    {i18n.language === 'ar' ? 'التالي' : 'Next'}
+                    {i18n.language === 'ar' ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+                  </button>
                 </div>
               </motion.div>
             )}
@@ -1330,7 +1274,7 @@ export default function AddNewStaffPage() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.2 }}
-                  className="space-y-6"
+                  className="bg-white rounded-3xl shadow-xl p-8 md:p-12 border border-white/50 backdrop-blur-sm space-y-6"
                 >
                   {/* Progress Bar */}
                   <div className="bg-muted/10 p-5 rounded-lg border space-y-3">
@@ -1365,22 +1309,21 @@ export default function AddNewStaffPage() {
                     ))}
                   </div>
 
-                  <div className="flex items-center justify-between pt-6 mt-4 border-t border-border">
-                    <Button type="button" variant="outline" onClick={() => setStep(1)}>
-                      {i18n.language === 'ar' ? '→ السابق' : '← Previous'}
-                    </Button>
-                    <Button type="submit" disabled={isSubmitting || isManualSubmitting}>
-                      <Save className={`w-4 h-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'}`} />
+                  <div className="flex flex-col-reverse md:flex-row justify-between mt-12 pt-6 border-t border-gray-100 gap-4">
+                    <button type="button" onClick={() => setStep(1)} className="px-8 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold transition-colors flex items-center justify-center gap-2">
+                      {i18n.language === 'ar' ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+                      {i18n.language === 'ar' ? 'السابق' : 'Previous'}
+                    </button>
+                    <button type="submit" disabled={isSubmitting || isManualSubmitting} className="flex-1 md:flex-none px-10 py-3 rounded-xl bg-indigo-700 hover:bg-indigo-800 text-white font-bold shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-3">
+                      {isSubmitting || isManualSubmitting ? <span className="animate-spin text-xl">⏳</span> : <Check size={24} />}
                       {isSubmitting || isManualSubmitting ? t("actions.saving") : t("actions.save")}
-                    </Button>
+                    </button>
                   </div>
                 </motion.div>
               );
             })()}
             </AnimatePresence>
           </form>
-        </CardContent>
-      </Card>
 
       {/* Soft Validation Dialog */}
       <Dialog open={softValidationPending} onOpenChange={setSoftValidationPending}>
@@ -1474,6 +1417,7 @@ export default function AddNewStaffPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }

@@ -637,7 +637,7 @@ const ComprehensiveRegistrationForm = () => {
     );
 
     return (
-        <div className="min-h-screen bg-slate-50 py-12 font-sans text-right" dir="rtl">
+        <div className="min-h-screen bg-slate-50 py-12 text-right" dir="rtl">
             <div className="container mx-auto px-4 max-w-6xl">
                 <StepIndicator currentStep={step} />
                 <AnimatePresence mode="wait">
