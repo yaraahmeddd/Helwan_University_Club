@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
-import { Check, Printer, Search, Eye, FileText, UserX, Loader2, RefreshCw, Filter, Users, Award, Globe, Phone, CreditCard, User, MapPin, Calendar, Mail, Clock, Activity, FileBadge } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Check, Search, FileText, UserX, Loader2, RefreshCw, Filter, Users, Award, Globe, Phone, CreditCard, User, MapPin, Calendar, Mail, Clock, Activity, FileBadge, Shield } from "lucide-react";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Input } from "../components/StaffPagesComponents/ui/input";
-import { Badge } from "../components/StaffPagesComponents/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "../components/StaffPagesComponents/ui/dialog";
 import { Label } from "../components/StaffPagesComponents/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/StaffPagesComponents/ui/select";
@@ -11,7 +10,11 @@ import { useToast } from "../hooks/use-toast";
 import { RoleGuard } from "../components/StaffPagesComponents/RoleGuard";
 import api from "../services/axios";
 import { useLocalizedTranslation } from "../hooks/useLocalizedTranslation";
-import { adminTableStyles, adminHeadClass, adminCellClass, adminDialogStyles } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { adminTableStyles, adminHeadClass, adminCellClass, adminDialogStyles, ADMIN_PAGE_SIZE, adminTableBadgeClass, adminTableStatusBadgeClass, adminPageStyles } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
+import { AdminSortableHead, type SortDirection } from "../components/StaffPagesComponents/shared/AdminSortableHead";
+import { formatAdminDate, formatAdminTime } from "../components/StaffPagesComponents/shared/adminFormatters";
+import { adminFieldIcons } from "../components/StaffPagesComponents/shared/adminRecordFields";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
 import {
     RecordViewTabs,
@@ -60,6 +63,10 @@ interface RegistrationRecord {
     membership_plan_en?: string;
 }
 
+type SortField = 'name' | 'created_at';
+
+const PAGE_SIZE = ADMIN_PAGE_SIZE;
+
 const toArabicDigits = (str: string | undefined | null) => {
     if (!str) return '';
     const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
@@ -74,6 +81,9 @@ export default function RegistrationManagementPage() {
     const [search, setSearch] = useState("");
     const [dateFilter, setDateFilter] = useState("");
     const [typeFilter, setTypeFilter] = useState<'all' | 'member' | 'team_member'>('all');
+    const [sortField, setSortField] = useState<SortField>('created_at');
+    const [sortDir, setSortDir] = useState<SortDirection>('desc');
+    const [page, setPage] = useState(1);
 
     const [approvingId, setApprovingId] = useState<string | null>(null);
     const [approvedKey, setApprovedKey] = useState<string | null>(null);
@@ -81,7 +91,6 @@ export default function RegistrationManagementPage() {
 
     const [addDialogOpen, setAddDialogOpen] = useState(false);
     const [selectedRecord, setSelectedRecord] = useState<RegistrationRecord | null>(null);
-    const [printDialogOpen, setPrintDialogOpen] = useState(false);
     const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
     const [reviewTab, setReviewTab] = useState<'info' | 'photos'>('info');
 
@@ -161,20 +170,55 @@ export default function RegistrationManagementPage() {
         void fetchRecords();
     }, []);
 
-    // ── Filter ───────────────────────────────────────────────────────────────
-    const filteredRecords = records.filter(m => {
-        const arName = `${m.first_name_ar || ''} ${m.last_name_ar || ''}`;
-        const enName = `${m.first_name_en || ''} ${m.last_name_en || ''}`;
-        const matchesSearch = (
-            arName.includes(search) ||
-            enName.toLowerCase().includes(search.toLowerCase()) ||
-            m.national_id?.includes(search) ||
-            m.phone?.includes(search)
-        );
-        const matchesType = typeFilter === 'all' || m.memberType === typeFilter;
-        const matchesDate = !dateFilter || (m.created_at && m.created_at.startsWith(dateFilter));
-        return matchesSearch && matchesType && matchesDate;
-    });
+    // ── Filter, sort, paginate ───────────────────────────────────────────────
+    const processedRecords = useMemo(() => {
+        let result = records.filter(m => {
+            const arName = `${m.first_name_ar || ''} ${m.last_name_ar || ''}`;
+            const enName = `${m.first_name_en || ''} ${m.last_name_en || ''}`;
+            const matchesSearch = (
+                arName.includes(search) ||
+                enName.toLowerCase().includes(search.toLowerCase()) ||
+                m.national_id?.includes(search) ||
+                m.phone?.includes(search)
+            );
+            const matchesType = typeFilter === 'all' || m.memberType === typeFilter;
+            const matchesDate = !dateFilter || (m.created_at && m.created_at.startsWith(dateFilter));
+            return matchesSearch && matchesType && matchesDate;
+        });
+
+        result.sort((a, b) => {
+            let cmp = 0;
+            if (sortField === 'name') {
+                cmp = `${a.first_name_ar ?? ''}${a.last_name_ar ?? ''}`.localeCompare(
+                    `${b.first_name_ar ?? ''}${b.last_name_ar ?? ''}`,
+                    'ar',
+                );
+            }
+            if (sortField === 'created_at') {
+                cmp = (a.created_at ?? '').localeCompare(b.created_at ?? '');
+            }
+            return sortDir === 'asc' ? cmp : -cmp;
+        });
+
+        return result;
+    }, [records, search, typeFilter, dateFilter, sortField, sortDir]);
+
+    const totalFiltered = processedRecords.length;
+    const pageRows = processedRecords.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+    useEffect(() => {
+        setPage(1);
+    }, [search, dateFilter, typeFilter, sortField, sortDir]);
+
+    const handleSort = (field: string) => {
+        const key = field as SortField;
+        if (key === sortField) {
+            setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+        } else {
+            setSortField(key);
+            setSortDir(key === 'created_at' ? 'desc' : 'asc');
+        }
+    };
 
     const memberCount = records.filter(r => r.memberType === 'member').length;
     const teamMemberCount = records.filter(r => r.memberType === 'team_member').length;
@@ -243,8 +287,6 @@ export default function RegistrationManagementPage() {
         }
     };
 
-    const openPrint = (record: RegistrationRecord) => { setSelectedRecord(record); setPrintDialogOpen(true); };
-    const handlePrint = () => { window.print(); };
     const openReview = (record: RegistrationRecord) => { setSelectedRecord(record); setReviewTab('info'); setReviewDialogOpen(true); };
 
     const getFileUrl = (filename: string | undefined) => {
@@ -303,7 +345,7 @@ export default function RegistrationManagementPage() {
             <div className="px-6 py-4 border-b border-border bg-background shrink-0">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+                        <h1 className={adminPageStyles.headerTitle}>
                             <FileText className="w-6 h-6 text-primary" />
                             {t('registration.title')}
                         </h1>
@@ -311,32 +353,33 @@ export default function RegistrationManagementPage() {
                             <button
                                 type="button"
                                 onClick={() => setTypeFilter('all')}
-                                className={`text-sm text-muted-foreground hover:text-foreground transition-colors ${typeFilter === 'all' ? 'font-semibold text-foreground' : ''}`}
+                                className={`text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer ${typeFilter === 'all' ? 'font-semibold text-foreground' : ''}`}
                             >
                                 {t('registration.pending')} <strong>{records.length}</strong> {records.length === 1 ? t('registration.request_one') : t('registration.request_other')}
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setTypeFilter('member')}
-                                className={`inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-medium transition-all hover:bg-blue-100 ${typeFilter === 'member' ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
+                                className={`inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-medium transition-all cursor-pointer hover:bg-blue-100 ${typeFilter === 'member' ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
                             >
                                 <Users className="w-3 h-3" /> {t('registration.members')}: {memberCount}
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setTypeFilter('team_member')}
-                                className={`inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-medium transition-all hover:bg-amber-100 ${typeFilter === 'team_member' ? 'ring-2 ring-amber-400 ring-offset-1' : ''}`}
+                                className={`inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-medium transition-all cursor-pointer hover:bg-amber-100 ${typeFilter === 'team_member' ? 'ring-2 ring-amber-400 ring-offset-1' : ''}`}
                             >
                                 <Award className="w-3 h-3" /> {t('registration.teamMembers')}: {teamMemberCount}
                             </button>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => void fetchRecords()}
-                            disabled={isLoading}
-                            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border hover:bg-muted transition-colors text-sm text-muted-foreground disabled:opacity-40"
-                        >
+                            <button
+                                type="button"
+                                onClick={() => void fetchRecords()}
+                                disabled={isLoading}
+                                className={adminPageStyles.refreshBtn}
+                            >
                             <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
                             {t('registration.refresh')}
                         </button>
@@ -358,14 +401,14 @@ export default function RegistrationManagementPage() {
 
                 <Popover>
                     <PopoverTrigger asChild>
-                        <Button variant="outline" size="icon" className={`h-8 w-8 shrink-0 relative ${dateFilter ? 'border-primary' : ''}`}>
+                        <Button variant="outline" size="icon" className={`admin-filter-btn h-8 w-8 shrink-0 relative transition-all duration-150 hover:scale-105 active:scale-95 ${dateFilter ? 'border-primary bg-primary/5' : ''}`}>
                             <Filter className="w-4 h-4 text-muted-foreground" />
                             {dateFilter && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full" />}
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-4">
                         <div className="space-y-3">
-                            <h4 className="font-medium text-sm">{t('registration.filterByDate', 'Filter by Date')}</h4>
+                            <h4 className="font-medium text-sm">{t('registration.filterByDate')}</h4>
                             <Input 
                                 type="date" 
                                 value={dateFilter} 
@@ -385,10 +428,6 @@ export default function RegistrationManagementPage() {
                         </div>
                     </PopoverContent>
                 </Popover>
-
-                <Badge variant="outline" className="text-xs text-muted-foreground">
-                    {filteredRecords.length} {t('registration.results')}
-                </Badge>
             </div>
 
             {/* ── Table ── */}
@@ -404,7 +443,7 @@ export default function RegistrationManagementPage() {
                         <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-3" aria-hidden />
                         <p className="text-sm">{t('registration.loading')}</p>
                     </div>
-                ) : filteredRecords.length === 0 ? (
+                ) : processedRecords.length === 0 ? (
                     <div className="py-20 text-center text-muted-foreground">
                         <div className="rounded-full bg-muted/30 p-6 mb-4 w-fit mx-auto">
                             <UserX className="h-12 w-12 text-muted-foreground/50" />
@@ -419,17 +458,17 @@ export default function RegistrationManagementPage() {
                         <TableHeader className={adminTableStyles.header}>
                             <TableRow>
                                 <TableHead className={adminHeadClass({ className: "w-10" })}>{t('table.index')}</TableHead>
-                                <TableHead className={adminHeadClass()}>{t('table.name')}</TableHead>
+                                <AdminSortableHead sortKey="name" activeSortKey={sortField} sortDirection={sortDir} onSort={handleSort}>{t('table.name')}</AdminSortableHead>
                                 <TableHead className={adminHeadClass()}>{t('table.phone')}</TableHead>
                                 <TableHead className={adminHeadClass()}>{t('table.nationalId')}</TableHead>
-                                <TableHead className={adminHeadClass()}>{t('table.registrationDate')}</TableHead>
+                                <AdminSortableHead sortKey="created_at" activeSortKey={sortField} sortDirection={sortDir} onSort={handleSort}>{t('table.registrationDate')}</AdminSortableHead>
                                 <TableHead className={adminHeadClass({ center: true })}>{t('table.type')}</TableHead>
                                 <TableHead className={adminHeadClass({ center: true })}>{t('table.status')}</TableHead>
-                                        <TableHead className={adminHeadClass({ center: true, className: "w-[1%] whitespace-nowrap" })}>{t('table.actions')}</TableHead>
+                                <TableHead className={adminHeadClass({ center: true, className: "w-[1%] whitespace-nowrap" })}>{t('table.actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody className={adminTableStyles.body}>
-                            {filteredRecords.map((record, idx) => {
+                            {pageRows.map((record, idx) => {
                                 const key = `${record.memberType}-${record.id}`;
                                 const isApproving = approvingId === key;
                                 const isActive = record.status === 'active';
@@ -441,7 +480,7 @@ export default function RegistrationManagementPage() {
                                         key={key}
                                         className={`${adminTableStyles.row} ${isJustApproved ? 'bg-emerald-500/10' : ''}`}
                                     >
-                                        <TableCell className={adminCellClass({ size: "muted", className: "font-mono" })}>{idx + 1}</TableCell>
+                                        <TableCell className={adminCellClass({ size: "muted", className: "font-mono" })}>{(page - 1) * PAGE_SIZE + idx + 1}</TableCell>
 
                                         <TableCell className={adminCellClass()}>
                                             <PersonNameDisplay
@@ -461,24 +500,24 @@ export default function RegistrationManagementPage() {
                                             <span dir="ltr">{record.phone}</span>
                                         </TableCell>
 
-                                        <TableCell className={adminCellClass({ size: "xs", className: "font-mono" })}>
+                                        <TableCell className={adminCellClass({ size: 'nationalId' })}>
                                             <span dir="ltr">{record.national_id}</span>
                                         </TableCell>
 
                                         <TableCell className={adminCellClass({ size: "muted", className: "tabular-nums" })}>
-                                            {new Date(record.created_at).toLocaleDateString(locale)}
+                                            {formatAdminDate(record.created_at, locale)}
                                         </TableCell>
 
                                         {/* Member type badge */}
                                         <TableCell className={adminCellClass({ center: true })}>
                                             {isTeamMember ? (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800">
-                                                    <Award className="w-3 h-3" />
+                                                <span className={`${adminTableBadgeClass} bg-amber-100 text-amber-800`}>
+                                                    <Award className="w-3 h-3 shrink-0" />
                                                     {t('memberTypes.teamMember')}
                                                 </span>
                                             ) : (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-800">
-                                                    <Users className="w-3 h-3" />
+                                                <span className={`${adminTableBadgeClass} bg-blue-100 text-blue-800`}>
+                                                    <Users className="w-3 h-3 shrink-0" />
                                                     {t('memberTypes.member')}
                                                 </span>
                                             )}
@@ -486,7 +525,7 @@ export default function RegistrationManagementPage() {
 
                                         {/* Status badge */}
                                         <TableCell className={adminCellClass({ center: true })}>
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${isActive
+                                            <span className={`${adminTableStatusBadgeClass} ${isActive
                                                 ? 'bg-emerald-100 text-emerald-700'
                                                 : 'bg-amber-100 text-amber-800'
                                                 }`}>
@@ -513,12 +552,6 @@ export default function RegistrationManagementPage() {
                                                         loading={isApproving}
                                                     />
                                                 </RoleGuard>
-                                                <AdminActionButton
-                                                    tooltip={t('actions.print')}
-                                                    icon={Printer}
-                                                    variant="print"
-                                                    onClick={() => openPrint(record)}
-                                                />
                                             </AdminRowActions>
                                         </TableCell>
                                     </TableRow>
@@ -528,6 +561,15 @@ export default function RegistrationManagementPage() {
                     </Table>
                 )}
             </div>
+
+            <AdminPagination
+                page={page}
+                totalCount={totalFiltered}
+                pageSize={PAGE_SIZE}
+                onPageChange={setPage}
+                isRTL={isRTL}
+                disabled={isLoading}
+            />
 
             {/* Add New Member Dialog */}
             <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
@@ -602,147 +644,6 @@ export default function RegistrationManagementPage() {
                 </DialogContent>
             </Dialog>
 
-            {/* Print Form Dialog */}
-            <Dialog open={printDialogOpen} onOpenChange={setPrintDialogOpen}>
-                <DialogContent className="max-w-4xl h-[90vh] overflow-y-auto print:max-w-none print:h-auto print:overflow-visible" dir={isRTL ? 'rtl' : 'ltr'}>
-                    <div id="printable-form" className="p-8 bg-white text-black print:p-0">
-                        <div className={`flex justify-between items-start mb-8 border-b pb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <div className={isRTL ? 'text-right' : 'text-left'}>
-                                {selectedRecord?.memberType === 'team_member' ? (
-                                    <div className="text-sm font-bold mb-1 text-amber-700">{t('memberTypes.teamMember')}</div>
-                                ) : (
-                                    <div className="text-sm font-bold mb-1">{t('print.formFee')}</div>
-                                )}
-                            </div>
-                            <div className="text-center">
-                                <h2 className="text-2xl font-bold mb-2">
-                                    {selectedRecord?.memberType === 'team_member' ? t('print.teamMembershipForm') : t('print.membershipForm')}
-                                </h2>
-                                <div className="text-primary font-bold">HUC</div>
-                                <div className="text-xs">{t('print.clubName')}</div>
-                                <div className="text-xs">{t('print.clubNameEn')}</div>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-12 gap-8 relative items-start">
-                            <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none select-none z-0">
-                                <span className="text-[150px] font-bold">HUC</span>
-                            </div>
-
-                            <div className="col-span-3 z-10">
-                                <div className="w-32 h-40 border border-black flex items-center justify-center bg-gray-50 overflow-hidden">
-                                    {selectedRecord?.photo ? (
-                                        <img
-                                            src={getFileUrl(selectedRecord.photo)}
-                                            alt="Member"
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => {
-                                                (e.target as HTMLImageElement).style.display = 'none';
-                                                (e.target as HTMLImageElement).parentElement!.innerText = t('print.photo');
-                                            }}
-                                        />
-                                    ) : (
-                                        <span>{t('print.photo')}</span>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className={`col-span-9 space-y-6 z-10 ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-                                <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                    <span className="font-bold min-w-[80px]">{t('print.name')}:</span>
-                                    <div className="flex-1 border-b border-dotted border-black px-2">{getDisplayName(selectedRecord!)}</div>
-                                </div>
-                                <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                    <span className="font-bold min-w-[80px]">{t('print.birthDate')}:</span>
-                                    <div className="flex-1 border-b border-dotted border-black px-2">{selectedRecord?.birth_date}</div>
-                                </div>
-                                <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                    <span className="font-bold min-w-[80px]">{t('print.gender')}:</span>
-                                    <div className="flex-1 border-b border-dotted border-black px-2">
-                                        {selectedRecord?.gender === 'male' ? t('addMember.male') : selectedRecord?.gender === 'female' ? t('addMember.female') : ''}
-                                    </div>
-                                </div>
-                                <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                    <span className="font-bold min-w-[80px]">{t('print.address')}:</span>
-                                    <div className="flex-1 border-b border-dotted border-black px-2">{selectedRecord?.address}</div>
-                                </div>
-                                {selectedRecord?.memberType === 'team_member' && selectedRecord.teams && selectedRecord.teams.length > 0 && (
-                                    <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <span className="font-bold min-w-[80px]">{t('print.teams')}:</span>
-                                        <div className="flex-1 border-b border-dotted border-black px-2">{selectedRecord.teams.join(' - ')}</div>
-                                    </div>
-                                )}
-                                {selectedRecord?.memberType !== 'team_member' && (
-                                    <div className={`flex gap-2 items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <span className="font-bold min-w-[80px]">{t('print.socialStatus')}:</span>
-                                        <div className={`flex gap-4 flex-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                            {[t('print.single'), t('print.married'), t('print.marriedWithDependents'), t('print.widowed'), t('print.divorced')].map((status, i) => {
-                                                const statusKeys = ['single', 'married', 'married', 'widowed', 'divorced'];
-                                                const isChecked = selectedRecord?.social_status === statusKeys[i] && (i !== 2 || selectedRecord?.social_status === 'married');
-                                                if (i === 2 && selectedRecord?.social_status !== 'married') return null;
-                                                return (
-                                                    <div key={status} className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                                        <div className={`w-4 h-4 rounded-full border border-black ${isChecked ? 'bg-black' : ''}`} />
-                                                        <span>{status}</span>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
-                                <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                    <span className="font-bold min-w-[80px]">{t('print.phone')}:</span>
-                                    <div className="flex-1 border-b border-dotted border-black px-2" dir="ltr">{selectedRecord?.phone}</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className={`mt-12 z-10 relative ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-                            <div className="font-bold mb-2">{t('print.declaration')}</div>
-                            <div className={`flex gap-4 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                <span>{t('print.iDeclare')}</span>
-                                <span className="border-b border-dotted border-black flex-1"></span>
-                                <span>{t('print.nationalId')}</span>
-                                <span className="border-b border-dotted border-black flex-1">{selectedRecord?.national_id}</span>
-                                <span>{t('print.declareBelow')}</span>
-                            </div>
-                            <p className="text-justify leading-relaxed mb-8">
-                                {t('print.declarationText')}
-                            </p>
-                            <div className={`flex justify-between items-end mt-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                <div className={`w-1/3 ${isRTL ? 'text-left' : 'text-right'}`}>
-                                    <div className={`flex gap-2 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <span>{t('print.issuedOn')}</span><span>/</span><span>/</span><span>{t('print.year')}</span>
-                                    </div>
-                                </div>
-                                <div className="w-1/3">
-                                    <div className={`mb-2 flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <span>{t('print.acknowledged')}:</span>
-                                        <span className="border-b border-dotted border-black flex-1"></span>
-                                    </div>
-                                    <div className={`mb-2 flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <span>{t('print.signatureName')}:</span>
-                                        <span className="border-b border-dotted border-black flex-1"></span>
-                                    </div>
-                                    <div className={`mb-2 flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <span>{t('print.signature')}:</span>
-                                        <span className="border-b border-dotted border-black flex-1"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <DialogFooter className="print:hidden mt-4">
-                        <Button onClick={handlePrint} className="gap-2 bg-[#1b71bc] hover:bg-[#1b71bc]/90">
-                            <Printer className="h-4 w-4" />
-                            {t('actions.print')}
-                        </Button>
-                        <Button variant="outline" onClick={() => setPrintDialogOpen(false)}>{t('actions.close')}</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
             {/* Review Record Details Dialog — matches MemberManagement DetailPanel layout */}
             <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
                 <DialogContent className={adminDialogStyles.content} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -793,44 +694,33 @@ export default function RegistrationManagementPage() {
 
                         {reviewTab === 'info' && (
                             <div className="p-5 space-y-4">
-                                    <RecordViewSection icon={Mail} title={t('review.accountInfo', 'Account Information')}>
+                                    <RecordViewSection icon={adminFieldIcons.accountSection} title={t('review.accountInfo', 'Account Information')}>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <RecordViewField icon={Mail} label={t('review.email', 'Email')} value={selectedRecord?.email} fallback={t('common.notAvailable')} />
+                                            <RecordViewField icon={adminFieldIcons.email} label={t('review.email', 'Email')} value={selectedRecord?.email} ltr fallback={t('common.notAvailable')} />
                                             <RecordViewField
-                                                icon={Clock}
-                                                label={t('review.registerTime', 'Register Time')}
-                                                value={selectedRecord?.created_at ? (() => {
-                                                    const d = new Date(selectedRecord.created_at);
-                                                    const day = d.getDate().toString().padStart(2, '0');
-                                                    const month = (d.getMonth() + 1).toString().padStart(2, '0');
-                                                    const year = d.getFullYear().toString();
-                                                    const baseDate = `${day}/${month}/${year}`;
-                                                    let hours = d.getHours();
-                                                    const minutes = d.getMinutes().toString().padStart(2, '0');
-                                                    const ampm = hours >= 12 ? 'PM' : 'AM';
-                                                    hours = hours % 12;
-                                                    hours = hours ? hours : 12;
-                                                    const hoursStr = hours.toString().padStart(2, '0');
-                                                    const baseTime = `${hoursStr}:${minutes} ${ampm}`;
-                                                    const displayDate = isRTL ? toArabicDigits(baseDate) : baseDate;
-                                                    const displayTime = isRTL ? toArabicDigits(baseTime).replace('AM', 'ص').replace('PM', 'م').replace('am', 'ص').replace('pm', 'م') : baseTime;
-                                                    return (
-                                                        <>
-                                                            <span>{displayDate}</span>
-                                                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-xs font-normal text-muted-foreground`}>{displayTime}</span>
-                                                        </>
-                                                    );
-                                                })() : undefined}
+                                                icon={adminFieldIcons.registrationDate}
+                                                label={t('review.registrationDate', 'Registration Date')}
+                                                value={formatAdminDate(selectedRecord?.created_at, locale)}
+                                                ltr
+                                                alignEnd={isRTL}
+                                                fallback={t('common.notAvailable')}
+                                            />
+                                            <RecordViewField
+                                                icon={adminFieldIcons.registrationTime}
+                                                label={t('review.registerTime', 'Registration Time')}
+                                                value={formatAdminTime(selectedRecord?.created_at, locale)}
+                                                ltr
+                                                alignEnd={isRTL}
                                                 fallback={t('common.notAvailable')}
                                             />
                                         </div>
                                     </RecordViewSection>
 
-                                    <RecordViewSection icon={User} title={t('review.personalInfo', 'Personal Information')}>
+                                    <RecordViewSection icon={adminFieldIcons.personalSection} title={t('review.personalInfo', 'Personal Information')}>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <RecordViewField icon={User} label={t('review.name', 'Name')} value={getDisplayName(selectedRecord!)} fallback={t('common.notAvailable')} />
+                                            <RecordViewField icon={adminFieldIcons.personalSection} label={t('review.name', 'Name')} value={getDisplayName(selectedRecord!)} fallback={t('common.notAvailable')} />
                                             <RecordViewField
-                                                icon={Globe}
+                                                icon={adminFieldIcons.nationality}
                                                 label={t('review.nationality', 'Nationality')}
                                                 value={(() => {
                                                     const nat = selectedRecord?.nationality;
@@ -842,7 +732,7 @@ export default function RegistrationManagementPage() {
                                                 fallback={t('common.notAvailable')}
                                             />
                                             <RecordViewField
-                                                icon={Calendar}
+                                                icon={adminFieldIcons.birthdate}
                                                 label={t('addMember.birthDate')}
                                                 value={(() => {
                                                     const raw = selectedRecord?.birthdate || selectedRecord?.birth_date;
@@ -860,38 +750,40 @@ export default function RegistrationManagementPage() {
                                                 fallback={t('common.notAvailable')}
                                             />
                                             <RecordViewField
-                                                icon={CreditCard}
+                                                icon={adminFieldIcons.nationalId}
                                                 label={t('table.nationalId')}
                                                 value={isRTL ? toArabicDigits(selectedRecord?.national_id ?? '') : selectedRecord?.national_id}
                                                 ltr
+                                                alignEnd={isRTL}
                                                 fallback={t('common.notAvailable')}
                                             />
                                         </div>
                                     </RecordViewSection>
 
-                                    <RecordViewSection icon={Phone} title={t('review.contactDetails', 'Contact Information')}>
+                                    <RecordViewSection icon={adminFieldIcons.contactSection} title={t('review.contactDetails', 'Contact Information')}>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <RecordViewField
-                                                icon={Phone}
+                                                icon={adminFieldIcons.phone}
                                                 label={t('table.phone')}
                                                 value={isRTL ? toArabicDigits(selectedRecord?.phone ?? '') : selectedRecord?.phone}
                                                 ltr
+                                                alignEnd={isRTL}
                                                 fallback={t('common.notAvailable')}
                                             />
-                                            <RecordViewField icon={MapPin} label={t('addMember.address')} value={selectedRecord?.address} fallback={t('common.notAvailable')} />
+                                            <RecordViewField icon={adminFieldIcons.address} label={t('addMember.address')} value={selectedRecord?.address} fallback={t('common.notAvailable')} />
                                         </div>
                                     </RecordViewSection>
 
                                     <RecordViewSection icon={Award} title={t('review.membershipDetails', 'Membership Details')} variant="accent">
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <RecordViewField
-                                                icon={Award}
+                                                icon={adminFieldIcons.memberType}
                                                 label={t('review.membershipType', 'Member Type')}
                                                 value={selectedRecord?.memberType === 'team_member' ? t('review.sportsTeamMember') : t('review.socialMember')}
                                                 fallback={t('common.notAvailable')}
                                             />
                                             <RecordViewField
-                                                icon={FileBadge}
+                                                icon={adminFieldIcons.membershipPlan}
                                                 label={t('review.membershipPlan', 'Membership Plan')}
                                                 value={getLocalizedText(selectedRecord?.membership_plan_ar, selectedRecord?.membership_plan_en, language) || selectedRecord?.membership_plan}
                                                 fallback={t('common.notAvailable')}
@@ -989,12 +881,6 @@ export default function RegistrationManagementPage() {
                     </div>
 
                     <div className="border-t border-border px-5 py-3 bg-muted/20 shrink-0 flex items-center gap-2">
-                        <AdminActionButton
-                            tooltip={t('actions.print')}
-                            icon={Printer}
-                            variant="print"
-                            onClick={() => openPrint(selectedRecord)}
-                        />
                         <div className="flex gap-2 ms-auto">
                             <Button variant="outline" size="sm" onClick={() => setReviewDialogOpen(false)}>
                                 {t('actions.close')}
@@ -1023,26 +909,6 @@ export default function RegistrationManagementPage() {
                     )}
                 </DialogContent>
             </Dialog>
-
-            {/* CSS for print */}
-            <style>{`
-                @media print {
-                    body * { visibility: hidden; }
-                    #printable-form, #printable-form * { visibility: visible; }
-                    #printable-form {
-                        position: fixed;
-                        left: 0; top: 0;
-                        width: 100%; height: 100%;
-                        margin: 0; padding: 2cm;
-                        background: white;
-                    }
-                    .no-print { display: none !important; }
-                    * {
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
-                    }
-                }
-            `}</style>
         </div>
         </TooltipProvider>
     );

@@ -1,9 +1,30 @@
 import { cn } from '@/lib/utils';
 
 /** Base admin text size (matches --admin-font-size in staffDashboard.css) */
+/** Fonts: heading = Cairo/Plus Jakarta Sans · body/tables = IBM Plex Sans Arabic/Inter */
 export const ADMIN_TEXT = 'text-[15px]' as const;
 export const ADMIN_ICON = 'w-[15px] h-[15px] shrink-0' as const;
 export const ADMIN_ACTION_ICON = '!w-[17px] !h-[17px] shrink-0' as const;
+export const ADMIN_PAGE_SIZE = 10;
+
+/** Semantic font roles — pair with CSS vars in staffDashboard.css */
+export const adminFontClass = {
+  heading: 'admin-font-heading',
+  section: 'admin-font-section',
+  label: 'admin-font-label',
+  value: 'admin-font-value',
+  tableHead: 'admin-font-table-head',
+  tableCell: 'admin-font-table-cell',
+  ui: 'admin-font-ui',
+} as const;
+
+/** Member type pills in admin tables */
+export const adminTableBadgeClass =
+  'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold leading-tight whitespace-nowrap';
+
+/** Status pills — slightly smaller than type badges */
+export const adminTableStatusBadgeClass =
+  'admin-table-status-badge inline-flex items-center gap-0.5 px-1.5 py-px rounded-full font-semibold leading-none whitespace-nowrap';
 
 /** View / edit dialogs — +50px vs max-w-3xl @ 88vh (see .admin-detail-dialog in CSS) */
 export const adminDialogStyles = {
@@ -17,26 +38,27 @@ export const adminTableStyles = {
     'flex-1 overflow-auto [&::-webkit-scrollbar]:hidden',
   /** Action button groups — horizontal, no wrapping */
   actions: 'inline-flex items-center justify-center gap-2 flex-nowrap',
-  table: `w-full ${ADMIN_TEXT} leading-snug`,
+  table: `w-full ${ADMIN_TEXT} leading-snug [font-family:var(--admin-font-body)]`,
   /** Shared icon size for admin table cells, badges, and row actions */
   icon: ADMIN_ICON,
   /** Row action column icons — slightly larger than badges */
   actionIcon: ADMIN_ACTION_ICON,
   /** Icon-only ghost buttons in action columns */
   iconAction:
-    'inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground',
+    'admin-icon-btn inline-flex h-10 w-10 items-center justify-center rounded-md cursor-pointer transition-all duration-150 text-muted-foreground hover:bg-muted hover:text-foreground hover:scale-105 active:scale-95',
   header: 'sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10',
-  head: `px-4 py-2.5 ${ADMIN_TEXT} font-semibold text-muted-foreground whitespace-nowrap select-none align-middle`,
-  headSortable: 'cursor-pointer hover:text-foreground',
+  head: `px-4 py-2.5 ${adminFontClass.tableHead} text-muted-foreground whitespace-nowrap select-none align-middle`,
+  headSortable: 'admin-head-sortable cursor-pointer hover:text-foreground hover:bg-muted/60',
   headCenter: 'text-center',
   headStart: 'text-start',
   body: 'divide-y divide-border',
   row: 'transition-colors hover:bg-muted/40 group',
-  cell: `px-4 py-2.5 ${ADMIN_TEXT} align-middle !h-auto`,
-  cellXs: `px-4 py-2.5 ${ADMIN_TEXT} align-middle !h-auto`,
-  cellMuted: `px-4 py-2.5 ${ADMIN_TEXT} text-muted-foreground align-middle !h-auto`,
-  /** Phone / numeric columns */
-  cellPhone: `px-4 py-2.5 ${ADMIN_TEXT} tabular-nums align-middle !h-auto`,
+  cell: `px-4 py-2.5 ${adminFontClass.tableCell} align-middle !h-auto`,
+  cellXs: `px-4 py-2.5 ${adminFontClass.tableCell} align-middle !h-auto`,
+  cellMuted: `px-4 py-2.5 ${adminFontClass.tableCell} text-muted-foreground align-middle !h-auto`,
+  /** Phone & national ID — shared compact numeric styling */
+  cellPhone: 'px-4 py-2.5 admin-cell-phone align-middle !h-auto',
+  cellNationalId: 'px-4 py-2.5 admin-cell-national-id align-middle !h-auto',
   cellCenter: 'px-4 py-2.5 text-center align-middle !h-auto',
   skeletonRow: 'animate-pulse',
 } as const;
@@ -56,31 +78,43 @@ export function adminHeadClass(options?: {
 
 /** Page chrome outside tables — headers, toolbars, filters, pagination, stats */
 export const adminPageStyles = {
-  header: `px-6 py-4 border-b border-border bg-background shrink-0 ${ADMIN_TEXT}`,
-  headerTitle: 'text-2xl font-bold tracking-tight flex items-center gap-2',
-  headerMeta: `${ADMIN_TEXT} text-muted-foreground`,
+  header: `px-6 py-4 border-b border-border bg-background shrink-0 ${ADMIN_TEXT} ${adminFontClass.ui}`,
+  headerTitle: `text-2xl tracking-tight flex items-center gap-2 ${adminFontClass.heading}`,
+  headerMeta: `${ADMIN_TEXT} text-muted-foreground ${adminFontClass.ui}`,
   statChip:
     `inline-flex items-center gap-1.5 ${ADMIN_TEXT} px-2.5 py-1 rounded-full font-medium`,
   toolbar:
-    `flex items-center gap-3 px-6 py-3 border-b border-border bg-muted/20 shrink-0 flex-wrap ${ADMIN_TEXT}`,
+    `flex items-center gap-3 px-6 py-3 border-b border-border bg-muted/20 shrink-0 flex-wrap ${ADMIN_TEXT} ${adminFontClass.ui}`,
   toolbarSearch: `h-10 ${ADMIN_TEXT} ps-10`,
+  toolbarTabGroup:
+    'inline-flex items-stretch gap-1.5 p-1 rounded-xl border border-border bg-muted/40 shrink-0',
   toolbarTab:
-    `flex items-center gap-1.5 px-3 py-2 rounded-md ${ADMIN_TEXT} font-medium transition-all`,
-  toolbarSelect: `h-10 min-w-[9rem] ${ADMIN_TEXT} shrink-0`,
+    `admin-toolbar-tab flex items-center justify-center gap-2 px-4 py-2 rounded-lg min-w-[7.5rem] ${ADMIN_TEXT} font-semibold cursor-pointer transition-all duration-150`,
+  toolbarTabActive: 'bg-background text-foreground shadow-sm border border-border',
+  toolbarTabInactive: 'text-muted-foreground hover:text-foreground hover:bg-background/70 hover:shadow-sm',
+  toolbarSelect: `h-10 min-w-[9rem] ${ADMIN_TEXT} shrink-0 cursor-pointer`,
   toolbarFilterBtn:
-    `flex items-center gap-1.5 h-10 px-3 rounded-md border ${ADMIN_TEXT} transition-colors`,
+    `admin-filter-btn flex items-center gap-1.5 h-10 px-3 rounded-md border ${ADMIN_TEXT} cursor-pointer transition-all duration-150 hover:bg-muted hover:border-muted-foreground/30 hover:text-foreground`,
   toolbarResults: `inline-flex items-center ${ADMIN_TEXT} text-muted-foreground`,
   pagination:
-    `flex items-center justify-between px-4 py-2.5 border-t border-border bg-muted/20 shrink-0 ${ADMIN_TEXT}`,
+    `flex items-center justify-between px-4 py-2.5 border-t border-border bg-muted/20 shrink-0 ${ADMIN_TEXT} ${adminFontClass.ui}`,
   paginationMeta: `${ADMIN_TEXT} text-muted-foreground`,
-  paginationBtn: `h-10 px-4 ${ADMIN_TEXT}`,
+  paginationBtn: `h-10 px-4 ${ADMIN_TEXT} cursor-pointer transition-colors duration-150 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50`,
   icon: ADMIN_ICON,
   refreshBtn:
-    `flex items-center gap-2 px-3 py-2 rounded-lg border border-border hover:bg-muted transition-colors ${ADMIN_TEXT} text-muted-foreground disabled:opacity-40`,
+    `admin-refresh-btn flex items-center gap-2 px-3 py-2 rounded-lg border border-border cursor-pointer transition-all duration-150 hover:bg-muted hover:border-muted-foreground/30 hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed ${ADMIN_TEXT} text-muted-foreground`,
 } as const;
 
+export function getAdminTotalPages(totalCount: number, pageSize = ADMIN_PAGE_SIZE): number {
+  return Math.max(1, Math.ceil(totalCount / pageSize));
+}
+
+export function paginateAdminRows<T>(rows: T[], page: number, pageSize = ADMIN_PAGE_SIZE): T[] {
+  return rows.slice((page - 1) * pageSize, page * pageSize);
+}
+
 export function adminCellClass(options?: {
-  size?: 'default' | 'xs' | 'muted' | 'phone';
+  size?: 'default' | 'xs' | 'muted' | 'phone' | 'nationalId';
   center?: boolean;
   className?: string;
 }) {
@@ -91,6 +125,8 @@ export function adminCellClass(options?: {
         ? adminTableStyles.cellMuted
         : options?.size === 'phone'
           ? adminTableStyles.cellPhone
-          : adminTableStyles.cell;
+          : options?.size === 'nationalId'
+            ? adminTableStyles.cellNationalId
+            : adminTableStyles.cell;
   return cn(base, options?.center && 'text-center', options?.className);
 }

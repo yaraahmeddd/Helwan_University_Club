@@ -8,6 +8,7 @@
     "teamMembers": "أعضاء فريق",
     "refresh": "تحديث",
     "searchPlaceholder": "بحث بالاسم، الرقم القومي، أو الهاتف...",
+    "filterByDate": "تصفية حسب التاريخ",
     "all": "الكل",
     "results": "نتيجة",
     "loading": "جارٍ التحميل...",
@@ -138,6 +139,7 @@
     "close": "إغلاق",
     "accountInfo": "معلومات الحساب",
     "email": "البريد الإلكتروني",
+    "registrationDate": "تاريخ التسجيل",
     "registerTime": "وقت التسجيل",
     "status": "الحالة",
     "personalInfo": "المعلومات الشخصية",
@@ -160,5 +162,12 @@
   },
   "common": {
     "notAvailable": "—"
+  },
+  "pagination": {
+    "showingNone": "عرض 0 من 0",
+    "showing": "عرض {{from}}-{{to}} من {{total}}",
+    "page": "صفحة {{page}} من {{totalPages}}",
+    "previous": "السابق",
+    "next": "التالي"
   }
 }

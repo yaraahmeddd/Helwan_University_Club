@@ -13,7 +13,8 @@ import { AdminActionButton, AdminRowActions, AdminViewButton } from "../componen
 import { useToast } from "../hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../hooks/useLanguage";
-import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
 import { getLocalizedText } from "../lib/localizedDisplay";
 import api from "../services/axios";
@@ -58,7 +59,7 @@ type MemberTypesResponse = {
   data?: MembershipTypeItem[];
 };
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = ADMIN_PAGE_SIZE;
 
 export default function MembershipsPage() {
   const { t } = useTranslation("MemberShipsPage");
@@ -412,20 +413,13 @@ export default function MembershipsPage() {
           </Table>
         </motion.div>
 
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between pt-2">
-            <p className="text-sm text-muted-foreground">
-              {t("pagination.showing", { start: (page - 1) * PAGE_SIZE + 1, end: Math.min(page * PAGE_SIZE, filtered.length), total: filtered.length })}
-            </p>
-            <div className="flex items-center gap-1">
-              <Button size="sm" variant="outline" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>{t("pagination.prev")}</Button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <Button key={p} size="sm" variant={p === page ? "default" : "outline"} onClick={() => setPage(p)}>{p}</Button>
-              ))}
-              <Button size="sm" variant="outline" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>{t("pagination.next")}</Button>
-            </div>
-          </div>
-        )}
+        <AdminPagination
+          page={page}
+          totalCount={filtered.length}
+          onPageChange={setPage}
+          isRTL={isRTL}
+          disabled={isLoading}
+        />
 
         <Dialog open={selectedPlan !== null} onOpenChange={() => setSelectedPlan(null)}>
           <DialogContent className="max-w-2xl" dir={isRTL ? "rtl" : "ltr"}>

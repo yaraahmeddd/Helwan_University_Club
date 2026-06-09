@@ -74,6 +74,8 @@
     "fieldNationality": "Nationality",
     "fieldBirthdate": "Birthdate",
     "fieldJoinDate": "Registration Date",
+    "fieldRegistrationDate": "Registration Date",
+    "fieldRegistrationTime": "Registration Time",
     "fieldEmail": "Email",
     "fieldPhone": "Phone",
     "fieldAddress": "Address",

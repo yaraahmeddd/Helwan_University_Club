@@ -1316,8 +1316,8 @@ export default function SportsPage() {
                             showAvatar={false}
                           />
                         </TableCell>
-                        <TableCell className={adminCellClass({ size: "xs", className: "font-mono" })} dir="ltr">{m.national_id}</TableCell>
-                        <TableCell className={adminCellClass()} dir="ltr">{m.phone ?? "—"}</TableCell>
+                        <TableCell className={adminCellClass({ size: 'nationalId' })} dir="ltr">{m.national_id}</TableCell>
+                        <TableCell className={adminCellClass({ size: 'phone' })} dir="ltr">{m.phone ?? "—"}</TableCell>
                         <TableCell className={adminCellClass()}>
                           <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusCls}`}>
                             {statusLabel}

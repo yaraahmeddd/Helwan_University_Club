@@ -19,7 +19,8 @@ import type { Locale } from "date-fns";
 
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../hooks/useLanguage";
-import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
 import { getLocalizedText, localeFontFamily } from "../lib/localizedDisplay";
 import { RoleGuard } from "../components/StaffPagesComponents/RoleGuard";
@@ -161,7 +162,7 @@ export default function ManageInvitationsPage() {
   const dateLocale = language === "ar" ? ar : enUS;
 
   const [invitations, setInvitations] = useState<Invitation[]>([]);
-  const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 15, total: 0, pages: 1 });
+  const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: ADMIN_PAGE_SIZE, total: 0, pages: 1 });
   const [loading, setLoading] = useState(true);
   
   // Filters
@@ -179,7 +180,7 @@ export default function ManageInvitationsPage() {
     try {
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: "15",
+        limit: ADMIN_PAGE_SIZE.toString(),
       });
       if (search.trim()) params.append("search", search.trim());
       if (statusFilter !== "all") params.append("status", statusFilter);
@@ -190,10 +191,10 @@ export default function ManageInvitationsPage() {
 
       if (res.data?.success) {
         setInvitations(res.data.data ?? []);
-        setPagination(res.data.pagination ?? { page: 1, limit: 15, total: 0, pages: 1 });
+        setPagination(res.data.pagination ?? { page: 1, limit: ADMIN_PAGE_SIZE, total: 0, pages: 1 });
       } else {
         setInvitations([]);
-        setPagination({ page: 1, limit: 15, total: 0, pages: 1 });
+        setPagination({ page: 1, limit: ADMIN_PAGE_SIZE, total: 0, pages: 1 });
       }
     } catch {
       setInvitations([]);
@@ -284,7 +285,7 @@ export default function ManageInvitationsPage() {
         </div>
       </div>
 
-      {/* Controls: Filters & Pagination */}
+      {/* Controls: Filters */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
         <div className="flex flex-col sm:flex-row gap-3 items-center w-full xl:w-auto">
           <div className="relative w-full sm:w-[320px]">
@@ -308,69 +309,10 @@ export default function ManageInvitationsPage() {
             </SelectContent>
           </Select>
         </div>
-
-        {/* Top-Left Pagination */}
-        {pagination.pages > 1 && (
-          <div className="flex flex-col sm:flex-row items-center gap-3 xl:me-auto">
-            <span className="text-sm font-medium text-slate-500">
-              {t('pagination.page', { page: pagination.page, pages: pagination.pages })}
-            </span>
-            <div className="flex items-center gap-1 bg-slate-50 p-1.5 rounded-lg border border-slate-200 shadow-sm">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 rounded-md px-3 text-sm font-semibold hover:bg-white hover:shadow-sm hover:text-primary transition-all"
-                disabled={pagination.page <= 1}
-                onClick={() => fetchData(pagination.page - 1)}
-              >
-                {t('pagination.previous')}
-              </Button>
-              
-              <div className="hidden sm:flex items-center gap-1 mx-1">
-                {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
-                  let pageNum = i + 1;
-                  if (pagination.pages > 5) {
-                     if (pagination.page > 3) {
-                       pageNum = pagination.page - 2 + i;
-                     }
-                     if (pageNum > pagination.pages) {
-                       pageNum = pagination.pages - (4 - i);
-                     }
-                  }
-                  return (
-                    <Button
-                      key={pageNum}
-                      variant={pagination.page === pageNum ? "default" : "ghost"}
-                      size="sm"
-                      className={`h-8 w-8 p-0 rounded-md font-bold transition-all ${
-                        pagination.page === pageNum 
-                          ? 'shadow-md ring-1 ring-primary/50' 
-                          : 'hover:bg-white hover:shadow-sm text-slate-600 hover:text-primary'
-                      }`}
-                      onClick={() => fetchData(pageNum)}
-                    >
-                      {pageNum}
-                    </Button>
-                  );
-                })}
-              </div>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 rounded-md px-3 text-sm font-semibold hover:bg-white hover:shadow-sm hover:text-primary transition-all"
-                disabled={pagination.page >= pagination.pages}
-                onClick={() => fetchData(pagination.page + 1)}
-              >
-                {t('pagination.next')}
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-border shadow-sm bg-background overflow-hidden">
+      <div className="rounded-xl border border-border shadow-sm bg-background overflow-hidden flex flex-col">
         <div className={adminTableStyles.container}>
           <Table>
             <TableHeader className={adminTableStyles.header}>
@@ -497,6 +439,14 @@ export default function ManageInvitationsPage() {
             </TableBody>
           </Table>
         </div>
+        <AdminPagination
+          page={pagination.page}
+          totalCount={pagination.total}
+          pageSize={pagination.limit}
+          onPageChange={(p) => void fetchData(p)}
+          isRTL={isRTL}
+          disabled={loading}
+        />
       </div>
 
       {/* Slide-over Detail Panel */}

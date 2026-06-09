@@ -6,12 +6,13 @@ import { Label } from "../components/StaffPagesComponents/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "../components/StaffPagesComponents/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/StaffPagesComponents/ui/select";
 import { Switch } from "../components/StaffPagesComponents/ui/switch";
-import { Plus, Search, RefreshCw, ChevronRight, ChevronLeft, MapPin, Pencil, Trash2, Link, Loader2, Eye, XCircle } from "lucide-react";
+import { Plus, Search, RefreshCw, MapPin, Pencil, Trash2, Link, Loader2, Eye, XCircle } from "lucide-react";
 import { useToast } from "../hooks/use-toast";
 import api from "../services/axios";
 import { useTranslation } from "react-i18next";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
-import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
 import { getLocalizedText } from "../lib/localizedDisplay";
 import { useLanguage } from "../hooks/useLanguage";
@@ -41,7 +42,7 @@ export interface Branch {
     sports_count?: number; 
 }
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = ADMIN_PAGE_SIZE;
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
@@ -379,55 +380,8 @@ export default function BranchManagementPage() {
             <div className="flex flex-1 p-6 overflow-hidden">
                 <div className="flex flex-col w-full bg-white border border-zinc-200/80 rounded-2xl shadow-sm overflow-hidden flex-1">
 
-                    {/* Toolbar: Search + Refresh + Pagination */}
+                    {/* Toolbar: Search + Refresh */}
                     <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-100 bg-white shrink-0 flex-wrap">
-
-                        {/* Pagination component */}
-                        <div className="flex items-center gap-1.5 shrink-0 bg-zinc-50/80 p-1 rounded-lg border border-zinc-100">
-                            <button
-                                disabled={page <= 1 || loading}
-                                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                                className="p-1.5 rounded-md hover:bg-white hover:shadow-sm text-zinc-500 transition-all disabled:opacity-40"
-                                aria-label="الصفحة السابقة"
-                            >
-                                <ChevronRight className="w-4 h-4" />
-                            </button>
-
-                            {Array.from({ length: totalPages }, (_, i) => i + 1)
-                                .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
-                                .reduce<(number | "…")[]>((acc, p, idx, arr) => {
-                                    if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("…");
-                                    acc.push(p);
-                                    return acc;
-                                }, [])
-                                .map((p, i) =>
-                                    p === "…" ? (
-                                        <span key={`el-${i}`} className="px-1.5 text-zinc-400 text-xs font-bold">…</span>
-                                    ) : (
-                                        <button
-                                            key={p}
-                                            onClick={() => setPage(p as number)}
-                                            className={`min-w-[32px] h-8 rounded-md text-xs font-bold transition-all ${page === p
-                                                ? "bg-zinc-900 text-white shadow-sm"
-                                                : "hover:bg-white hover:shadow-sm text-zinc-600 hover:text-zinc-900"
-                                                }`}
-                                        >
-                                            {p}
-                                        </button>
-                                    )
-                                )}
-
-                            <button
-                                disabled={page >= totalPages || loading}
-                                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                                className="p-1.5 rounded-md hover:bg-white hover:shadow-sm text-zinc-500 transition-all disabled:opacity-40"
-                                aria-label="الصفحة التالية"
-                            >
-                                <ChevronLeft className="w-4 h-4" />
-                            </button>
-                        </div>
-
-                        <div className="flex-1" />
 
                         {/* Search Input */}
                         <div className="relative w-full sm:w-80">
@@ -660,6 +614,14 @@ export default function BranchManagementPage() {
                             </Table>
                         )}
                     </div>
+
+                    <AdminPagination
+                        page={page}
+                        totalCount={filteredRows.length}
+                        onPageChange={setPage}
+                        isRTL={isRTL}
+                        disabled={loading}
+                    />
 
                 </div>
             </div>

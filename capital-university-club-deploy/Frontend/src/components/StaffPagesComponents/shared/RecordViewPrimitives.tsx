@@ -2,6 +2,7 @@ import React from 'react';
 import { FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProfileAvatar } from './ProfileAvatar';
+import { adminFontClass } from './adminTableStyles';
 
 /** Tab bar — matches Registration review dialog. */
 export function RecordViewTabs<T extends string>({
@@ -21,10 +22,11 @@ export function RecordViewTabs<T extends string>({
           type="button"
           onClick={() => onChange(tab.key)}
           className={cn(
-            'px-5 py-2.5 text-sm font-semibold transition-all border-b-2 -mb-px whitespace-nowrap',
+            'admin-record-tab px-5 py-2.5 text-sm transition-all duration-150 border-b-2 -mb-px whitespace-nowrap cursor-pointer',
+            adminFontClass.ui,
             active === tab.key
               ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground',
+              : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/40',
           )}
         >
           {tab.label}
@@ -64,7 +66,7 @@ export function RecordViewSection({
         )}
       >
         <Icon className={cn('w-4 h-4', accent ? 'text-primary' : 'text-primary')} />
-        <h4 className={cn('font-semibold text-sm', accent && 'text-primary')}>{title}</h4>
+        <h4 className={cn('text-sm', adminFontClass.section, accent && 'text-primary')}>{title}</h4>
       </div>
       <div className="p-4">{children}</div>
     </div>
@@ -89,7 +91,7 @@ export function RecordViewEditableField({
 
   return (
     <div className={cn('space-y-1.5', className)}>
-      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+      <p className={cn('text-muted-foreground flex items-center gap-1.5', adminFontClass.label)}>
         <Icon className="w-3.5 h-3.5 shrink-0" />
         {label}
       </p>
@@ -104,12 +106,15 @@ export function RecordViewField({
   label,
   value,
   ltr = false,
+  alignEnd = false,
   fallback = '—',
 }: {
   icon: React.ElementType;
   label: string;
   value?: React.ReactNode;
   ltr?: boolean;
+  /** Right-align LTR values (phone, national ID) in RTL layouts */
+  alignEnd?: boolean;
   fallback?: string;
 }) {
   const display =
@@ -121,12 +126,17 @@ export function RecordViewField({
 
   return (
     <div className="space-y-1">
-      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+      <p className={cn('text-muted-foreground flex items-center gap-1.5', adminFontClass.label)}>
         <Icon className="w-3.5 h-3.5 shrink-0" />
         {label}
       </p>
       <div
-        className="text-sm font-semibold leading-snug break-words"
+        className={cn(
+          adminFontClass.value,
+          'break-words',
+          ltr && 'tabular-nums',
+          alignEnd && 'text-end w-full',
+        )}
         dir={ltr ? 'ltr' : undefined}
       >
         {display}
@@ -153,7 +163,7 @@ export function RecordViewProfileHeader({
     <div className="flex items-center gap-4 p-4 bg-muted/40 rounded-xl">
       <ProfileAvatar photoUrl={photoUrl} alt={photoAlt} size="xl" rounded="xl" />
       <div className="flex-1 min-w-0 space-y-1">
-        <h3 className="text-xl font-bold leading-tight truncate">{name || '—'}</h3>
+        <h3 className={cn('text-xl leading-tight truncate', adminFontClass.heading)}>{name || '—'}</h3>
         {subtitle && (
           <p className="text-xs text-muted-foreground truncate" dir="ltr">
             {subtitle}

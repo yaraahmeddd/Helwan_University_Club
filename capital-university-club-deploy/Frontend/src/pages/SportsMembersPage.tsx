@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { Search, RefreshCw, Trophy, ChevronRight, ChevronLeft, Loader2, Users } from "lucide-react";
+import { Search, RefreshCw, Trophy, Loader2, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   Dialog,
@@ -21,7 +21,8 @@ import {
 import api from "../services/api";
 import { useToast } from "../hooks/use-toast";
 import { useLanguage } from "../hooks/useLanguage";
-import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
 import { getLocalizedText, type DisplayLanguage } from "../lib/localizedDisplay";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
@@ -79,7 +80,7 @@ type MemberRow = {
   sports: SportItem[];
 };
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = ADMIN_PAGE_SIZE;
 const MAX_SPORTS_PER_MEMBER = 4;
 
 const isActiveStatus = (status: string) => status === "active";
@@ -628,54 +629,9 @@ export default function SportsMembersPage() {
         </Badge>
 
         <div className="flex-1" />
-
-        {totalPages > 1 && (
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1 || isLoading}
-              className="p-2 rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-40"
-              aria-label={t("pagination.previous")}
-            >
-              {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-            </button>
-
-            {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
-              .reduce<(number | "...")[]>((acc, p, idx, arr) => {
-                if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
-                acc.push(p);
-                return acc;
-              }, [])
-              .map((p, i) =>
-                p === "..." ? (
-                  <span key={`el-${i}`} className="px-1.5 text-muted-foreground text-xs">...</span>
-                ) : (
-                  <button
-                    key={p}
-                    onClick={() => setCurrentPage(p as number)}
-                    className={`min-w-[36px] h-9 rounded-md text-xs font-medium transition-colors border ${currentPage === p
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "border-border hover:bg-muted text-foreground"
-                      }`}
-                  >
-                    {p}
-                  </button>
-                )
-              )}
-
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages || isLoading}
-              className="p-2 rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-40"
-              aria-label={t("pagination.next")}
-            >
-              {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            </button>
-          </div>
-        )}
       </div>
 
+      <div className="flex flex-col flex-1 overflow-hidden">
       <div className={adminTableStyles.container}>
         {isLoading ? (
           <div className="py-20 text-center text-muted-foreground">
@@ -768,6 +724,15 @@ export default function SportsMembersPage() {
             </TableBody>
           </Table>
         )}
+      </div>
+
+      <AdminPagination
+        page={currentPage}
+        totalCount={totalCount}
+        onPageChange={setCurrentPage}
+        isRTL={isRTL}
+        disabled={isLoading}
+      />
       </div>
 
       <Dialog open={showModal} onOpenChange={(open) => {

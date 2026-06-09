@@ -77,5 +77,12 @@
   "pageNotFound": {
     "message": "Sorry! Page not found",
     "goBack": "Go back to previous page"
+  },
+  "pagination": {
+    "showingNone": "Showing 0 of 0",
+    "showing": "Showing {{from}}–{{to}} of {{total}}",
+    "page": "Page {{page}} of {{totalPages}}",
+    "previous": "Previous",
+    "next": "Next"
   }
 }

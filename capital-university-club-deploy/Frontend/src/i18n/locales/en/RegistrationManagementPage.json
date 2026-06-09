@@ -8,6 +8,7 @@
     "teamMembers": "Team Members",
     "refresh": "Refresh",
     "searchPlaceholder": "Search by name, national ID, or phone...",
+    "filterByDate": "Filter by Date",
     "all": "All",
     "results": "results",
     "loading": "Loading...",
@@ -138,7 +139,8 @@
     "close": "Close",
     "accountInfo": "Account Information",
     "email": "Email",
-    "registerTime": "Register Time",
+    "registrationDate": "Registration Date",
+    "registerTime": "Registration Time",
     "status": "Status",
     "personalInfo": "Personal Information",
     "name": "Name",
@@ -160,5 +162,12 @@
   },
   "common": {
     "notAvailable": "—"
+  },
+  "pagination": {
+    "showingNone": "Showing 0 of 0",
+    "showing": "Showing {{from}}-{{to}} of {{total}}",
+    "page": "Page {{page}} of {{totalPages}}",
+    "previous": "Previous",
+    "next": "Next"
   }
 }
