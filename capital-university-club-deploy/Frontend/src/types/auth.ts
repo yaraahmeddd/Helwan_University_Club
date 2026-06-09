@@ -15,6 +15,12 @@ export type Role =
 
 export interface UserToken {
   fullName: string;
+  name_ar?: string;
+  name_en?: string;
+  first_name_ar?: string;
+  last_name_ar?: string;
+  first_name_en?: string;
+  last_name_en?: string;
   role: Role;
   privileges: string[];
   staff_id?: number;

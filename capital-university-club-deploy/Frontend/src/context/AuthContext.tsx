@@ -95,6 +95,10 @@ function buildUserToken(data: any): UserToken {
   const rawNameEn = (source?.name_en || data?.name_en || "").trim();
   const rawName = (source?.name || data?.name || "").trim();
   const existingFullName = (source?.fullName || data?.fullName || "").trim();
+  const first_name_ar = (source?.first_name_ar ?? data?.first_name_ar ?? "").trim() || undefined;
+  const last_name_ar = (source?.last_name_ar ?? data?.last_name_ar ?? "").trim() || undefined;
+  const first_name_en = (source?.first_name_en ?? data?.first_name_en ?? "").trim() || undefined;
+  const last_name_en = (source?.last_name_en ?? data?.last_name_en ?? "").trim() || undefined;
 
   const fullName = existingFullName || rawNameAr || rawNameEn || rawName || "User";
 
@@ -117,6 +121,12 @@ function buildUserToken(data: any): UserToken {
 
   const builtUser = {
     fullName,
+    ...(rawNameAr && { name_ar: rawNameAr }),
+    ...(rawNameEn && { name_en: rawNameEn }),
+    ...(first_name_ar && { first_name_ar }),
+    ...(last_name_ar && { last_name_ar }),
+    ...(first_name_en && { first_name_en }),
+    ...(last_name_en && { last_name_en }),
     email: source?.email ?? data?.email,
     photo: resolveFileUrl(rawPhoto) ?? undefined,
     role,

@@ -192,12 +192,23 @@
   },
   "editModal": {
     "title": "Edit Member Data",
-    "description": "Edit personal and contact information",
+    "description": "Update personal and registration details. Documents can be viewed in the member profile only.",
+    "sections": {
+      "account": "Account",
+      "personal": "Personal Information",
+      "contact": "Contact Information",
+      "student": "Student Details",
+      "employee": "Employee Details",
+      "retired": "Retired Employee Details",
+      "visitor": "Visitor / Foreigner Details"
+    },
     "tabs": {
       "personalInfo": "👤 Personal Data",
       "docsAndPhotos": "🖼️ Photos & Documents"
     },
     "fields": {
+      "email": "Email",
+      "nationalId": "National ID",
       "firstNameAr": "First Name (Arabic)",
       "lastNameAr": "Last Name (Arabic)",
       "firstNameEn": "First Name (English)",
@@ -207,9 +218,30 @@
       "phone": "Phone",
       "nationality": "Nationality",
       "address": "Address",
-      "healthStatus": "Health Status"
+      "healthStatus": "Health Status",
+      "faculty": "Faculty",
+      "graduationYear": "Graduation Year",
+      "profession": "Profession",
+      "departmentEn": "Department (English)",
+      "departmentAr": "Department (Arabic)",
+      "salary": "Salary",
+      "professionCode": "Profession Code",
+      "formerDepartmentEn": "Former Department (English)",
+      "formerDepartmentAr": "Former Department (Arabic)",
+      "retirementDate": "Retirement Date",
+      "lastSalary": "Last Salary",
+      "passportNumber": "Passport Number",
+      "country": "Country",
+      "visitorType": "Visitor Type",
+      "visaStatus": "Visa Status",
+      "employmentStatus": "Employment Status",
+      "durationMonths": "Duration (Months)",
+      "jobTitleEn": "Job Title (English)",
+      "jobTitleAr": "Job Title (Arabic)"
     },
     "placeholders": {
+      "email": "member@example.com",
+      "nationalId": "29001011234001",
       "firstNameAr": "Mohamed",
       "lastNameAr": "Ahmed",
       "firstNameEn": "Mohamed",

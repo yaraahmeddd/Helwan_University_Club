@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
 import { TableHead } from '../ui/table';
-import { adminHeadClass } from './adminTableStyles';
+import { adminHeadClass, adminTableStyles } from './adminTableStyles';
 import { cn } from '@/lib/utils';
 
 export type SortDirection = 'asc' | 'desc';
@@ -25,12 +25,12 @@ function SortIcon({
   dir?: SortDirection;
 }) {
   if (field !== active) {
-    return <ChevronsUpDown className="w-3 h-3 opacity-40" />;
+    return <ChevronsUpDown className={`${adminTableStyles.icon} opacity-40`} />;
   }
   return dir === 'asc' ? (
-    <ChevronUp className="w-3 h-3 text-primary" />
+    <ChevronUp className={`${adminTableStyles.icon} text-primary`} />
   ) : (
-    <ChevronDown className="w-3 h-3 text-primary" />
+    <ChevronDown className={`${adminTableStyles.icon} text-primary`} />
   );
 }
 

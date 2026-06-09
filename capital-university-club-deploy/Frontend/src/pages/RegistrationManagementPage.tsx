@@ -11,7 +11,7 @@ import { useToast } from "../hooks/use-toast";
 import { RoleGuard } from "../components/StaffPagesComponents/RoleGuard";
 import api from "../services/axios";
 import { useLocalizedTranslation } from "../hooks/useLocalizedTranslation";
-import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { adminTableStyles, adminHeadClass, adminCellClass, adminDialogStyles } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
 import {
     RecordViewTabs,
@@ -745,14 +745,14 @@ export default function RegistrationManagementPage() {
 
             {/* Review Record Details Dialog — matches MemberManagement DetailPanel layout */}
             <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
-                <DialogContent className="max-w-3xl w-full p-0 overflow-hidden" style={{ maxHeight: '88vh' }} dir={isRTL ? 'rtl' : 'ltr'}>
+                <DialogContent className={adminDialogStyles.content} dir={isRTL ? 'rtl' : 'ltr'}>
                     <DialogHeader className="sr-only">
                         <DialogTitle>{t('review.title')}</DialogTitle>
                         <DialogDescription>{t('review.title')}</DialogDescription>
                     </DialogHeader>
 
                     {selectedRecord && (
-                    <div className="flex flex-col" style={{ maxHeight: '88vh' }}>
+                    <div className={adminDialogStyles.panel}>
                         <div className="px-6 pt-5 pb-0 border-b border-border shrink-0">
                             <RecordViewProfileHeader
                                 photoUrl={selectedRecord.photo ? getFileUrl(selectedRecord.photo) : null}

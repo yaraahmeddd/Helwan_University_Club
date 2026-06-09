@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "../../../context/AuthContext";
 import type { Role } from "../../../types/auth";
@@ -13,12 +13,14 @@ import {
   Dumbbell,
   MapPin,
   ChevronDown,
+  Languages,
 } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { resolveFileUrl } from "../../../utils/fileUrl";
 import { useLanguage } from "../../../hooks/useLanguage";
 import { useTranslation } from "react-i18next";
 import api from "../../../services/axios";
+import { buildPersonName, getLocalizedText, resolveDisplayLanguage } from "../../../lib/localizedDisplay";
 
 const hucLogo = "/assets/HUC_logo.jpeg";
 const DEFAULT_CLUB_NAME_AR = "نادي جامعة العاصمة";
@@ -101,34 +103,32 @@ const LogoutModal = ({ isOpen, onClose, onConfirm }: LogoutModalProps) => {
 export function Navbar() {
   const { user, logout } = useAuth();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [avatarFailed, setAvatarFailed] = useState(false);
-  const { language } = useLanguage();
+  const { language, isRTL } = useLanguage();
   const { t, i18n } = useTranslation(["nav"]);
   const location = useLocation();
+  const navigate = useNavigate();
   const [fetchedPhotoUrl, setFetchedPhotoUrl] = useState<string | undefined>(undefined);
 
   if (!user) return null;
 
   const isMember = user.role === "MEMBER";
-  const isEnglish = language === "en";
+  const displayLanguage = resolveDisplayLanguage(language);
 
-  const buildName = (...parts: Array<unknown>) =>
-    parts
-      .map((p) => (typeof p === "string" ? p.trim() : ""))
-      .filter(Boolean)
-      .join(" ")
-      .trim();
-
-  const displayNameAr =
-    buildName((user as any)?.first_name_ar, (user as any)?.last_name_ar) ||
-    (typeof (user as any)?.name_ar === "string" ? (user as any).name_ar.trim() : "");
-  const displayNameEn =
-    buildName((user as any)?.first_name_en, (user as any)?.last_name_en) ||
-    (typeof (user as any)?.name_en === "string" ? (user as any).name_en.trim() : "");
-  const displayUserName = isEnglish
-    ? (displayNameEn || displayNameAr || user.fullName)
-    : (displayNameAr || displayNameEn || user.fullName);
+  const personName = buildPersonName(
+    {
+      firstNameAr: user.first_name_ar,
+      lastNameAr: user.last_name_ar,
+      firstNameEn: user.first_name_en,
+      lastNameEn: user.last_name_en,
+    },
+    displayLanguage,
+  );
+  const displayUserName =
+    personName.primary ||
+    getLocalizedText(user.name_ar, user.name_en, displayLanguage) ||
+    user.fullName;
 
   const roleLabel = t(`roles.${user.role}`, {
     defaultValue: ROLE_LABELS[user.role as Role] ?? user.role,
@@ -213,12 +213,139 @@ export function Navbar() {
   const isActiveMemberTab = (path: string) =>
     location.pathname === path || location.pathname.startsWith(`${path}/`);
 
+  const profilePath = isMember ? "/member/dashboard/profile" : "/staff/dashboard/profile";
+
+  const renderAvatar = () =>
+    effectivePhotoUrl && !avatarFailed ? (
+      <div className="h-9 w-9 rounded-full overflow-hidden shrink-0 border border-border">
+        <img
+          src={effectivePhotoUrl}
+          alt={displayUserName}
+          className="h-full w-full object-cover"
+          onError={() => setAvatarFailed(true)}
+        />
+      </div>
+    ) : (
+      <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0 border border-border">
+        <User className="h-4 w-4 text-muted-foreground" />
+      </div>
+    );
+
+  const renderIdentityName = () => (
+    <p className="hidden lg:block text-sm font-semibold text-foreground truncate max-w-[120px] sm:max-w-[180px] min-w-0">
+      {displayUserName}
+    </p>
+  );
+
+  const renderIdentityRole = () => (
+    <Badge className="hidden lg:inline-flex bg-huc-orange text-huc-orange-foreground text-xs px-2.5 py-0.5 rounded-full shrink-0 whitespace-nowrap">
+      {roleLabel}
+    </Badge>
+  );
+
+  const renderProfileMenu = () => (
+    <div className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => setProfileMenuOpen((v) => !v)}
+        className="flex items-center gap-1 rounded-full p-0.5 hover:bg-muted transition-colors cursor-pointer border border-transparent hover:border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        aria-expanded={profileMenuOpen}
+        aria-haspopup="menu"
+        aria-label={t("navbar.profile")}
+        title={t("navbar.profile")}
+      >
+        {renderAvatar()}
+        <ChevronDown
+          className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${profileMenuOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {profileMenuOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            aria-hidden
+            onClick={() => setProfileMenuOpen(false)}
+          />
+          <div
+            className="absolute top-full end-0 mt-2 w-56 bg-card rounded-2xl shadow-xl border border-border overflow-hidden z-50 animate-fade-in"
+            role="menu"
+            dir={isRTL ? "rtl" : "ltr"}
+          >
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setProfileMenuOpen(false);
+                navigate(profilePath);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 text-start text-sm font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
+            >
+              <User className="h-4 w-4 text-muted-foreground shrink-0" />
+              {t("navbar.profile")}
+            </button>
+
+            <div className="h-px bg-border mx-3" />
+
+            <div className="px-4 py-2 text-xs font-bold text-muted-foreground flex items-center gap-2">
+              <Languages className="h-3.5 w-3.5" />
+              {t("navbar.language")}
+            </div>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                void i18n.changeLanguage("ar");
+                setProfileMenuOpen(false);
+              }}
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-start text-sm font-semibold transition-colors cursor-pointer ${i18n.language.startsWith("ar") ? "bg-blue-50 text-[#2596be]" : "text-foreground hover:bg-muted"}`}
+            >
+              <img src="https://flagcdn.com/w20/eg.png" alt="AR" className="w-5 rounded-sm shadow-sm" />
+              {t("languageOptions.ar")}
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                void i18n.changeLanguage("en");
+                setProfileMenuOpen(false);
+              }}
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-start text-sm font-semibold transition-colors cursor-pointer ${i18n.language.startsWith("en") ? "bg-blue-50 text-[#2596be]" : "text-foreground hover:bg-muted"}`}
+            >
+              <img src="https://flagcdn.com/w20/gb.png" alt="EN" className="w-5 rounded-sm shadow-sm" />
+              {t("languageOptions.en")}
+            </button>
+
+            <div className="h-px bg-border mx-3 my-1" />
+
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setProfileMenuOpen(false);
+                setShowLogoutModal(true);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 text-start text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+            >
+              <LogOut className="h-4 w-4 shrink-0" />
+              {t("navbar.logout")}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+
   return (
     <>
       <header className="fixed top-0 right-0 left-0 z-40 h-16 bg-card border-b border-border">
         <div className="px-4 sm:px-6 h-full">
-          <div className="flex flex-row h-full items-center gap-2 sm:gap-4">
-            <div className={`${isMember ? "w-[140px] sm:w-[200px] xl:w-[260px]" : "flex-1"} flex items-center gap-2 sm:gap-3 min-w-0`}>
+          <div className="flex flex-row h-full items-center gap-2 sm:gap-4 w-full">
+            <div
+              className={`flex items-center gap-2 sm:gap-3 min-w-0 shrink-0 ${
+                isMember ? "w-[140px] sm:w-[200px] xl:w-[260px]" : ""
+              }`}
+            >
               <img
                 src={hucLogo}
                 alt="HUC"
@@ -243,7 +370,7 @@ export function Navbar() {
                         key={tab.path}
                         to={tab.path}
                         title={t(tab.title)}
-                        className="relative flex-1 min-w-0 h-8 sm:h-9 px-1.5 rounded-xl text-[11px] sm:text-xs xl:text-sm flex items-center justify-center gap-1"
+                        className="relative flex-1 min-w-0 h-8 sm:h-9 px-1.5 rounded-xl text-[11px] sm:text-xs xl:text-sm flex items-center justify-center gap-1 cursor-pointer"
                       >
                         {active && (
                           <motion.span
@@ -271,77 +398,10 @@ export function Navbar() {
               </div>
             )}
 
-            <div className={`${isMember ? "w-[110px] sm:w-[170px] xl:w-[250px]" : "flex-1"} flex items-center justify-end gap-2 sm:gap-4 min-w-0`}>
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="text-right hidden xl:block">
-                  <p className="text-sm font-semibold text-foreground truncate max-w-[110px] sm:max-w-[180px]">{displayUserName}</p>
-                  <Badge className="bg-huc-orange text-huc-orange-foreground text-[12px] px-3 py-0.5 rounded-full">
-                    {roleLabel}
-                  </Badge>
-                </div>
-                {effectivePhotoUrl && !avatarFailed ? (
-                  <div className="h-9 w-9 rounded-full overflow-hidden shrink-0 border border-border">
-                    <img
-                      src={effectivePhotoUrl}
-                      alt={displayUserName}
-                      className="h-full w-full object-cover"
-                      onError={() => setAvatarFailed(true)}
-                    />
-                  </div>
-                ) : (
-                  <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                )}
-              </div>
-
-              <div className="relative">
-                <button
-                  onClick={() => setLangDropdownOpen((v) => !v)}
-                  className="h-9 px-2 sm:px-3 rounded-lg hover:bg-muted flex flex-row items-center justify-center transition-colors shadow-sm border border-border bg-card hover:border-primary/20 gap-1.5"
-                  title={t("navbar.language")}
-                >
-                  {language === "ar" ? (
-                    <img src="https://flagcdn.com/w20/eg.png" alt="AR" className="w-5 rounded-sm shadow-sm" />
-                  ) : (
-                    <img src="https://flagcdn.com/w20/gb.png" alt="EN" className="w-5 rounded-sm shadow-sm" />
-                  )}
-                  <span className="hidden sm:block text-xs font-bold text-primary leading-none">
-                    {language === "ar" ? "AR" : "EN"}
-                  </span>
-                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${langDropdownOpen ? "rotate-180" : ""}`} />
-                </button>
-
-                {langDropdownOpen && (
-                  <div
-                    className="absolute top-11 end-0 w-36 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 animate-fade-in"
-                    onMouseLeave={() => setLangDropdownOpen(false)}
-                  >
-                    <button
-                      onClick={() => { void i18n.changeLanguage("ar"); setLangDropdownOpen(false); }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-start text-sm font-semibold transition-colors ${i18n.language.startsWith("ar") ? "bg-blue-50 text-[#2596be]" : "text-[#0e1c38] hover:bg-gray-50"}`}
-                    >
-                      <img src="https://flagcdn.com/w20/eg.png" alt="AR" className="w-5 rounded-sm shadow-sm" />
-                      {t("languageOptions.ar")}
-                    </button>
-                    <button
-                      onClick={() => { void i18n.changeLanguage("en"); setLangDropdownOpen(false); }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-start text-sm font-semibold transition-colors ${i18n.language.startsWith("en") ? "bg-blue-50 text-[#2596be]" : "text-[#0e1c38] hover:bg-gray-50"}`}
-                    >
-                      <img src="https://flagcdn.com/w20/gb.png" alt="EN" className="w-5 rounded-sm shadow-sm" />
-                      {t("languageOptions.en")}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <button
-                onClick={() => setShowLogoutModal(true)}
-                className="h-9 w-9 rounded-lg hover:bg-muted flex items-center justify-center transition-colors"
-                title={t("navbar.logout")}
-              >
-                <LogOut className="h-4 w-4 text-muted-foreground" />
-              </button>
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink-0 ms-auto flex-row-reverse">
+              {renderProfileMenu()}
+              {renderIdentityName()}
+              {renderIdentityRole()}
             </div>
           </div>
         </div>
@@ -364,7 +424,7 @@ export function Navbar() {
                   key={tab.path}
                   to={tab.path}
                   title={t(tab.title)}
-                  className="relative flex flex-col items-center justify-center w-full h-full gap-1"
+                  className="relative flex flex-col items-center justify-center w-full h-full gap-1 cursor-pointer"
                 >
                   {active && (
                     <motion.span

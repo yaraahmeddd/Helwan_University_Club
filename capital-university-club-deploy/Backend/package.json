@@ -23,7 +23,8 @@
     "add:professions": "node -r ts-node/register src/scripts/add-sample-professions.ts",
     "add:sport-staff-types": "node -r ts-node/register src/scripts/add-sport-staff-types.ts",
     "create:sport-test-accounts": "node -r ts-node/register src/scripts/create-sport-test-accounts.ts",
-    "create:media-account": "node -r ts-node/register --transpile-only src/scripts/create-media-account.ts"
+    "create:media-account": "node -r ts-node/register --transpile-only src/scripts/create-media-account.ts",
+    "create:admin-account": "node -r ts-node/register src/scripts/create-admin-account.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.91.1",

@@ -68,14 +68,14 @@ export function AdminActionButton({
         <Button
           variant="ghost"
           size="icon"
-          className={`h-8 w-8 ${variantClass[variant]}`}
+          className={`h-10 w-10 [&_svg]:!size-[17px] ${variantClass[variant]}`}
           onClick={onClick}
           disabled={disabled || loading}
         >
           {loading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className={`${adminTableStyles.actionIcon} animate-spin`} />
           ) : (
-            <Icon className="w-4 h-4" />
+            <Icon className={adminTableStyles.actionIcon} />
           )}
         </Button>
       </TooltipTrigger>

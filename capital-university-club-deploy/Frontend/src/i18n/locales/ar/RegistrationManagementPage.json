@@ -116,8 +116,8 @@
   },
   "review": {
     "title": "مراجعة الطلب",
-    "memberData": "👤 بيانات العضو",
-    "documents": "🖼️ المستندات والصور",
+    "memberData": "👤 البيانات الشخصية",
+    "documents": "🖼️ الصور والمستندات",
     "registered": "تسجيل:",
     "age": "سنة",
     "personalPhoto": "الصورة الشخصية",

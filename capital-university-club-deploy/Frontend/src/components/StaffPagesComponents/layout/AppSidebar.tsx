@@ -253,7 +253,7 @@ export function AppSidebar() {
           : "border-transparent text-white/90 hover:bg-white/10 hover:text-white font-bold"
           }`}
       >
-        <item.icon className="h-[20px] w-[20px] shrink-0" />
+        <item.icon className="h-[22px] w-[22px] shrink-0" />
         <span className="flex-1 text-[15px] font-extrabold leading-none tracking-tight">{t(item.title)}</span>
         {hasAlert && (
           <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-extrabold shrink-0">
@@ -272,7 +272,7 @@ export function AppSidebar() {
       return (
         <div className="flex items-center gap-2 px-3 py-1.5 mt-4">
           <div className="h-px flex-1 bg-white/20" />
-          <span className="text-[12px] font-extrabold tracking-[0.18em] text-[#f8941c] whitespace-nowrap px-1">
+          <span className="text-[16px] font-extrabold tracking-[0.18em] text-[#f8941c] whitespace-nowrap px-1">
             {t(group.label)}
           </span>
           <div className="h-px flex-1 bg-white/20" />
@@ -287,10 +287,10 @@ export function AppSidebar() {
         className="w-full flex items-center gap-2 px-3 py-1.5 mt-4 rounded-md hover:bg-white/10 transition-colors"
       >
         <div className="h-px flex-1 bg-white/20" />
-        <span className="text-[12px] font-extrabold tracking-[0.18em] text-[#f8941c] whitespace-nowrap px-1 flex items-center gap-1">
+        <span className="text-[16px] font-extrabold tracking-[0.18em] text-[#f8941c] whitespace-nowrap px-1 flex items-center gap-1">
           {t(group.label)}
           <ChevronLeft
-            className={`w-3 h-3 transition-transform duration-200 ${isOpen ? "-rotate-90" : ""
+            className={`w-[15px] h-[15px] transition-transform duration-200 ${isOpen ? "-rotate-90" : ""
               }`}
           />
         </span>

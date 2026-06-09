@@ -10,7 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { resolveFileUrl } from '../utils/fileUrl';
 import { useLocalizedTranslation } from '../hooks/useLocalizedTranslation';
 import { useLanguage } from '../hooks/useLanguage';
-import { getLocalizedText } from '../lib/localizedDisplay';
+import { buildPersonName, getNameInitials, resolveDisplayLanguage } from '../lib/localizedDisplay';
 import { useStaffJobLabels } from '../lib/staffJobLabel';
 import { formatValidationError, validatePassword, validatePasswordMatch } from '../lib/validation';
 import { useTranslation as useI18nTranslation } from 'react-i18next';
@@ -42,8 +42,10 @@ const colors = {
 // Types mapped to Frontend UI
 interface UserProfile {
     id: number;
-    fullNameAr: string;
-    fullNameEn: string;
+    firstNameAr: string;
+    lastNameAr: string;
+    firstNameEn: string;
+    lastNameEn: string;
     email: string;
     phone: string;
     nationalId: string;
@@ -82,6 +84,7 @@ const StaffProfile: React.FC = () => {
     const { t, t: tCommon } = useLocalizedTranslation(['StaffProfile', 'common']);
     const { t: tVal } = useI18nTranslation('validation');
     const { language, isRTL } = useLanguage();
+    const displayLanguage = resolveDisplayLanguage(language);
     const { resolveJobLabel } = useStaffJobLabels(language);
     const dateLocale = language === 'en' ? 'en-US' : 'ar-EG';
     const fmtDate = (value?: string) => {
@@ -114,6 +117,21 @@ const StaffProfile: React.FC = () => {
     // Fetch Data
     const { user } = useAuth();
 
+    const authNameParts = React.useMemo(() => {
+        const arFromParts = `${user?.first_name_ar ?? ''} ${user?.last_name_ar ?? ''}`.trim();
+        const enFromParts = `${user?.first_name_en ?? ''} ${user?.last_name_en ?? ''}`.trim();
+        const arParts = (user?.name_ar ?? arFromParts).split(/\s+/).filter(Boolean);
+        const enParts = (user?.name_en ?? enFromParts).split(/\s+/).filter(Boolean);
+        const fullFallback = (user?.fullName ?? '').split(/\s+/).filter(Boolean);
+
+        return {
+            firstNameAr: user?.first_name_ar ?? arParts[0] ?? fullFallback[0] ?? '',
+            lastNameAr: user?.last_name_ar ?? arParts.slice(1).join(' ') ?? fullFallback.slice(1).join(' ') ?? '',
+            firstNameEn: user?.first_name_en ?? enParts[0] ?? fullFallback[0] ?? '',
+            lastNameEn: user?.last_name_en ?? enParts.slice(1).join(' ') ?? fullFallback.slice(1).join(' ') ?? '',
+        };
+    }, [user]);
+
     useEffect(() => {
         const fetchProfile = async () => {
             setIsLoading(true);
@@ -126,9 +144,11 @@ const StaffProfile: React.FC = () => {
                     if (user?.role === 'ADMIN') {
                         const mappedUser: UserProfile = {
                             id: 0,
-                            fullNameAr: user.fullName || t('adminDefaults.fullName'),
-                            fullNameEn: user.fullName || t('adminDefaults.fullName'),
-                            email: '',
+                            firstNameAr: authNameParts.firstNameAr || t('adminDefaults.fullName'),
+                            lastNameAr: authNameParts.lastNameAr,
+                            firstNameEn: authNameParts.firstNameEn || t('adminDefaults.fullName'),
+                            lastNameEn: authNameParts.lastNameEn,
+                            email: user.email ?? '',
                             phone: '',
                             nationalId: '',
                             dateOfBirth: '',
@@ -182,8 +202,10 @@ const StaffProfile: React.FC = () => {
                 // Map Backend -> Frontend
                 const mappedUser: UserProfile = {
                     id: staff.id,
-                    fullNameAr: `${staff.first_name_ar ?? ''} ${staff.last_name_ar ?? ''}`.trim(),
-                    fullNameEn: `${staff.first_name_en ?? ''} ${staff.last_name_en ?? ''}`.trim(),
+                    firstNameAr: staff.first_name_ar ?? authNameParts.firstNameAr,
+                    lastNameAr: staff.last_name_ar ?? authNameParts.lastNameAr,
+                    firstNameEn: staff.first_name_en ?? authNameParts.firstNameEn,
+                    lastNameEn: staff.last_name_en ?? authNameParts.lastNameEn,
                     email: staff.email,
                     phone: staff.phone,
                     nationalId: staff.national_id,
@@ -207,9 +229,11 @@ const StaffProfile: React.FC = () => {
                 if (user?.role === 'ADMIN') {
                     const mappedUser: UserProfile = {
                         id: 0,
-                        fullNameAr: user.fullName || t('adminDefaults.fullName'),
-                        fullNameEn: user.fullName || t('adminDefaults.fullName'),
-                        email: '',
+                        firstNameAr: authNameParts.firstNameAr || t('adminDefaults.fullName'),
+                        lastNameAr: authNameParts.lastNameAr,
+                        firstNameEn: authNameParts.firstNameEn || t('adminDefaults.fullName'),
+                        lastNameEn: authNameParts.lastNameEn,
+                        email: user.email ?? '',
                         phone: '',
                         nationalId: '',
                         dateOfBirth: '',
@@ -235,7 +259,7 @@ const StaffProfile: React.FC = () => {
         };
 
         fetchProfile();
-    }, [user, t]);
+    }, [user, t, authNameParts]);
 
     const handleInputChange = (field: keyof UserProfile, value: string) => {
         if (!userData) return;
@@ -363,8 +387,16 @@ const StaffProfile: React.FC = () => {
     };
 
     const displayFullName = userData
-        ? getLocalizedText(userData.fullNameAr, userData.fullNameEn, language) || userData.fullNameAr || userData.fullNameEn
+        ? buildPersonName(userData, displayLanguage).primary || t('notAvailable')
         : '';
+
+    const displayInitial = userData
+        ? getNameInitials(
+            `${userData.firstNameAr} ${userData.lastNameAr}`.trim(),
+            `${userData.firstNameEn} ${userData.lastNameEn}`.trim(),
+            displayLanguage,
+        )
+        : '?';
 
     const displayJobTitle = userData
         ? (userData.isAdminProfile
@@ -490,7 +522,7 @@ const StaffProfile: React.FC = () => {
                                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                     />
                                 ) : (
-                                    displayFullName.charAt(0)
+                                    displayInitial
                                 )}
                             </div>
                             <button style={{

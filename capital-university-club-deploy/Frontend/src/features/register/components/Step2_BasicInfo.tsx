@@ -283,7 +283,7 @@ export const Step2BasicInfo = ({ onNext, onPrev, embedded = false }: Step2BasicI
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 border border-gray-100 backdrop-blur-sm"
+            className="bg-white rounded-3xl shadow-2xl p-8 md:p-10 border border-gray-100 backdrop-blur-sm"
         >
             {/* Header */}
             <div className="mb-6">
@@ -299,7 +299,7 @@ export const Step2BasicInfo = ({ onNext, onPrev, embedded = false }: Step2BasicI
             </div>
 
             {/* Form Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Arabic Names Section */}
                 <InputGroup
                     id="first_name_ar"

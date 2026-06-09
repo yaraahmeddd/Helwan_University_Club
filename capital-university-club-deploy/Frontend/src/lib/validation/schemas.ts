@@ -83,6 +83,11 @@ export const createMemberEditSchema = (t: ValidationTranslator) =>
     last_name_ar: zArabicName(t),
     first_name_en: zEnglishName(t),
     last_name_en: zEnglishName(t),
+    email: zRegistrationEmail(t),
+    national_id: z.string()
+      .max(20, t('nationalId.memberInvalid'))
+      .optional()
+      .or(z.literal('')),
     gender: z.enum(['male', 'female', 'other'], { message: t('gender.invalid') }),
     phone: zEgyptianPhone(t),
     birthdate: zBirthdate(t),

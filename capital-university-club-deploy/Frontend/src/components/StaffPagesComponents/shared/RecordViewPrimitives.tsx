@@ -71,6 +71,33 @@ export function RecordViewSection({
   );
 }
 
+/** Label + editable control inside a section grid (edit mode). */
+export function RecordViewEditableField({
+  icon: Icon,
+  label,
+  children,
+  className,
+  hidden,
+}: {
+  icon: React.ElementType;
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+  hidden?: boolean;
+}) {
+  if (hidden) return null;
+
+  return (
+    <div className={cn('space-y-1.5', className)}>
+      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+        <Icon className="w-3.5 h-3.5 shrink-0" />
+        {label}
+      </p>
+      {children}
+    </div>
+  );
+}
+
 /** Label + value field row inside a section grid. */
 export function RecordViewField({
   icon: Icon,

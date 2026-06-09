@@ -16,7 +16,7 @@ type BilingualTextProps = {
   fallback?: string;
 };
 
-/** Renders primary localized text with an optional English subtitle (Arabic UI only). */
+/** Renders primary localized text only (no cross-language subtitle in admin UI). */
 export function BilingualText({
   ar,
   en,

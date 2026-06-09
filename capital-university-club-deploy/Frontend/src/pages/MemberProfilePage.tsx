@@ -26,6 +26,7 @@ import {
     validateEgyptianPhone,
 } from "../lib/validation";
 import i18n from "../i18n";
+import { buildPersonName, getNameInitials, resolveDisplayLanguage } from "../lib/localizedDisplay";
 
 interface MemberProfile {
     id: number;
@@ -112,17 +113,16 @@ async function fetchMemberProfile(): Promise<{ profile: MemberProfile }> {
     const memberId: number = meData.member_id;
     if (!memberId) throw new Error("NO_MEMBER_ID");
 
-    // Parse name parts
-    const nameArParts = (meData.name_ar ?? "").split(" ");
-    const nameEnParts = (meData.name_en ?? "").split(" ");
+    const nameArParts = (meData.name_ar ?? "").split(/\s+/).filter(Boolean);
+    const nameEnParts = (meData.name_en ?? "").split(/\s+/).filter(Boolean);
 
     return {
         profile: {
             id: memberId,
-            firstNameAr: nameArParts[0] ?? "",
-            lastNameAr: nameArParts.slice(1).join(" ") ?? "",
-            firstNameEn: nameEnParts[0] ?? "",
-            lastNameEn: nameEnParts.slice(1).join(" ") ?? "",
+            firstNameAr: meData.first_name_ar ?? nameArParts[0] ?? "",
+            lastNameAr: meData.last_name_ar ?? nameArParts.slice(1).join(" ") ?? "",
+            firstNameEn: meData.first_name_en ?? nameEnParts[0] ?? "",
+            lastNameEn: meData.last_name_en ?? nameEnParts.slice(1).join(" ") ?? "",
             email: meData.email ?? "",
             phone: meData.phone ?? "",
             birthdate: meData.birthdate ? new Date(meData.birthdate).toISOString().split("T")[0] : "",
@@ -339,6 +339,7 @@ export default function MemberProfilePage() {
     };
 
     const isEnglish = i18n.language?.startsWith("en");
+    const displayLanguage = resolveDisplayLanguage(i18n.language);
     const locale = isEnglish ? "en-US" : "ar-EG";
 
     if (loading) {
@@ -373,15 +374,12 @@ export default function MemberProfilePage() {
 
     const rawPhoto = photoPreview || form.photo || profile.photo;
     const currentPhoto = resolveFileUrl(rawPhoto);
-    const initials = `${profile.firstNameAr?.charAt(0) ?? ""}${profile.lastNameAr?.charAt(0) ?? ""}`;
-    const displayNameAr = `${profile.firstNameAr || ""} ${profile.lastNameAr || ""}`.trim();
-    const displayNameEn = `${profile.firstNameEn || ""} ${profile.lastNameEn || ""}`.trim();
-    const displayPrimaryName = isEnglish
-        ? (displayNameEn || displayNameAr || "—")
-        : (displayNameAr || displayNameEn || "—");
-    const displaySecondaryName = isEnglish
-        ? (displayNameAr || displayNameEn || "")
-        : (displayNameEn || displayNameAr || "");
+    const { primary: displayPrimaryName } = buildPersonName(profile, displayLanguage);
+    const initials = getNameInitials(
+        `${profile.firstNameAr} ${profile.lastNameAr}`.trim(),
+        `${profile.firstNameEn} ${profile.lastNameEn}`.trim(),
+        displayLanguage,
+    );
     const documentsConfig = [
         { key: "photo", label: "الصورة الشخصية" },
         { key: "nationalIdFront", label: "صورة البطاقة (أمام)" },
@@ -448,9 +446,8 @@ export default function MemberProfilePage() {
 
                         <div className="min-w-0 flex flex-col items-center sm:items-start text-center sm:text-right w-full sm:w-auto">
                             <h1 className="text-xl font-bold text-[#1F3A5F] leading-tight truncate w-full">
-                                {displayPrimaryName}
+                                {displayPrimaryName || "—"}
                             </h1>
-                            <p className="text-sm text-muted-foreground truncate w-full">{displaySecondaryName}</p>
                             <div className="mt-2 flex items-center justify-center sm:justify-start gap-2 flex-wrap">
                                 <Badge className={statusStyle(profile.status)}>
                                     {tStatus(profile.status)}

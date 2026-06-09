@@ -192,12 +192,23 @@
   },
   "editModal": {
     "title": "تعديل بيانات العضو",
-    "description": "تعديل المعلومات الشخصية والتواصل",
+    "description": "تحديث البيانات الشخصية وبيانات التسجيل. المستندات للعرض فقط من ملف العضو.",
+    "sections": {
+      "account": "الحساب",
+      "personal": "البيانات الشخصية",
+      "contact": "بيانات التواصل",
+      "student": "بيانات الطالب",
+      "employee": "بيانات الموظف",
+      "retired": "بيانات المتقاعد",
+      "visitor": "بيانات الزائر / الأجنبي"
+    },
     "tabs": {
       "personalInfo": "👤 البيانات الشخصية",
       "docsAndPhotos": "🖼️ الصور والمستندات"
     },
     "fields": {
+      "email": "البريد الإلكتروني",
+      "nationalId": "الرقم القومي",
       "firstNameAr": "الاسم الأول (عربي)",
       "lastNameAr": "الاسم الأخير (عربي)",
       "firstNameEn": "الاسم الأول (إنجليزي)",
@@ -207,9 +218,30 @@
       "phone": "رقم الهاتف",
       "nationality": "الجنسية",
       "address": "العنوان",
-      "healthStatus": "الحالة الصحية"
+      "healthStatus": "الحالة الصحية",
+      "faculty": "الكلية",
+      "graduationYear": "سنة التخرج",
+      "profession": "المهنة",
+      "departmentEn": "القسم (إنجليزي)",
+      "departmentAr": "القسم (عربي)",
+      "salary": "الراتب",
+      "professionCode": "كود المهنة",
+      "formerDepartmentEn": "القسم السابق (إنجليزي)",
+      "formerDepartmentAr": "القسم السابق (عربي)",
+      "retirementDate": "تاريخ التقاعد",
+      "lastSalary": "آخر راتب",
+      "passportNumber": "رقم جواز السفر",
+      "country": "الدولة",
+      "visitorType": "نوع الزائر",
+      "visaStatus": "حالة التأشيرة",
+      "employmentStatus": "الحالة الوظيفية",
+      "durationMonths": "المدة (بالأشهر)",
+      "jobTitleEn": "المسمى الوظيفي (إنجليزي)",
+      "jobTitleAr": "المسمى الوظيفي (عربي)"
     },
     "placeholders": {
+      "email": "member@example.com",
+      "nationalId": "29001011234001",
       "firstNameAr": "محمد",
       "lastNameAr": "أحمد",
       "firstNameEn": "Mohamed",

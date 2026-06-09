@@ -5,6 +5,10 @@ import { Account } from '../entities/Account';
 import { Staff } from '../entities/Staff';
 import { TeamMember } from '../entities/TeamMember';
 import { TeamMemberTeam } from '../entities/TeamMemberTeam';
+import { UniversityStudentDetail } from '../entities/UniversityStudentDetail';
+import { EmployeeDetail } from '../entities/EmployeeDetail';
+import { RetiredEmployeeDetail } from '../entities/RetiredEmployeeDetail';
+import { OutsiderDetail } from '../entities/OutsiderDetail';
 import { AuthenticatedRequest } from '../middleware/authorizePrivilege';
 import * as bcrypt from 'bcrypt';
 import { AuditLogService } from '../services/AuditLogService';
@@ -19,6 +23,33 @@ export class MemberController {
   private static memberRepo = AppDataSource.getRepository(Member);
   private static accountRepo = AppDataSource.getRepository(Account);
   private static staffRepo = AppDataSource.getRepository(Staff);
+  private static universityStudentRepo = AppDataSource.getRepository(UniversityStudentDetail);
+  private static employeeDetailRepo = AppDataSource.getRepository(EmployeeDetail);
+  private static retiredEmployeeRepo = AppDataSource.getRepository(RetiredEmployeeDetail);
+  private static outsiderDetailRepo = AppDataSource.getRepository(OutsiderDetail);
+
+  private static async loadMemberProfileDetails(memberId: number) {
+    const [university_student_detail, employee_detail, retired_employee_detail, outsider_detail] =
+      await Promise.all([
+        MemberController.universityStudentRepo.findOne({
+          where: { member_id: memberId },
+          relations: ['faculty'],
+        }),
+        MemberController.employeeDetailRepo.findOne({
+          where: { member_id: memberId },
+          relations: ['profession'],
+        }),
+        MemberController.retiredEmployeeRepo.findOne({ where: { member_id: memberId } }),
+        MemberController.outsiderDetailRepo.findOne({ where: { member_id: memberId } }),
+      ]);
+
+    return {
+      university_student_detail,
+      employee_detail,
+      retired_employee_detail,
+      outsider_detail,
+    };
+  }
 
   private static async logAction(req: AuthenticatedRequest, action: string, description: string, oldValue?: Record<string, unknown> | null, newValue?: Record<string, unknown> | null) {
     try {
@@ -121,6 +152,8 @@ export class MemberController {
 
       // Flatten active membership data for backward compatibility with frontend
       const memberData: Record<string, unknown> = { ...member };
+      const profileDetails = await MemberController.loadMemberProfileDetails(member.id);
+      Object.assign(memberData, profileDetails);
       if (member.memberships && member.memberships.length > 0) {
         const sortedMemberships = member.memberships.sort((a, b) =>
           new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
@@ -319,6 +352,8 @@ export class MemberController {
     try {
       const { id } = req.params;
       const {
+        email,
+        national_id,
         first_name_en,
         first_name_ar,
         last_name_en,
@@ -329,10 +364,10 @@ export class MemberController {
         nationality,
         health_status,
         address,
-        photo,
-        national_id_front,
-        national_id_back,
-        medical_report,
+        university_student,
+        employee,
+        retired,
+        outsider,
       } = req.body;
 
       const member = await MemberController.memberRepo.findOne({ where: { id: parseInt(id) } });
@@ -344,6 +379,15 @@ export class MemberController {
       }
 
       const oldMember = { ...member };
+
+      if (email && member.account_id) {
+        const account = await MemberController.accountRepo.findOne({ where: { id: member.account_id } });
+        if (account) {
+          account.email = String(email).trim().toLowerCase();
+          await MemberController.accountRepo.save(account);
+        }
+      }
+
       // Update fields if provided
       if (first_name_en) member.first_name_en = first_name_en;
       if (first_name_ar) member.first_name_ar = first_name_ar;
@@ -352,25 +396,96 @@ export class MemberController {
       if (gender) member.gender = gender;
       if (phone) member.phone = phone;
       if (birthdate) member.birthdate = new Date(birthdate);
+      if (national_id) member.national_id = national_id;
       if (nationality) {
         member.nationality = nationality;
         member.is_foreign = nationality.toLowerCase() !== 'egyptian';
       }
-      if (health_status) member.health_status = health_status;
+      if (health_status !== undefined) member.health_status = health_status;
       if (address !== undefined) member.address = address;
-      if (photo !== undefined) member.photo = photo;
-      if (national_id_front !== undefined) member.national_id_front = national_id_front;
-      if (national_id_back !== undefined) member.national_id_back = national_id_back;
-      if (medical_report !== undefined) member.medical_report = medical_report;
 
       const updatedMember = await MemberController.memberRepo.save(member);
 
+      if (university_student && typeof university_student === 'object') {
+        let detail = await MemberController.universityStudentRepo.findOne({ where: { member_id: member.id } });
+        if (!detail) {
+          detail = MemberController.universityStudentRepo.create({ member_id: member.id });
+        }
+        if (university_student.faculty_id !== undefined && university_student.faculty_id !== null && university_student.faculty_id !== '') {
+          detail.faculty_id = Number(university_student.faculty_id);
+        }
+        if (university_student.graduation_year !== undefined && university_student.graduation_year !== null && university_student.graduation_year !== '') {
+          detail.graduation_year = Number(university_student.graduation_year);
+        }
+        await MemberController.universityStudentRepo.save(detail);
+      }
+
+      if (employee && typeof employee === 'object') {
+        let detail = await MemberController.employeeDetailRepo.findOne({ where: { member_id: member.id } });
+        if (!detail && employee.profession_id) {
+          detail = MemberController.employeeDetailRepo.create({
+            member_id: member.id,
+            profession_id: Number(employee.profession_id),
+          });
+        }
+        if (detail) {
+          if (employee.profession_id !== undefined) detail.profession_id = Number(employee.profession_id);
+          if (employee.department_en !== undefined) detail.department_en = employee.department_en;
+          if (employee.department_ar !== undefined) detail.department_ar = employee.department_ar;
+          if (employee.salary !== undefined && employee.salary !== '') {
+            detail.salary = Number(employee.salary);
+          }
+          await MemberController.employeeDetailRepo.save(detail);
+        }
+      }
+
+      if (retired && typeof retired === 'object') {
+        let detail = await MemberController.retiredEmployeeRepo.findOne({ where: { member_id: member.id } });
+        if (!detail) {
+          detail = MemberController.retiredEmployeeRepo.create({
+            member_id: member.id,
+            retirement_date: retired.retirement_date ? new Date(retired.retirement_date) : new Date(),
+          });
+        }
+        if (retired.profession_code !== undefined) detail.profession_code = retired.profession_code;
+        if (retired.former_department_en !== undefined) detail.former_department_en = retired.former_department_en;
+        if (retired.former_department_ar !== undefined) detail.former_department_ar = retired.former_department_ar;
+        if (retired.retirement_date) detail.retirement_date = new Date(retired.retirement_date);
+        if (retired.last_salary !== undefined && retired.last_salary !== '') {
+          detail.last_salary = Number(retired.last_salary);
+        }
+        await MemberController.retiredEmployeeRepo.save(detail);
+      }
+
+      if (outsider && typeof outsider === 'object') {
+        let detail = await MemberController.outsiderDetailRepo.findOne({ where: { member_id: member.id } });
+        if (!detail) {
+          detail = MemberController.outsiderDetailRepo.create({ member_id: member.id });
+        }
+        if (outsider.job_title_en !== undefined) detail.job_title_en = outsider.job_title_en;
+        if (outsider.job_title_ar !== undefined) detail.job_title_ar = outsider.job_title_ar;
+        if (outsider.employment_status !== undefined) detail.employment_status = outsider.employment_status;
+        if (outsider.passport_number !== undefined) detail.passport_number = outsider.passport_number;
+        if (outsider.country !== undefined) detail.country = outsider.country;
+        if (outsider.visa_status !== undefined) detail.visa_status = outsider.visa_status;
+        if (outsider.visitor_type !== undefined) detail.visitor_type = outsider.visitor_type;
+        if (outsider.duration_months !== undefined && outsider.duration_months !== '') {
+          detail.duration_months = Number(outsider.duration_months);
+        }
+        await MemberController.outsiderDetailRepo.save(detail);
+      }
+
       await MemberController.logAction(req, 'Update', `Updated member profile: ${updatedMember.first_name_en} ${updatedMember.last_name_en}`, oldMember as unknown as Record<string, unknown>, updatedMember as unknown as Record<string, unknown>);
+
+      const profileDetails = await MemberController.loadMemberProfileDetails(updatedMember.id);
 
       return res.json({
         success: true,
         message: 'Member updated successfully',
-        data: updatedMember,
+        data: {
+          ...updatedMember,
+          ...profileDetails,
+        },
       });
     } catch (error: unknown) {
       console.error('Error updating member:', error);

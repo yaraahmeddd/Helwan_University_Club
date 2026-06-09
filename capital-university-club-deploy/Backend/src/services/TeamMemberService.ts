@@ -459,6 +459,8 @@ export class TeamMemberService {
     async updateTeamMemberWithSports(
         teamMemberId: number,
         data: {
+            email?: string;
+            national_id?: string;
             first_name_en?: string;
             first_name_ar?: string;
             last_name_en?: string;
@@ -467,7 +469,7 @@ export class TeamMemberService {
             address?: string;
             gender?: string;
             nationality?: string;
-            birthdate?: Date;
+            birthdate?: Date | string;
             sport_ids?: number[];
         }
     ) {
@@ -476,15 +478,27 @@ export class TeamMemberService {
             throw new Error('Team member not found');
         }
 
+        if (data.email && teamMember.account_id) {
+            const account = await this.accountRepo.findOne({ where: { id: teamMember.account_id } });
+            if (account) {
+                account.email = String(data.email).trim().toLowerCase();
+                await this.accountRepo.save(account);
+            }
+        }
+
         // Update basic info
         if (data.first_name_en) teamMember.first_name_en = data.first_name_en;
         if (data.first_name_ar) teamMember.first_name_ar = data.first_name_ar;
         if (data.last_name_en) teamMember.last_name_en = data.last_name_en;
         if (data.last_name_ar) teamMember.last_name_ar = data.last_name_ar;
         if (data.phone) teamMember.phone = data.phone;
-        if (data.address) teamMember.address = data.address;
+        if (data.address !== undefined) teamMember.address = data.address;
         if (data.gender) teamMember.gender = data.gender;
-        if (data.nationality) teamMember.nationality = data.nationality;
+        if (data.national_id) teamMember.national_id = data.national_id;
+        if (data.nationality) {
+            teamMember.nationality = data.nationality;
+            teamMember.is_foreign = data.nationality.toLowerCase() !== 'egyptian';
+        }
         if (data.birthdate) teamMember.birthdate = new Date(data.birthdate);
 
         await this.teamMemberRepo.save(teamMember);

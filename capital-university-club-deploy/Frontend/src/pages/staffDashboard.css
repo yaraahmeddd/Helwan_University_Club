@@ -17,6 +17,13 @@
   --huc-radius-control: 8px;
 
   --huc-shadow-soft: 0 1px 2px rgba(16, 24, 40, 0.06);
+
+  /* Admin module typography & sizing */
+  --admin-font-size: 15px;
+  --admin-icon-size: 15px;
+  --admin-action-icon-size: 17px;
+  --admin-dialog-max-width: calc(48rem + 50px);
+  --admin-dialog-max-height: min(calc(88vh + 50px), 95vh);
 }
 
 html[dir="rtl"],
@@ -36,4 +43,127 @@ body[dir="rtl"] {
 /* Hide scrollbar in sidebar nav — keep scroll functional */
 .huc-sidebar-nav::-webkit-scrollbar {
   display: none;
+}
+
+/* ── Admin module — 15px typography & icons (page chrome + tables) ── */
+.admin-module {
+  font-size: var(--admin-font-size);
+  line-height: 1.45;
+}
+
+.admin-module :where(.text-xs, .text-sm) {
+  font-size: var(--admin-font-size) !important;
+  line-height: 1.45;
+}
+
+.admin-module :where(
+  .text-\[10px\],
+  .text-\[11px\],
+  .text-\[12px\],
+  .text-\[14px\],
+  .text-\[15px\],
+  .text-\[18px\]
+) {
+  font-size: var(--admin-font-size) !important;
+  line-height: 1.45;
+}
+
+.admin-module :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  font-size: var(--admin-font-size);
+}
+
+.admin-module :where(.h-8, .h-9):not(svg) {
+  min-height: 2.5rem;
+}
+
+/* View / edit record dialogs — +50px vs previous max-w-3xl @ 88vh */
+.admin-detail-dialog {
+  max-width: min(var(--admin-dialog-max-width), 95vw) !important;
+  max-height: var(--admin-dialog-max-height) !important;
+}
+
+.admin-detail-panel {
+  max-height: var(--admin-dialog-max-height);
+}
+
+/* Scale common Lucide sizes to match admin body text */
+.admin-module svg.w-3,
+.admin-module svg.h-3,
+.admin-module svg.w-3\.5,
+.admin-module svg.h-3\.5,
+.admin-module svg.w-4,
+.admin-module svg.h-4 {
+  width: var(--admin-icon-size) !important;
+  height: var(--admin-icon-size) !important;
+}
+
+.admin-module svg.w-5,
+.admin-module svg.h-5,
+.admin-module svg.w-6,
+.admin-module svg.h-6 {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+.admin-module svg.w-7,
+.admin-module svg.h-7,
+.admin-module svg.w-8,
+.admin-module svg.h-8 {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+.admin-module svg[class*="w-[15px]"],
+.admin-module svg[class*="h-[15px]"],
+.admin-module svg[class*="w-[18px]"],
+.admin-module svg[class*="h-[18px]"] {
+  width: var(--admin-icon-size) !important;
+  height: var(--admin-icon-size) !important;
+}
+
+.admin-module svg[class*="w-[17px]"],
+.admin-module svg[class*="h-[17px]"],
+.admin-module svg[class*="w-[20px]"],
+.admin-module svg[class*="h-[20px]"] {
+  width: var(--admin-action-icon-size) !important;
+  height: var(--admin-action-icon-size) !important;
+}
+
+.admin-module svg.\!w-\[17px\],
+.admin-module svg.\!h-\[17px\],
+.admin-module svg.\!w-\[20px\],
+.admin-module svg.\!h-\[20px\] {
+  width: var(--admin-action-icon-size) !important;
+  height: var(--admin-action-icon-size) !important;
+}
+
+.admin-module button:not([class*="h-11"]):not([class*="w-11"]) svg:not([class*="!w-"]):not([class*="!h-"]) {
+  width: var(--admin-icon-size);
+  height: var(--admin-icon-size);
+}
+
+/* Staff add-member wizard — spacious, professional layout */
+.staff-register-wizard .grid {
+  gap: 1.5rem;
+}
+
+.staff-register-wizard .flex.flex-col.gap-1,
+.staff-register-wizard .flex.flex-col.gap-1\.5 {
+  gap: 0.625rem;
+}
+
+.staff-register-wizard input:not([type="checkbox"]):not([type="radio"]),
+.staff-register-wizard select,
+.staff-register-wizard textarea {
+  min-height: 2.75rem;
+}
+
+.staff-register-wizard .bg-white.rounded-3xl {
+  padding: 2rem 2.5rem;
+}
+
+@media (min-width: 768px) {
+  .staff-register-wizard .bg-white.rounded-3xl {
+    padding: 2.5rem 3rem;
+  }
 }

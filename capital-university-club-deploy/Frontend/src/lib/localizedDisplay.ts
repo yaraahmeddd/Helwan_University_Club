@@ -30,17 +30,13 @@ export function getLocalizedText(
 }
 
 /**
- * Secondary subtitle text shown below the primary line.
- * Only shown in Arabic UI as an English subtitle when both languages exist.
+ * Secondary subtitle — suppressed in admin UI (Arabic shows Arabic only).
  */
 export function getSecondaryText(
-  ar: string | undefined | null,
-  en: string | undefined | null,
-  language: DisplayLanguage,
+  _ar: string | undefined | null,
+  _en: string | undefined | null,
+  _language: DisplayLanguage,
 ): string | null {
-  const arTrim = (ar ?? '').trim();
-  const enTrim = (en ?? '').trim();
-  if (language === 'ar' && arTrim && enTrim && arTrim !== enTrim) return enTrim;
   return null;
 }
 

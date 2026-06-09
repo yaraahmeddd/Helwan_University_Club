@@ -76,8 +76,9 @@ import {
 } from "../data/paymentsData";
 import { BACKEND_ORIGIN } from "../config/backend";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
-import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { adminTableStyles, adminHeadClass, adminCellClass, adminDialogStyles } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
+import { MemberEditPanel } from "../components/StaffPagesComponents/shared/MemberEditPanel";
 import {
     RecordViewTabs,
     RecordViewSection,
@@ -172,6 +173,39 @@ type MemberApiItem = {
     national_id_back?: string;
 
     medical_report?: string;
+
+    university_student_detail?: {
+        faculty_id?: number | null;
+        graduation_year?: number | null;
+        faculty?: { id: number; name_en?: string; name_ar?: string };
+    };
+
+    employee_detail?: {
+        profession_id?: number;
+        department_en?: string;
+        department_ar?: string;
+        salary?: number | string | null;
+        profession?: { id: number; name_en?: string; name_ar?: string };
+    };
+
+    retired_employee_detail?: {
+        profession_code?: string | null;
+        former_department_en?: string | null;
+        former_department_ar?: string | null;
+        retirement_date?: string | null;
+        last_salary?: number | string | null;
+    };
+
+    outsider_detail?: {
+        job_title_en?: string | null;
+        job_title_ar?: string | null;
+        employment_status?: string | null;
+        passport_number?: string | null;
+        country?: string | null;
+        visa_status?: string | null;
+        visitor_type?: string | null;
+        duration_months?: number | null;
+    };
 
 };
 
@@ -443,8 +477,8 @@ function StatusBadge({ status, compact = false }: { status: string; compact?: bo
     };
     const Icon = cfg.icon;
     return (
-        <span className={`inline-flex items-center gap-1 rounded-full font-semibold border ${cfg.color} ${cfg.bg} ${cfg.border} ${compact ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-[11px]"}`}>
-            <Icon className={compact ? "w-3 h-3" : "w-3.5 h-3.5"} />
+        <span className={`inline-flex items-center gap-1 rounded-full font-semibold border ${cfg.color} ${cfg.bg} ${cfg.border} ${compact ? "px-2.5 py-1 text-[15px]" : "px-3 py-1 text-[15px]"}`}>
+            <Icon className={adminTableStyles.icon} />
             {t(cfg.labelKey, { defaultValue: status })}
         </span>
     );
@@ -493,9 +527,9 @@ function PaymentBadge({
 
 function SortIcon({ field, active, dir }: { field: SortField; active: SortField; dir: SortDir }) {
 
-    if (field !== active) return <ChevronsUpDown className="w-3 h-3 opacity-40" />;
+    if (field !== active) return <ChevronsUpDown className={`${adminTableStyles.icon} opacity-40`} />;
 
-    return dir === "asc" ? <ChevronUp className="w-3 h-3 text-primary" /> : <ChevronDown className="w-3 h-3 text-primary" />;
+    return dir === "asc" ? <ChevronUp className={`${adminTableStyles.icon} text-primary`} /> : <ChevronDown className={`${adminTableStyles.icon} text-primary`} />;
 
 }
 
@@ -536,7 +570,7 @@ function DetailPanel({ row, details, loading, sports, onEdit, onChangeStatus, on
     const notAvailable = t('common.notAvailable', { defaultValue: '—' });
 
     return (
-        <div className="flex flex-col" style={{ maxHeight: '88vh' }} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={adminDialogStyles.panel} dir={isRTL ? 'rtl' : 'ltr'}>
             <div className="px-6 pt-5 pb-0 border-b border-border shrink-0">
                 <RecordViewProfileHeader
                     photoUrl={getFileUrl(d?.photo) || null}
@@ -587,7 +621,6 @@ function DetailPanel({ row, details, loading, sports, onEdit, onChangeStatus, on
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <RecordViewField icon={Hash} label={t('detail.fieldMemberId')} value={`MEM-${String(row.id).padStart(5, '0')}`} ltr fallback={notAvailable} />
                                 <RecordViewField icon={Calendar} label={t('detail.fieldJoinDate')} value={fmtDate(d?.created_at ?? row.createdAt, isRTL)} fallback={notAvailable} />
-                                <RecordViewField icon={Mail} label={t('detail.fieldEmail')} value={d?.account?.email ?? row.email} ltr fallback={notAvailable} />
                                 <RecordViewField icon={Award} label={t('detail.fieldMemberType')} value={row.memberTypeLabel} fallback={notAvailable} />
                             </div>
                         </RecordViewSection>
@@ -609,6 +642,7 @@ function DetailPanel({ row, details, loading, sports, onEdit, onChangeStatus, on
 
                         <RecordViewSection icon={Phone} title={t('detail.sectionContact', 'Contact Information')}>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <RecordViewField icon={Mail} label={t('detail.fieldEmail')} value={d?.account?.email ?? row.email} ltr fallback={notAvailable} />
                                 <RecordViewField icon={Phone} label={t('detail.fieldPhone')} value={d?.phone ?? row.phone} ltr fallback={notAvailable} />
                                 <RecordViewField icon={MapPin} label={t('detail.fieldAddress')} value={d?.address ?? row.address} fallback={notAvailable} />
                                 <RecordViewField icon={HeartPulse} label={t('detail.fieldHealthStatus')} value={d?.health_status ?? row.healthStatus} fallback={notAvailable} />
@@ -957,15 +991,53 @@ export default function MemberManagementPage() {
 
     const [editHealth, setEditHealth] = useState("");
 
+    const [editEmail, setEditEmail] = useState("");
+
+    const [editNationalId, setEditNationalId] = useState("");
+
+    const [editFacultyId, setEditFacultyId] = useState("");
+
+    const [editGraduationYear, setEditGraduationYear] = useState("");
+
+    const [editProfessionId, setEditProfessionId] = useState("");
+
+    const [editDepartmentEn, setEditDepartmentEn] = useState("");
+
+    const [editDepartmentAr, setEditDepartmentAr] = useState("");
+
+    const [editSalary, setEditSalary] = useState("");
+
+    const [editProfessionCode, setEditProfessionCode] = useState("");
+
+    const [editFormerDepartmentEn, setEditFormerDepartmentEn] = useState("");
+
+    const [editFormerDepartmentAr, setEditFormerDepartmentAr] = useState("");
+
+    const [editRetirementDate, setEditRetirementDate] = useState("");
+
+    const [editLastSalary, setEditLastSalary] = useState("");
+
+    const [editJobTitleEn, setEditJobTitleEn] = useState("");
+
+    const [editJobTitleAr, setEditJobTitleAr] = useState("");
+
+    const [editEmploymentStatus, setEditEmploymentStatus] = useState("");
+
+    const [editPassportNumber, setEditPassportNumber] = useState("");
+
+    const [editCountry, setEditCountry] = useState("");
+
+    const [editVisaStatus, setEditVisaStatus] = useState("");
+
+    const [editVisitorType, setEditVisitorType] = useState("");
+
+    const [editDurationMonths, setEditDurationMonths] = useState("");
+
+    const [faculties, setFaculties] = useState<Array<{ id: number; name_en?: string; name_ar?: string }>>([]);
+
+    const [professions, setProfessions] = useState<Array<{ id: number; name_en?: string; name_ar?: string }>>([]);
+
     const [editSaving, setEditSaving] = useState(false);
-
-    // Photo upload state
-    const [photoFile, setPhotoFile] = useState<File | null>(null);
-    const [idFrontFile, setIdFrontFile] = useState<File | null>(null);
-    const [idBackFile, setIdBackFile] = useState<File | null>(null);
-    const [medicalFile, setMedicalFile] = useState<File | null>(null);
-
-    const [editTab, setEditTab] = useState<'info' | 'docs'>('info');
 
 
 
@@ -1377,6 +1449,21 @@ export default function MemberManagementPage() {
 
     useEffect(() => { void fetchAll(); }, [fetchAll]);
 
+    useEffect(() => {
+        void (async () => {
+            try {
+                const [facultyRes, professionRes] = await Promise.all([
+                    api.get<{ success?: boolean; data?: Array<{ id: number; name_en?: string; name_ar?: string }> }>('/faculties'),
+                    api.get<{ success?: boolean; data?: Array<{ id: number; name_en?: string; name_ar?: string }> }>('/professions'),
+                ]);
+                setFaculties(facultyRes.data?.data ?? []);
+                setProfessions(professionRes.data?.data ?? []);
+            } catch {
+                // optional lookups for edit form
+            }
+        })();
+    }, []);
+
 
 
     // Player types filter
@@ -1696,57 +1783,93 @@ export default function MemberManagementPage() {
 
     // Edit handlers
 
-    const openEdit = (row?: MemberRow) => {
-
-        const target = row || selectedRow;
-
-        if (!target) return;
-
-        const d = selectedRow?.id === target.id ? selectedDetail : null;
-
+    const populateEditFields = (target: MemberRow, d: MemberApiItem | null) => {
         setEditFirstNameAr(d?.first_name_ar ?? target.firstNameAr);
-
         setEditFirstNameEn(d?.first_name_en ?? target.firstNameEn);
-
         setEditLastNameAr(d?.last_name_ar ?? target.lastNameAr);
-
         setEditLastNameEn(d?.last_name_en ?? target.lastNameEn);
-
         setEditGender(d?.gender ?? target.gender ?? "");
-
         setEditPhone(d?.phone ?? target.phone ?? "");
-
         setEditBirthdate(d?.birthdate ? String(d.birthdate).slice(0, 10) : target.birthdate ? String(target.birthdate).slice(0, 10) : "");
-
         setEditNationality(d?.nationality ?? target.nationality ?? "");
-
         setEditAddress(d?.address ?? target.address ?? "");
-
         setEditHealth(d?.health_status ?? target.healthStatus ?? "");
+        setEditEmail(d?.account?.email ?? target.email ?? "");
+        setEditNationalId(d?.national_id ?? target.nationalId ?? "");
 
-        setEditTab('info');
+        const student = d?.university_student_detail;
+        setEditFacultyId(student?.faculty_id ? String(student.faculty_id) : "");
+        setEditGraduationYear(student?.graduation_year ? String(student.graduation_year) : "");
 
-        setEditOpen(true);
+        const employee = d?.employee_detail;
+        setEditProfessionId(employee?.profession_id ? String(employee.profession_id) : "");
+        setEditDepartmentEn(employee?.department_en ?? "");
+        setEditDepartmentAr(employee?.department_ar ?? "");
+        setEditSalary(employee?.salary != null ? String(employee.salary) : "");
 
-        if (row) setSelectedRow(row);
+        const retired = d?.retired_employee_detail;
+        setEditProfessionCode(retired?.profession_code ?? "");
+        setEditFormerDepartmentEn(retired?.former_department_en ?? "");
+        setEditFormerDepartmentAr(retired?.former_department_ar ?? "");
+        setEditRetirementDate(retired?.retirement_date ? String(retired.retirement_date).slice(0, 10) : "");
+        setEditLastSalary(retired?.last_salary != null ? String(retired.last_salary) : "");
 
+        const outsider = d?.outsider_detail;
+        setEditJobTitleEn(outsider?.job_title_en ?? "");
+        setEditJobTitleAr(outsider?.job_title_ar ?? "");
+        setEditEmploymentStatus(outsider?.employment_status ?? "");
+        setEditPassportNumber(outsider?.passport_number ?? "");
+        setEditCountry(outsider?.country ?? "");
+        setEditVisaStatus(outsider?.visa_status ?? "");
+        setEditVisitorType(outsider?.visitor_type ?? "");
+        setEditDurationMonths(outsider?.duration_months != null ? String(outsider.duration_months) : "");
     };
 
+    const openEdit = async (row?: MemberRow) => {
+        const target = row || selectedRow;
+        if (!target) return;
+        if (row) setSelectedRow(row);
 
+        let d = selectedRow?.id === target.id ? selectedDetail : null;
 
-    // Convert File → base64 and upload to /members/:id/documents
-    const uploadDocIfChanged = async (file: File | null, docType: string, memberId: string) => {
-        if (!file) return;
-        const base64 = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve((reader.result as string));
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        });
-        await api.post(`/members/${memberId}/documents`, {
-            document_type: docType,
-            document_data: base64,
-        });
+        try {
+            if (!d || selectedRow?.id !== target.id) {
+                if (target.isTeamPlayer && target.memberTypeCode === "TEAM_MEMBER") {
+                    const teamRes = await api.get<{ success: boolean; data: TeamMemberApiItem }>(`/team-members/${target.id}`);
+                    if (teamRes.data?.success) {
+                        const teamData = teamRes.data.data;
+                        d = {
+                            id: teamData.id,
+                            first_name_en: teamData.first_name_en ?? teamData.firstNameEn ?? '',
+                            first_name_ar: teamData.first_name_ar ?? teamData.firstNameAr ?? '',
+                            last_name_en: teamData.last_name_en ?? teamData.lastNameEn ?? '',
+                            last_name_ar: teamData.last_name_ar ?? teamData.lastNameAr ?? '',
+                            gender: teamData.gender,
+                            phone: teamData.phone,
+                            nationality: teamData.nationality,
+                            birthdate: teamData.birthdate,
+                            national_id: teamData.national_id ?? '',
+                            address: teamData.address,
+                            status: teamData.status ?? 'active',
+                            member_type_id: 0,
+                            account: teamData.email ? { email: teamData.email } : undefined,
+                        } as MemberApiItem;
+                        setSelectedDetail(d);
+                    }
+                } else {
+                    const memberRes = await api.get<{ success: boolean; data: MemberApiItem }>(`/members/${target.id}`);
+                    if (memberRes.data?.success) {
+                        d = memberRes.data.data;
+                        setSelectedDetail(d);
+                    }
+                }
+            }
+        } catch {
+            // fall back to row-level data
+        }
+
+        populateEditFields(target, d);
+        setEditOpen(true);
     };
 
     const handleSaveEdit = async () => {
@@ -1758,6 +1881,8 @@ export default function MemberManagementPage() {
             last_name_ar: editLastNameAr.trim(),
             first_name_en: editFirstNameEn.trim(),
             last_name_en: editLastNameEn.trim(),
+            email: editEmail.trim(),
+            national_id: editNationalId.trim(),
             gender: (editGender.trim() || 'male') as 'male' | 'female' | 'other',
             phone: editPhone.trim(),
             birthdate: editBirthdate.trim(),
@@ -1778,17 +1903,12 @@ export default function MemberManagementPage() {
 
         try {
 
-            // Use correct endpoint based on whether it's a team player or regular member
-
             const endpoint = selectedRow.isTeamPlayer && selectedRow.memberTypeCode === "TEAM_MEMBER"
-
                 ? `/team-members/${selectedRow.id}`
-
                 : `/members/${selectedRow.id}`;
 
-
-
-            await api.put(endpoint, {
+            const basePayload = {
+                email: editEmail.trim() || undefined,
                 first_name_ar: editFirstNameAr.trim() || undefined,
                 first_name_en: editFirstNameEn.trim() || undefined,
                 last_name_ar: editLastNameAr.trim() || undefined,
@@ -1799,58 +1919,83 @@ export default function MemberManagementPage() {
                 nationality: editNationality.trim() || undefined,
                 address: editAddress.trim() || undefined,
                 health_status: editHealth.trim() || undefined,
-            });
+                national_id: editNationalId.trim() || undefined,
+            };
 
-            // Upload changed photos in parallel
-            await Promise.allSettled([
-                uploadDocIfChanged(photoFile, 'photo', selectedRow.id),
-                uploadDocIfChanged(idFrontFile, 'national_id_front', selectedRow.id),
-                uploadDocIfChanged(idBackFile, 'national_id_back', selectedRow.id),
-                uploadDocIfChanged(medicalFile, 'medical_report', selectedRow.id),
-            ]);
-            // Reset file pickers
-            setPhotoFile(null); setIdFrontFile(null); setIdBackFile(null); setMedicalFile(null);
+            const detailPayload =
+                selectedRow.isTeamPlayer && selectedRow.memberTypeCode === "TEAM_MEMBER"
+                    ? basePayload
+                    : {
+                        ...basePayload,
+                        ...(selectedDetail?.university_student_detail || editFacultyId || editGraduationYear
+                            ? {
+                                university_student: {
+                                    faculty_id: editFacultyId ? Number(editFacultyId) : null,
+                                    graduation_year: editGraduationYear ? Number(editGraduationYear) : null,
+                                },
+                            }
+                            : {}),
+                        ...(selectedDetail?.employee_detail || editProfessionId
+                            ? {
+                                employee: {
+                                    profession_id: editProfessionId ? Number(editProfessionId) : undefined,
+                                    department_en: editDepartmentEn.trim() || undefined,
+                                    department_ar: editDepartmentAr.trim() || undefined,
+                                    salary: editSalary.trim() || undefined,
+                                },
+                            }
+                            : {}),
+                        ...(selectedDetail?.retired_employee_detail || editRetirementDate || editProfessionCode
+                            ? {
+                                retired: {
+                                    profession_code: editProfessionCode.trim() || undefined,
+                                    former_department_en: editFormerDepartmentEn.trim() || undefined,
+                                    former_department_ar: editFormerDepartmentAr.trim() || undefined,
+                                    retirement_date: editRetirementDate.trim() || undefined,
+                                    last_salary: editLastSalary.trim() || undefined,
+                                },
+                            }
+                            : {}),
+                        ...(selectedDetail?.outsider_detail || editPassportNumber || editVisitorType
+                            ? {
+                                outsider: {
+                                    job_title_en: editJobTitleEn.trim() || undefined,
+                                    job_title_ar: editJobTitleAr.trim() || undefined,
+                                    employment_status: editEmploymentStatus.trim() || undefined,
+                                    passport_number: editPassportNumber.trim() || undefined,
+                                    country: editCountry.trim() || undefined,
+                                    visa_status: editVisaStatus.trim() || undefined,
+                                    visitor_type: editVisitorType.trim() || undefined,
+                                    duration_months: editDurationMonths.trim() || undefined,
+                                },
+                            }
+                            : {}),
+                    };
+
+            await api.put(endpoint, detailPayload);
 
             toast({ title: t('toast.updateSuccess') });
 
             setEditOpen(false);
 
-
-
-            // Update the selected row with new values
-
             const updatedRow = {
-
                 ...selectedRow,
-
                 firstNameAr: editFirstNameAr || selectedRow.firstNameAr,
-
                 firstNameEn: editFirstNameEn || selectedRow.firstNameEn,
-
                 lastNameAr: editLastNameAr || selectedRow.lastNameAr,
-
                 lastNameEn: editLastNameEn || selectedRow.lastNameEn,
-
                 gender: editGender || selectedRow.gender,
-
                 phone: editPhone || selectedRow.phone,
-
+                email: editEmail || selectedRow.email,
+                nationalId: editNationalId || selectedRow.nationalId,
                 nationality: editNationality || selectedRow.nationality,
-
                 address: editAddress || selectedRow.address,
-
                 healthStatus: editHealth || selectedRow.healthStatus,
-
             };
 
-
-
             setSelectedRow(updatedRow);
-
             setAllRows((prev) => prev.map((r) => r.id === selectedRow.id ? updatedRow : r));
-
             void openDetail(updatedRow);
-
         } catch (err) {
 
             toast({ title: t('toast.updateFailed'), description: err instanceof Error ? err.message : "", variant: "destructive" });
@@ -2347,6 +2492,8 @@ export default function MemberManagementPage() {
                                                         names={row}
                                                         language={language}
                                                         showAvatar={false}
+                                                        primaryClassName="text-[15px]"
+                                                        secondaryClassName="text-[15px] text-muted-foreground"
                                                     />
                                                 </TableCell>
 
@@ -2366,13 +2513,13 @@ export default function MemberManagementPage() {
 
                                                 <TableCell className={adminCellClass({ center: true })}>
                                                     {row.isTeamPlayer ? (
-                                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800">
-                                                            <Award className="w-3 h-3" />
+                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[15px] font-semibold bg-amber-100 text-amber-800">
+                                                            <Award className={adminTableStyles.icon} />
                                                             {t('memberTypes.teamMember')}
                                                         </span>
                                                     ) : (
-                                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-800">
-                                                            <Users className="w-3 h-3" />
+                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[15px] font-semibold bg-blue-100 text-blue-800">
+                                                            <Users className={adminTableStyles.icon} />
                                                             {t('memberTypes.member')}
                                                         </span>
                                                     )}
@@ -2393,7 +2540,7 @@ export default function MemberManagementPage() {
                                                                 tooltip={t('rowActions.edit')}
                                                                 icon={Pencil}
                                                                 variant="edit"
-                                                                onClick={() => openEdit(row)}
+                                                                onClick={() => void openEdit(row)}
                                                             />
                                                         </RoleGuard>
                                                         <RoleGuard privilege="MANAGE_MEMBER_BLOCK">
@@ -2473,7 +2620,7 @@ export default function MemberManagementPage() {
 
                 <Dialog open={!!selectedRow && !editOpen && !statusOpen && !deleteOpen} onOpenChange={(o) => !o && setSelectedRow(null)}>
 
-                    <DialogContent className="max-w-3xl w-full p-0 overflow-hidden" style={{ maxHeight: '88vh' }} dir={isRTL ? 'rtl' : 'ltr'}>
+                    <DialogContent className={adminDialogStyles.content} dir={isRTL ? 'rtl' : 'ltr'}>
 
                         <DialogHeader className="sr-only">
 
@@ -2496,7 +2643,7 @@ export default function MemberManagementPage() {
 
                                 onClose={() => setSelectedRow(null)}
 
-                                onEdit={() => openEdit()}
+                                onEdit={() => void openEdit()}
 
                                 onChangeStatus={() => openStatus()}
 
@@ -2512,145 +2659,112 @@ export default function MemberManagementPage() {
 
 
 
-                {/* Edit Dialog */}
+                {/* Edit Dialog — same layout as view, fields editable */}
 
                 <Dialog open={editOpen} onOpenChange={(o) => !o && setEditOpen(false)}>
 
-                    <DialogContent className="max-w-xl" dir={isRTL ? 'rtl' : 'ltr'}>
+                    <DialogContent className={adminDialogStyles.content} dir={isRTL ? 'rtl' : 'ltr'}>
 
-                        <DialogHeader>
-                            <DialogTitle className="text-lg">{t('editModal.title')}</DialogTitle>
-                            <DialogDescription className="text-sm">{t('editModal.description')}</DialogDescription>
+                        <DialogHeader className="sr-only">
+                            <DialogTitle>{t('editModal.title')}</DialogTitle>
+                            <DialogDescription>{t('editModal.description')}</DialogDescription>
                         </DialogHeader>
 
-                        {/* ── Tab bar ── */}
-                        <div className="flex gap-0 border-b border-border -mx-1">
-                            {([
-                                { key: 'info', label: t('editModal.tabs.personalInfo') },
-                                { key: 'docs', label: t('editModal.tabs.docsAndPhotos') },
-                            ] as const).map(tab => (
-                                <button
-                                    key={tab.key}
-                                    type="button"
-                                    onClick={() => setEditTab(tab.key)}
-                                    className={`px-5 py-2.5 text-sm font-semibold transition-all border-b-2 -mb-px
-                                        ${editTab === tab.key
-                                            ? 'border-primary text-primary'
-                                            : 'border-transparent text-muted-foreground hover:text-foreground'
-                                        }`}
-                                >
-                                    {tab.label}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* ── TAB 1: Personal Info ── */}
-                        {editTab === 'info' && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 py-4">
-                                <div>
-                                    <Label className="text-xs">{t('editModal.fields.firstNameAr')}</Label>
-                                    <Input value={editFirstNameAr} onChange={(e) => setEditFirstNameAr(e.target.value)} className="mt-1 h-8 text-xs" placeholder={t('editModal.placeholders.firstNameAr')} />
-                                </div>
-                                <div>
-                                    <Label className="text-xs">{t('editModal.fields.lastNameAr')}</Label>
-                                    <Input value={editLastNameAr} onChange={(e) => setEditLastNameAr(e.target.value)} className="mt-1 h-8 text-xs" placeholder={t('editModal.placeholders.lastNameAr')} />
-                                </div>
-                                <div>
-                                    <Label className="text-xs">{t('editModal.fields.firstNameEn')}</Label>
-                                    <Input value={editFirstNameEn} onChange={(e) => setEditFirstNameEn(e.target.value)} className="mt-1 h-8 text-xs" placeholder={t('editModal.placeholders.firstNameEn')} dir="ltr" />
-                                </div>
-                                <div>
-                                    <Label className="text-xs">{t('editModal.fields.lastNameEn')}</Label>
-                                    <Input value={editLastNameEn} onChange={(e) => setEditLastNameEn(e.target.value)} className="mt-1 h-8 text-xs" placeholder={t('editModal.placeholders.lastNameEn')} dir="ltr" />
-                                </div>
-                                <div>
-                                    <Label className="text-xs">{t('editModal.fields.gender')}</Label>
-                                    <Select value={editGender} onValueChange={setEditGender}>
-                                        <SelectTrigger className="mt-1 h-8 text-xs"><SelectValue placeholder={t('editModal.placeholders.select')} /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="male">{t('gender.male')}</SelectItem>
-                                            <SelectItem value="female">{t('gender.female')}</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div>
-                                    <Label className="text-xs">{t('editModal.fields.birthdate')}</Label>
-                                    <Input value={editBirthdate} onChange={(e) => setEditBirthdate(e.target.value)} className="mt-1 h-8 text-xs" type="date" dir="ltr" />
-                                </div>
-                                <div>
-                                    <Label className="text-xs">{t('editModal.fields.phone')}</Label>
-                                    <Input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className="mt-1 h-8 text-xs" placeholder={t('editModal.placeholders.phone')} dir="ltr" type="tel" />
-                                </div>
-                                <div>
-                                    <Label className="text-xs">{t('editModal.fields.nationality')}</Label>
-                                    <Input value={editNationality} onChange={(e) => setEditNationality(e.target.value)} className="mt-1 h-8 text-xs" placeholder={t('editModal.placeholders.nationality')} dir="ltr" />
-                                </div>
-                                <div className="col-span-2">
-                                    <Label className="text-xs">{t('editModal.fields.address')}</Label>
-                                    <Input value={editAddress} onChange={(e) => setEditAddress(e.target.value)} className="mt-1 h-8 text-xs" placeholder={t('editModal.placeholders.address')} />
-                                </div>
-                                <div className="col-span-2">
-                                    <Label className="text-xs">{t('editModal.fields.healthStatus')}</Label>
-                                    <Input value={editHealth} onChange={(e) => setEditHealth(e.target.value)} className="mt-1 h-8 text-xs" placeholder={t('editModal.placeholders.healthStatus')} />
-                                </div>
-                            </div>
+                        {selectedRow && (
+                            <MemberEditPanel
+                                row={selectedRow}
+                                details={selectedDetail}
+                                language={language}
+                                isRTL={isRTL}
+                                photoUrl={getFileUrl(selectedDetail?.photo) || null}
+                                fmtDate={fmtDate}
+                                statusBadge={<StatusBadge status={selectedRow.status} />}
+                                memberTypeBadge={
+                                    selectedRow.isTeamPlayer ? (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800">
+                                            <Award className="w-3 h-3" />
+                                            {t('memberTypes.teamMember')}
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-800">
+                                            <Users className="w-3 h-3" />
+                                            {t('memberTypes.member')}
+                                        </span>
+                                    )
+                                }
+                                faculties={faculties}
+                                professions={professions}
+                                editSaving={editSaving}
+                                onSave={() => void handleSaveEdit()}
+                                onCancel={() => setEditOpen(false)}
+                                fields={{
+                                    firstNameAr: editFirstNameAr,
+                                    firstNameEn: editFirstNameEn,
+                                    lastNameAr: editLastNameAr,
+                                    lastNameEn: editLastNameEn,
+                                    gender: editGender,
+                                    phone: editPhone,
+                                    birthdate: editBirthdate,
+                                    nationality: editNationality,
+                                    address: editAddress,
+                                    health: editHealth,
+                                    email: editEmail,
+                                    nationalId: editNationalId,
+                                    facultyId: editFacultyId,
+                                    graduationYear: editGraduationYear,
+                                    professionId: editProfessionId,
+                                    departmentEn: editDepartmentEn,
+                                    departmentAr: editDepartmentAr,
+                                    salary: editSalary,
+                                    professionCode: editProfessionCode,
+                                    formerDepartmentEn: editFormerDepartmentEn,
+                                    formerDepartmentAr: editFormerDepartmentAr,
+                                    retirementDate: editRetirementDate,
+                                    lastSalary: editLastSalary,
+                                    passportNumber: editPassportNumber,
+                                    country: editCountry,
+                                    visaStatus: editVisaStatus,
+                                    visitorType: editVisitorType,
+                                    durationMonths: editDurationMonths,
+                                    jobTitleEn: editJobTitleEn,
+                                    jobTitleAr: editJobTitleAr,
+                                    employmentStatus: editEmploymentStatus,
+                                }}
+                                onChange={{
+                                    setFirstNameAr: setEditFirstNameAr,
+                                    setFirstNameEn: setEditFirstNameEn,
+                                    setLastNameAr: setEditLastNameAr,
+                                    setLastNameEn: setEditLastNameEn,
+                                    setGender: setEditGender,
+                                    setPhone: setEditPhone,
+                                    setBirthdate: setEditBirthdate,
+                                    setNationality: setEditNationality,
+                                    setAddress: setEditAddress,
+                                    setHealth: setEditHealth,
+                                    setEmail: setEditEmail,
+                                    setNationalId: setEditNationalId,
+                                    setFacultyId: setEditFacultyId,
+                                    setGraduationYear: setEditGraduationYear,
+                                    setProfessionId: setEditProfessionId,
+                                    setDepartmentEn: setEditDepartmentEn,
+                                    setDepartmentAr: setEditDepartmentAr,
+                                    setSalary: setEditSalary,
+                                    setProfessionCode: setEditProfessionCode,
+                                    setFormerDepartmentEn: setEditFormerDepartmentEn,
+                                    setFormerDepartmentAr: setEditFormerDepartmentAr,
+                                    setRetirementDate: setEditRetirementDate,
+                                    setLastSalary: setEditLastSalary,
+                                    setPassportNumber: setEditPassportNumber,
+                                    setCountry: setEditCountry,
+                                    setVisaStatus: setEditVisaStatus,
+                                    setVisitorType: setEditVisitorType,
+                                    setDurationMonths: setEditDurationMonths,
+                                    setJobTitleEn: setEditJobTitleEn,
+                                    setJobTitleAr: setEditJobTitleAr,
+                                    setEmploymentStatus: setEditEmploymentStatus,
+                                }}
+                            />
                         )}
-
-                        {/* ── TAB 2: Documents & Photos ── */}
-                        {editTab === 'docs' && (
-                            <div className="py-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    {([
-                                        { label: t('editModal.docs.photo'), file: photoFile, setter: setPhotoFile, existing: selectedDetail?.photo, span: 'col-span-2', height: 'h-36' },
-                                        { label: t('editModal.docs.idFront'), file: idFrontFile, setter: setIdFrontFile, existing: selectedDetail?.national_id_front, span: '', height: 'h-24' },
-                                        { label: t('editModal.docs.idBack'), file: idBackFile, setter: setIdBackFile, existing: selectedDetail?.national_id_back, span: '', height: 'h-24' },
-                                        { label: t('editModal.docs.medicalReport'), file: medicalFile, setter: setMedicalFile, existing: selectedDetail?.medical_report, span: 'col-span-2', height: 'h-28' },
-                                    ] as { label: string; file: File | null; setter: (f: File | null) => void; existing?: string; span: string; height: string }[]).map(({ label, file, setter, existing, span, height }) => {
-                                        const preview = file ? URL.createObjectURL(file) : getFileUrl(existing);
-                                        return (
-                                            <label key={label} className={`${span} flex flex-col gap-1.5 cursor-pointer group`}>
-                                                <span className="text-xs font-medium text-muted-foreground">{label}</span>
-                                                <div className={`relative w-full ${height} rounded-xl border-2 border-dashed 
-                                                    ${file ? 'border-primary bg-primary/5' : 'border-muted-foreground/25 bg-muted/10'} 
-                                                    overflow-hidden flex items-center justify-center 
-                                                    group-hover:border-primary/60 transition-colors`}>
-                                                    {preview ? (
-                                                        <img src={preview} alt={label} className="w-full h-full object-contain" />
-                                                    ) : (
-                                                        <div className="flex flex-col items-center gap-1.5 text-muted-foreground/50">
-                                                            <span className="text-2xl">📎</span>
-                                                            <span className="text-[11px]">{t('editModal.docs.clickToUpload')}</span>
-                                                        </div>
-                                                    )}
-                                                    {file && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={e => { e.preventDefault(); setter(null); }}
-                                                            className="absolute top-1.5 start-1.5 w-5 h-5 rounded-full 
-                                                                bg-rose-500 text-white text-[10px] flex items-center 
-                                                                justify-center hover:bg-rose-600 shadow"
-                                                        >✕</button>
-                                                    )}
-                                                </div>
-                                                <input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    className="hidden"
-                                                    onChange={e => e.target.files?.[0] && setter(e.target.files[0])}
-                                                />
-                                            </label>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
-
-                        <DialogFooter className="mt-2 gap-2 border-t border-border pt-3">
-                            <Button onClick={() => void handleSaveEdit()} disabled={editSaving} size="sm" className="text-xs">
-                                {editSaving ? t('editModal.buttons.saving') : t('editModal.buttons.save')}
-                            </Button>
-                            <Button variant="outline" onClick={() => setEditOpen(false)} disabled={editSaving} size="sm" className="text-xs">{t('editModal.buttons.cancel')}</Button>
-                        </DialogFooter>
 
                     </DialogContent>
 

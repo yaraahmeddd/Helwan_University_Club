@@ -116,8 +116,8 @@
   },
   "review": {
     "title": "Review Request",
-    "memberData": "👤 Member Data",
-    "documents": "🖼️ Documents & Photos",
+    "memberData": "👤 Personal Data",
+    "documents": "🖼️ Photos & Documents",
     "registered": "Reg:",
     "age": "years",
     "personalPhoto": "Personal Photo",

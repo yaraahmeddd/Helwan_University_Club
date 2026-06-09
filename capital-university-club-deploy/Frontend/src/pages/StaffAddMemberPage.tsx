@@ -259,8 +259,8 @@ const StaffAddMemberPage = () => {
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 pb-8">
-                <div className="max-w-5xl mx-auto">
+            <div className="flex-1 overflow-y-auto p-6 pb-10">
+                <div className="max-w-6xl mx-auto staff-register-wizard">
                     <FormProvider {...methods}>
                         <RegisterStepIndicator currentStep={step} />
                         <form onSubmit={handleSubmit((d: RegisterFormValues) => onSubmit(d))}>

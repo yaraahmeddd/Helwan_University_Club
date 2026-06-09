@@ -18,8 +18,20 @@ export function MainLayout({ children }: { children: ReactNode }) {
     document.documentElement.lang = savedLang || 'ar';
   }, []);
 
+  useEffect(() => {
+    if (isMember) {
+      document.body.classList.remove("admin-module");
+    } else {
+      document.body.classList.add("admin-module");
+    }
+    return () => document.body.classList.remove("admin-module");
+  }, [isMember]);
+
   return (
-    <div className="h-screen bg-background huc-app huc-page overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div
+      className={`h-screen bg-background huc-app huc-page overflow-hidden ${isMember ? "" : "admin-module"}`}
+      dir={isRTL ? 'rtl' : 'ltr'}
+    >
       <Navbar />
       {!isMember && <AppSidebar />}
       {/*
