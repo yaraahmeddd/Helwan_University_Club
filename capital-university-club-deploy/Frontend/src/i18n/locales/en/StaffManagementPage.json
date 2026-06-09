@@ -1,16 +1,28 @@
 {
   "status": {
     "active": "Active",
+    "cancelled": "Cancelled",
     "inactive": "Inactive"
+  },
+  "toolbar": {
+    "dateFilter": "Date Filter",
+    "filterByDate": "Filter by Date",
+    "statusFilter": "Status",
+    "clearFilter": "Clear",
+    "allRoles": "All Job Roles",
+    "refresh": "Refresh"
   },
   "detailPanel": {
     "loading": "Loading...",
+    "tabs": {
+      "info": "Personal Info",
+      "photos": "Photos & Documents"
+    },
     "sections": {
       "name": "Name",
+      "personal": "Personal Information",
       "contact": "Contact Information",
-      "employment": "Employment Information",
-      "assignedPackages": "Assigned Packages",
-      "privileges": "Individual Privileges"
+      "employment": "Employment Information"
     },
     "fields": {
       "firstNameAr": "First Name (Arabic)",
@@ -25,6 +37,13 @@
       "startDate": "Start Date",
       "endDate": "End Date"
     },
+    "photos": {
+      "personalPhoto": "Personal Photo",
+      "nationalId": "National ID",
+      "idFront": "ID Front",
+      "idBack": "ID Back",
+      "notUploaded": "Not uploaded"
+    },
     "placeholders": {
       "selectJob": "Select Job Role",
       "address": "Cairo, Egypt",
@@ -33,11 +52,7 @@
       "firstNameEn": "Mohamed",
       "lastNameEn": "Ahmed"
     },
-    "messages": {
-      "noPackages": "No assigned packages"
-    },
     "actions": {
-      "viewPrivileges": "View Privileges",
       "saveChanges": "Save Changes",
       "saving": "Saving...",
       "cancel": "Cancel",
@@ -51,22 +66,21 @@
     "newStaff": "New Staff"
   },
   "list": {
-    "searchPlaceholder": "Search by name...",
-    "prevPage": "Previous Page",
-    "nextPage": "Next Page"
+    "searchPlaceholder": "Search by name, national ID, or phone..."
   },
   "table": {
     "headers": {
       "number": "#",
-      "staff": "Staff",
+      "staff": "Name",
       "job": "Job Role",
+      "nationalId": "National ID",
+      "phone": "Phone",
       "startDate": "Start Date",
-      "status": "Status",
+      "status": "Account Status",
       "actions": "Actions"
     },
     "states": {
-      "noStaff": "No staff found",
-      "addFirstStaff": "Add first staff"
+      "noStaff": "No staff found"
     },
     "actions": {
       "view": "View",
@@ -76,12 +90,7 @@
   },
   "toasts": {
     "dataError": {
-      "title": "Data Error",
-      "desc": "First name in Arabic or English is required"
-    },
-    "phoneError": {
-      "title": "Invalid Phone Number",
-      "desc": "Phone number must start with 010, 011, 012, or 015"
+      "title": "Data Error"
     },
     "updateSuccess": {
       "title": "Updated Successfully",
@@ -92,7 +101,7 @@
     },
     "deactivateSuccess": {
       "title": "Deactivated Successfully",
-      "desc": "Staff deactivated successfully"
+      "desc": "Staff account status changed to cancelled"
     },
     "deactivateFailed": {
       "title": "Deactivation Failed"
@@ -103,7 +112,7 @@
   },
   "deactivateDialog": {
     "title": "Confirm Deactivation",
-    "description": "Are you sure you want to deactivate this staff member? They can be reactivated later.",
+    "description": "This will change the staff account status to cancelled. The record will remain in the system.",
     "cancel": "Cancel"
   }
 }

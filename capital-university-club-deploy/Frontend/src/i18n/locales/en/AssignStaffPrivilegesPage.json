@@ -1,15 +1,4 @@
 {
-  "roles": {
-    "ADMIN": "System Admin",
-    "SPORTS_DIRECTOR": "Sports Director",
-    "SPORTS_OFFICER": "Sports Officer",
-    "FINANCIAL_DIRECTOR": "Financial Director",
-    "REGISTRATION_STAFF": "Registration Staff",
-    "TEAM_MANAGER": "Team Manager",
-    "SUPPORT": "Technical Support",
-    "AUDITOR": "Financial Auditor",
-    "STAFF": "Staff"
-  },
   "filters": {
     "all": "All",
     "admin": "Admin",
@@ -43,6 +32,13 @@
       "actions": "Action"
     },
     "assignAction": "Assign Privileges"
+  },
+  "toolbar": {
+    "dateFilter": "Date Filter",
+    "filterByDate": "Filter by Date",
+    "statusFilter": "Status",
+    "clearFilter": "Clear",
+    "allRoles": "All Job Roles"
   },
   "assign": {
     "back": "Back to list",

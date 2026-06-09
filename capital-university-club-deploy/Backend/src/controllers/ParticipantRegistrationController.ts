@@ -27,13 +27,14 @@ function formatInvitationTime(value: Date | string): string {
   return `${hours}:${minutes}`;
 }
 
-function resolveBookerName(
+function buildPersonNames(
   person: { first_name_ar?: string | null; last_name_ar?: string | null; first_name_en?: string | null; last_name_en?: string | null } | null | undefined
-): string {
-  if (!person) return "Unknown";
-  const en = `${person.first_name_en || ""} ${person.last_name_en || ""}`.trim();
-  const ar = `${person.first_name_ar || ""} ${person.last_name_ar || ""}`.trim();
-  return en || ar || "Unknown";
+): { name_ar: string; name_en: string } {
+  if (!person) return { name_ar: "", name_en: "" };
+  return {
+    name_ar: `${person.first_name_ar || ""} ${person.last_name_ar || ""}`.trim(),
+    name_en: `${person.first_name_en || ""} ${person.last_name_en || ""}`.trim(),
+  };
 }
 
 export class ParticipantRegistrationController {
@@ -459,7 +460,7 @@ export class ParticipantRegistrationController {
 
       // Fetch booker and field details for each booking
       const invitations = await Promise.all(bookings.map(async (booking) => {
-        let bookerName = "Unknown";
+        let bookerNames = { name_ar: "", name_en: "" };
         let bookerType: string | null = null;
         let bookerPhone: string | null = null;
         let bookerEmail: string | null = null;
@@ -476,7 +477,7 @@ export class ParticipantRegistrationController {
             select: ["id", "first_name_ar", "last_name_ar", "first_name_en", "last_name_en", "phone"]
           });
           if (member) {
-            bookerName = resolveBookerName(member);
+            bookerNames = buildPersonNames(member);
             bookerType = "member";
             bookerPhone = member.phone || null;
             bookerEmail = null;
@@ -487,7 +488,7 @@ export class ParticipantRegistrationController {
             select: ["id", "first_name_ar", "last_name_ar", "first_name_en", "last_name_en", "phone"]
           });
           if (teamMember) {
-            bookerName = resolveBookerName(teamMember);
+            bookerNames = buildPersonNames(teamMember);
             bookerType = "team_member";
             bookerPhone = teamMember.phone || null;
             bookerEmail = null;
@@ -501,7 +502,8 @@ export class ParticipantRegistrationController {
           share_token: booking.share_token,
           share_url: `${frontendOrigin}/bookings/share/${booking.share_token}`,
           booker: {
-            name: bookerName,
+            name_ar: bookerNames.name_ar,
+            name_en: bookerNames.name_en,
             type: bookerType,
             phone: bookerPhone,
             email: bookerEmail
@@ -520,14 +522,18 @@ export class ParticipantRegistrationController {
             name_ar: field?.name_ar,
             name_en: field?.name_en
           },
-          participants: booking.participants.map(p => ({
-            id: p.id,
-            full_name: p.full_name,
-            phone_number: p.phone_number,
-            email: p.email,
-            is_creator: p.is_creator,
-            registered_at: p.created_at
-          })),
+          participants: booking.participants.map(p => {
+            const useBookerName = p.is_creator && (bookerNames.name_ar || bookerNames.name_en);
+            return {
+              id: p.id,
+              full_name_ar: useBookerName ? bookerNames.name_ar : p.full_name,
+              full_name_en: useBookerName ? bookerNames.name_en : p.full_name,
+              phone_number: p.phone_number,
+              email: p.email,
+              is_creator: p.is_creator,
+              registered_at: p.created_at
+            };
+          }),
           stats: {
             expected_participants: booking.expected_participants,
             registered_count: booking.participants.length,

@@ -1,16 +1,28 @@
 {
   "status": {
     "active": "نشط",
+    "cancelled": "ملغى",
     "inactive": "غير نشط"
+  },
+  "toolbar": {
+    "dateFilter": "تصفية التاريخ",
+    "filterByDate": "تصفية حسب التاريخ",
+    "statusFilter": "الحالة",
+    "clearFilter": "مسح",
+    "allRoles": "كل الوظائف",
+    "refresh": "تحديث"
   },
   "detailPanel": {
     "loading": "جارٍ التحميل...",
+    "tabs": {
+      "info": "المعلومات الشخصية",
+      "photos": "الصور والمستندات"
+    },
     "sections": {
       "name": "الاسم",
+      "personal": "المعلومات الشخصية",
       "contact": "بيانات التواصل",
-      "employment": "بيانات التوظيف",
-      "assignedPackages": "الحزم المخصصة",
-      "privileges": "الصلاحيات الفردية"
+      "employment": "بيانات التوظيف"
     },
     "fields": {
       "firstNameAr": "الاسم الأول (عربي)",
@@ -25,6 +37,13 @@
       "startDate": "بداية العمل",
       "endDate": "نهاية العمل"
     },
+    "photos": {
+      "personalPhoto": "الصورة الشخصية",
+      "nationalId": "البطاقة القومية",
+      "idFront": "الوجه الأمامي",
+      "idBack": "الوجه الخلفي",
+      "notUploaded": "غير مرفوع"
+    },
     "placeholders": {
       "selectJob": "اختر نوع الوظيفة",
       "address": "القاهرة، مصر",
@@ -33,16 +52,12 @@
       "firstNameEn": "Mohamed",
       "lastNameEn": "Ahmed"
     },
-    "messages": {
-      "noPackages": "لا توجد حزم مخصصة"
-    },
     "actions": {
-      "viewPrivileges": "عرض الصلاحيات",
       "saveChanges": "حفظ التغييرات",
       "saving": "جارٍ الحفظ...",
       "cancel": "إلغاء",
       "edit": "تعديل",
-      "deactivate": "إلغاء تفعيل"
+      "deactivate": "إلغاء التفعيل"
     }
   },
   "page": {
@@ -51,37 +66,31 @@
     "newStaff": "موظف جديد"
   },
   "list": {
-    "searchPlaceholder": "بحث بالاسم...",
-    "prevPage": "الصفحة السابقة",
-    "nextPage": "الصفحة التالية"
+    "searchPlaceholder": "بحث بالاسم، الرقم القومي، أو الهاتف..."
   },
   "table": {
     "headers": {
       "number": "#",
-      "staff": "الموظف",
+      "staff": "الاسم",
       "job": "الوظيفة",
+      "nationalId": "الرقم القومي",
+      "phone": "الهاتف",
       "startDate": "بداية العمل",
-      "status": "الحالة",
+      "status": "حالة الحساب",
       "actions": "الإجراءات"
     },
     "states": {
-      "noStaff": "لم يتم العثور على موظفين",
-      "addFirstStaff": "إضافة الموظف الأول"
+      "noStaff": "لم يتم العثور على موظفين"
     },
     "actions": {
       "view": "عرض",
       "edit": "تعديل",
-      "deactivate": "إلغاء تفعيل"
+      "deactivate": "إلغاء التفعيل"
     }
   },
   "toasts": {
     "dataError": {
-      "title": "خطأ في البيانات",
-      "desc": "يجب إدخال الاسم الأول بالعربية أو الإنجليزية"
-    },
-    "phoneError": {
-      "title": "رقم هاتف غير صحيح",
-      "desc": "يجب أن يبدأ الرقم بـ 010, 011, 012, أو 015"
+      "title": "خطأ في البيانات"
     },
     "updateSuccess": {
       "title": "تم التحديث",
@@ -92,7 +101,7 @@
     },
     "deactivateSuccess": {
       "title": "تم إلغاء التفعيل",
-      "desc": "تم إلغاء تفعيل الموظف بنجاح"
+      "desc": "تم تغيير حالة حساب الموظف إلى ملغى"
     },
     "deactivateFailed": {
       "title": "فشل إلغاء التفعيل"
@@ -103,7 +112,7 @@
   },
   "deactivateDialog": {
     "title": "تأكيد إلغاء التفعيل",
-    "description": "هل أنت متأكد أنك تريد إلغاء تفعيل هذا الموظف؟ يمكن إعادة تفعيله لاحقاً.",
+    "description": "سيتم تغيير حالة حساب الموظف إلى ملغى. السجل سيبقى في النظام.",
     "cancel": "تراجع"
   }
 }

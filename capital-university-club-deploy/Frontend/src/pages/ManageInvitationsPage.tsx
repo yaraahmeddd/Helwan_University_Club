@@ -58,7 +58,9 @@ import {
 
 type Participant = {
   id: string;
-  full_name: string;
+  full_name_ar?: string;
+  full_name_en?: string;
+  full_name?: string;
   phone_number: string | null;
   email: string | null;
   is_creator: boolean;
@@ -70,7 +72,9 @@ type Invitation = {
   share_token: string;
   share_url: string;
   booker: {
-    name: string;
+    name_ar?: string;
+    name_en?: string;
+    name?: string;
     type: string | null;
     phone: string | null;
     email: string | null;
@@ -132,6 +136,19 @@ function StatusBadge({ status }: { status: Invitation["status"] }) {
 function truncate(str: string, length = 8) {
   if (!str) return "";
   return str.length > length ? str.substring(0, length) + "..." : str;
+}
+
+function getPersonDisplayName(
+  ar: string | undefined | null,
+  en: string | undefined | null,
+  language: "ar" | "en",
+  legacyName?: string | null,
+  fallback = "—",
+) {
+  const localized = getLocalizedText(ar, en, language);
+  if (localized) return localized;
+  if (legacyName?.trim()) return legacyName.trim();
+  return fallback;
 }
 
 function formatTime(timeStr: string, dateLocale: Locale) {
@@ -349,7 +366,9 @@ export default function ManageInvitationsPage() {
                   <TableRow key={inv.booking_id} className={adminTableStyles.row}>
                     <TableCell className={adminCellClass()}>
                       <div className="flex flex-col gap-1.5 items-start">
-                        <span className="text-sm font-bold leading-none">{inv.booker?.name || t('cell.unknown')}</span>
+                        <span className="text-sm font-bold leading-none">
+                          {getPersonDisplayName(inv.booker?.name_ar, inv.booker?.name_en, language, inv.booker?.name, t('cell.unknown'))}
+                        </span>
                         {inv.booker?.type && (
                           <Badge variant="secondary" className="text-[10px] uppercase font-bold text-blue-700 bg-blue-50 border-blue-200/60 shadow-sm px-2 py-0.5">
                             {inv.booker.type === "member" ? t('bookerType.member') : t('bookerType.teamPlayer')}
@@ -545,7 +564,9 @@ export default function ManageInvitationsPage() {
                     <div className="flex justify-between">
                       <span className="text-muted-foreground text-xs py-0.5">{t('panel.name')}</span>
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">{selectedInv.booker?.name || "—"}</span>
+                        <span className="font-medium">
+                          {getPersonDisplayName(selectedInv.booker?.name_ar, selectedInv.booker?.name_en, language, selectedInv.booker?.name)}
+                        </span>
                         {selectedInv.booker?.type && (
                           <Badge variant="secondary" className="text-[10px] h-5">{selectedInv.booker.type === "member" ? t('bookerType.memberShort') : t('bookerType.teamPlayerShort')}</Badge>
                         )}
@@ -587,7 +608,7 @@ export default function ManageInvitationsPage() {
                           <div className="flex justify-between items-start">
                             <span className="font-medium text-sm text-[#1a365d] flex items-center gap-1.5">
                               {p.is_creator && <User className="h-3.5 w-3.5 text-primary" />}
-                              {p.full_name}
+                              {getPersonDisplayName(p.full_name_ar, p.full_name_en, language, p.full_name)}
                             </span>
                             {p.is_creator && (
                               <Badge variant="outline" className="text-[10px] h-4 leading-none py-0 px-1 border-primary/30 text-primary">{t('panel.bookingCreator')}</Badge>

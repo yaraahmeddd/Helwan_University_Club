@@ -57,6 +57,8 @@ import {
 import { useToast } from "../hooks/use-toast";
 import i18n from "../i18n";
 import { useTranslation } from "react-i18next";
+import { getLanguageOnlyText } from "../lib/localizedDisplay";
+import { getPrivilegeModuleLabel } from "../lib/privilegeModuleLabels";
 
 type StaffType = {
   id: number;
@@ -276,7 +278,7 @@ function DocumentUploadCard({
         className={`
             relative border-2 border-dashed p-6 rounded-2xl cursor-pointer transition-all duration-300 group
             flex flex-col items-center justify-center text-center h-full
-            ${file ? 'border-indigo-500 bg-indigo-50/50' : 'border-gray-200 bg-gray-50 hover:border-indigo-300 hover:bg-white'}
+            ${file ? 'border-primary-500 bg-primary-50/50' : 'border-gray-200 bg-gray-50 hover:border-primary-300 hover:bg-white'}
             ${(error || localError) ? "border-red-400 bg-red-50/50" : ""}
             ${ringClass}
         `}
@@ -307,11 +309,11 @@ function DocumentUploadCard({
         </div>
 
         <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 mt-6 transition-colors
-             ${file ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-200 text-gray-500 group-hover:bg-indigo-100 group-hover:text-indigo-600'}`}>
+             ${file ? 'bg-primary-100 text-primary-600' : 'bg-gray-200 text-gray-500 group-hover:bg-primary-100 group-hover:text-primary-600'}`}>
             {file ? <Check size={28} /> : <UploadCloud size={28} />}
         </div>
 
-        <p className={`font-bold text-base ${file ? 'text-indigo-900' : 'text-gray-600'}`}>{label}</p>
+        <p className={`font-bold text-base ${file ? 'text-primary-900' : 'text-gray-600'}`}>{label}</p>
 
         <p className="text-sm text-gray-400 mt-2 max-w-[200px] truncate" dir="ltr">
             {file ? file.name : t("documents.uploadPrompt")}
@@ -331,29 +333,7 @@ function DocumentUploadCard({
   );
 }
 
-// Arabic display names for privilege module codes sent by the backend
-const MODULE_NAMES_AR: Record<string, string> = {
-  MEMBERS: "الأعضاء",
-  MEMBER: "العضو",
-  MEMBER_TYPES: "أنواع الأعضاء",
-  TEAM_MEMBERS: "أعضاء الفريق",
-  MEMBERSHIP_PLANS: "خطط العضوية",
-  STAFF: "الموظفون",
-  STAFF_TYPES: "أنواع الموظفين",
-  FINANCE: "الشؤون المالية",
-  EVENTS: "الفعاليات",
-  SPORTS: "الأنشطة الرياضية",
-  MAINTENANCE: "الصيانة",
-  MEDIA: "الوسائط",
-  MEDIA_CENTER: "المركز الإعلامي",
-  MediaGallery: "معرض الوسائط",
-  FACULTIES: "الكليات",
-  PROFESSIONS: "المهن",
-  ADMIN: "الإدارة",
-  PRIVILEGE_MANAGEMENT: "إدارة الصلاحيات",
-  PACKAGE_MANAGEMENT: "إدارة الحزم",
-  General: "عام",
-};
+// Module labels handled via getPrivilegeModuleLabel()
 
 export default function AddNewStaffPage() {
   const { t, i18n } = useTranslation("AddNewStaffPage");
@@ -387,7 +367,8 @@ export default function AddNewStaffPage() {
   });
 
   const staffTypeId = watch("staff_type_id");
-  const inputClasses = "w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none placeholder:text-gray-400 text-gray-800";
+  const uiLanguage = (i18n.language === 'ar' ? 'ar' : 'en') as 'ar' | 'en';
+  const inputClasses = "w-full px-4 py-3 rounded-xl border border-border bg-muted/30 focus:bg-background focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-200 outline-none placeholder:text-muted-foreground text-foreground";
 
   // Stepper & Gender State
   const [step, setStep] = useState(1);
@@ -848,7 +829,7 @@ export default function AddNewStaffPage() {
       <div className="w-full max-w-3xl mx-auto mb-12 relative z-0 mt-8">
         <div className="absolute top-1/2 left-0 right-0 h-2 bg-gray-200 -z-10 rounded-full" />
         <motion.div
-            className={`absolute top-1/2 ${i18n.language === 'ar' ? 'right-0' : 'left-0'} h-2 bg-indigo-600 -z-10 rounded-full`}
+            className={`absolute top-1/2 ${i18n.language === 'ar' ? 'right-0' : 'left-0'} h-2 bg-primary-600 -z-10 rounded-full`}
             initial={{ width: "0%" }}
             animate={{ width: step === 1 ? "0%" : "100%" }}
             transition={{ duration: 0.5, ease: "circOut" }}
@@ -857,12 +838,12 @@ export default function AddNewStaffPage() {
           <div className="flex flex-col items-center bg-transparent">
               <motion.div
                   className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-4 transition-colors duration-300 bg-white
-                      ${step >= 1 ? 'border-indigo-600 text-indigo-600' : 'border-gray-300 text-gray-300'}`}
+                      ${step >= 1 ? 'border-primary-600 text-primary-600' : 'border-gray-300 text-gray-300'}`}
                   animate={{ scale: step === 1 ? 1.2 : 1, borderColor: step >= 1 ? '#4f46e5' : '#d1d5db' }}
               >
                   {step > 1 ? <Check size={24} strokeWidth={3} /> : "1"}
               </motion.div>
-              <span className={`mt-3 text-sm font-bold transition-colors ${step >= 1 ? 'text-indigo-900' : 'text-gray-400'}`}>
+              <span className={`mt-3 text-sm font-bold transition-colors ${step >= 1 ? 'text-primary-900' : 'text-gray-400'}`}>
                   {t("stepper.step1")}
               </span>
           </div>
@@ -870,12 +851,12 @@ export default function AddNewStaffPage() {
           <div className="flex flex-col items-center bg-transparent">
               <motion.div
                   className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-4 transition-colors duration-300 bg-white
-                      ${step >= 2 ? 'border-indigo-600 text-indigo-600' : 'border-gray-300 text-gray-300'}`}
+                      ${step >= 2 ? 'border-primary-600 text-primary-600' : 'border-gray-300 text-gray-300'}`}
                   animate={{ scale: step === 2 ? 1.2 : 1, borderColor: step >= 2 ? '#4f46e5' : '#d1d5db' }}
               >
                   2
               </motion.div>
-              <span className={`mt-3 text-sm font-bold transition-colors ${step >= 2 ? 'text-indigo-900' : 'text-gray-400'}`}>
+              <span className={`mt-3 text-sm font-bold transition-colors ${step >= 2 ? 'text-primary-900' : 'text-gray-400'}`}>
                   {t("stepper.step2")}
               </span>
           </div>
@@ -886,8 +867,8 @@ export default function AddNewStaffPage() {
             <AnimatePresence mode="wait">
             {step === 1 && (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} key="step1" className="bg-white rounded-3xl shadow-xl p-8 md:p-12 border border-white/50 backdrop-blur-sm space-y-8">
-                <h3 className="text-2xl font-bold text-indigo-900 mb-8 flex items-center gap-3">
-                  <div className="p-2 bg-indigo-100 rounded-lg"><IdCard className="text-indigo-600" /></div>
+                <h3 className="text-2xl font-bold text-primary-900 mb-8 flex items-center gap-3">
+                  <div className="p-2 bg-primary-100 rounded-lg"><IdCard className="text-primary-600" /></div>
                   {t("stepper.step1")}
                 </h3>
                 
@@ -1010,9 +991,6 @@ export default function AddNewStaffPage() {
                           <div className="flex-1 space-y-1">
                             <div className="font-semibold text-sm">{pkg.name}</div>
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-[10px] px-2 py-0.5 bg-muted rounded uppercase font-mono">
-                                BACKEND
-                              </span>
                               <span className="text-[10px] text-muted-foreground">
                                 {t("packages.privilegeCount", { count: pkg.privilegeCodes.length })}
                               </span>
@@ -1049,7 +1027,7 @@ export default function AddNewStaffPage() {
                   </div>
                   {selectedExtraPrivilegeIds.length > 0 && (
                     <span className="text-xs font-medium bg-primary/10 text-primary px-2.5 py-1 rounded-full">
-                      {selectedExtraPrivilegeIds.length} محددة
+                      {t('privileges.selected', { count: selectedExtraPrivilegeIds.length })}
                     </span>
                   )}
                 </div>
@@ -1098,7 +1076,7 @@ export default function AddNewStaffPage() {
                                   }
                                 `}
                               >
-                                {i18n.language === 'ar' ? (MODULE_NAMES_AR[group.module] ?? group.module) : group.module}
+                                {getPrivilegeModuleLabel(group.module, uiLanguage)}
                                 {extraCount > 0 && (
                                   <span className={`
                                     text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none
@@ -1173,7 +1151,7 @@ export default function AddNewStaffPage() {
                                   <div className="flex-1 text-right min-w-0">
                                     <p className={`text-xs font-medium truncate ${isSelected ? "text-emerald-700" : isExcluded ? "text-red-700" : "text-foreground"
                                       }`}>
-                                      {(i18n.language === 'ar' ? (privilege.name_ar || privilege.name_en) : (privilege.name_en || privilege.name_ar)) || privilege.code}
+                                      {getLanguageOnlyText(privilege.name_ar, privilege.name_en, uiLanguage) || privilege.code}
                                     </p>
                                     <p className="text-[10px] font-mono text-muted-foreground truncate mt-0.5">
                                       {privilege.code}
@@ -1236,7 +1214,7 @@ export default function AddNewStaffPage() {
                     {t("actions.cancel")}
                     {i18n.language !== 'ar' ? <ChevronLeft size={20} /> : null}
                   </button>
-                  <button type="button" onClick={handleNextStep} className="px-8 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-lg shadow-indigo-200 transition-all flex items-center gap-2">
+                  <button type="button" onClick={handleNextStep} className="px-8 py-3 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-bold shadow-lg shadow-primary-200 transition-all flex items-center gap-2">
                     {i18n.language === 'ar' ? 'التالي' : 'Next'}
                     {i18n.language === 'ar' ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
                   </button>
@@ -1314,7 +1292,7 @@ export default function AddNewStaffPage() {
                       {i18n.language === 'ar' ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
                       {i18n.language === 'ar' ? 'السابق' : 'Previous'}
                     </button>
-                    <button type="submit" disabled={isSubmitting || isManualSubmitting} className="flex-1 md:flex-none px-10 py-3 rounded-xl bg-indigo-700 hover:bg-indigo-800 text-white font-bold shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-3">
+                    <button type="submit" disabled={isSubmitting || isManualSubmitting} className="flex-1 md:flex-none px-10 py-3 rounded-xl bg-primary-700 hover:bg-primary-800 text-white font-bold shadow-lg shadow-primary-200 transition-all flex items-center justify-center gap-3">
                       {isSubmitting || isManualSubmitting ? <span className="animate-spin text-xl">⏳</span> : <Check size={24} />}
                       {isSubmitting || isManualSubmitting ? t("actions.saving") : t("actions.save")}
                     </button>

@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-    Search, RefreshCw, Shield, ChevronRight, ChevronLeft, Loader2,
+    Search, RefreshCw, Shield, Loader2,
     Users, ArrowRight, Trash2, RotateCcw, AlertTriangle, ShieldOff
 } from "lucide-react";
 import api from "../services/axios";
@@ -8,41 +8,20 @@ import { StaffService } from "../services/staffService";
 import { Input } from "../components/StaffPagesComponents/ui/input";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Badge } from "../components/StaffPagesComponents/ui/badge";
-import {
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "../components/StaffPagesComponents/ui/select";
 import { useToast } from "../hooks/use-toast";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 import { useLanguage } from "../hooks/useLanguage";
 import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
-import { getLocalizedText, buildPersonName } from "../lib/localizedDisplay";
+import { buildPersonName, getLanguageOnlyText } from "../lib/localizedDisplay";
+import { getPrivilegeModuleLabel } from "../lib/privilegeModuleLabels";
+import { filterStaffListRows, mapStaffApiItem, staffTypeOptionsFromApi, type StaffListApiItem } from "../lib/staffListUtils";
+import { AdminStaffListToolbar } from "../components/StaffPagesComponents/shared/AdminStaffListToolbar";
 import { useStaffJobLabels } from "../lib/staffJobLabel";
 import { useTranslation } from "react-i18next";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-type StaffApiItem = {
-    id: number;
-    first_name_ar?: string;
-    last_name_ar?: string;
-    first_name_en?: string;
-    last_name_en?: string;
-    national_id?: string;
-    role?: string;
-    staff_type?: string | {
-        id?: number;
-        name_ar?: string;
-        name_en?: string;
-        code?: string;
-    };
-    staff_type_id?: number;
-    status?: string;
-    employment_start_date?: string;
-    created_at?: string;
-    start_date?: string;
-};
 
 type StaffType = {
     id: number;
@@ -67,16 +46,6 @@ type StaffRow = {
     staffTypeCode?: string;
     status: string;
     startDate: string;
-};
-
-const parseStaffTypeFields = (s: StaffApiItem) => {
-    const staffTypeObj = typeof s.staff_type === "object" && s.staff_type ? s.staff_type : null;
-    return {
-        staffTypeId: Number(s.staff_type_id ?? staffTypeObj?.id ?? 0),
-        staffTypeNameAr: staffTypeObj?.name_ar ?? (typeof s.staff_type === "string" ? s.staff_type : undefined),
-        staffTypeNameEn: staffTypeObj?.name_en,
-        staffTypeCode: staffTypeObj?.code,
-    };
 };
 
 type GrantedPrivilege = {
@@ -159,15 +128,12 @@ export default function RevokePrivilegesPage() {
     const [selectedStaff, setSelectedStaff] = useState<StaffRow | null>(null);
 
     // ── STEP 1: Staff Table ─────────────────────────────────────────────────────
-    const [staffRows, setStaffRows] = useState<StaffRow[]>([]);
-    const [totalCount, setTotalCount] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [search, setSearch] = useState("");
     const [roleFilter, setRoleFilter] = useState("");
-    const [dateFrom, setDateFrom] = useState("");
-    const [dateTo, setDateTo] = useState("");
-    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [dateFilter, setDateFilter] = useState("");
+    const [allStaffRows, setAllStaffRows] = useState<StaffRow[]>([]);
 
     const [staffTypes, setStaffTypes] = useState<StaffType[]>([]);
 
@@ -177,77 +143,54 @@ export default function RevokePrivilegesPage() {
             .catch(() => {});
     }, []);
 
-    const fetchStaff = useCallback(
-        async (page: number, q: string, role: string, from: string, to: string) => {
-            setIsLoading(true);
-            try {
-                const params: Record<string, unknown> = { page, limit: PAGE_SIZE };
-                if (role) params.role = role;
-                const res = await api.get("/staff", { params });
-                const raw = res.data;
-                const data: StaffApiItem[] = Array.isArray(raw)
-                    ? raw : Array.isArray(raw?.data) ? raw.data : [];
-                const total: number = raw?.total ?? raw?.meta?.total ?? raw?.pagination?.total ?? data.length;
+    const fetchStaff = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const res = await api.get("/staff", { params: { page: 1, limit: 500 } });
+            const raw = res.data;
+            const data: StaffListApiItem[] = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+            const mapped = data.map((s) => {
+                const row = mapStaffApiItem(s);
+                return {
+                    id: row.id,
+                    nameAr: `${row.firstNameAr ?? ""} ${row.lastNameAr ?? ""}`.trim(),
+                    nameEn: `${row.firstNameEn ?? ""} ${row.lastNameEn ?? ""}`.trim(),
+                    firstNameAr: row.firstNameAr,
+                    lastNameAr: row.lastNameAr,
+                    firstNameEn: row.firstNameEn,
+                    lastNameEn: row.lastNameEn,
+                    nationalId: row.nationalId,
+                    role: String(row.staffTypeCode ?? "STAFF").toUpperCase(),
+                    staffTypeId: row.staffTypeId,
+                    staffTypeNameAr: row.staffTypeNameAr,
+                    staffTypeNameEn: row.staffTypeNameEn,
+                    staffTypeCode: row.staffTypeCode,
+                    status: row.status,
+                    startDate: row.startDate,
+                } satisfies StaffRow;
+            });
+            setAllStaffRows(mapped);
+        } catch {
+            toast({ title: t("toasts.errorTitle"), description: t("toasts.errorLoad"), variant: "destructive" });
+        } finally {
+            setIsLoading(false);
+        }
+    }, [toast, t]);
 
-                const trim = q.trim().toLowerCase();
-                let filtered = trim
-                    ? data.filter((s) =>
-                        `${s.first_name_ar ?? ""} ${s.last_name_ar ?? ""}`.includes(q.trim()) ||
-                        `${s.first_name_en ?? ""} ${s.last_name_en ?? ""}`.toLowerCase().includes(trim) ||
-                        (s.national_id ?? "").includes(trim)
-                    )
-                    : data;
-
-                if (from || to) {
-                    const fromMs = from ? new Date(from).setHours(0, 0, 0, 0) : -Infinity;
-                    const toMs = to ? new Date(to).setHours(23, 59, 59, 999) : Infinity;
-                    filtered = filtered.filter((s) => {
-                        const rawDate = s.employment_start_date ?? s.start_date ?? s.created_at;
-                        if (!rawDate) return false;
-                        const ms = new Date(rawDate).getTime();
-                        return ms >= fromMs && ms <= toMs;
-                    });
-                }
-
-                const rows: StaffRow[] = filtered.map((s) => {
-                    const staffType = parseStaffTypeFields(s);
-                    return {
-                        id: s.id,
-                        nameAr: `${s.first_name_ar ?? ""} ${s.last_name_ar ?? ""}`.trim(),
-                        nameEn: `${s.first_name_en ?? ""} ${s.last_name_en ?? ""}`.trim(),
-                        firstNameAr: s.first_name_ar,
-                        lastNameAr: s.last_name_ar,
-                        firstNameEn: s.first_name_en,
-                        lastNameEn: s.last_name_en,
-                        nationalId: s.national_id ?? "",
-                        role: String(s.role ?? staffType.staffTypeCode ?? "STAFF").toUpperCase(),
-                        ...staffType,
-                        status: String(s.status ?? "").toLowerCase(),
-                        startDate: s.employment_start_date ?? s.start_date ?? s.created_at ?? "",
-                    };
-                });
-
-                setStaffRows(rows);
-                setTotalCount(trim || from || to ? rows.length : total);
-            } catch {
-                toast({ title: t("toasts.errorTitle"), description: t("toasts.errorLoad"), variant: "destructive" });
-            } finally {
-                setIsLoading(false);
-            }
-        },
-        [toast, t]
+    const filteredStaffRows = useMemo(
+        () => filterStaffListRows(allStaffRows, { search, roleFilter, dateFilter, activeOnly: true }),
+        [allStaffRows, search, roleFilter, dateFilter],
     );
 
-    useEffect(() => { void fetchStaff(currentPage, search, roleFilter, dateFrom, dateTo); }, [currentPage, search, roleFilter, dateFrom, dateTo, fetchStaff]);
+    const staffRows = useMemo(
+        () => filteredStaffRows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+        [filteredStaffRows, currentPage],
+    );
 
-    const handleSearchChange = (value: string) => {
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => { setSearch(value); setCurrentPage(1); }, 300);
-    };
+    const totalCount = filteredStaffRows.length;
 
-    const handleRoleFilter = (role: string) => { setRoleFilter(role); setCurrentPage(1); };
-    const clearDateFilter = () => { setDateFrom(""); setDateTo(""); setCurrentPage(1); };
-    const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+    useEffect(() => { void fetchStaff(); }, [fetchStaff]);
+    useEffect(() => { setCurrentPage(1); }, [search, roleFilter, dateFilter]);
 
     // ── STEP 2: Revoke state ────────────────────────────────────────────────────
     const [grantedPrivileges, setGrantedPrivileges] = useState<GrantedPrivilege[]>([]);
@@ -375,7 +318,7 @@ export default function RevokePrivilegesPage() {
                             </p>
                         </div>
                         <button
-                            onClick={() => void fetchStaff(currentPage, search, roleFilter, dateFrom, dateTo)}
+                            onClick={() => void fetchStaff()}
                             disabled={isLoading}
                             className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border hover:bg-muted transition-colors text-sm text-muted-foreground disabled:opacity-40"
                         >
@@ -385,74 +328,35 @@ export default function RevokePrivilegesPage() {
                     </div>
                 </div>
 
-                {/* Toolbar */}
-                <div className="flex items-center gap-3 px-6 py-3 border-b border-border bg-muted/20 shrink-0 flex-wrap">
-                    <div className="relative w-full sm:w-64">
-                        <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none`} />
-                        <Input
-                            placeholder={t("table.searchPlaceholder")}
-                            defaultValue={search}
-                            onChange={(e) => handleSearchChange(e.target.value)}
-                            className={`h-10 ${isRTL ? 'pr-9' : 'pl-9'}`}
-                        />
-                    </div>
-
-                    {/* Role filter dropdown */}
-                    <div className="w-full sm:w-56">
-                        <Select value={roleFilter || "all"} onValueChange={(val) => handleRoleFilter(val === "all" ? "" : val)}>
-                            <SelectTrigger className="h-10 bg-background border-border hover:border-rose-300 transition-colors">
-                                <SelectValue placeholder={t("filters.all")} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all" className="font-medium">{t("filters.all")}</SelectItem>
-                                {staffTypes.map((st) => (
-                                    <SelectItem key={st.code || st.id} value={st.code}>
-                                        {getLocalizedText(st.name_ar, st.name_en, language) || st.code}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">{t("table.dateFrom")}</span>
-                        <input
-                            type="date"
-                            value={dateFrom}
-                            max={dateTo || undefined}
-                            onChange={(e) => { setDateFrom(e.target.value); setCurrentPage(1); }}
-                            className="h-10 px-3 text-sm border-2 border-border rounded-xl focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all bg-background text-foreground"
-                        />
-                        <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">{t("table.dateTo")}</span>
-                        <input
-                            type="date"
-                            value={dateTo}
-                            min={dateFrom || undefined}
-                            onChange={(e) => { setDateTo(e.target.value); setCurrentPage(1); }}
-                            className="h-10 px-3 text-sm border-2 border-border rounded-xl focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all bg-background text-foreground"
-                        />
-                        {(dateFrom || dateTo) && (
-                            <button
-                                onClick={clearDateFilter}
-                                className="h-10 px-3 text-xs font-semibold text-rose-600 border-2 border-rose-200 rounded-xl hover:bg-rose-50 transition-colors whitespace-nowrap"
-                            >
-                                {t("table.clearDate")}
-                            </button>
-                        )}
-                    </div>
-
-                    <Badge variant="outline" className="text-xs text-muted-foreground shrink-0">
-                        {totalCount} {t("table.staffCount")}
-                    </Badge>
-
-                    <div className="flex-1" />
-                </div>
+                <AdminStaffListToolbar
+                    isRTL={isRTL}
+                    search={search}
+                    onSearchChange={setSearch}
+                    searchPlaceholder={t("table.searchPlaceholder")}
+                    dateFilter={dateFilter}
+                    onDateFilterChange={setDateFilter}
+                    dateFilterLabel={t("toolbar.dateFilter")}
+                    filterByDateLabel={t("toolbar.filterByDate")}
+                    clearLabel={t("toolbar.clearFilter")}
+                    statusFilterLabel={t("toolbar.statusFilter")}
+                    clearFilterLabel={t("toolbar.clearFilter")}
+                    filterStatuses={[]}
+                    onFilterStatusesChange={() => undefined}
+                    statusPopoverOpen={false}
+                    onStatusPopoverOpenChange={() => undefined}
+                    statusOptions={[]}
+                    roleFilter={roleFilter}
+                    onRoleFilterChange={setRoleFilter}
+                    allRolesLabel={t("toolbar.allRoles")}
+                    staffTypes={staffTypeOptionsFromApi(staffTypes, language)}
+                    showStatusFilter={false}
+                />
 
                 <div className="flex flex-col flex-1 overflow-hidden">
                 <div className={adminTableStyles.container}>
                     {isLoading ? (
                         <div className="py-20 text-center text-muted-foreground">
-                            <div className="w-8 h-8 rounded-full border-2 border-rose-500 border-t-transparent animate-spin mx-auto mb-3" />
+                            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-3" />
                             <p className="text-sm">{t("table.loading")}</p>
                         </div>
                     ) : staffRows.length === 0 ? (
@@ -497,7 +401,7 @@ export default function RevokePrivilegesPage() {
                                             <span dir="ltr">{staff.nationalId || "—"}</span>
                                         </TableCell>
                                         <TableCell className={adminCellClass({ center: true })}>
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-700">
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-primary/10 text-primary">
                                                 {resolveJobLabel({
                                                     staffTypeId: staff.staffTypeId,
                                                     staffTypeNameAr: staff.staffTypeNameAr,
@@ -511,7 +415,7 @@ export default function RevokePrivilegesPage() {
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                className="h-8 px-3 gap-1.5 border-rose-300 text-rose-600 hover:bg-rose-50"
+                                                className="h-8 px-3 gap-1.5"
                                                 onClick={() => openRevoke(staff)}
                                             >
                                                 {t("table.revokeAction")}
@@ -539,22 +443,20 @@ export default function RevokePrivilegesPage() {
 
     // ─── STEP 2 RENDER: Revoke Privileges ──────────────────────────────────────
     return (
-        <div className="h-[calc(100vh-4rem)] flex flex-col overflow-hidden" dir={isRTL ? "rtl" : "ltr"}>
+        <div className="h-[calc(100vh-4rem)] flex flex-col bg-background" dir={isRTL ? "rtl" : "ltr"}>
 
             {/* Header */}
-            <div className="px-6 py-4 border-b border-border bg-background shrink-0">
-                <div className="flex items-center gap-3 flex-wrap">
+            <div className="px-6 py-4 border-b border-border bg-background shrink-0 flex items-center justify-between shadow-sm">
+                <div className="flex items-center gap-4">
                     <button
                         onClick={() => setStep("table")}
-                        className={`flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-lg hover:bg-muted ${isRTL ? 'flex-row-reverse' : ''}`}
+                        className={`p-2 -mx-2 hover:bg-muted rounded-full transition-colors text-muted-foreground ${isRTL ? 'mr-0 ml-2' : 'ml-0 mr-2'}`}
                     >
-                        <ChevronRight className="w-4 h-4" style={{ transform: isRTL ? 'none' : 'rotate(180deg)' }} />
-                        {t("revoke.back")}
+                        <ArrowRight className="w-5 h-5" style={{ transform: isRTL ? 'none' : 'rotate(180deg)' }} />
                     </button>
-                    <span className="text-muted-foreground/50">/</span>
                     <div>
                         <h1 className="text-xl font-bold flex items-center gap-2">
-                            <Trash2 className="w-5 h-5 text-rose-500" />
+                            <ShieldOff className="w-5 h-5 text-destructive" />
                             {t("revoke.title")} {selectedStaff ? buildPersonName({
                                 firstNameAr: selectedStaff.firstNameAr,
                                 lastNameAr: selectedStaff.lastNameAr,
@@ -569,168 +471,135 @@ export default function RevokePrivilegesPage() {
                                 staffTypeNameEn: selectedStaff.staffTypeNameEn,
                                 staffTypeCode: selectedStaff.staffTypeCode,
                             })}
+                            {!loadingPrivileges && grantedPrivileges.length > 0 && (
+                                <span className={`inline-block ${isRTL ? 'mr-2' : 'ml-2'} font-medium text-foreground`}>
+                                    {t("revoke.totalPrivileges")} {grantedPrivileges.length}
+                                    {markedIds.length > 0 && (
+                                        <span className={`text-destructive ${isRTL ? 'mr-2' : 'ml-2'}`}>
+                                            · {t("revoke.toRevoke")} {markedIds.length}
+                                        </span>
+                                    )}
+                                </span>
+                            )}
                         </p>
                     </div>
                 </div>
-
-                {/* Stats row */}
-                {!loadingPrivileges && grantedPrivileges.length > 0 && (
-                    <div className="flex items-center gap-4 mt-3">
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <Shield className="w-3.5 h-3.5 text-emerald-500" />
-                            <span>{t("revoke.totalPrivileges")}</span>
-                            <span className="font-bold text-foreground">{grantedPrivileges.length}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <Trash2 className="w-3.5 h-3.5 text-rose-500" />
-                            <span>{t("revoke.toRevoke")}</span>
-                            <span className={`font-bold ${markedIds.length > 0 ? "text-rose-600" : "text-foreground"}`}>
-                                {markedIds.length}
-                            </span>
-                        </div>
-                    </div>
-                )}
             </div>
 
-            {/* Privilege list body */}
-            <div className="flex-1 overflow-hidden flex flex-col">
-
-                {/* Search + quick actions bar */}
-                <div className="px-6 py-3 border-b border-border bg-muted/10 shrink-0 flex items-center gap-3 flex-wrap">
-                    <div className="relative flex-1 min-w-[180px]">
-                        <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none`} />
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder={t("revoke.searchPrivilege")}
-                            className={`w-full ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-2 border-2 border-border rounded-xl focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all text-sm bg-background`}
-                        />
-                        {searchQuery && (
-                            <button onClick={() => setSearchQuery("")} className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground`}>✕</button>
-                        )}
-                    </div>
-
-                    {/* Quick actions */}
-                    <button
-                        onClick={markAll}
-                        disabled={loadingPrivileges || grantedPrivileges.length === 0}
-                        className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border-2 border-rose-300 text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-40"
-                    >
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                        {t("revoke.markAll")}
-                    </button>
-                    <button
-                        onClick={clearAll}
-                        disabled={markedIds.length === 0}
-                        className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border-2 border-border text-muted-foreground hover:bg-muted transition-colors disabled:opacity-40"
-                    >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        {t("revoke.undo")}
-                    </button>
+            {/* Toolbar */}
+            <div className="px-6 py-3 border-b border-border bg-muted/20 shrink-0 flex items-center gap-3 flex-wrap">
+                <div className="relative flex-1 min-w-[200px] max-w-md">
+                    <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none`} />
+                    <Input
+                        placeholder={t("revoke.searchPrivilege")}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className={`h-9 ${isRTL ? 'pr-9' : 'pl-9'} text-sm bg-background`}
+                    />
                 </div>
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={markAll}
+                    disabled={loadingPrivileges || grantedPrivileges.length === 0}
+                    className="gap-1.5"
+                >
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    {t("revoke.markAll")}
+                </Button>
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={clearAll}
+                    disabled={markedIds.length === 0}
+                    className="gap-1.5"
+                >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    {t("revoke.undo")}
+                </Button>
+            </div>
 
-                {/* Privilege cards */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-4 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
-                    {loadingPrivileges ? (
-                        <div className="flex justify-center py-20">
-                            <Loader2 className="w-8 h-8 animate-spin text-rose-400" />
-                        </div>
-                    ) : grantedPrivileges.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground border-2 border-dashed border-border rounded-2xl">
-                            <Shield className="h-12 w-12 mb-3 text-muted-foreground/30" />
-                            <h3 className="text-base font-semibold text-foreground mb-1">{t("revoke.noGrantedPrivilegesTitle")}</h3>
-                            <p className="text-sm">{t("revoke.noGrantedPrivilegesDesc")}</p>
-                        </div>
-                    ) : filteredGroups.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground border-2 border-dashed border-border rounded-2xl">
-                            <Search className="h-10 w-10 mb-2 text-muted-foreground/30" />
-                            <p className="text-sm">{t("revoke.noResults")}</p>
-                        </div>
-                    ) : (
-                        filteredGroups.map((group) => (
-                            <div key={group.module} className="rounded-xl border-2 border-border overflow-hidden">
-                                <div className="bg-muted/50 px-4 py-2.5 border-b border-border flex items-center justify-between">
-                                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{group.module}</p>
-                                    <span className="text-[11px] text-muted-foreground">{group.items.length} {t("revoke.privilegeCount")}</span>
-                                </div>
-                                <div className="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                                    {group.items.map((priv) => {
-                                        const marked = priv.markedForRevocation;
-
-                                        return (
-                                            <button
-                                                key={priv.code}
-                                                type="button"
-                                                onClick={() => toggleRevoke(priv.code)}
-                                                className={`w-full text-right flex items-start gap-2.5 rounded-xl border-2 px-3 py-2.5 transition-all cursor-pointer group ${
-                                                    marked
-                                                        ? "bg-rose-50 border-rose-300 shadow-sm"
-                                                        : "bg-background border-border hover:border-rose-200 hover:bg-rose-50/40"
+            {/* Privilege list */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-3">
+                {loadingPrivileges ? (
+                    <div className="flex justify-center py-20">
+                        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                    </div>
+                ) : grantedPrivileges.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-muted-foreground border-2 border-dashed border-border rounded-2xl">
+                        <Shield className="h-12 w-12 mb-3 text-muted-foreground/30" />
+                        <h3 className="text-base font-semibold text-foreground mb-1">{t("revoke.noGrantedPrivilegesTitle")}</h3>
+                        <p className="text-sm">{t("revoke.noGrantedPrivilegesDesc")}</p>
+                    </div>
+                ) : filteredGroups.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-muted-foreground border-2 border-dashed border-border rounded-2xl">
+                        <Search className="h-10 w-10 mb-2 text-muted-foreground/30" />
+                        <p className="text-sm">{t("revoke.noResults")}</p>
+                    </div>
+                ) : (
+                    filteredGroups.map((group) => (
+                        <div key={group.module} className="rounded-xl border-2 border-border overflow-hidden">
+                            <div className="bg-muted/50 px-4 py-2.5 border-b border-border flex items-center justify-between">
+                                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                    {getPrivilegeModuleLabel(group.module, language)}
+                                </p>
+                                <span className="text-[11px] text-muted-foreground">{group.items.length} {t("revoke.privilegeCount")}</span>
+                            </div>
+                            <div className="p-2 space-y-1">
+                                {group.items.map((priv) => {
+                                    const marked = priv.markedForRevocation;
+                                    const displayName = getLanguageOnlyText(priv.nameAr, priv.nameEn, language) || priv.code;
+                                    return (
+                                        <label
+                                            key={priv.code}
+                                            className={`flex items-center gap-2.5 rounded-lg border px-3 py-2 cursor-pointer transition-all ${
+                                                marked
+                                                    ? "bg-destructive/5 border-destructive/40 shadow-sm"
+                                                    : "bg-background border-border hover:border-destructive/30 hover:bg-muted/40"
+                                            }`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                className="w-4 h-4 accent-destructive shrink-0"
+                                                checked={marked}
+                                                onChange={() => toggleRevoke(priv.code)}
+                                            />
+                                            <span className="flex-1 min-w-0">
+                                                <span className={`block text-xs font-semibold truncate ${marked ? "text-destructive line-through" : "text-foreground"}`}>
+                                                    {displayName}
+                                                </span>
+                                                <span className={`block text-[10px] font-mono truncate ${marked ? "text-destructive/70 line-through" : "text-muted-foreground"}`}>
+                                                    {priv.code}
+                                                </span>
+                                            </span>
+                                            <Badge
+                                                variant="outline"
+                                                className={`text-[9px] h-5 px-1.5 shrink-0 ${
+                                                    priv.source === "direct"
+                                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                        : priv.source === "package"
+                                                            ? "bg-primary/10 text-primary border-primary/20"
+                                                            : "bg-amber-50 text-amber-700 border-amber-200"
                                                 }`}
                                             >
-                                                {/* Checkbox/Icon */}
-                                                <div className={`mt-0.5 shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
-                                                    marked
-                                                        ? "bg-rose-500 text-white"
-                                                        : "bg-emerald-100 text-emerald-600 group-hover:bg-rose-100 group-hover:text-rose-500"
-                                                }`}>
-                                                    {marked
-                                                        ? <Trash2 className="w-3.5 h-3.5" />
-                                                        : <Shield className="w-3.5 h-3.5" />}
-                                                </div>
-
-                                                {/* Text */}
-                                                <div className="flex-1 min-w-0">
-                                                    <p className={`text-xs font-semibold leading-tight truncate ${
-                                                        marked ? "text-rose-800 line-through" : "text-foreground"
-                                                    }`}>
-                                                        {getLocalizedText(priv.nameAr, priv.nameEn, language) || priv.code}
-                                                    </p>
-                                                    <p className={`text-[10px] font-mono mt-0.5 truncate ${
-                                                        marked ? "text-rose-500 line-through" : "text-muted-foreground"
-                                                    }`}>
-                                                        {priv.code}
-                                                    </p>
-
-                                                    {/* Source badge */}
-                                                    <div className="mt-1.5 flex items-center gap-1">
-                                                        <Badge
-                                                            variant="outline"
-                                                            className={`text-[9px] h-5 px-1.5 ${
-                                                                priv.source === "direct"
-                                                                    ? "bg-emerald-100 text-emerald-700 border-emerald-300"
-                                                                    : priv.source === "package"
-                                                                        ? "bg-blue-100 text-blue-700 border-blue-300"
-                                                                        : "bg-amber-100 text-amber-700 border-amber-300"
-                                                            }`}
-                                                        >
-                                                            {t(`sources.${priv.source.toLowerCase()}`, { defaultValue: priv.source })}
-                                                        </Badge>
-
-                                                        {priv.source === "package" && priv.package_code && (
-                                                            <span className="text-[8px] text-muted-foreground truncate">
-                                                                ({priv.package_code})
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
+                                                {t(`sources.${priv.source.toLowerCase()}`, { defaultValue: priv.source })}
+                                            </Badge>
+                                        </label>
+                                    );
+                                })}
                             </div>
-                        ))
-                    )}
-                </div>
+                        </div>
+                    ))
+                )}
 
-                {/* Failed attempts warning */}
                 {failedAttempts.length > 0 && (
-                    <div className="mx-6 mb-4 p-3 rounded-lg bg-red-50 border-2 border-red-200">
-                        <p className="text-xs font-semibold text-red-800 mb-2">{t("revoke.failedAttemptsTitle", { count: failedAttempts.length })}</p>
+                    <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                        <p className="text-xs font-semibold text-destructive mb-2">{t("revoke.failedAttemptsTitle", { count: failedAttempts.length })}</p>
                         <ul className="space-y-1">
                             {failedAttempts.map((attempt, idx) => (
-                                <li key={idx} className={`text-[11px] text-red-700 ${isRTL ? 'ml-0 mr-4' : 'mr-0 ml-4'}`}>
+                                <li key={idx} className={`text-[11px] text-destructive/90 ${isRTL ? 'mr-4' : 'ml-4'}`}>
                                     • <span className="font-mono">{attempt.error}</span>
                                 </li>
                             ))}
@@ -739,11 +608,11 @@ export default function RevokePrivilegesPage() {
                 )}
             </div>
 
-            {/* Sticky footer */}
+            {/* Footer */}
             <div className="shrink-0 border-t border-border bg-background px-6 py-3 flex items-center justify-between gap-4">
                 <p className="text-sm text-muted-foreground">
                     {markedIds.length > 0
-                        ? <><strong className="text-rose-600">{markedIds.length}</strong> {t("revoke.footerTextSelected")}</>
+                        ? <><strong className="text-destructive">{markedIds.length}</strong> {t("revoke.footerTextSelected")}</>
                         : t("revoke.footerTextNone")}
                 </p>
                 <Button

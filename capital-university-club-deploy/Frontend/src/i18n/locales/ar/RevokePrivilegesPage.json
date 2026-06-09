@@ -49,6 +49,13 @@
     },
     "revokeAction": "سحب الصلاحيات"
   },
+  "toolbar": {
+    "dateFilter": "تصفية التاريخ",
+    "filterByDate": "تصفية حسب التاريخ",
+    "statusFilter": "الحالة",
+    "clearFilter": "مسح",
+    "allRoles": "كل الوظائف"
+  },
   "revoke": {
     "back": "العودة للقائمة",
     "title": "سحب صلاحيات:",

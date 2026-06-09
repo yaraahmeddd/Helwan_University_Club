@@ -22,6 +22,17 @@ export function getBilingualFieldPlaceholder(
   return i18n.getFixedT(fieldLocale, namespace)(key);
 }
 
+/**
+ * Text in the UI's language only — no cross-language fallback (bilingual field labels/names).
+ */
+export function getLanguageOnlyText(
+  ar: string | undefined | null,
+  en: string | undefined | null,
+  language: DisplayLanguage,
+): string {
+  return language === 'ar' ? (ar ?? '').trim() : (en ?? '').trim();
+}
+
 /** Normalize i18n language codes (e.g. "ar-EG") to a supported display language. */
 export function resolveDisplayLanguage(language?: string | null): DisplayLanguage {
   const code = (language ?? 'ar').split('-')[0].toLowerCase();

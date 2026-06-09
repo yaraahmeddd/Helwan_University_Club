@@ -475,6 +475,9 @@ export class StaffService {
       is_active: staff.is_active,
       employment_start_date: staff.employment_start_date,
       employment_end_date: staff.employment_end_date,
+      personal_photo: staff.personal_photo,
+      national_id_front: staff.national_id_front,
+      national_id_back: staff.national_id_back,
       assigned_packages: packages.map((p) => ({
         id: p.package?.id,
         code: p.package?.code,
@@ -577,7 +580,10 @@ export class StaffService {
     }
 
     staff.is_active = false;
-    staff.status = 'inactive';
+    staff.status = 'cancelled';
+    if (!staff.employment_end_date) {
+      staff.employment_end_date = new Date();
+    }
     await this.staffRepository.save(staff);
 
     // Log activity

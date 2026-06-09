@@ -49,6 +49,13 @@
     },
     "revokeAction": "Revoke Privileges"
   },
+  "toolbar": {
+    "dateFilter": "Date Filter",
+    "filterByDate": "Filter by Date",
+    "statusFilter": "Status",
+    "clearFilter": "Clear",
+    "allRoles": "All Job Roles"
+  },
   "revoke": {
     "back": "Back to list",
     "title": "Revoke Privileges:",

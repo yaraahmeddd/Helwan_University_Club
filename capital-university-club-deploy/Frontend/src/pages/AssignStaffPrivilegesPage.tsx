@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Search, RefreshCw, Shield, Loader2,
   Users, Check, ChevronDown, ChevronUp, Package, Save, ArrowRight,
@@ -8,41 +8,20 @@ import { StaffService } from "../services/staffService";
 import { Input } from "../components/StaffPagesComponents/ui/input";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Badge } from "../components/StaffPagesComponents/ui/badge";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "../components/StaffPagesComponents/ui/select";
 import { useToast } from "../hooks/use-toast";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 import { useLanguage } from "../hooks/useLanguage";
 import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
-import { getLocalizedText, buildPersonName } from "../lib/localizedDisplay";
+import { AdminStaffListToolbar } from "../components/StaffPagesComponents/shared/AdminStaffListToolbar";
+import { buildPersonName, getLanguageOnlyText, getLocalizedText } from "../lib/localizedDisplay";
+import { getPrivilegeModuleLabel } from "../lib/privilegeModuleLabels";
+import { filterStaffListRows, mapStaffApiItem, staffTypeOptionsFromApi, type StaffListApiItem } from "../lib/staffListUtils";
 import { useStaffJobLabels } from "../lib/staffJobLabel";
 import { useTranslation } from "react-i18next";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-type StaffApiItem = {
-  id: number;
-  first_name_ar?: string;
-  last_name_ar?: string;
-  first_name_en?: string;
-  last_name_en?: string;
-  national_id?: string;
-  role?: string;
-  staff_type?: string | {
-    id?: number;
-    name_ar?: string;
-    name_en?: string;
-    code?: string;
-  };
-  staff_type_id?: number;
-  status?: string;
-  employment_start_date?: string;
-  created_at?: string;
-  start_date?: string;
-};
 
 type StaffType = {
   id: number;
@@ -67,16 +46,6 @@ type StaffRow = {
   staffTypeCode?: string;
   status: string;
   startDate: string;
-};
-
-const parseStaffTypeFields = (s: StaffApiItem) => {
-  const staffTypeObj = typeof s.staff_type === "object" && s.staff_type ? s.staff_type : null;
-  return {
-    staffTypeId: Number(s.staff_type_id ?? staffTypeObj?.id ?? 0),
-    staffTypeNameAr: staffTypeObj?.name_ar ?? (typeof s.staff_type === "string" ? s.staff_type : undefined),
-    staffTypeNameEn: staffTypeObj?.name_en,
-    staffTypeCode: staffTypeObj?.code,
-  };
 };
 
 type PrivilegeApiItem = {
@@ -166,15 +135,12 @@ export default function AssignStaffPrivilegesPage() {
   const [selectedStaff, setSelectedStaff] = useState<StaffRow | null>(null);
 
   // ── STEP 1: Staff Table ─────────────────────────────────────────────────────
-  const [staffRows, setStaffRows] = useState<StaffRow[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [dateFilter, setDateFilter] = useState("");
+  const [allStaffRows, setAllStaffRows] = useState<StaffRow[]>([]);
 
   const [staffTypes, setStaffTypes] = useState<StaffType[]>([]);
 
@@ -184,88 +150,54 @@ export default function AssignStaffPrivilegesPage() {
       .catch(() => {});
   }, []);
 
-  const fetchStaff = useCallback(
-    async (page: number, q: string, role: string, from: string, to: string) => {
-      setIsLoading(true);
-      try {
-        const params: Record<string, unknown> = { page, limit: PAGE_SIZE };
-        if (role) params.role = role;
-        const res = await api.get("/staff", { params });
-        const raw = res.data;
-        const data: StaffApiItem[] = Array.isArray(raw)
-          ? raw : Array.isArray(raw?.data) ? raw.data : [];
-        const total: number = raw?.total ?? raw?.meta?.total ?? raw?.pagination?.total ?? data.length;
+  const fetchStaff = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const res = await api.get("/staff", { params: { page: 1, limit: 500 } });
+      const raw = res.data;
+      const data: StaffListApiItem[] = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+      const mapped = data.map((s) => {
+        const row = mapStaffApiItem(s);
+        return {
+          id: row.id,
+          nameAr: `${row.firstNameAr ?? ""} ${row.lastNameAr ?? ""}`.trim(),
+          nameEn: `${row.firstNameEn ?? ""} ${row.lastNameEn ?? ""}`.trim(),
+          firstNameAr: row.firstNameAr,
+          lastNameAr: row.lastNameAr,
+          firstNameEn: row.firstNameEn,
+          lastNameEn: row.lastNameEn,
+          nationalId: row.nationalId,
+          role: String(row.staffTypeCode ?? "STAFF").toUpperCase(),
+          staffTypeId: row.staffTypeId,
+          staffTypeNameAr: row.staffTypeNameAr,
+          staffTypeNameEn: row.staffTypeNameEn,
+          staffTypeCode: row.staffTypeCode,
+          status: row.status,
+          startDate: row.startDate,
+        } satisfies StaffRow;
+      });
+      setAllStaffRows(mapped);
+    } catch {
+      toast({ title: t("toasts.errorTitle"), description: t("toasts.errorLoad"), variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast, t]);
 
-        // ── Text search filter ──
-        const trim = q.trim().toLowerCase();
-        let filtered = trim
-          ? data.filter((s) =>
-            `${s.first_name_ar ?? ""} ${s.last_name_ar ?? ""}`.includes(q.trim()) ||
-            `${s.first_name_en ?? ""} ${s.last_name_en ?? ""}`.toLowerCase().includes(trim) ||
-            (s.national_id ?? "").includes(trim)
-          )
-          : data;
-
-        // ── Date range filter ──
-        if (from || to) {
-          const fromMs = from ? new Date(from).setHours(0, 0, 0, 0) : -Infinity;
-          const toMs = to ? new Date(to).setHours(23, 59, 59, 999) : Infinity;
-          filtered = filtered.filter((s) => {
-            const raw = s.employment_start_date ?? s.start_date ?? s.created_at;
-            if (!raw) return false;
-            const ms = new Date(raw).getTime();
-            return ms >= fromMs && ms <= toMs;
-          });
-        }
-
-        const rows: StaffRow[] = filtered.map((s) => {
-          const staffType = parseStaffTypeFields(s);
-          return {
-            id: s.id,
-            nameAr: `${s.first_name_ar ?? ""} ${s.last_name_ar ?? ""}`.trim(),
-            nameEn: `${s.first_name_en ?? ""} ${s.last_name_en ?? ""}`.trim(),
-            firstNameAr: s.first_name_ar,
-            lastNameAr: s.last_name_ar,
-            firstNameEn: s.first_name_en,
-            lastNameEn: s.last_name_en,
-            nationalId: s.national_id ?? "",
-            role: String(s.role ?? staffType.staffTypeCode ?? "STAFF").toUpperCase(),
-            ...staffType,
-            status: String(s.status ?? "").toLowerCase(),
-            startDate: s.employment_start_date ?? s.start_date ?? s.created_at ?? "",
-          };
-        });
-
-        setStaffRows(rows);
-        setTotalCount(trim || from || to ? rows.length : total);
-      } catch {
-        toast({ title: t("toasts.errorTitle"), description: t("toasts.errorLoad"), variant: "destructive" });
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [toast]
+  const filteredStaffRows = useMemo(
+    () => filterStaffListRows(allStaffRows, { search, roleFilter, dateFilter, activeOnly: true }),
+    [allStaffRows, search, roleFilter, dateFilter],
   );
 
-  useEffect(() => { void fetchStaff(currentPage, search, roleFilter, dateFrom, dateTo); }, [currentPage, search, roleFilter, dateFrom, dateTo]);
+  const staffRows = useMemo(
+    () => filteredStaffRows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+    [filteredStaffRows, currentPage],
+  );
 
-  const handleSearchChange = (value: string) => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => { setSearch(value); setCurrentPage(1); }, 300);
-  };
+  const totalCount = filteredStaffRows.length;
 
-  const handleRoleFilter = (role: string) => {
-    setRoleFilter(role);
-    setCurrentPage(1);
-  };
-
-  const clearDateFilter = () => {
-    setDateFrom("");
-    setDateTo("");
-    setCurrentPage(1);
-  };
-
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  useEffect(() => { void fetchStaff(); }, [fetchStaff]);
+  useEffect(() => { setCurrentPage(1); }, [search, roleFilter, dateFilter]);
 
   const openAssign = (staff: StaffRow) => {
     setSelectedStaff(staff);
@@ -458,7 +390,7 @@ export default function AssignStaffPrivilegesPage() {
               </p>
             </div>
             <button
-              onClick={() => void fetchStaff(currentPage, search, roleFilter, dateFrom, dateTo)}
+              onClick={() => void fetchStaff()}
               disabled={isLoading}
               className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border hover:bg-muted transition-colors text-sm text-muted-foreground disabled:opacity-40"
             >
@@ -468,69 +400,29 @@ export default function AssignStaffPrivilegesPage() {
           </div>
         </div>
 
-        {/* Toolbar */}
-        <div className="flex items-center gap-3 px-6 py-3 border-b border-border bg-muted/20 shrink-0 flex-wrap">
-          <div className="relative w-full sm:w-64">
-            <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none`} />
-            <Input
-              placeholder={t("table.searchPlaceholder")}
-              defaultValue={search}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className={`h-10 ${isRTL ? 'pr-9' : 'pl-9'}`}
-            />
-          </div>
-
-          {/* Role filter dropdown */}
-          <div className="w-full sm:w-56">
-            <Select value={roleFilter || "all"} onValueChange={(val) => handleRoleFilter(val === "all" ? "" : val)}>
-              <SelectTrigger className="h-10 bg-background border-border hover:border-primary/50 transition-colors">
-                <SelectValue placeholder={t("filters.all")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all" className="font-medium">{t("filters.all")}</SelectItem>
-                {staffTypes.map((st) => (
-                  <SelectItem key={st.code || st.id} value={st.code}>
-                    {getLocalizedText(st.name_ar, st.name_en, language) || st.code}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Date range filter */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">{t("table.dateFrom")}</span>
-            <input
-              type="date"
-              value={dateFrom}
-              max={dateTo || undefined}
-              onChange={(e) => { setDateFrom(e.target.value); setCurrentPage(1); }}
-              className="h-10 px-3 text-sm border-2 border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-background text-foreground"
-            />
-            <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">{t("table.dateTo")}</span>
-            <input
-              type="date"
-              value={dateTo}
-              min={dateFrom || undefined}
-              onChange={(e) => { setDateTo(e.target.value); setCurrentPage(1); }}
-              className="h-10 px-3 text-sm border-2 border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-background text-foreground"
-            />
-            {(dateFrom || dateTo) && (
-              <button
-                onClick={clearDateFilter}
-                className="h-10 px-3 text-xs font-semibold text-red-600 border-2 border-red-200 rounded-xl hover:bg-red-50 transition-colors whitespace-nowrap"
-              >
-                {t("table.clearDate")}
-              </button>
-            )}
-          </div>
-
-          <Badge variant="outline" className="text-xs text-muted-foreground shrink-0">
-            {totalCount} {t("table.staffCount")}
-          </Badge>
-
-          <div className="flex-1" />
-        </div>
+        <AdminStaffListToolbar
+          isRTL={isRTL}
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder={t("table.searchPlaceholder")}
+          dateFilter={dateFilter}
+          onDateFilterChange={setDateFilter}
+          dateFilterLabel={t("toolbar.dateFilter")}
+          filterByDateLabel={t("toolbar.filterByDate")}
+          clearLabel={t("toolbar.clearFilter")}
+          statusFilterLabel={t("toolbar.statusFilter")}
+          clearFilterLabel={t("toolbar.clearFilter")}
+          filterStatuses={[]}
+          onFilterStatusesChange={() => undefined}
+          statusPopoverOpen={false}
+          onStatusPopoverOpenChange={() => undefined}
+          statusOptions={[]}
+          roleFilter={roleFilter}
+          onRoleFilterChange={setRoleFilter}
+          allRolesLabel={t("toolbar.allRoles")}
+          staffTypes={staffTypeOptionsFromApi(staffTypes, language)}
+          showStatusFilter={false}
+        />
 
         <div className="flex flex-col flex-1 overflow-hidden">
         <div className={adminTableStyles.container}>
@@ -625,7 +517,7 @@ export default function AssignStaffPrivilegesPage() {
 
   // ── STEP 2: Privileges Assignment ──────────────────────────────────────────
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col bg-slate-50/50" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="h-[calc(100vh-4rem)] flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="px-6 py-4 border-b border-border bg-background shrink-0 flex items-center justify-between shadow-sm relative z-10">
         <div className="flex items-center gap-4">
@@ -666,12 +558,12 @@ export default function AssignStaffPrivilegesPage() {
         {/* ── Left column: Packages ─────────────────────────────────────────── */}
         <div className="flex flex-col overflow-hidden border-l border-border">
           <div className="px-5 py-3 border-b border-border bg-muted/20 flex items-center justify-between shrink-0">
-            <h2 className="font-semibold text-lg flex items-center gap-2">
-              <Package className="w-5 h-5 text-purple-500" />
+            <h2 className="font-semibold text-base flex items-center gap-2">
+              <Package className="w-5 h-5 text-primary" />
               {t("assign.packagesTitle")}
             </h2>
             {selectedPackageKeys.length > 0 && (
-              <Badge className="bg-orange-100 text-orange-700 border-0 text-xs">
+              <Badge className="bg-primary/10 text-primary border-0 text-xs">
                 {t("assign.selectedPackagesCount", { count: selectedPackageKeys.length })}
               </Badge>
             )}
@@ -695,23 +587,23 @@ export default function AssignStaffPrivilegesPage() {
                   <div
                     key={pkg.key}
                     className={`rounded-xl border-2 transition-all overflow-hidden ${isSelected
-                      ? "border-orange-400 bg-orange-50 shadow-sm"
-                      : "border-border bg-background hover:border-orange-200"
+                      ? "border-primary bg-primary/5 shadow-sm"
+                      : "border-border bg-background hover:border-primary/30"
                       }`}
                   >
                     <div className="flex items-start gap-3 p-3.5 cursor-pointer" onClick={() => togglePackage(pkg.key)}>
-                      <div className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${isSelected ? "bg-orange-500 border-orange-500 text-white" : "border-muted-foreground/30"}`}>
+                      <div className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${isSelected ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30"}`}>
                         {isSelected && <Check className="w-3 h-3" />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-bold ${isSelected ? "text-orange-900" : "text-foreground"}`}>{pkg.name}</p>
+                        <p className={`text-sm font-bold ${isSelected ? "text-primary" : "text-foreground"}`}>{pkg.name}</p>
                         {pkg.description && (
-                          <p className={`text-xs mt-0.5 line-clamp-1 ${isSelected ? "text-orange-700" : "text-muted-foreground"}`}>{pkg.description}</p>
+                          <p className={`text-xs mt-0.5 line-clamp-1 ${isSelected ? "text-primary/80" : "text-muted-foreground"}`}>{pkg.description}</p>
                         )}
-                        <span className={`inline-block mt-1 text-[10px] font-mono px-1.5 py-0.5 rounded ${isSelected ? "bg-orange-200 text-orange-800" : "bg-muted text-muted-foreground"}`}>{pkg.code}</span>
+                        <span className={`inline-block mt-1 text-[10px] font-mono px-1.5 py-0.5 rounded ${isSelected ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"}`}>{pkg.code}</span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className={`text-xs font-semibold ${isSelected ? "text-orange-700" : "text-muted-foreground"}`}>{t("assign.packagePrivilegesCount", { count: pkg.privilegeCodes.length })}</span>
+                        <span className={`text-xs font-semibold ${isSelected ? "text-primary" : "text-muted-foreground"}`}>{t("assign.packagePrivilegesCount", { count: pkg.privilegeCodes.length })}</span>
                         {pkg.privilegeCodes.length > 0 && (
                           <button onClick={(e) => { e.stopPropagation(); toggleExpand(pkg.key); }} className="p-1 rounded hover:bg-muted transition-colors">
                             {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
@@ -743,13 +635,13 @@ export default function AssignStaffPrivilegesPage() {
 
         {/* ── Right column: Individual Privileges ───────────────────────────── */}
         <div className="flex flex-col overflow-hidden">
-          <div className="px-5 py-3 border-b border-border bg-muted/20 flex items-center justify-between shrink-0">
-            <div className="flex items-center justify-between border-b pb-4 mb-4">
-              <h2 className="font-semibold text-lg flex items-center gap-2">
-                <Shield className="w-5 h-5 text-blue-500" />
+          <div className="px-5 py-3 border-b border-border bg-muted/20 shrink-0">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <h2 className="font-semibold text-base flex items-center gap-2">
+                <Shield className="w-5 h-5 text-primary" />
                 {t("assign.individualPrivilegesTitle")}
               </h2>
-              <div className="relative w-64">
+              <div className="relative w-full sm:w-64">
                 <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none`} />
                 <Input
                   placeholder={t("assign.searchPrivilege")}
@@ -775,36 +667,36 @@ export default function AssignStaffPrivilegesPage() {
               filteredPrivileges.map((group) => (
                 <div key={group.module} className="rounded-xl border-2 border-border overflow-hidden">
                   <div className="bg-muted/50 px-3 py-2 border-b border-border">
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{group.module}</p>
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{getPrivilegeModuleLabel(group.module, language)}</p>
                   </div>
                   <div className="p-2 space-y-1">
                     {group.items.map((privilege) => {
-                      const displayName = getLocalizedText(privilege.name_ar, privilege.name_en, language) || privilege.code;
+                      const displayName = getLanguageOnlyText(privilege.name_ar, privilege.name_en, language) || privilege.code;
                       const isSelected = selectedExtraPrivilegeIds.includes(privilege.id);
                       const inPackage = selectedPackageCodes.has(privilege.code);
                       return (
                         <label
                           key={privilege.id}
-                          className={`flex items-center gap-2.5 rounded-lg border-2 px-3 py-2 cursor-pointer transition-all ${inPackage
+                          className={`flex items-center gap-2.5 rounded-lg border px-3 py-2 cursor-pointer transition-all ${inPackage
                             ? "bg-emerald-50 border-emerald-200 opacity-70 cursor-not-allowed"
                             : isSelected
-                              ? "bg-blue-50 border-blue-400 shadow-sm"
-                              : "bg-background border-border hover:border-blue-300 hover:bg-blue-50/50"
+                              ? "bg-primary/5 border-primary shadow-sm"
+                              : "bg-background border-border hover:border-primary/30 hover:bg-muted/40"
                             }`}
                         >
                           <input
                             type="checkbox"
-                            className="w-4 h-4 accent-blue-500 shrink-0"
+                            className="w-4 h-4 accent-primary shrink-0"
                             checked={isSelected || inPackage}
                             disabled={inPackage}
                             onChange={() => !inPackage && toggleExtra(privilege.id)}
                           />
-                          <Badge variant="secondary" className="bg-purple-100 text-purple-700 hover:bg-purple-100 shrink-0">
+                          <Badge variant="secondary" className="bg-muted text-muted-foreground shrink-0">
                             <Check className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                             {t("assign.selectedBadge")}
                           </Badge>
                           <span className="flex-1 min-w-0">
-                            <span className={`block text-xs font-semibold truncate ${inPackage ? "text-emerald-800" : isSelected ? "text-blue-900" : "text-foreground"}`}>
+                            <span className={`block text-xs font-semibold truncate ${inPackage ? "text-emerald-800" : isSelected ? "text-primary" : "text-foreground"}`}>
                               {displayName}
                               {inPackage && <span className={`text-[10px] font-normal text-emerald-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{t("assign.inPackage")}</span>}
                             </span>
@@ -833,7 +725,7 @@ export default function AssignStaffPrivilegesPage() {
         <Button
           onClick={() => void handleAssign()}
           disabled={isSaving || totalPrivilegesCount === 0}
-          className="gap-2 bg-orange-500 hover:bg-orange-600 text-white"
+          className="gap-2"
         >
           {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           {isSaving ? t("assign.saving") : t("table.assignAction")}
