@@ -23,7 +23,6 @@ import api from "../../../services/axios";
 import { buildPersonName, getLocalizedText, resolveDisplayLanguage } from "../../../lib/localizedDisplay";
 
 const hucLogo = "/assets/HUC_logo.jpeg";
-const DEFAULT_CLUB_NAME_AR = "نادي جامعة العاصمة";
 
 const pickPhotoFromSource = (src: any): string | undefined => {
   if (!src || typeof src !== "object") return undefined;
@@ -152,7 +151,7 @@ export function Navbar() {
     .map((value) => resolveFileUrl(typeof value === "string" ? value : undefined))
     .find(Boolean);
   const effectivePhotoUrl = fetchedPhotoUrl || photoUrl;
-  const clubName = t("navbar.clubName", DEFAULT_CLUB_NAME_AR);
+  const clubName = t("navbar.clubName");
 
   useEffect(() => {
     setAvatarFailed(false);
@@ -348,7 +347,7 @@ export function Navbar() {
             >
               <img
                 src={hucLogo}
-                alt="HUC"
+                alt={clubName}
                 className="h-9 w-9 sm:h-10 sm:w-10 rounded-full object-cover bg-card"
               />
               <span

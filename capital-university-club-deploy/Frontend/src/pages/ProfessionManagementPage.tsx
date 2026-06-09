@@ -12,6 +12,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from ".
 import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
+import { getBilingualFieldPlaceholder } from "../lib/localizedDisplay";
 import { useLanguage } from "../hooks/useLanguage";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -395,7 +396,7 @@ export default function ProfessionManagementPage() {
                                 id="prof-name-ar"
                                 value={form.name_ar}
                                 onChange={(e) => setForm({ ...form, name_ar: e.target.value })}
-                                placeholder={t("modalAdd.nameArPlaceholder")}
+                                placeholder={getBilingualFieldPlaceholder("ar", "ProfessionManagementPage", "modalAdd.nameArPlaceholder")}
                                 dir={isRTL ? "rtl" : "auto"}
                             />
                         </div>
@@ -407,7 +408,7 @@ export default function ProfessionManagementPage() {
                                 className="text-left"
                                 value={form.name_en}
                                 onChange={(e) => setForm({ ...form, name_en: e.target.value })}
-                                placeholder={t("modalAdd.nameEnPlaceholder")}
+                                placeholder={getBilingualFieldPlaceholder("en", "ProfessionManagementPage", "modalAdd.nameEnPlaceholder")}
                             />
                         </div>
                     </div>

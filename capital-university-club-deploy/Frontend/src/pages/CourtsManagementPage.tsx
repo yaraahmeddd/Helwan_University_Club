@@ -49,7 +49,7 @@ import { Switch } from "../components/StaffPagesComponents/ui/switch";
 import { useLanguage } from "../hooks/useLanguage";
 import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
-import { getLocalizedText } from "../lib/localizedDisplay";
+import { getBilingualFieldPlaceholder, getLocalizedText } from "../lib/localizedDisplay";
 
 type FieldStatus = Field["status"];
 
@@ -563,7 +563,7 @@ export default function CourtsManagementPage() {
                             <Label htmlFor="field-name-ar">{t("dialog.fields.nameAr")} <span className="text-destructive">*</span></Label>
                             <Input
                                 id="field-name-ar"
-                                placeholder={t("dialog.placeholders.nameAr")}
+                                placeholder={getBilingualFieldPlaceholder("ar", "CourtsManagementPage", "dialog.placeholders.nameAr")}
                                 value={form.name_ar}
                                 onChange={(e) => setForm({ ...form, name_ar: e.target.value })}
                                 dir="rtl"
@@ -574,7 +574,7 @@ export default function CourtsManagementPage() {
                             <Label htmlFor="field-name-en">{t("dialog.fields.nameEn")} <span className="text-destructive">*</span></Label>
                             <Input
                                 id="field-name-en"
-                                placeholder={t("dialog.placeholders.nameEn")}
+                                placeholder={getBilingualFieldPlaceholder("en", "CourtsManagementPage", "dialog.placeholders.nameEn")}
                                 value={form.name_en}
                                 onChange={(e) => setForm({ ...form, name_en: e.target.value })}
                                 dir="ltr"

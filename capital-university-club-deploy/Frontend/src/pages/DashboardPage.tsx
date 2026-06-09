@@ -46,6 +46,7 @@ import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/
 import api from "../services/axios";
 import { useAuth } from "../context/AuthContext";
 import i18n from "../i18n";
+import { buildPersonName } from "../lib/localizedDisplay";
 
 type SectionKey = "members" | "sports" | "plans" | "tasks" | "audit" | "privileges";
 
@@ -199,7 +200,7 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
 
 export default function DashboardPage() {
   const { hasPrivilege, user } = useAuth();
-  const { t } = useTranslation(["DashboardPage", "common"]);
+  const { t } = useTranslation(["DashboardPage", "nav"]);
   const { language } = useLanguage();
   const [dashboard, setDashboard] = useState<DashboardState>(INITIAL_STATE);
   const [loading, setLoading] = useState(true);
@@ -218,6 +219,34 @@ export default function DashboardPage() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // ───────────────────────────────────────────────────────────────────────────
+
+  const locale = language === "ar" ? "ar-EG" : "en-US";
+  const displayName =
+    buildPersonName(
+      {
+        firstNameAr: user?.first_name_ar,
+        lastNameAr: user?.last_name_ar,
+        firstNameEn: user?.first_name_en,
+        lastNameEn: user?.last_name_en,
+      },
+      language,
+    ).primary ||
+    user?.fullName ||
+    t("defaultStaffName");
+
+  const greetingKey = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return "greetingMorning";
+    if (h < 17) return "greetingAfternoon";
+    return "greetingEvening";
+  })();
+
+  useEffect(() => {
+    document.title = t("documentTitle", {
+      dashboard: t("pageTitle"),
+      club: t("nav:navbar.clubName"),
+    });
+  }, [t, language]);
 
   const loadDashboard = useCallback(
     async (mode: "initial" | "refresh") => {
@@ -498,20 +527,18 @@ export default function DashboardPage() {
               </span>
               <div>
                 <p className="text-xs font-bold tracking-[0.2em] uppercase text-[#f8941c]">
-                  {(() => {
-                    const h = new Date().getHours();
-                    if (h < 12) return language === "ar" ? "صباح الخير" : "Good Morning";
-                    if (h < 17) return language === "ar" ? "أهلاً بك" : "Good Afternoon";
-                    return language === "ar" ? "مساء الخير" : "Good Evening";
-                  })()}
+                  {t("pageTitle")}
                 </p>
               </div>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-              {user?.fullName || "Staff Member"}
+              {t("welcomeMessage", { name: displayName })}
             </h1>
+            <p className="mt-1 text-sm md:text-base text-white/70 font-medium">
+              {t(greetingKey)}
+            </p>
             <p className="mt-2 text-sm md:text-base text-white/80 font-medium">
-              {new Date().toLocaleDateString(language === "ar" ? "ar-EG" : "en-US", {
+              {new Date().toLocaleDateString(locale, {
                 weekday: "long",
                 year: "numeric",
                 month: "long",
@@ -523,7 +550,7 @@ export default function DashboardPage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             {lastUpdated && (
               <div className="text-xs text-white/70 bg-white/10 rounded-full px-3 py-1.5 ring-1 ring-white/15 backdrop-blur-sm">
-                {t("lastUpdated", { time: lastUpdated.toLocaleTimeString(language === "ar" ? "ar-EG" : "en-US") })}
+                {t("lastUpdated", { time: lastUpdated.toLocaleTimeString(locale) })}
               </div>
             )}
             <Button

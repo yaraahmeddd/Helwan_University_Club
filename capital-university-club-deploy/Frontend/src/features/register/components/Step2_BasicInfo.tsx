@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { IdCard, AlertCircle, ChevronRight, ChevronLeft, User, Mail, Phone, Lock, Calendar, Users, Check, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../../hooks/useLanguage';
+import { getBilingualFieldPlaceholder } from '../../../lib/localizedDisplay';
 import type { RegisterFormValues } from '../schemas/validation';
 
 interface Step2BasicInfoProps {
@@ -314,7 +315,7 @@ export const Step2BasicInfo = ({ onNext, onPrev, embedded = false }: Step2BasicI
                         id="first_name_ar"
                         {...register('first_name_ar')}
                         className={inputClasses}
-                        placeholder={t('step2.firstNameArPlaceholder')}
+                        placeholder={getBilingualFieldPlaceholder('ar', 'register', 'step2.firstNameArPlaceholder')}
                         maxLength={20}
                         dir="rtl"
                         aria-required="true"
@@ -336,7 +337,7 @@ export const Step2BasicInfo = ({ onNext, onPrev, embedded = false }: Step2BasicI
                         id="last_name_ar"
                         {...register('last_name_ar')}
                         className={inputClasses}
-                        placeholder={t('step2.lastNameArPlaceholder')}
+                        placeholder={getBilingualFieldPlaceholder('ar', 'register', 'step2.lastNameArPlaceholder')}
                         maxLength={20}
                         dir="rtl"
                         aria-required="true"
@@ -357,7 +358,7 @@ export const Step2BasicInfo = ({ onNext, onPrev, embedded = false }: Step2BasicI
                         id="first_name_en"
                         {...register('first_name_en')}
                         className={`${inputClasses} text-left`}
-                        placeholder={t('step2.firstNameEnPlaceholder')}
+                        placeholder={getBilingualFieldPlaceholder('en', 'register', 'step2.firstNameEnPlaceholder')}
                         dir="ltr"
                         maxLength={20}
                         aria-required="true"
@@ -377,7 +378,7 @@ export const Step2BasicInfo = ({ onNext, onPrev, embedded = false }: Step2BasicI
                         id="last_name_en"
                         {...register('last_name_en')}
                         className={`${inputClasses} text-left`}
-                        placeholder={t('step2.lastNameEnPlaceholder')}
+                        placeholder={getBilingualFieldPlaceholder('en', 'register', 'step2.lastNameEnPlaceholder')}
                         dir="ltr"
                         maxLength={20}
                         aria-required="true"

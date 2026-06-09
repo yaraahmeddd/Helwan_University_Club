@@ -22,7 +22,7 @@ import {
     RecordViewField,
     RecordViewProfileHeader,
 } from "../components/StaffPagesComponents/shared/RecordViewPrimitives";
-import { buildPersonName, getLocalizedText } from "../lib/localizedDisplay";
+import { buildPersonName, getBilingualFieldPlaceholder, getLocalizedText } from "../lib/localizedDisplay";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 import {
     TooltipProvider,
@@ -581,11 +581,11 @@ export default function RegistrationManagementPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
                         <div className="space-y-2">
                             <Label>{t('addMember.nameAr')}</Label>
-                            <Input value={newMember.name_ar} onChange={e => setNewMember({ ...newMember, name_ar: e.target.value })} placeholder={t('addMember.nameArPlaceholder')} />
+                            <Input value={newMember.name_ar} onChange={e => setNewMember({ ...newMember, name_ar: e.target.value })} placeholder={getBilingualFieldPlaceholder('ar', 'RegistrationManagementPage', 'addMember.nameArPlaceholder')} />
                         </div>
                         <div className="space-y-2">
                             <Label>{t('addMember.nameEn')}</Label>
-                            <Input value={newMember.name_en} onChange={e => setNewMember({ ...newMember, name_en: e.target.value })} placeholder={t('addMember.nameEnPlaceholder')} className="text-left" dir="ltr" />
+                            <Input value={newMember.name_en} onChange={e => setNewMember({ ...newMember, name_en: e.target.value })} placeholder={getBilingualFieldPlaceholder('en', 'RegistrationManagementPage', 'addMember.nameEnPlaceholder')} className="text-left" dir="ltr" />
                         </div>
                         <div className="space-y-2">
                             <Label>{t('addMember.nationalId')}</Label>

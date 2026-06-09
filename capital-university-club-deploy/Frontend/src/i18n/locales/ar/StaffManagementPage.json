@@ -27,7 +27,11 @@
     },
     "placeholders": {
       "selectJob": "اختر نوع الوظيفة",
-      "address": "القاهرة، مصر"
+      "address": "القاهرة، مصر",
+      "firstNameAr": "محمد",
+      "lastNameAr": "أحمد",
+      "firstNameEn": "Mohamed",
+      "lastNameEn": "Ahmed"
     },
     "messages": {
       "noPackages": "لا توجد حزم مخصصة"

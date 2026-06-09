@@ -27,7 +27,11 @@
     },
     "placeholders": {
       "selectJob": "Select Job Role",
-      "address": "Cairo, Egypt"
+      "address": "Cairo, Egypt",
+      "firstNameAr": "محمد",
+      "lastNameAr": "أحمد",
+      "firstNameEn": "Mohamed",
+      "lastNameEn": "Ahmed"
     },
     "messages": {
       "noPackages": "No assigned packages"

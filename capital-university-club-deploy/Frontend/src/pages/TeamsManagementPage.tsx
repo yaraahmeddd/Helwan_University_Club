@@ -27,7 +27,7 @@ import { useToast } from "../hooks/use-toast";
 import { useLanguage } from "../hooks/useLanguage";
 import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
-import { getEntityName, getLocalizedText } from "../lib/localizedDisplay";
+import { getBilingualFieldPlaceholder, getEntityName, getLocalizedText } from "../lib/localizedDisplay";
 import api from "../services/axios";
 import { PATTERNS } from "../lib/validation";
 
@@ -652,7 +652,7 @@ export default function TeamsManagementPage() {
                                     <Label>{t('form.nameArLabel')} <span className="text-destructive">*</span></Label>
                                     <Input
                                         value={form.nameAr}
-                                        placeholder={t('form.nameArPlaceholder')}
+                                        placeholder={getBilingualFieldPlaceholder('ar', 'TeamsManagementPage', 'form.nameArPlaceholder')}
                                         maxLength={100}
                                         onChange={e => {
                                             const v = e.target.value;
@@ -667,7 +667,7 @@ export default function TeamsManagementPage() {
                                     <Input
                                         dir="ltr" className={`text-left ${isRTL ? '' : 'text-left'}`}
                                         value={form.nameEn}
-                                        placeholder={t('form.nameEnPlaceholder')}
+                                        placeholder={getBilingualFieldPlaceholder('en', 'TeamsManagementPage', 'form.nameEnPlaceholder')}
                                         maxLength={100}
                                         onChange={e => {
                                             const v = e.target.value;

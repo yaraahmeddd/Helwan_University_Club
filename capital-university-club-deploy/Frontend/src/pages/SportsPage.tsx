@@ -8,7 +8,7 @@ import { useLanguage } from "../hooks/useLanguage";
 import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
-import { getLocalizedText } from "../lib/localizedDisplay";
+import { getBilingualFieldPlaceholder, getLocalizedText } from "../lib/localizedDisplay";
 import { PATTERNS } from "../lib/validation";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Input } from "../components/StaffPagesComponents/ui/input";
@@ -964,7 +964,7 @@ export default function SportsPage() {
                 <Input
                   value={form.nameAr}
                   onChange={(e) => handleNameArChange(e.target.value)}
-                  placeholder={t('form.nameArPlaceholder')}
+                  placeholder={getBilingualFieldPlaceholder('ar', 'SportsPage', 'form.nameArPlaceholder')}
                   maxLength={100}
                 />
               </div>
@@ -975,7 +975,7 @@ export default function SportsPage() {
                   onChange={(e) => handleNameEnChange(e.target.value)}
                   dir="ltr"
                   className="text-start"
-                  placeholder={t('form.nameEnPlaceholder')}
+                  placeholder={getBilingualFieldPlaceholder('en', 'SportsPage', 'form.nameEnPlaceholder')}
                   maxLength={100}
                 />
               </div>
@@ -1041,7 +1041,7 @@ export default function SportsPage() {
                             <Label className="text-xs mb-1 block">{t('form.teamNameArLabel')} <span className="text-destructive">*</span></Label>
                             <input type="text" value={team.nameAr}
                               onChange={e => { upd({ nameAr: e.target.value }); if (teamsError) setTeamsError(""); }}
-                              placeholder={t('form.teamNameArPlaceholder')}
+                              placeholder={getBilingualFieldPlaceholder('ar', 'SportsPage', 'form.teamNameArPlaceholder')}
                               className="w-full h-8 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
                           </div>
                           <div>

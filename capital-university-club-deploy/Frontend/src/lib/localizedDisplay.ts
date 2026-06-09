@@ -1,10 +1,25 @@
+import i18n from '../i18n';
+
 export type DisplayLanguage = 'ar' | 'en';
+export type BilingualFieldLocale = DisplayLanguage;
 
 /** Font family for locale-appropriate name display (Cairo for Arabic UI). */
 export function localeFontFamily(language: DisplayLanguage): string {
   return language === 'ar'
     ? "'Cairo', sans-serif"
     : "'Segoe UI', system-ui, sans-serif";
+}
+
+/**
+ * Placeholder for bilingual form fields: always in the field's writing language
+ * (Arabic inputs → Arabic hint, English inputs → English hint), regardless of UI language.
+ */
+export function getBilingualFieldPlaceholder(
+  fieldLocale: BilingualFieldLocale,
+  namespace: string,
+  key: string,
+): string {
+  return i18n.getFixedT(fieldLocale, namespace)(key);
 }
 
 /** Normalize i18n language codes (e.g. "ar-EG") to a supported display language. */

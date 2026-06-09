@@ -14,7 +14,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from ".
 import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
-import { getLocalizedText } from "../lib/localizedDisplay";
+import { getBilingualFieldPlaceholder, getLocalizedText } from "../lib/localizedDisplay";
 import { useLanguage } from "../hooks/useLanguage";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -659,7 +659,7 @@ export default function BranchManagementPage() {
                                 id="name_ar" 
                                 value={form.name_ar} 
                                 onChange={(e) => { setForm({ ...form, name_ar: e.target.value }); setFormErrors({...formErrors, name_ar: []}); }} 
-                                placeholder={t('modals.addEdit.fields.nameArPlaceholder')} 
+                                placeholder={getBilingualFieldPlaceholder('ar', 'BranchManagementPage', 'modals.addEdit.fields.nameArPlaceholder')} 
                                 className={formErrors.name_ar?.length ? "border-destructive focus-visible:ring-destructive/20" : ""}
                             />
                             {formErrors.name_ar?.length > 0 && <span className="text-xs text-destructive">{formErrors.name_ar[0]}</span>}
@@ -671,7 +671,7 @@ export default function BranchManagementPage() {
                                 dir="ltr" 
                                 value={form.name_en} 
                                 onChange={(e) => { setForm({ ...form, name_en: e.target.value }); setFormErrors({...formErrors, name_en: []}); }} 
-                                placeholder={t('modals.addEdit.fields.nameEnPlaceholder')} 
+                                placeholder={getBilingualFieldPlaceholder('en', 'BranchManagementPage', 'modals.addEdit.fields.nameEnPlaceholder')} 
                                 className={`text-start ${formErrors.name_en?.length ? "border-destructive focus-visible:ring-destructive/20" : ""}`}
                             />
                             {formErrors.name_en?.length > 0 && <span className="text-xs text-destructive">{formErrors.name_en[0]}</span>}
@@ -682,7 +682,7 @@ export default function BranchManagementPage() {
                                 id="location_ar" 
                                 value={form.location_ar} 
                                 onChange={(e) => { setForm({ ...form, location_ar: e.target.value }); setFormErrors({...formErrors, location_ar: []}); }} 
-                                placeholder={t('modals.addEdit.fields.locationArPlaceholder')} 
+                                placeholder={getBilingualFieldPlaceholder('ar', 'BranchManagementPage', 'modals.addEdit.fields.locationArPlaceholder')} 
                                 className={formErrors.location_ar?.length ? "border-destructive focus-visible:ring-destructive/20" : ""}
                             />
                             {formErrors.location_ar?.length > 0 && <span className="text-xs text-destructive">{formErrors.location_ar[0]}</span>}
@@ -694,7 +694,7 @@ export default function BranchManagementPage() {
                                 dir="ltr" 
                                 value={form.location_en} 
                                 onChange={(e) => { setForm({ ...form, location_en: e.target.value }); setFormErrors({...formErrors, location_en: []}); }} 
-                                placeholder={t('modals.addEdit.fields.locationEnPlaceholder')} 
+                                placeholder={getBilingualFieldPlaceholder('en', 'BranchManagementPage', 'modals.addEdit.fields.locationEnPlaceholder')} 
                                 className={`text-start ${formErrors.location_en?.length ? "border-destructive focus-visible:ring-destructive/20" : ""}`}
                             />
                             {formErrors.location_en?.length > 0 && <span className="text-xs text-destructive">{formErrors.location_en[0]}</span>}

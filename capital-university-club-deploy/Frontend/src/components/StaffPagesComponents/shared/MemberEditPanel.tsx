@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
-import { buildPersonName, getEntityName, type DisplayLanguage } from '@/lib/localizedDisplay';
+import { buildPersonName, getBilingualFieldPlaceholder, getEntityName, type DisplayLanguage } from '@/lib/localizedDisplay';
 import { formatAdminDate, formatAdminTime } from './adminFormatters';
 import { adminFieldIcons } from './adminRecordFields';
 import { adminDialogStyles } from './adminTableStyles';
@@ -236,7 +236,7 @@ export function MemberEditPanel({
                 value={f.firstNameAr}
                 onChange={(e) => set.setFirstNameAr(e.target.value)}
                 className={fieldInputClass}
-                placeholder={t('editModal.placeholders.firstNameAr')}
+                placeholder={getBilingualFieldPlaceholder('ar', 'MemberManagementPage', 'editModal.placeholders.firstNameAr')}
               />
             </RecordViewEditableField>
             <RecordViewEditableField icon={User} label={t('editModal.fields.lastNameAr')}>
@@ -244,7 +244,7 @@ export function MemberEditPanel({
                 value={f.lastNameAr}
                 onChange={(e) => set.setLastNameAr(e.target.value)}
                 className={fieldInputClass}
-                placeholder={t('editModal.placeholders.lastNameAr')}
+                placeholder={getBilingualFieldPlaceholder('ar', 'MemberManagementPage', 'editModal.placeholders.lastNameAr')}
               />
             </RecordViewEditableField>
             <RecordViewEditableField
@@ -256,7 +256,7 @@ export function MemberEditPanel({
                 value={f.firstNameEn}
                 onChange={(e) => set.setFirstNameEn(e.target.value)}
                 className={fieldInputClass}
-                placeholder={t('editModal.placeholders.firstNameEn')}
+                placeholder={getBilingualFieldPlaceholder('en', 'MemberManagementPage', 'editModal.placeholders.firstNameEn')}
                 dir="ltr"
               />
             </RecordViewEditableField>
@@ -269,7 +269,7 @@ export function MemberEditPanel({
                 value={f.lastNameEn}
                 onChange={(e) => set.setLastNameEn(e.target.value)}
                 className={fieldInputClass}
-                placeholder={t('editModal.placeholders.lastNameEn')}
+                placeholder={getBilingualFieldPlaceholder('en', 'MemberManagementPage', 'editModal.placeholders.lastNameEn')}
                 dir="ltr"
               />
             </RecordViewEditableField>

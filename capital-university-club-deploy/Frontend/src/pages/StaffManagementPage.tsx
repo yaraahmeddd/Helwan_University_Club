@@ -24,7 +24,7 @@ import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE } fro
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
 import { RecordViewProfileHeader } from "../components/StaffPagesComponents/shared/RecordViewPrimitives";
-import { buildPersonName, getLocalizedText } from "../lib/localizedDisplay";
+import { buildPersonName, getBilingualFieldPlaceholder, getLocalizedText } from "../lib/localizedDisplay";
 import { useLanguage } from "../hooks/useLanguage";
 import { useLocalizedTranslation } from "../hooks/useLocalizedTranslation";
 import { useTranslation } from "react-i18next";
@@ -267,11 +267,11 @@ function DetailPanel({ row, details, privileges, loading, roleName, onDelete, st
                             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">{t("detailPanel.sections.name")}</p>
                             <div className="rounded-xl border border-border bg-muted/30 divide-y divide-border overflow-hidden">
                                 {[
-                                    { icon: Users, label: t("detailPanel.fields.firstNameAr"), value: editFirstNameAr, setValue: setEditFirstNameAr, dir: "rtl" as const },
-                                    { icon: Users, label: t("detailPanel.fields.lastNameAr"), value: editLastNameAr, setValue: setEditLastNameAr, dir: "rtl" as const },
-                                    { icon: Users, label: t("detailPanel.fields.firstNameEn"), value: editFirstNameEn, setValue: setEditFirstNameEn, dir: "ltr" as const },
-                                    { icon: Users, label: t("detailPanel.fields.lastNameEn"), value: editLastNameEn, setValue: setEditLastNameEn, dir: "ltr" as const },
-                                ].map(({ icon: Icon, label, value, setValue, dir }) => (
+                                    { icon: Users, label: t("detailPanel.fields.firstNameAr"), value: editFirstNameAr, setValue: setEditFirstNameAr, dir: "rtl" as const, placeholder: getBilingualFieldPlaceholder("ar", "StaffManagementPage", "detailPanel.placeholders.firstNameAr") },
+                                    { icon: Users, label: t("detailPanel.fields.lastNameAr"), value: editLastNameAr, setValue: setEditLastNameAr, dir: "rtl" as const, placeholder: getBilingualFieldPlaceholder("ar", "StaffManagementPage", "detailPanel.placeholders.lastNameAr") },
+                                    { icon: Users, label: t("detailPanel.fields.firstNameEn"), value: editFirstNameEn, setValue: setEditFirstNameEn, dir: "ltr" as const, placeholder: getBilingualFieldPlaceholder("en", "StaffManagementPage", "detailPanel.placeholders.firstNameEn") },
+                                    { icon: Users, label: t("detailPanel.fields.lastNameEn"), value: editLastNameEn, setValue: setEditLastNameEn, dir: "ltr" as const, placeholder: getBilingualFieldPlaceholder("en", "StaffManagementPage", "detailPanel.placeholders.lastNameEn") },
+                                ].map(({ icon: Icon, label, value, setValue, dir, placeholder }) => (
                                     <div key={label} className="flex items-center gap-3 px-4 py-1.5">
                                         <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
                                         <span className="text-[11px] text-muted-foreground w-32 shrink-0">{label}</span>
@@ -279,6 +279,7 @@ function DetailPanel({ row, details, privileges, loading, roleName, onDelete, st
                                             value={value}
                                             onChange={(e) => setValue(e.target.value)}
                                             dir={dir}
+                                            placeholder={placeholder}
                                             className="flex-1 bg-transparent text-sm font-medium outline-none border-b border-transparent focus:border-primary transition-colors py-1.5 min-w-0 text-right"
                                             style={{ direction: dir }}
                                         />
