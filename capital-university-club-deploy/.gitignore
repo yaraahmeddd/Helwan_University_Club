@@ -8,9 +8,16 @@ node_modules/
 # Build Outputs
 dist/
 build/
+Frontend/dist/
 .next/
 out/
 coverage/
+
+# Backend runtime uploads (keep README + .gitkeep placeholders only)
+Backend/uploads/**
+!Backend/uploads/README.md
+!Backend/uploads/**/
+!Backend/uploads/**/.gitkeep
 
 # Logs
 logs/
