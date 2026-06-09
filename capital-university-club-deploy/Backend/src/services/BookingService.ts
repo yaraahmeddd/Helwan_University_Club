@@ -20,6 +20,7 @@ export interface CreateBookingRequest {
   expected_participants?: number;
   notes?: string;
   language?: "ar" | "en";
+  skipBookableCheck?: boolean; // Staff bypass: skip is_available_for_booking check
 }
 
 export interface BookingParticipantInput {
@@ -188,7 +189,9 @@ export class BookingService {
     if (!field) {
       throw new Error("Field not found");
     }
-    this.assertFieldBookable(field);
+    if (!request.skipBookableCheck) {
+      this.assertFieldBookable(field);
+    }
 
     // Check for all conflicts (bookings and training schedules)
     const conflictCheck = await this.checkAllConflicts(
@@ -516,7 +519,8 @@ export class BookingService {
    */
   async getAvailableSlots(
     fieldId: string,
-    date: string // YYYY-MM-DD format
+    date: string, // YYYY-MM-DD format
+    skipBookableCheck = false
   ): Promise<{
     field_id: string;
     field_name: string;
@@ -543,7 +547,9 @@ export class BookingService {
     if (!field) {
       throw new Error("Field not found");
     }
-    this.assertFieldBookable(field);
+    if (!skipBookableCheck) {
+      this.assertFieldBookable(field);
+    }
 
     // Parse date and get day of week
     const targetDate = new Date(date);
@@ -705,7 +711,8 @@ export class BookingService {
   async getCalendarView(
     fieldId: string,
     startDate: string, // YYYY-MM-DD
-    endDate: string // YYYY-MM-DD
+    endDate: string, // YYYY-MM-DD
+    skipBookableCheck = false
   ): Promise<{
     field_id: string;
     field_name: string;
@@ -736,7 +743,9 @@ export class BookingService {
     if (!field) {
       throw new Error("Field not found");
     }
-    this.assertFieldBookable(field);
+    if (!skipBookableCheck) {
+      this.assertFieldBookable(field);
+    }
 
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -765,7 +774,7 @@ export class BookingService {
     const currentDate = new Date(start);
     while (currentDate <= end) {
       const dateStr = currentDate.toISOString().split('T')[0];
-      const daySlots = await this.getAvailableSlots(fieldId, dateStr);
+      const daySlots = await this.getAvailableSlots(fieldId, dateStr, skipBookableCheck);
 
       const dayOfWeek = currentDate.getDay();
 

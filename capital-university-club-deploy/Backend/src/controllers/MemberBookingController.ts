@@ -91,7 +91,7 @@ export class MemberBookingController {
         ? (end_date as string)
         : endDateCalc.toISOString().split("T")[0];
 
-      const calendar = await this.bookingService.getCalendarView(fieldId, startDate, endDate);
+      const calendar = await this.bookingService.getCalendarView(fieldId, startDate, endDate, true);
 
       res.json({
         success: true,

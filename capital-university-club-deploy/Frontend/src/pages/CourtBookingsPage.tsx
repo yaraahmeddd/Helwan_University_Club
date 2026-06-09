@@ -1198,19 +1198,15 @@ export default function CourtBookingsPage() {
     const fetchCourts = useCallback(async () => {
         setCourtsLoading(true);
         try {
-            const res = await api.get<{ success: boolean; data: ApiBookableSport[] }>("/members/bookings/sports");
-            const sports = Array.isArray(res?.data?.data) ? res.data.data : [];
-            const allFields = sports.flatMap((sport) =>
-                Array.isArray(sport.fields)
-                    ? sport.fields.map(f => ({
-                        ...f,
-                        sport_id: sport.sport_id,
-                        sport: f.sport ?? { name_ar: sport.sport_name_ar, name_en: sport.sport_name_en },
-                    }))
-                    : []
-            );
+            // Use the authenticated staff endpoint which returns all active fields
+            // (the member endpoint /members/bookings/sports filters by is_available_for_booking=true
+            //  which defaults to false, causing courts to be hidden)
+            const res = await api.get<{ success: boolean; data: ApiField[] }>("/fields", {
+                params: { status: "active" },
+            });
+            const rawFields = Array.isArray(res?.data?.data) ? res.data.data : [];
             const uniqueFields = Array.from(
-                new Map(allFields.filter((field) => field?.id).map((field) => [field.id, field])).values()
+                new Map(rawFields.filter((field) => field?.id).map((field) => [field.id, field])).values()
             );
             setCourts(uniqueFields);
             setSelectedCourtId((prev) => {

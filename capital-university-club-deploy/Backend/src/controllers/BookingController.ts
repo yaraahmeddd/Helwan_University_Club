@@ -111,6 +111,7 @@ export class BookingController {
         end_time: endDateTime,
         notes: notes || undefined,
         language: language || "ar",
+        skipBookableCheck: true, // Staff can book any active field
       });
 
       // Return the booking directly instead of fetching details
