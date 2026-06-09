@@ -1,6 +1,7 @@
 import {
   Award,
   Calendar,
+  Clock,
   CreditCard,
   Globe,
   Hash,
@@ -24,6 +25,8 @@ import {
   SelectValue,
 } from '../ui/select';
 import { buildPersonName, getEntityName, type DisplayLanguage } from '@/lib/localizedDisplay';
+import { formatAdminDate, formatAdminTime } from './adminFormatters';
+import { adminFieldIcons } from './adminRecordFields';
 import { adminDialogStyles } from './adminTableStyles';
 import {
   RecordViewEditableField,
@@ -166,6 +169,8 @@ export function MemberEditPanel({
   );
 
   const d = details;
+  const locale = language === 'ar' ? 'ar-EG' : 'en-US';
+  const createdAt = d?.created_at ?? row.createdAt;
 
   return (
     <div className={adminDialogStyles.panel} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -184,22 +189,39 @@ export function MemberEditPanel({
       </div>
 
       <div className="flex-1 overflow-y-auto p-5 space-y-4">
-        <RecordViewSection icon={Shield} title={t('detail.sectionAccount', 'Account Information')}>
+        <RecordViewSection icon={adminFieldIcons.accountSection} title={t('detail.sectionAccount', 'Account Information')}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <RecordViewField
-              icon={Hash}
+              icon={adminFieldIcons.memberId}
               label={t('detail.fieldMemberId')}
               value={`MEM-${String(row.id).padStart(5, '0')}`}
               ltr
             />
             <RecordViewField
-              icon={Calendar}
-              label={t('detail.fieldJoinDate')}
-              value={fmtDate(d?.created_at ?? row.createdAt, isRTL)}
+              icon={adminFieldIcons.email}
+              label={t('detail.fieldEmail')}
+              value={row.email}
+              ltr
               fallback={notAvailable}
             />
             <RecordViewField
-              icon={Award}
+              icon={adminFieldIcons.registrationDate}
+              label={t('detail.fieldRegistrationDate')}
+              value={formatAdminDate(createdAt, locale)}
+              ltr
+              alignEnd={isRTL}
+              fallback={notAvailable}
+            />
+            <RecordViewField
+              icon={adminFieldIcons.registrationTime}
+              label={t('detail.fieldRegistrationTime')}
+              value={formatAdminTime(createdAt, locale)}
+              ltr
+              alignEnd={isRTL}
+              fallback={notAvailable}
+            />
+            <RecordViewField
+              icon={adminFieldIcons.memberType}
               label={t('detail.fieldMemberType')}
               value={row.memberTypeLabel}
               fallback={notAvailable}
@@ -207,7 +229,7 @@ export function MemberEditPanel({
           </div>
         </RecordViewSection>
 
-        <RecordViewSection icon={User} title={t('detail.sectionPersonal', 'Personal Information')}>
+        <RecordViewSection icon={adminFieldIcons.personalSection} title={t('detail.sectionPersonal', 'Personal Information')}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <RecordViewEditableField icon={User} label={t('editModal.fields.firstNameAr')}>
               <Input
@@ -304,9 +326,9 @@ export function MemberEditPanel({
           </div>
         </RecordViewSection>
 
-        <RecordViewSection icon={Phone} title={t('detail.sectionContact', 'Contact Information')}>
+        <RecordViewSection icon={adminFieldIcons.contactSection} title={t('detail.sectionContact', 'Contact Information')}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <RecordViewEditableField icon={Mail} label={t('editModal.fields.email')}>
+            <RecordViewEditableField icon={adminFieldIcons.email} label={t('editModal.fields.email')}>
               <Input
                 value={f.email}
                 onChange={(e) => set.setEmail(e.target.value)}
@@ -316,7 +338,7 @@ export function MemberEditPanel({
                 type="email"
               />
             </RecordViewEditableField>
-            <RecordViewEditableField icon={Phone} label={t('editModal.fields.phone')}>
+            <RecordViewEditableField icon={adminFieldIcons.phone} label={t('editModal.fields.phone')}>
               <Input
                 value={f.phone}
                 onChange={(e) => set.setPhone(e.target.value)}
@@ -327,7 +349,7 @@ export function MemberEditPanel({
               />
             </RecordViewEditableField>
             <RecordViewEditableField
-              icon={MapPin}
+              icon={adminFieldIcons.address}
               label={t('editModal.fields.address')}
               className="sm:col-span-2"
             >

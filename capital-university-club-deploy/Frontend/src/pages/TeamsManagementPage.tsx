@@ -507,7 +507,6 @@ export default function TeamsManagementPage() {
                 </Popover>
 
                 <Filter className="w-4 h-4 text-muted-foreground shrink-0" />
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full border border-border text-xs text-muted-foreground">{filtered.length} {t('toolbar.results')}</span>
                 {hasFilters && (
                     <button onClick={() => { setFilterSports([]); setFilterStatuses([]); setSearch(""); void fetchTeams(); }} className="text-xs text-primary hover:underline">
                         {t('toolbar.clearAll')}

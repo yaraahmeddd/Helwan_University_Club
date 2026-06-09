@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-    Search, RefreshCw, UserPlus, ChevronLeft, ChevronRight,
+    Search, RefreshCw, UserPlus,
     Mail, Phone, MapPin, CreditCard, Briefcase, CalendarCheck,
     CalendarX, ShieldCheck, X, Pencil, Trash2, Users, Eye,
 } from "lucide-react";
@@ -20,7 +20,8 @@ import { RoleGuard } from "../components/StaffPagesComponents/RoleGuard";
 import { useNavigate } from "react-router-dom";
 import { StaffService } from "../services/staffService";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
-import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
 import { RecordViewProfileHeader } from "../components/StaffPagesComponents/shared/RecordViewPrimitives";
 import { buildPersonName, getLocalizedText } from "../lib/localizedDisplay";
@@ -28,8 +29,6 @@ import { useLanguage } from "../hooks/useLanguage";
 import { useLocalizedTranslation } from "../hooks/useLocalizedTranslation";
 import { useTranslation } from "react-i18next";
 import { validateStaffEdit } from "../lib/validation";
-
-const PAGE_SIZE = 12;
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -662,8 +661,7 @@ export default function StaffManagementPage() {
         });
     }, [rows, search]);
 
-    const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
-    const pagedRows = filteredRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    const pagedRows = filteredRows.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE);
 
     const roleOf = (row: StaffRow) => staffTypeLabelById.get(row.staffTypeId) || row.staffTypeLabel;
 
@@ -703,53 +701,8 @@ export default function StaffManagementPage() {
                 {/* ── Left: Table panel ── */}
                 <div className="flex flex-col w-full overflow-hidden">
 
-                    {/* Search + refresh + pagination bar */}
+                    {/* Search + refresh bar */}
                     <div className="flex items-center gap-3 px-5 py-3 border-b border-border bg-muted/30 shrink-0 flex-wrap">
-
-                        {/* Pagination – top left */}
-                        <div className="flex items-center gap-1.5 shrink-0">
-                            <button
-                                disabled={page <= 1 || loading}
-                                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                                className="p-2 rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-40"
-                                aria-label={t("list.prevPage")}
-                            >
-                                <ChevronRight className="w-4 h-4" style={{ transform: isRTL ? 'none' : 'rotate(180deg)' }} />
-                            </button>
-
-                            {Array.from({ length: totalPages }, (_, i) => i + 1)
-                                .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
-                                .reduce<(number | "…")[]>((acc, p, idx, arr) => {
-                                    if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("…");
-                                    acc.push(p);
-                                    return acc;
-                                }, [])
-                                .map((p, i) =>
-                                    p === "…" ? (
-                                        <span key={`el-${i}`} className="px-1.5 text-muted-foreground text-xs">…</span>
-                                    ) : (
-                                        <button
-                                            key={p}
-                                            onClick={() => setPage(p as number)}
-                                            className={`min-w-[36px] h-9 rounded-md text-xs font-medium transition-colors border ${page === p
-                                                ? "bg-primary text-primary-foreground border-primary"
-                                                : "border-border hover:bg-muted text-foreground"
-                                                }`}
-                                        >
-                                            {p}
-                                        </button>
-                                    )
-                                )}
-
-                            <button
-                                disabled={page >= totalPages || loading}
-                                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                                className="p-2 rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-40"
-                                aria-label={t("list.nextPage")}
-                            >
-                                <ChevronLeft className="w-4 h-4" style={{ transform: isRTL ? 'none' : 'rotate(180deg)' }} />
-                            </button>
-                        </div>
 
                         <div className="flex-1" />
 
@@ -890,6 +843,13 @@ export default function StaffManagementPage() {
                         </Table>
                     </div>
 
+                    <AdminPagination
+                        page={page}
+                        totalCount={filteredRows.length}
+                        onPageChange={setPage}
+                        isRTL={isRTL}
+                        disabled={loading}
+                    />
 
                 </div>
             </div>

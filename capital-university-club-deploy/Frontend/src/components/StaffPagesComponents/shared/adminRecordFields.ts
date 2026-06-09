@@ -1,0 +1,35 @@
+import {
+  Award,
+  Calendar,
+  Clock,
+  CreditCard,
+  FileBadge,
+  Globe,
+  Hash,
+  HeartPulse,
+  Mail,
+  MapPin,
+  Phone,
+  Shield,
+  User,
+} from 'lucide-react';
+
+/** Shared field icons for admin member/registration record views. */
+export const adminFieldIcons = {
+  accountSection: Shield,
+  personalSection: User,
+  contactSection: Phone,
+  email: Mail,
+  phone: Phone,
+  address: MapPin,
+  registrationDate: Calendar,
+  registrationTime: Clock,
+  birthdate: Calendar,
+  nationalId: CreditCard,
+  gender: User,
+  nationality: Globe,
+  memberId: Hash,
+  memberType: Award,
+  healthStatus: HeartPulse,
+  membershipPlan: FileBadge,
+} as const;

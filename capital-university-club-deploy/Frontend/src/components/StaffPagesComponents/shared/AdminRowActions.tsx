@@ -19,13 +19,13 @@ export type AdminActionVariant =
   | 'default';
 
 const variantClass: Record<AdminActionVariant, string> = {
-  view: 'text-blue-600 hover:bg-blue-50 hover:text-blue-600',
-  edit: 'text-emerald-600 hover:bg-emerald-50 hover:text-emerald-600',
-  status: 'text-amber-600 hover:bg-amber-50 hover:text-amber-600',
-  delete: 'text-red-600 hover:bg-red-50 hover:text-red-600',
-  approve: 'text-emerald-700 hover:bg-emerald-50 hover:text-emerald-700',
-  print: 'text-slate-600 hover:bg-muted hover:text-foreground',
-  default: 'text-muted-foreground hover:bg-muted hover:text-foreground',
+  view: 'text-blue-600 hover:bg-blue-50 hover:text-blue-700 hover:ring-1 hover:ring-blue-200',
+  edit: 'text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 hover:ring-1 hover:ring-emerald-200',
+  status: 'text-amber-600 hover:bg-amber-50 hover:text-amber-700 hover:ring-1 hover:ring-amber-200',
+  delete: 'text-red-600 hover:bg-red-50 hover:text-red-700 hover:ring-1 hover:ring-red-200',
+  approve: 'text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 hover:ring-1 hover:ring-emerald-200',
+  print: 'text-slate-600 hover:bg-muted hover:text-foreground hover:ring-1 hover:ring-border',
+  default: 'text-muted-foreground hover:bg-muted hover:text-foreground hover:ring-1 hover:ring-border',
 };
 
 /** Eye icon view button — matches Member/Registration management tables. */
@@ -68,7 +68,7 @@ export function AdminActionButton({
         <Button
           variant="ghost"
           size="icon"
-          className={`h-10 w-10 [&_svg]:!size-[17px] ${variantClass[variant]}`}
+          className={`admin-row-action-btn h-10 w-10 cursor-pointer transition-all duration-150 hover:scale-110 active:scale-95 [&_svg]:!size-[17px] ${variantClass[variant]}`}
           onClick={onClick}
           disabled={disabled || loading}
         >

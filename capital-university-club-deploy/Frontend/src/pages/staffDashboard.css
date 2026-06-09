@@ -18,8 +18,25 @@
 
   --huc-shadow-soft: 0 1px 2px rgba(16, 24, 40, 0.06);
 
-  /* Admin module typography & sizing */
+  /* Admin typography — role-based font stacks (switch with page direction) */
+  --admin-font-heading-ar: "Cairo", "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+  --admin-font-heading-en: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --admin-font-body-ar: "IBM Plex Sans Arabic", "Cairo", ui-sans-serif, system-ui, sans-serif;
+  --admin-font-body-en: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --admin-font-heading: var(--admin-font-heading-ar);
+  --admin-font-body: var(--admin-font-body-ar);
+  /* Legacy alias used in a few Tailwind arbitrary values */
+  --admin-font-family: var(--admin-font-body);
+
+  /* Type scale */
   --admin-font-size: 15px;
+  --admin-font-size-table-head: 13px;
+  --admin-font-size-label: 12px;
+  --admin-font-size-section: 14px;
+  /* Admin table — phone & national ID columns */
+  --admin-cell-numeric-size: 14px;
+  --admin-cell-numeric-line-height: 1.4;
   --admin-icon-size: 15px;
   --admin-action-icon-size: 17px;
   --admin-dialog-max-width: calc(48rem + 50px);
@@ -31,8 +48,24 @@ body[dir="rtl"] {
   direction: rtl;
 }
 
+html[dir="ltr"],
+.admin-module[dir="ltr"],
+.huc-app[dir="ltr"] {
+  --admin-font-heading: var(--admin-font-heading-en);
+  --admin-font-body: var(--admin-font-body-en);
+  --admin-font-family: var(--admin-font-body);
+}
+
+html[dir="rtl"],
+.admin-module[dir="rtl"],
+.huc-app[dir="rtl"] {
+  --admin-font-heading: var(--admin-font-heading-ar);
+  --admin-font-body: var(--admin-font-body-ar);
+  --admin-font-family: var(--admin-font-body);
+}
+
 .huc-app {
-  font-family: Cairo, "IBM Plex Sans Arabic", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial;
+  font-family: var(--admin-font-body);
 }
 
 .huc-page {
@@ -45,10 +78,155 @@ body[dir="rtl"] {
   display: none;
 }
 
-/* ── Admin module — 15px typography & icons (page chrome + tables) ── */
+/* ── Admin module — typography roles ── */
 .admin-module {
+  font-family: var(--admin-font-body);
   font-size: var(--admin-font-size);
   line-height: 1.45;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Page & dialog titles */
+.admin-font-heading,
+.admin-module h1,
+.admin-module h2,
+.admin-module .admin-page-title {
+  font-family: var(--admin-font-heading);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Card / dialog section titles */
+.admin-font-section,
+.admin-module .admin-detail-panel h3,
+.admin-module .admin-detail-panel h4 {
+  font-family: var(--admin-font-heading);
+  font-size: var(--admin-font-size-section) !important;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+/* Form & field labels */
+.admin-font-label {
+  font-family: var(--admin-font-body);
+  font-size: var(--admin-font-size-label) !important;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+/* Field values in view/edit panels */
+.admin-font-value {
+  font-family: var(--admin-font-body);
+  font-size: var(--admin-font-size-section);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* Toolbar, tabs, filters, pagination */
+.admin-font-ui {
+  font-family: var(--admin-font-body);
+  font-weight: 500;
+}
+
+/* Radix dialogs / popovers opened from admin pages */
+body.admin-module [data-radix-portal],
+body.admin-module [role="dialog"],
+body.admin-module [data-radix-popper-content-wrapper] {
+  font-family: var(--admin-font-body);
+}
+
+body.admin-module [role="dialog"] h1,
+body.admin-module [role="dialog"] h2,
+body.admin-module [role="dialog"] .admin-font-heading,
+body.admin-module [role="dialog"] .admin-font-section {
+  font-family: var(--admin-font-heading);
+}
+
+/* Data tables */
+.admin-module table {
+  font-family: var(--admin-font-body);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+.admin-font-table-head,
+.admin-module thead th {
+  font-family: var(--admin-font-body);
+  font-size: var(--admin-font-size-table-head) !important;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.admin-font-table-cell,
+.admin-module tbody td {
+  font-family: var(--admin-font-body);
+  font-size: var(--admin-font-size);
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+/* ── Interactive affordances (cursor + hover feedback) ── */
+.admin-module button:not(:disabled),
+.admin-module [role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+.admin-module button:disabled,
+.admin-module [aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+.admin-module .admin-head-sortable {
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.admin-module .admin-head-sortable:hover {
+  background-color: color-mix(in srgb, var(--color-muted) 70%, transparent);
+}
+
+.admin-module .admin-row-action-btn:hover:not(:disabled) {
+  box-shadow: 0 1px 4px rgb(15 23 42 / 0.08);
+}
+
+.admin-module .admin-toolbar-tab:hover {
+  transform: translateY(-1px);
+}
+
+.admin-module .admin-filter-btn:active:not(:disabled),
+.admin-module .admin-refresh-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.admin-module .admin-record-tab:hover {
+  background-color: color-mix(in srgb, var(--color-muted) 40%, transparent);
+}
+
+/* Compact numeric columns in admin tables (phone & national ID) */
+.admin-module .admin-cell-phone,
+.admin-module .admin-cell-national-id {
+  font-size: var(--admin-cell-numeric-size) !important;
+  line-height: var(--admin-cell-numeric-line-height) !important;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+/* Status badges in table cells */
+.admin-module .admin-table-status-badge {
+  font-family: var(--admin-font-body);
+  font-size: 10px !important;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.admin-module .admin-table-status-badge svg {
+  width: 11px !important;
+  height: 11px !important;
 }
 
 .admin-module :where(.text-xs, .text-sm) {
@@ -60,10 +238,22 @@ body[dir="rtl"] {
   .text-\[10px\],
   .text-\[11px\],
   .text-\[12px\],
+  .text-\[13px\],
   .text-\[14px\],
   .text-\[15px\],
   .text-\[18px\]
-) {
+):not(:where(
+  .rounded-full,
+  [class*="rounded-full"],
+  .admin-font-label,
+  .admin-font-value,
+  .admin-font-table-head,
+  .admin-font-section,
+  .admin-font-heading,
+  .admin-cell-phone,
+  .admin-cell-national-id,
+  .admin-table-status-badge
+)) {
   font-size: var(--admin-font-size) !important;
   line-height: 1.45;
 }

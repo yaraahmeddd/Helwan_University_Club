@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 import {
     Trophy, Users, Search, RefreshCw, Filter,
     ChevronUp, ChevronDown, ChevronsUpDown,
-    ChevronLeft, ChevronRight, Loader2, UserCheck,
+    Loader2, UserCheck,
 } from "lucide-react";
 import api from "../services/axios";
 import { useToast } from "../components/StaffPagesComponents/ui/use-toast";
@@ -25,7 +25,8 @@ import {
 import { motion } from "framer-motion";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 import { useLanguage } from "../hooks/useLanguage";
-import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
 import { getLocalizedText, type DisplayLanguage } from "../lib/localizedDisplay";
 
@@ -74,7 +75,7 @@ type ApiMember = {
     team_member_teams?: TeamMemberTeamItem[];
 };
 
-const PAGE_SIZE = 15;
+const PAGE_SIZE = ADMIN_PAGE_SIZE;
 
 type SortField = "name" | "national_id" | "status" | "created_at";
 type SortDir = "asc" | "desc";
@@ -304,7 +305,6 @@ export default function SportManagementPage() {
 
     useEffect(() => { setPage(1); }, [search, filterStatus, sortField, sortDir, selectedSport, selectedTeam]);
 
-    const totalPages = Math.max(1, Math.ceil(processed.length / PAGE_SIZE));
     const pageRows = processed.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     const thProps = { sortField, sortDir, onSort: handleSort, isRTL };
@@ -504,10 +504,10 @@ export default function SportManagementPage() {
                                                         showAvatar={false}
                                                     />
                                                 </TableCell>
-                                                <TableCell className={adminCellClass({ className: "tabular-nums" })}>
+                                                <TableCell className={adminCellClass({ size: 'phone' })}>
                                                     <span dir="ltr">{m.phone ?? "-"}</span>
                                                 </TableCell>
-                                                <TableCell className={adminCellClass({ size: "xs", className: "font-mono" })}>
+                                                <TableCell className={adminCellClass({ size: 'nationalId' })}>
                                                     <span dir="ltr">{m.national_id}</span>
                                                 </TableCell>
                                                 <TableCell className={adminCellClass()}>
@@ -544,47 +544,14 @@ export default function SportManagementPage() {
                         )}
                     </div>
 
-                    {!membersLoading && processed.length > PAGE_SIZE && (
-                        <div className="shrink-0 flex items-center justify-between px-5 py-3 border-t border-border bg-muted/20 text-sm">
-                            <span className="text-muted-foreground text-xs">
-                                {t("pagination.summary", { page, totalPages, count: processed.length })}
-                            </span>
-                            <div className="flex items-center gap-1">
-                                <button
-                                    disabled={page <= 1}
-                                    onClick={() => setPage((p) => p - 1)}
-                                    className="p-1.5 rounded-lg hover:bg-muted disabled:opacity-40 transition-colors"
-                                    aria-label={t("pagination.previous")}
-                                >
-                                    {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-                                </button>
-                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                                    const pg = page <= 3 ? i + 1
-                                        : page >= totalPages - 2 ? totalPages - 4 + i
-                                            : page - 2 + i;
-                                    if (pg < 1 || pg > totalPages) return null;
-                                    return (
-                                        <button
-                                            key={pg}
-                                            onClick={() => setPage(pg)}
-                                            className={`w-7 h-7 rounded-lg text-xs font-semibold transition-colors
-                        ${pg === page ? "bg-primary text-primary-foreground" : "hover:bg-muted text-muted-foreground"}`}
-                                        >
-                                            {pg}
-                                        </button>
-                                    );
-                                })}
-                                <button
-                                    disabled={page >= totalPages}
-                                    onClick={() => setPage((p) => p + 1)}
-                                    className="p-1.5 rounded-lg hover:bg-muted disabled:opacity-40 transition-colors"
-                                    aria-label={t("pagination.next")}
-                                >
-                                    {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                                </button>
-                            </div>
-                        </div>
-                    )}
+                    <AdminPagination
+                        page={page}
+                        totalCount={processed.length}
+                        pageSize={PAGE_SIZE}
+                        onPageChange={setPage}
+                        isRTL={isRTL}
+                        disabled={membersLoading}
+                    />
             </div>
         </div>
     );

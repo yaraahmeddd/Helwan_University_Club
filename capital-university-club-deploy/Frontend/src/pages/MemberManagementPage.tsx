@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
 
-    Search, RefreshCw, ChevronLeft, ChevronRight,
+    Search, RefreshCw,
 
     ChevronUp, ChevronDown, ChevronsUpDown,
 
@@ -16,7 +16,7 @@ import {
     AlertTriangle, CheckCircle,
 
     XCircle, Clock, Filter,
-    Mail, Phone, MapPin, Calendar, Globe, User, Award, Hash, HeartPulse, Medal, FileBadge, CreditCard
+    Mail, Phone, MapPin, Calendar, Globe, User, Award, Hash, HeartPulse, FileBadge, CreditCard
 } from "lucide-react";
 
 import api from "../services/axios";
@@ -62,12 +62,9 @@ import {
 } from "../components/StaffPagesComponents/shared/AdminRowActions";
 
 import {
-
-    Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
-
+    TooltipProvider,
 } from "../components/StaffPagesComponents/ui/tooltip";
 
-import { Badge } from "../components/StaffPagesComponents/ui/badge";
 import { RoleGuard } from "../components/StaffPagesComponents/RoleGuard";
 import {
     PAYMENTS_MAP,
@@ -76,17 +73,19 @@ import {
 } from "../data/paymentsData";
 import { BACKEND_ORIGIN } from "../config/backend";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
-import { adminTableStyles, adminHeadClass, adminCellClass, adminDialogStyles } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { adminTableStyles, adminHeadClass, adminCellClass, adminDialogStyles, ADMIN_PAGE_SIZE, adminTableBadgeClass, adminTableStatusBadgeClass, adminPageStyles } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
+import { formatAdminDate, formatAdminTime } from "../components/StaffPagesComponents/shared/adminFormatters";
+import { adminFieldIcons } from "../components/StaffPagesComponents/shared/adminRecordFields";
 import { MemberEditPanel } from "../components/StaffPagesComponents/shared/MemberEditPanel";
 import {
     RecordViewTabs,
     RecordViewSection,
     RecordViewField,
     RecordViewProfileHeader,
-    RecordViewDocPlaceholder,
 } from "../components/StaffPagesComponents/shared/RecordViewPrimitives";
-import { buildPersonName, getLocalizedText, getEntityName } from "../lib/localizedDisplay";
+import { buildPersonName, getEntityName } from "../lib/localizedDisplay";
 import { useLanguage } from "../hooks/useLanguage";
 
 
@@ -240,6 +239,10 @@ type TeamMemberApiItem = {
     national_id?: string;
 
     phone?: string;
+
+    email?: string;
+
+    account?: { email?: string };
 
     gender?: string;
 
@@ -425,7 +428,7 @@ const GENDER_LABELS: Record<string, string> = {
 
 
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = ADMIN_PAGE_SIZE;
 
 
 
@@ -446,22 +449,6 @@ const fmtDate = (v?: string | null, isRTL = false) => {
     } catch { return v; }
 };
 
-const fmtDateShort = (v?: string | null, isRTL = false) => {
-    if (!v) return "—";
-    try {
-        const d = new Date(v);
-        const day = d.getDate().toString().padStart(2, '0');
-        const month = (d.getMonth() + 1).toString().padStart(2, '0');
-        const year = d.getFullYear().toString().slice(-2);
-        const baseDate = `${day}/${month}/${year}`;
-        return isRTL ? toArabicDigits(baseDate) : baseDate;
-    } catch { return v; }
-};
-
-
-
-
-
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
 
@@ -477,44 +464,9 @@ function StatusBadge({ status, compact = false }: { status: string; compact?: bo
     };
     const Icon = cfg.icon;
     return (
-        <span className={`inline-flex items-center gap-1 rounded-full font-semibold border ${cfg.color} ${cfg.bg} ${cfg.border} ${compact ? "px-2.5 py-1 text-[15px]" : "px-3 py-1 text-[15px]"}`}>
-            <Icon className={adminTableStyles.icon} />
+        <span className={`inline-flex items-center gap-0.5 rounded-full font-semibold border ${cfg.color} ${cfg.bg} ${cfg.border} ${compact ? adminTableStatusBadgeClass : "px-3 py-1 text-[15px] gap-1"}`}>
+            <Icon className={compact ? "w-[11px] h-[11px] shrink-0" : adminTableStyles.icon} />
             {t(cfg.labelKey, { defaultValue: status })}
-        </span>
-    );
-}
-
-
-
-// ─── Payment Badge ────────────────────────────────────────────────────────────
-
-function PaymentBadge({
-    memberId,
-    memberType = "member",
-}: {
-    memberId: number;
-    memberType?: "member" | "team_member";
-}) {
-    const { t } = useTranslation('MemberManagementPage');
-    const payment = PAYMENTS_MAP.get(`${memberType}-${memberId}`);
-    if (!payment) return null;
-
-    const status = computePaymentStatus(payment.nextRenewalDate);
-    if (status === "active") return null;
-
-    const days = getDaysUntilRenewal(payment.nextRenewalDate);
-
-    if (status === "overdue") {
-        return (
-            <span className="inline-flex items-center rounded-full border border-rose-300 bg-rose-100 text-rose-700 font-bold px-1.5 py-0.5 text-[9px] whitespace-nowrap">
-                ⚠ {t('detail.payment.statusOverdue')}
-            </span>
-        );
-    }
-
-    return (
-        <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 text-[9px] whitespace-nowrap">
-            🔔 {t('detail.payment.expiringDays', { count: days })}
         </span>
     );
 }
@@ -564,7 +516,9 @@ type PanelProps = {
 function DetailPanel({ row, details, loading, sports, onEdit, onChangeStatus, onDelete }: PanelProps) {
     const { t } = useTranslation('MemberManagementPage');
     const { language, isRTL } = useLanguage();
+    const locale = language === 'ar' ? 'ar-EG' : 'en-US';
     const d = details;
+    const createdAt = d?.created_at ?? row.createdAt;
     const { primary: displayName, secondary: subtitleName } = buildPersonName(row, language);
     const [detailTab, setDetailTab] = React.useState<'info' | 'sports' | 'photos'>('info');
     const notAvailable = t('common.notAvailable', { defaultValue: '—' });
@@ -617,35 +571,50 @@ function DetailPanel({ row, details, loading, sports, onEdit, onChangeStatus, on
                     </div>
                 ) : detailTab === 'info' ? (
                     <div className="p-5 space-y-4">
-                        <RecordViewSection icon={Shield} title={t('detail.sectionAccount', 'Account Information')}>
+                        <RecordViewSection icon={adminFieldIcons.accountSection} title={t('detail.sectionAccount', 'Account Information')}>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <RecordViewField icon={Hash} label={t('detail.fieldMemberId')} value={`MEM-${String(row.id).padStart(5, '0')}`} ltr fallback={notAvailable} />
-                                <RecordViewField icon={Calendar} label={t('detail.fieldJoinDate')} value={fmtDate(d?.created_at ?? row.createdAt, isRTL)} fallback={notAvailable} />
-                                <RecordViewField icon={Award} label={t('detail.fieldMemberType')} value={row.memberTypeLabel} fallback={notAvailable} />
+                                <RecordViewField icon={adminFieldIcons.memberId} label={t('detail.fieldMemberId')} value={`MEM-${String(row.id).padStart(5, '0')}`} ltr fallback={notAvailable} />
+                                <RecordViewField icon={adminFieldIcons.email} label={t('detail.fieldEmail')} value={d?.account?.email ?? row.email} ltr fallback={notAvailable} />
+                                <RecordViewField
+                                    icon={adminFieldIcons.registrationDate}
+                                    label={t('detail.fieldRegistrationDate')}
+                                    value={formatAdminDate(createdAt, locale)}
+                                    ltr
+                                    alignEnd={isRTL}
+                                    fallback={notAvailable}
+                                />
+                                <RecordViewField
+                                    icon={adminFieldIcons.registrationTime}
+                                    label={t('detail.fieldRegistrationTime')}
+                                    value={formatAdminTime(createdAt, locale)}
+                                    ltr
+                                    alignEnd={isRTL}
+                                    fallback={notAvailable}
+                                />
+                                <RecordViewField icon={adminFieldIcons.memberType} label={t('detail.fieldMemberType')} value={row.memberTypeLabel} fallback={notAvailable} />
                             </div>
                         </RecordViewSection>
 
-                        <RecordViewSection icon={User} title={t('detail.sectionPersonal', 'Personal Information')}>
+                        <RecordViewSection icon={adminFieldIcons.personalSection} title={t('detail.sectionPersonal', 'Personal Information')}>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <RecordViewField icon={User} label={t('detail.fieldGender')} value={t(GENDER_LABELS[d?.gender ?? row.gender ?? ''] || row.gender || '', { defaultValue: notAvailable })} fallback={notAvailable} />
-                                <RecordViewField icon={Globe} label={t('detail.fieldNationality')} value={(() => {
+                                <RecordViewField icon={adminFieldIcons.gender} label={t('detail.fieldGender')} value={t(GENDER_LABELS[d?.gender ?? row.gender ?? ''] || row.gender || '', { defaultValue: notAvailable })} fallback={notAvailable} />
+                                <RecordViewField icon={adminFieldIcons.nationality} label={t('detail.fieldNationality')} value={(() => {
                                     const nat = d?.nationality ?? row.nationality;
                                     if (!nat) return undefined;
                                     if (nat.toLowerCase() === 'egyptian') return isRTL ? 'مصرى' : 'Egyptian';
                                     if (nat.toLowerCase() === 'foreigner' || nat.toLowerCase() === 'non-egyptian') return isRTL ? 'أجنبى' : 'Foreigner';
                                     return nat;
                                 })()} fallback={notAvailable} />
-                                <RecordViewField icon={Calendar} label={t('detail.fieldBirthdate')} value={fmtDate(d?.birthdate ?? row.birthdate, isRTL)} fallback={notAvailable} />
-                                <RecordViewField icon={CreditCard} label={t('detail.fieldNationalId')} value={d?.national_id ?? row.nationalId} ltr fallback={notAvailable} />
+                                <RecordViewField icon={adminFieldIcons.birthdate} label={t('detail.fieldBirthdate')} value={fmtDate(d?.birthdate ?? row.birthdate, isRTL)} fallback={notAvailable} />
+                                <RecordViewField icon={adminFieldIcons.nationalId} label={t('detail.fieldNationalId')} value={d?.national_id ?? row.nationalId} ltr alignEnd={isRTL} fallback={notAvailable} />
                             </div>
                         </RecordViewSection>
 
-                        <RecordViewSection icon={Phone} title={t('detail.sectionContact', 'Contact Information')}>
+                        <RecordViewSection icon={adminFieldIcons.contactSection} title={t('detail.sectionContact', 'Contact Information')}>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <RecordViewField icon={Mail} label={t('detail.fieldEmail')} value={d?.account?.email ?? row.email} ltr fallback={notAvailable} />
-                                <RecordViewField icon={Phone} label={t('detail.fieldPhone')} value={d?.phone ?? row.phone} ltr fallback={notAvailable} />
-                                <RecordViewField icon={MapPin} label={t('detail.fieldAddress')} value={d?.address ?? row.address} fallback={notAvailable} />
-                                <RecordViewField icon={HeartPulse} label={t('detail.fieldHealthStatus')} value={d?.health_status ?? row.healthStatus} fallback={notAvailable} />
+                                <RecordViewField icon={adminFieldIcons.phone} label={t('detail.fieldPhone')} value={d?.phone ?? row.phone} ltr alignEnd={isRTL} fallback={notAvailable} />
+                                <RecordViewField icon={adminFieldIcons.address} label={t('detail.fieldAddress')} value={d?.address ?? row.address} fallback={notAvailable} />
+                                <RecordViewField icon={adminFieldIcons.healthStatus} label={t('detail.fieldHealthStatus')} value={d?.health_status ?? row.healthStatus} fallback={notAvailable} />
                             </div>
                         </RecordViewSection>
 
@@ -679,7 +648,7 @@ function DetailPanel({ row, details, loading, sports, onEdit, onChangeStatus, on
                                                 </span>
                                             </p>
                                         </div>
-                                        <RecordViewField icon={FileBadge} label={t('detail.payment.subscriptionType')} value={payment.subscriptionType} fallback={notAvailable} />
+                                        <RecordViewField icon={adminFieldIcons.membershipPlan} label={t('detail.payment.subscriptionType')} value={payment.subscriptionType} fallback={notAvailable} />
                                         
                                         <div className="space-y-1">
                                             <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" />{t('detail.payment.lastPayment')}</p>
@@ -921,7 +890,7 @@ const getFileUrl = (f?: string | null): string => {
 };
 
 export default function MemberManagementPage() {
-    const { t, i18n } = useTranslation('MemberManagementPage');
+    const { t } = useTranslation('MemberManagementPage');
     const { language, isRTL } = useLanguage();
     const { toast } = useToast();
     const memberEditSchema = useMemberEditSchema();
@@ -935,8 +904,6 @@ export default function MemberManagementPage() {
     const [allRows, setAllRows] = useState<MemberRow[]>([]);
 
     const [fetching, setFetching] = useState(false);
-
-    const [lastFetched, setLastFetched] = useState<Date | null>(null);
 
 
 
@@ -1429,8 +1396,6 @@ export default function MemberManagementPage() {
 
             setAllRows(combined);
 
-            setLastFetched(new Date());
-
         } catch (err) {
 
             const errorMsg = err instanceof Error ? err.message : 'Unknown error';
@@ -1575,8 +1540,6 @@ export default function MemberManagementPage() {
 
 
     const totalFiltered = processedRows.length;
-
-    const totalPages = Math.max(1, Math.ceil(totalFiltered / PAGE_SIZE));
 
     const pageRows = processedRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -1828,6 +1791,7 @@ export default function MemberManagementPage() {
     const openEdit = async (row?: MemberRow) => {
         const target = row || selectedRow;
         if (!target) return;
+        setEditOpen(true);
         if (row) setSelectedRow(row);
 
         let d = selectedRow?.id === target.id ? selectedDetail : null;
@@ -1838,6 +1802,7 @@ export default function MemberManagementPage() {
                     const teamRes = await api.get<{ success: boolean; data: TeamMemberApiItem }>(`/team-members/${target.id}`);
                     if (teamRes.data?.success) {
                         const teamData = teamRes.data.data;
+                        const teamEmail = teamData.account?.email ?? teamData.email;
                         d = {
                             id: teamData.id,
                             first_name_en: teamData.first_name_en ?? teamData.firstNameEn ?? '',
@@ -1852,7 +1817,7 @@ export default function MemberManagementPage() {
                             address: teamData.address,
                             status: teamData.status ?? 'active',
                             member_type_id: 0,
-                            account: teamData.email ? { email: teamData.email } : undefined,
+                            account: teamEmail ? { email: teamEmail } : undefined,
                         } as MemberApiItem;
                         setSelectedDetail(d);
                     }
@@ -2028,8 +1993,6 @@ export default function MemberManagementPage() {
 
     };
 
-
-
     const handleChangeStatus = async () => {
 
         if (!selectedRow || !newStatus) return;
@@ -2071,11 +2034,8 @@ export default function MemberManagementPage() {
     // Delete handlers
 
     const openDelete = (row?: MemberRow) => {
-
-        if (row) setSelectedRow(row);
-
         setDeleteOpen(true);
-
+        if (row) setSelectedRow(row);
     };
 
 
@@ -2088,13 +2048,19 @@ export default function MemberManagementPage() {
 
         try {
 
-            await api.patch(`/members/${selectedRow.id}/status`, { status: "cancelled", reason: t('toast.deletedByAdmin') });
+            if (selectedRow.isTeamPlayer && selectedRow.memberTypeCode === "TEAM_MEMBER") {
+                await api.put(`/team-members/${selectedRow.id}/deactivate`);
+            } else {
+                await api.patch(`/members/${selectedRow.id}/status`, { status: "cancelled", reason: t('toast.deletedByAdmin') });
+            }
 
             toast({ title: t('toast.deleted') });
 
             setDeleteOpen(false);
 
-            setAllRows((prev) => prev.filter((r) => r.id !== selectedRow.id));
+            setAllRows((prev) => prev.map((r) =>
+                r.uniqueId === selectedRow.uniqueId ? { ...r, status: "cancelled" } : r
+            ));
 
             setSelectedRow(null);
 
@@ -2160,7 +2126,7 @@ export default function MemberManagementPage() {
                 <div className="px-6 py-4 border-b border-border bg-background shrink-0">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+                            <h1 className={adminPageStyles.headerTitle}>
                                 <Users className="w-6 h-6 text-primary" />
                                 {t('header.title')}
                             </h1>
@@ -2174,23 +2140,13 @@ export default function MemberManagementPage() {
                                 <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-medium">
                                     <Award className="w-3 h-3" /> {t('tabs.teamMembers')}: {teamMemberCount}
                                 </span>
-                                {(() => {
-                                    const alertCount = allRows.filter(r => {
-                                        const p = PAYMENTS_MAP.get(`${r.isTeamPlayer ? "team_member" : "member"}-${Number(r.id)}`);
-                                        return p ? computePaymentStatus(p.nextRenewalDate) !== "active" : false;
-                                    }).length;
-                                    return alertCount > 0 ? (
-                                        <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-medium">
-                                            🔔 {t(alertCount === 1 ? 'header.paymentAlert_one' : 'header.paymentAlert_other', { count: alertCount })}
-                                        </span>
-                                    ) : null;
-                                })()}
                             </div>
                         </div>
                         <button
+                            type="button"
                             onClick={() => void fetchAll()}
                             disabled={fetching}
-                            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border hover:bg-muted transition-colors text-sm text-muted-foreground disabled:opacity-40"
+                            className={adminPageStyles.refreshBtn}
                         >
                             <RefreshCw className={`w-4 h-4 ${fetching ? "animate-spin" : ""}`} />
                             {fetching ? t('header.refreshing') : t('header.refresh')}
@@ -2226,17 +2182,15 @@ export default function MemberManagementPage() {
                                 />
                             </div>
 
-                            <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5 shrink-0">
+                            <div className={adminPageStyles.toolbarTabGroup}>
                                 {TAB_CONFIG.map(({ key, label, icon: Icon }) => (
                                     <button
                                         key={key}
+                                        type="button"
                                         onClick={() => setTab(key)}
-                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${tab === key
-                                            ? 'bg-white shadow-sm text-foreground'
-                                            : 'text-muted-foreground hover:text-foreground'
-                                            }`}
+                                        className={`${adminPageStyles.toolbarTab} ${tab === key ? adminPageStyles.toolbarTabActive : adminPageStyles.toolbarTabInactive}`}
                                     >
-                                        <Icon className="w-3.5 h-3.5" />
+                                        <Icon className="w-4 h-4 shrink-0" />
                                         {label}
                                     </button>
                                 ))}
@@ -2260,10 +2214,12 @@ export default function MemberManagementPage() {
 
                             <Popover>
                                 <PopoverTrigger asChild>
-                                    <button className={`flex items-center gap-1.5 h-8 px-3 rounded-md border text-xs transition-colors
+                                    <button
+                                        type="button"
+                                        className={`${adminPageStyles.toolbarFilterBtn} h-8 text-xs
                                         ${dateFilter
-                                            ? "border-primary bg-primary/5 text-primary"
-                                            : "border-border bg-background text-muted-foreground hover:bg-muted"}`}>
+                                            ? "border-primary bg-primary/5 text-primary hover:bg-primary/10"
+                                            : "border-border bg-background text-muted-foreground"}`}>
                                         <Calendar className="w-3 h-3" />
                                         {t('toolbar.dateFilter', 'Date Filter')}
                                         {dateFilter && (
@@ -2300,13 +2256,15 @@ export default function MemberManagementPage() {
 
                                 <PopoverTrigger asChild>
 
-                                    <button className={`flex items-center gap-1.5 h-8 px-3 rounded-md border text-xs transition-colors
+                                    <button
+                                        type="button"
+                                        className={`${adminPageStyles.toolbarFilterBtn} h-8 text-xs
 
                                         ${filterStatuses.length > 0
 
-                                            ? "border-primary bg-primary/5 text-primary"
+                                            ? "border-primary bg-primary/5 text-primary hover:bg-primary/10"
 
-                                            : "border-border bg-background text-muted-foreground hover:bg-muted"}`}>
+                                            : "border-border bg-background text-muted-foreground"}`}>
 
                                         <Filter className="w-3 h-3" />
                                         {t('toolbar.statusFilter')}
@@ -2389,11 +2347,12 @@ export default function MemberManagementPage() {
                                     <div className="flex items-center justify-end gap-2 px-3 py-2 border-t border-border">
 
                                         <button
+                                            type="button"
                                             onClick={() => {
                                                 setFilterStatuses([]);
                                                 setStatusPopoverOpen(false);
                                             }}
-                                            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                                            className="text-xs text-muted-foreground hover:text-foreground hover:underline cursor-pointer transition-colors"
                                         >
                                             {t('toolbar.clearFilter')}
                                         </button>
@@ -2405,10 +2364,6 @@ export default function MemberManagementPage() {
                             </Popover>
 
 
-
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-full border border-border text-xs text-muted-foreground shrink-0">
-                                {totalFiltered} {t('toolbar.results')}
-                            </span>
 
                         </div>
 
@@ -2501,25 +2456,23 @@ export default function MemberManagementPage() {
                                                     <span dir="ltr">{row.phone || "—"}</span>
                                                 </TableCell>
 
-                                                <TableCell className={adminCellClass({ size: "xs", className: "font-mono" })}>
+                                                <TableCell className={adminCellClass({ size: 'nationalId' })}>
                                                     <span dir="ltr">{row.nationalId || "—"}</span>
                                                 </TableCell>
 
                                                 <TableCell className={adminCellClass({ size: "muted", className: "tabular-nums whitespace-nowrap" })}>
-                                                    {row.createdAt
-                                                        ? new Date(row.createdAt).toLocaleDateString(isRTL ? 'ar-EG' : 'en-US')
-                                                        : "—"}
+                                                    {formatAdminDate(row.createdAt, language === 'ar' ? 'ar-EG' : 'en-US')}
                                                 </TableCell>
 
                                                 <TableCell className={adminCellClass({ center: true })}>
                                                     {row.isTeamPlayer ? (
-                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[15px] font-semibold bg-amber-100 text-amber-800">
-                                                            <Award className={adminTableStyles.icon} />
+                                                        <span className={`${adminTableBadgeClass} bg-amber-100 text-amber-800`}>
+                                                            <Award className="w-3 h-3 shrink-0" />
                                                             {t('memberTypes.teamMember')}
                                                         </span>
                                                     ) : (
-                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[15px] font-semibold bg-blue-100 text-blue-800">
-                                                            <Users className={adminTableStyles.icon} />
+                                                        <span className={`${adminTableBadgeClass} bg-blue-100 text-blue-800`}>
+                                                            <Users className="w-3 h-3 shrink-0" />
                                                             {t('memberTypes.member')}
                                                         </span>
                                                     )}
@@ -2573,42 +2526,14 @@ export default function MemberManagementPage() {
 
 
 
-                        {/* Pagination */}
-
-                        <div className="flex items-center justify-between px-4 py-2.5 border-t border-border bg-muted/20 shrink-0 text-xs">
-
-                            <span className="text-muted-foreground text-[11px]">
-                                {totalFiltered === 0 ? t('pagination.showingNone') : t('pagination.showing', {
-                                    from: (page - 1) * PAGE_SIZE + 1,
-                                    to: Math.min(page * PAGE_SIZE, totalFiltered),
-                                    total: totalFiltered
-                                })} · {t('pagination.page', { page, totalPages })}
-                            </span>
-
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    disabled={page <= 1}
-                                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                                    className="h-8 gap-1"
-                                >
-                                    <ChevronRight className="w-4 h-4" />
-                                    {t('pagination.previous')}
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    disabled={page >= totalPages}
-                                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                                    className="h-8 gap-1"
-                                >
-                                    {t('pagination.next')}
-                                    <ChevronLeft className="w-4 h-4" />
-                                </Button>
-                            </div>
-
-                        </div>
+                        <AdminPagination
+                            page={page}
+                            totalCount={totalFiltered}
+                            pageSize={PAGE_SIZE}
+                            onPageChange={setPage}
+                            isRTL={isRTL}
+                            disabled={fetching}
+                        />
 
                     </div>
 
