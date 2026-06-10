@@ -63,6 +63,7 @@
     "selectedPackagesCount": "{{count}} محدد",
     "individualSelectedCount": "{{count}} إضافية",
     "noPackages": "لا توجد حزم متاحة",
+    "packageFallback": "حزمة #{{id}}",
     "loadingPackages": "جارٍ تحميل الحزم...",
     "loadingPrivileges": "جارٍ تحميل الصلاحيات...",
     "packagePrivilegesCount": "{{count}} صلاحية",

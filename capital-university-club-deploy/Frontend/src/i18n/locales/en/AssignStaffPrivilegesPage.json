@@ -52,6 +52,7 @@
     "selectedPackagesCount": "{{count}} selected",
     "individualSelectedCount": "{{count}} extra",
     "noPackages": "No packages available",
+    "packageFallback": "Package #{{id}}",
     "loadingPackages": "Loading packages...",
     "loadingPrivileges": "Loading privileges...",
     "packagePrivilegesCount": "{{count}} privileges",

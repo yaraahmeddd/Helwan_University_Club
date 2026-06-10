@@ -15,8 +15,8 @@ import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE } fro
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
 import { AdminStaffListToolbar } from "../components/StaffPagesComponents/shared/AdminStaffListToolbar";
-import { buildPersonName, getLanguageOnlyText, getLocalizedText } from "../lib/localizedDisplay";
-import { getPrivilegeModuleLabel } from "../lib/privilegeModuleLabels";
+import { buildPersonName, getLocalizedText, localeFontFamily } from "../lib/localizedDisplay";
+import { getPrivilegeDisplayName, getPrivilegeModuleLabel } from "../lib/privilegeModuleLabels";
 import { filterStaffListRows, mapStaffApiItem, staffTypeOptionsFromApi, type StaffListApiItem } from "../lib/staffListUtils";
 import { useStaffJobLabels } from "../lib/staffJobLabel";
 import { useTranslation } from "react-i18next";
@@ -261,11 +261,11 @@ export default function AssignStaffPrivilegesPage() {
       key: `backend:${pkg.id}`,
       backendId: pkg.id,
       code: pkg.code || `PKG_${pkg.id}`,
-      name: getLocalizedText(pkg.name_ar, pkg.name_en, language) || pkg.code || `Package #${pkg.id}`,
+      name: getLocalizedText(pkg.name_ar, pkg.name_en, language) || pkg.code || t("assign.packageFallback", { id: pkg.id }),
       description: getLocalizedText(pkg.description_ar, pkg.description_en, language) || undefined,
       privilegeCodes: packageCodesByKey[`backend:${pkg.id}`] || [],
     })),
-    [backendPackages, packageCodesByKey]
+    [backendPackages, packageCodesByKey, language, t]
   );
 
   const selectedPackages = useMemo(
@@ -324,28 +324,45 @@ export default function AssignStaffPrivilegesPage() {
       const mod = p.module || "General";
       map.set(mod, [...(map.get(mod) ?? []), p]);
     });
+    const sortLocale = language === "ar" ? "ar" : "en";
     return Array.from(map.entries())
       .map(([module, items]) => ({
         module,
-        items: [...items].sort((a, b) => (a.name_ar || a.code).localeCompare(b.name_ar || b.code)),
+        items: [...items].sort((a, b) =>
+          getPrivilegeDisplayName(a.name_ar, a.name_en, a.code, language).localeCompare(
+            getPrivilegeDisplayName(b.name_ar, b.name_en, b.code, language),
+            sortLocale,
+          ),
+        ),
       }))
-      .sort((a, b) => a.module.localeCompare(b.module));
-  }, [allPrivileges]);
+      .sort((a, b) =>
+        getPrivilegeModuleLabel(a.module, language).localeCompare(
+          getPrivilegeModuleLabel(b.module, language),
+          sortLocale,
+        ),
+      );
+  }, [allPrivileges, language]);
 
   const filteredPrivileges = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return groupedPrivileges
       .map((g) => ({
         module: g.module,
-        items: g.items.filter((p) =>
-          !q ||
-          (p.name_ar ?? "").toLowerCase().includes(q) ||
-          (p.name_en ?? "").toLowerCase().includes(q) ||
-          p.code.toLowerCase().includes(q)
-        ),
+        items: g.items.filter((p) => {
+          if (!q) return true;
+          const displayName = getPrivilegeDisplayName(p.name_ar, p.name_en, p.code, language).toLowerCase();
+          const moduleLabel = getPrivilegeModuleLabel(g.module, language).toLowerCase();
+          return (
+            displayName.includes(q) ||
+            (p.name_ar ?? "").toLowerCase().includes(q) ||
+            (p.name_en ?? "").toLowerCase().includes(q) ||
+            p.code.toLowerCase().includes(q) ||
+            moduleLabel.includes(q)
+          );
+        }),
       }))
       .filter((g) => g.items.length > 0);
-  }, [groupedPrivileges, searchQuery]);
+  }, [groupedPrivileges, searchQuery, language]);
 
   const totalPrivilegesCount = selectedPackageCodes.size + selectedExtraPrivilegeIds.length;
   const selectedExtraCount = selectedExtraPrivilegeIds.length;
@@ -577,7 +594,12 @@ export default function AssignStaffPrivilegesPage() {
     : "";
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col bg-muted/20" dir={isRTL ? "rtl" : "ltr"}>
+    <div
+      className="h-[calc(100vh-4rem)] flex flex-col bg-muted/20"
+      dir={isRTL ? "rtl" : "ltr"}
+      lang={language}
+      style={{ fontFamily: localeFontFamily(language) }}
+    >
       {/* Top bar */}
       <div className="shrink-0 border-b border-border bg-background">
         <div className="px-6 py-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -717,9 +739,12 @@ export default function AssignStaffPrivilegesPage() {
                               <div className="flex flex-wrap gap-1.5">
                                 {pkg.privilegeCodes.map((code) => {
                                   const priv = allPrivileges.find((p) => p.code === code);
-                                  const label = getLanguageOnlyText(priv?.name_ar, priv?.name_en, language)
-                                    || getLocalizedText(priv?.name_ar, priv?.name_en, language)
-                                    || code;
+                                  const label = getPrivilegeDisplayName(
+                                    priv?.name_ar,
+                                    priv?.name_en,
+                                    code,
+                                    language,
+                                  );
                                   return (
                                     <span
                                       key={code}
@@ -852,7 +877,12 @@ export default function AssignStaffPrivilegesPage() {
                   {activePrivilegeGroup ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2">
                       {activePrivilegeGroup.items.map((privilege) => {
-                        const displayName = getLanguageOnlyText(privilege.name_ar, privilege.name_en, language) || privilege.code;
+                        const displayName = getPrivilegeDisplayName(
+                          privilege.name_ar,
+                          privilege.name_en,
+                          privilege.code,
+                          language,
+                        );
                         const isSelected = selectedExtraPrivilegeIds.includes(privilege.id);
                         const inPackage = selectedPackageCodes.has(privilege.code);
 
@@ -892,6 +922,9 @@ export default function AssignStaffPrivilegesPage() {
                               <p className="text-[10px] font-mono text-muted-foreground mt-0.5 truncate">
                                 {privilege.code}
                               </p>
+                              {inPackage && (
+                                <p className="text-[10px] text-emerald-700 mt-1 font-medium">{t("assign.inPackage")}</p>
+                              )}
                             </div>
                           </button>
                         );
