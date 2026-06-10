@@ -514,7 +514,7 @@ export default function AssignStaffPrivilegesPage() {
                   <TableHead className={adminHeadClass({ className: "w-10" })}>{t("table.headers.number")}</TableHead>
                   <TableHead className={adminHeadClass()}>{t("table.headers.staff")}</TableHead>
                   <TableHead className={adminHeadClass()}>{t("table.headers.nationalId")}</TableHead>
-                  <TableHead className={adminHeadClass({ center: true })}>{t("table.headers.job")}</TableHead>
+                  <TableHead className={adminHeadClass()}>{t("table.headers.job")}</TableHead>
                   <TableHead className={adminHeadClass()}>{t("table.headers.startDate")}</TableHead>
                   <TableHead className={adminHeadClass({ center: true })}>{t("table.headers.actions")}</TableHead>
                 </TableRow>
@@ -540,8 +540,8 @@ export default function AssignStaffPrivilegesPage() {
                     <TableCell className={adminCellClass({ size: "xs", className: "font-mono" })}>
                       <span dir="ltr">{staff.nationalId || "—"}</span>
                     </TableCell>
-                    <TableCell className={adminCellClass({ center: true })}>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700">
+                    <TableCell className={adminCellClass({ size: "muted", className: "max-w-[160px]" })}>
+                      <span className="truncate block">
                         {resolveJobLabel({
                           staffTypeId: staff.staffTypeId,
                           staffTypeNameAr: staff.staffTypeNameAr,
@@ -550,7 +550,7 @@ export default function AssignStaffPrivilegesPage() {
                         })}
                       </span>
                     </TableCell>
-                    <TableCell className={adminCellClass({ size: "xs", className: "tabular-nums" })}>
+                    <TableCell className={adminCellClass({ size: "muted", className: "text-sm tabular-nums" })}>
                       {fmtDate(staff.startDate)}
                     </TableCell>
                     <TableCell className={adminCellClass({ center: true })}>

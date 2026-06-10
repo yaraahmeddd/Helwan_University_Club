@@ -248,13 +248,13 @@ export function AppSidebar() {
       <RouterNavLink
         key={item.path}
         to={item.path}
-        className={`mx-2 mb-1 flex h-11 items-center gap-3 rounded-xl border-r-[3px] px-3 transition-all duration-200 ${active
+        className={`mx-2 mb-1 flex h-11 items-center gap-4 rounded-xl border-r-[3px] px-4 transition-all duration-200 ${active
           ? "bg-gradient-to-l from-[#f8941c] to-[#fb923c] border-[#f8941c] text-white font-extrabold shadow-lg shadow-[#f8941c]/25"
           : "border-transparent text-white/90 hover:bg-white/10 hover:text-white font-bold"
           }`}
       >
-        <item.icon className="h-[22px] w-[22px] shrink-0" />
-        <span className="flex-1 text-[15px] font-extrabold leading-none tracking-tight">{t(item.title)}</span>
+        <item.icon className="h-[20px] w-[20px] shrink-0" />
+        <span className="flex-1 text-[13px] font-extrabold leading-tight tracking-tight pe-1">{t(item.title)}</span>
         {hasAlert && (
           <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-extrabold shrink-0">
             {paymentCountLabel}
@@ -272,7 +272,7 @@ export function AppSidebar() {
       return (
         <div className="flex items-center gap-2 px-3 py-1.5 mt-4">
           <div className="h-px flex-1 bg-white/20" />
-          <span className="text-[16px] font-extrabold tracking-[0.18em] text-[#f8941c] whitespace-nowrap px-1">
+          <span className="text-[13px] font-extrabold tracking-[0.15em] text-[#f8941c] whitespace-nowrap px-2">
             {t(group.label)}
           </span>
           <div className="h-px flex-1 bg-white/20" />
@@ -287,7 +287,7 @@ export function AppSidebar() {
         className="w-full flex items-center gap-2 px-3 py-1.5 mt-4 rounded-md hover:bg-white/10 transition-colors"
       >
         <div className="h-px flex-1 bg-white/20" />
-        <span className="text-[16px] font-extrabold tracking-[0.18em] text-[#f8941c] whitespace-nowrap px-1 flex items-center gap-1">
+        <span className="text-[13px] font-extrabold tracking-[0.15em] text-[#f8941c] whitespace-nowrap px-2 flex items-center gap-2">
           {t(group.label)}
           <ChevronLeft
             className={`w-[15px] h-[15px] transition-transform duration-200 ${isOpen ? "-rotate-90" : ""

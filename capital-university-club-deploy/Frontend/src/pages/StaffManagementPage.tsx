@@ -476,7 +476,7 @@ export default function StaffManagementPage() {
                     <TableCell className={adminCellClass({ className: adminTableStyles.cellPhone })}>
                       <span dir="ltr">{row.phone}</span>
                     </TableCell>
-                    <TableCell className={adminCellClass({ className: 'text-sm tabular-nums' })}>
+                    <TableCell className={adminCellClass({ size: 'muted', className: 'text-sm tabular-nums' })}>
                       {fmtDate(row.employmentStartDate)}
                     </TableCell>
                     <TableCell className={adminCellClass({ center: true })}>

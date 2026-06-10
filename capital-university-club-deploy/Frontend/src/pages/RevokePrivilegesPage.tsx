@@ -364,7 +364,7 @@ export default function RevokePrivilegesPage() {
                                     <TableHead className={adminHeadClass({ className: "w-10" })}>{t("table.headers.number")}</TableHead>
                                     <TableHead className={adminHeadClass()}>{t("table.headers.staff")}</TableHead>
                                     <TableHead className={adminHeadClass()}>{t("table.headers.nationalId")}</TableHead>
-                                    <TableHead className={adminHeadClass({ center: true })}>{t("table.headers.job")}</TableHead>
+                                    <TableHead className={adminHeadClass()}>{t("table.headers.job")}</TableHead>
                                     <TableHead className={adminHeadClass()}>{t("table.headers.startDate")}</TableHead>
                                     <TableHead className={adminHeadClass({ center: true })}>{t("table.headers.actions")}</TableHead>
                                 </TableRow>
@@ -390,8 +390,8 @@ export default function RevokePrivilegesPage() {
                                         <TableCell className={adminCellClass({ size: "xs", className: "font-mono" })}>
                                             <span dir="ltr">{staff.nationalId || "—"}</span>
                                         </TableCell>
-                                        <TableCell className={adminCellClass({ center: true })}>
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-primary/10 text-primary">
+                                        <TableCell className={adminCellClass({ size: "muted", className: "max-w-[160px]" })}>
+                                            <span className="truncate block">
                                                 {resolveJobLabel({
                                                     staffTypeId: staff.staffTypeId,
                                                     staffTypeNameAr: staff.staffTypeNameAr,
@@ -400,7 +400,7 @@ export default function RevokePrivilegesPage() {
                                                 })}
                                             </span>
                                         </TableCell>
-                                        <TableCell className={adminCellClass({ size: "xs", className: "tabular-nums" })}>{fmtDate(staff.startDate)}</TableCell>
+                                        <TableCell className={adminCellClass({ size: "muted", className: "text-sm tabular-nums" })}>{fmtDate(staff.startDate)}</TableCell>
                                         <TableCell className={adminCellClass({ center: true })}>
                                             <Button
                                                 size="sm"
