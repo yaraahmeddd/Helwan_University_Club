@@ -16,7 +16,7 @@ import { AdminPagination } from "../components/StaffPagesComponents/shared/Admin
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
 import { AdminStaffListToolbar } from "../components/StaffPagesComponents/shared/AdminStaffListToolbar";
 import { buildPersonName, getLocalizedText, localeFontFamily } from "../lib/localizedDisplay";
-import { getPrivilegeDisplayName, getPrivilegeModuleLabel } from "../lib/privilegeModuleLabels";
+import { compareLocalizedText, getPrivilegeDisplayName, getPrivilegeModuleLabel, shouldShowPrivilegeCode } from "../lib/privilegeModuleLabels";
 import { filterStaffListRows, mapStaffApiItem, staffTypeOptionsFromApi, type StaffListApiItem } from "../lib/staffListUtils";
 import { useStaffJobLabels } from "../lib/staffJobLabel";
 import { useTranslation } from "react-i18next";
@@ -94,22 +94,45 @@ const formatDisplayDate = (v: string | null | undefined, locale: string) => {
 const normalizePrivilegesResponse = (response: unknown): PrivilegeApiItem[] => {
   if (!isRecord(response)) return [];
   const payload = response.data;
-  const arr = Array.isArray(payload) ? payload : isRecord(payload)
-    ? Object.values(payload).flat() : [];
-  const out: PrivilegeApiItem[] = [];
-  arr.forEach((item) => {
-    if (!isRecord(item)) return;
-    const id = Number(item.id);
-    const code = String(item.code ?? "").trim();
-    if (!Number.isFinite(id) || !code) return;
-    out.push({
-      id, code,
-      name_en: String(item.name_en ?? ""),
-      name_ar: String(item.name_ar ?? ""),
-      module: String(item.module ?? "General"),
+
+  if (Array.isArray(payload)) {
+    const privileges: PrivilegeApiItem[] = [];
+    payload.forEach((item) => {
+      if (!isRecord(item)) return;
+      const id = Number(item.id);
+      const code = String(item.code ?? "").trim();
+      if (!Number.isFinite(id) || !code) return;
+      privileges.push({
+        id,
+        code,
+        name_en: String(item.name_en ?? ""),
+        name_ar: String(item.name_ar ?? ""),
+        module: String(item.module ?? "General"),
+      });
+    });
+    return privileges;
+  }
+
+  if (!isRecord(payload)) return [];
+
+  const privileges: PrivilegeApiItem[] = [];
+  Object.entries(payload).forEach(([moduleName, list]) => {
+    if (!Array.isArray(list)) return;
+    list.forEach((item) => {
+      if (!isRecord(item)) return;
+      const id = Number(item.id);
+      const code = String(item.code ?? "").trim();
+      if (!Number.isFinite(id) || !code) return;
+      privileges.push({
+        id,
+        code,
+        name_en: String(item.name_en ?? ""),
+        name_ar: String(item.name_ar ?? ""),
+        module: String((item.module ?? moduleName) || "General"),
+      });
     });
   });
-  return out;
+  return privileges;
 };
 
 const normalizePackageCodes = (response: unknown): string[] => {
@@ -324,21 +347,22 @@ export default function AssignStaffPrivilegesPage() {
       const mod = p.module || "General";
       map.set(mod, [...(map.get(mod) ?? []), p]);
     });
-    const sortLocale = language === "ar" ? "ar" : "en";
     return Array.from(map.entries())
       .map(([module, items]) => ({
         module,
         items: [...items].sort((a, b) =>
-          getPrivilegeDisplayName(a.name_ar, a.name_en, a.code, language).localeCompare(
+          compareLocalizedText(
+            getPrivilegeDisplayName(a.name_ar, a.name_en, a.code, language),
             getPrivilegeDisplayName(b.name_ar, b.name_en, b.code, language),
-            sortLocale,
+            language,
           ),
         ),
       }))
       .sort((a, b) =>
-        getPrivilegeModuleLabel(a.module, language).localeCompare(
+        compareLocalizedText(
+          getPrivilegeModuleLabel(a.module, language),
           getPrivilegeModuleLabel(b.module, language),
-          sortLocale,
+          language,
         ),
       );
   }, [allPrivileges, language]);
@@ -367,19 +391,14 @@ export default function AssignStaffPrivilegesPage() {
   const totalPrivilegesCount = selectedPackageCodes.size + selectedExtraPrivilegeIds.length;
   const selectedExtraCount = selectedExtraPrivilegeIds.length;
 
-  useEffect(() => {
-    if (filteredPrivileges.length === 0) {
-      setActivePrivilegeTab(null);
-      return;
-    }
-    if (!activePrivilegeTab || !filteredPrivileges.some((g) => g.module === activePrivilegeTab)) {
-      setActivePrivilegeTab(filteredPrivileges[0].module);
-    }
-  }, [filteredPrivileges, activePrivilegeTab]);
+  const currentPrivilegeTab =
+    activePrivilegeTab && filteredPrivileges.some((g) => g.module === activePrivilegeTab)
+      ? activePrivilegeTab
+      : filteredPrivileges[0]?.module ?? null;
 
   const activePrivilegeGroup = useMemo(
-    () => filteredPrivileges.find((g) => g.module === activePrivilegeTab) ?? null,
-    [filteredPrivileges, activePrivilegeTab],
+    () => filteredPrivileges.find((g) => g.module === currentPrivilegeTab) ?? null,
+    [filteredPrivileges, currentPrivilegeTab],
   );
 
   const togglePackage = (key: string) =>
@@ -836,7 +855,7 @@ export default function AssignStaffPrivilegesPage() {
                         const moduleSelectedCount = group.items.filter((p) =>
                           selectedExtraPrivilegeIds.includes(p.id),
                         ).length;
-                        const isActive = group.module === activePrivilegeTab;
+                        const isActive = group.module === currentPrivilegeTab;
                         return (
                           <button
                             key={group.module}
@@ -917,11 +936,13 @@ export default function AssignStaffPrivilegesPage() {
                                   inPackage ? "text-emerald-900" : isSelected ? "text-primary" : "text-foreground"
                                 }`}
                               >
-                                {displayName}
+                                {displayName || "—"}
                               </p>
-                              <p className="text-[10px] font-mono text-muted-foreground mt-0.5 truncate">
-                                {privilege.code}
-                              </p>
+                              {shouldShowPrivilegeCode(language) && (
+                                <p className="text-[10px] font-mono text-muted-foreground mt-0.5 truncate">
+                                  {privilege.code}
+                                </p>
+                              )}
                               {inPackage && (
                                 <p className="text-[10px] text-emerald-700 mt-1 font-medium">{t("assign.inPackage")}</p>
                               )}

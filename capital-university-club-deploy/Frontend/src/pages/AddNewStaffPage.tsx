@@ -57,8 +57,7 @@ import {
 import { useToast } from "../hooks/use-toast";
 import i18n from "../i18n";
 import { useTranslation } from "react-i18next";
-import { getLanguageOnlyText } from "../lib/localizedDisplay";
-import { getPrivilegeModuleLabel } from "../lib/privilegeModuleLabels";
+import { getPrivilegeDisplayName, getPrivilegeModuleLabel, shouldShowPrivilegeCode, compareLocalizedText } from "../lib/privilegeModuleLabels";
 
 type StaffType = {
   id: number;
@@ -503,11 +502,21 @@ export default function AddNewStaffPage() {
       .map(([module, items]) => ({
         module,
         items: [...items].sort((a, b) =>
-          ((i18n.language === 'ar' ? (a.name_ar || a.name_en) : (a.name_en || a.name_ar)) || a.code).localeCompare((i18n.language === 'ar' ? (b.name_ar || b.name_en) : (b.name_en || b.name_ar)) || b.code),
+          compareLocalizedText(
+            getPrivilegeDisplayName(a.name_ar, a.name_en, a.code, uiLanguage),
+            getPrivilegeDisplayName(b.name_ar, b.name_en, b.code, uiLanguage),
+            uiLanguage,
+          ),
         ),
       }))
-      .sort((a, b) => a.module.localeCompare(b.module));
-  }, [allPrivileges]);
+      .sort((a, b) =>
+        compareLocalizedText(
+          getPrivilegeModuleLabel(a.module, uiLanguage),
+          getPrivilegeModuleLabel(b.module, uiLanguage),
+          uiLanguage,
+        ),
+      );
+  }, [allPrivileges, uiLanguage]);
 
   // #8 — packages load with error state + retry
   const loadPackages = useCallback(async () => {
@@ -1151,11 +1160,13 @@ export default function AddNewStaffPage() {
                                   <div className="flex-1 text-right min-w-0">
                                     <p className={`text-xs font-medium truncate ${isSelected ? "text-emerald-700" : isExcluded ? "text-red-700" : "text-foreground"
                                       }`}>
-                                      {getLanguageOnlyText(privilege.name_ar, privilege.name_en, uiLanguage) || privilege.code}
+                                      {getPrivilegeDisplayName(privilege.name_ar, privilege.name_en, privilege.code, uiLanguage) || "—"}
                                     </p>
+                                    {shouldShowPrivilegeCode(uiLanguage) && (
                                     <p className="text-[10px] font-mono text-muted-foreground truncate mt-0.5">
                                       {privilege.code}
                                     </p>
+                                    )}
                                   </div>
 
                                   {/* State badge */}

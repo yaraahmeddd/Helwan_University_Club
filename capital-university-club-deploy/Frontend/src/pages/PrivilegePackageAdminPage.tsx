@@ -1,12 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, X, Search, CheckSquare, Square } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ChevronLeft, ChevronRight, Package, Shield, Loader2, Check,
+  Search, X, Save, RotateCcw,
+} from "lucide-react";
 import api from "../services/axios";
 import { useToast } from "../hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../hooks/useLanguage";
-import { getLocalizedText } from "../lib/localizedDisplay";
+import { localeFontFamily } from "../lib/localizedDisplay";
+import { compareLocalizedText, getPrivilegeDisplayName, getPrivilegeModuleLabel, shouldShowPrivilegeCode } from "../lib/privilegeModuleLabels";
+import { FormErrorAlert } from "../components/shared/FormErrorAlert";
+import { getApiErrorMessage } from "../lib/appErrors";
+import { Input } from "../components/StaffPagesComponents/ui/input";
+import { Button } from "../components/StaffPagesComponents/ui/button";
+import { Badge } from "../components/StaffPagesComponents/ui/badge";
 
-// ─── Brand tokens (unchanged) ────────────────────────────────────────────────
 const theme = {
   primaryDark: "#1F3A5F",
   accentBlue: "#2EA7C9",
@@ -14,16 +22,25 @@ const theme = {
   border: "#E5E7EB",
 };
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+const hiddenHorizontalScrollbar =
+  "overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]";
 
 type PrivilegeItem = {
   id: number;
   nameAr?: string;
   nameEn?: string;
+  code?: string;
   labelKey?: string;
 };
 
-type ModuleItem = { id: string; name: string; privileges: PrivilegeItem[] };
+type ModuleItem = {
+  id: string;
+  moduleKey: string;
+  privileges: PrivilegeItem[];
+};
+
+const toModuleId = (name: string) =>
+  name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
 const privilegeDisplayName = (
   privilege: PrivilegeItem,
@@ -31,25 +48,19 @@ const privilegeDisplayName = (
   t: (key: string) => string,
 ) => {
   if (privilege.labelKey) return t(privilege.labelKey);
-  return getLocalizedText(privilege.nameAr, privilege.nameEn, language) || "";
+  return getPrivilegeDisplayName(privilege.nameAr, privilege.nameEn, privilege.code ?? "", language);
 };
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const toModuleId = (name: string) =>
-  name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-
-// ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function PrivilegePackageAdminPage() {
   const { toast } = useToast();
   const { t } = useTranslation("PrivilegePackageAdminPage");
+  const { t: tCommon } = useTranslation("common");
   const { language, isRTL } = useLanguage();
 
-  const mockModules: ModuleItem[] = [
+  const mockModules: ModuleItem[] = useMemo(() => [
     {
       id: "members",
-      name: t("modules.members"),
+      moduleKey: "members",
       privileges: [
         { id: -1, labelKey: "mockPrivileges.addMember" },
         { id: -2, labelKey: "mockPrivileges.editMember" },
@@ -59,7 +70,7 @@ export default function PrivilegePackageAdminPage() {
     },
     {
       id: "teams",
-      name: t("modules.teams"),
+      moduleKey: "teams",
       privileges: [
         { id: -5, labelKey: "mockPrivileges.addTeam" },
         { id: -6, labelKey: "mockPrivileges.editTeam" },
@@ -68,7 +79,7 @@ export default function PrivilegePackageAdminPage() {
     },
     {
       id: "media",
-      name: t("modules.media"),
+      moduleKey: "media",
       privileges: [
         { id: -8, labelKey: "mockPrivileges.addMedia" },
         { id: -9, labelKey: "mockPrivileges.deleteMedia" },
@@ -76,7 +87,7 @@ export default function PrivilegePackageAdminPage() {
     },
     {
       id: "finance",
-      name: t("modules.finance"),
+      moduleKey: "finance",
       privileges: [
         { id: -10, labelKey: "mockPrivileges.viewFinance" },
         { id: -11, labelKey: "mockPrivileges.createTransaction" },
@@ -84,40 +95,33 @@ export default function PrivilegePackageAdminPage() {
         { id: -13, labelKey: "mockPrivileges.deleteTransaction" },
       ],
     },
-  ];
+  ], []);
 
-  const getModuleLabel = (name: string): string => {
-    const key = name.toLowerCase().trim().replace(/[-\s]/g, "_");
-    const trans = t(`modules.${key}`);
-    // If translation doesn't exist, i18next returns the key string
-    if (trans && !trans.startsWith("modules.")) {
-      return trans;
-    }
-    const exactTrans = t(`modules.${name.toLowerCase().trim()}`);
-    if (exactTrans && !exactTrans.startsWith("modules.")) {
-      return exactTrans;
-    }
-    return name;
-  };
-
-  // Form fields
   const [packageName, setPackageName] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
 
-  // Privilege data
   const [modules, setModules] = useState<ModuleItem[]>(mockModules);
   const [loadingModules, setLoadingModules] = useState(true);
   const [selectedPrivileges, setSelectedPrivileges] = useState<Set<number>>(new Set());
   const [isSaving, setIsSaving] = useState(false);
 
-  // UX state
-  const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
   const [globalSearch, setGlobalSearch] = useState("");
   const [viewFilter, setViewFilter] = useState<"all" | "selected" | "unselected">("all");
-  const [sidebarSearch, setSidebarSearch] = useState("");
+  const [selectedSearch, setSelectedSearch] = useState("");
+  const [activeModuleTab, setActiveModuleTab] = useState<string | null>(null);
+  const moduleTabsRef = useRef<HTMLDivElement>(null);
 
-  // ── Load privileges from API ───────────────────────────────────────────────
+  const scrollModuleTabs = useCallback((direction: "back" | "forward") => {
+    const el = moduleTabsRef.current;
+    if (!el) return;
+    const amount = Math.max(220, Math.floor(el.clientWidth * 0.55));
+    const delta = direction === "back"
+      ? (isRTL ? amount : -amount)
+      : (isRTL ? -amount : amount);
+    el.scrollBy({ left: delta, behavior: "smooth" });
+  }, [isRTL]);
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -128,7 +132,7 @@ export default function PrivilegePackageAdminPage() {
         const apiModules: ModuleItem[] = Object.entries(grouped as Record<string, unknown[]>)
           .map(([moduleName, list]) => ({
             id: toModuleId(moduleName),
-            name: getModuleLabel(moduleName),
+            moduleKey: moduleName,
             privileges: Array.isArray(list)
               ? list
                 .map((item) => {
@@ -137,39 +141,39 @@ export default function PrivilegePackageAdminPage() {
                   const nameAr = String(priv?.name_ar ?? "").trim();
                   const nameEn = String(priv?.name_en ?? "").trim();
                   const code = String(priv?.code ?? "").trim();
-                  return {
-                    id,
-                    nameAr: nameAr || undefined,
-                    nameEn: nameEn || code || undefined,
-                  };
+                  return { id, nameAr: nameAr || undefined, nameEn: nameEn || undefined, code: code || undefined };
                 })
-                .filter((p) => Number.isFinite(p.id) && p.id > 0 && (p.nameAr || p.nameEn))
+                .filter((p) => Number.isFinite(p.id) && p.id > 0 && (p.nameAr || p.nameEn || p.code))
               : [],
           }))
-          .filter((m) => m.privileges.length > 0);
+          .filter((m) => m.privileges.length > 0)
+          .sort((a, b) =>
+            compareLocalizedText(
+              getPrivilegeModuleLabel(a.moduleKey, language),
+              getPrivilegeModuleLabel(b.moduleKey, language),
+              language,
+            ),
+          );
 
         if (apiModules.length > 0) {
           setModules(apiModules);
-          // Default: expand the first module
-          setExpandedModules(new Set([apiModules[0].id]));
+          setActiveModuleTab(apiModules[0].id);
         }
       } catch {
-        // keep fallback
-        setExpandedModules(new Set([mockModules[0].id]));
+        setActiveModuleTab(mockModules[0]?.id ?? null);
       } finally {
         setLoadingModules(false);
       }
     };
     void load();
-  }, [language, t]);
+  }, [language, mockModules]);
 
-  // ── Computed values ────────────────────────────────────────────────────────
-
-  const totalPrivileges = useMemo(() => modules.reduce((s, m) => s + m.privileges.length, 0), [modules]);
+  const totalPrivileges = useMemo(
+    () => modules.reduce((s, m) => s + m.privileges.length, 0),
+    [modules],
+  );
   const selectedCount = selectedPrivileges.size;
 
-
-  // Filtered modules for center column
   const filteredModules = useMemo(() => {
     const q = globalSearch.trim().toLowerCase();
     return modules
@@ -178,7 +182,8 @@ export default function PrivilegePackageAdminPage() {
         if (q) {
           privs = privs.filter((p) => {
             const label = privilegeDisplayName(p, language, t).toLowerCase();
-            return label.includes(q) || m.name.toLowerCase().includes(q);
+            const mod = getPrivilegeModuleLabel(m.moduleKey, language).toLowerCase();
+            return label.includes(q) || mod.includes(q) || m.moduleKey.toLowerCase().includes(q);
           });
         }
         if (viewFilter === "selected") privs = privs.filter((p) => selectedPrivileges.has(p.id));
@@ -188,26 +193,35 @@ export default function PrivilegePackageAdminPage() {
       .filter((m) => m.privileges.length > 0);
   }, [modules, globalSearch, viewFilter, selectedPrivileges, language, t]);
 
-  // Sidebar: selected items grouped by module, filtered by sidebarSearch
-  const sidebarGroups = useMemo(() => {
-    const sq = sidebarSearch.trim().toLowerCase();
-    return modules
-      .map((m) => ({
-        moduleId: m.id,
-        moduleName: m.name,
-        items: m.privileges.filter(
-          (p) => selectedPrivileges.has(p.id) && (!sq || privilegeDisplayName(p, language, t).toLowerCase().includes(sq))
-        ),
-      }))
-      .filter((g) => g.items.length > 0);
-  }, [modules, selectedPrivileges, sidebarSearch, language, t]);
+  const currentModuleTab =
+    activeModuleTab && filteredModules.some((m) => m.id === activeModuleTab)
+      ? activeModuleTab
+      : filteredModules[0]?.id ?? null;
 
-  // ── Actions ────────────────────────────────────────────────────────────────
+  const activeModule = useMemo(
+    () => filteredModules.find((m) => m.id === currentModuleTab) ?? null,
+    [filteredModules, currentModuleTab],
+  );
+
+  const selectedItems = useMemo(() => {
+    const sq = selectedSearch.trim().toLowerCase();
+    const items: Array<{ moduleKey: string; privilege: PrivilegeItem }> = [];
+    modules.forEach((m) => {
+      m.privileges.forEach((p) => {
+        if (!selectedPrivileges.has(p.id)) return;
+        const label = privilegeDisplayName(p, language, t).toLowerCase();
+        if (sq && !label.includes(sq)) return;
+        items.push({ moduleKey: m.moduleKey, privilege: p });
+      });
+    });
+    return items;
+  }, [modules, selectedPrivileges, selectedSearch, language, t]);
 
   const togglePrivilege = (id: number) => {
     setSelectedPrivileges((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -224,22 +238,26 @@ export default function PrivilegePackageAdminPage() {
     });
   };
 
-  const toggleExpand = (moduleId: string) => {
-    setExpandedModules((prev) => {
-      const next = new Set(prev);
-      if (next.has(moduleId)) next.delete(moduleId); else next.add(moduleId);
-      return next;
-    });
-  };
-
   const handleReset = () => {
-    setPackageName(""); setDescription(""); setSelectedPrivileges(new Set()); setError(""); setSidebarSearch(""); setGlobalSearch(""); setViewFilter("all");
+    setPackageName("");
+    setDescription("");
+    setSelectedPrivileges(new Set());
+    setError("");
+    setSelectedSearch("");
+    setGlobalSearch("");
+    setViewFilter("all");
   };
 
   const handleSave = async () => {
     setError("");
-    if (!packageName.trim()) { setError(t("errors.nameRequired")); return; }
-    if (selectedPrivileges.size === 0) { setError(t("errors.minPrivilege")); return; }
+    if (!packageName.trim()) {
+      setError(t("errors.nameRequired"));
+      return;
+    }
+    if (selectedPrivileges.size === 0) {
+      setError(t("errors.minPrivilege"));
+      return;
+    }
     const privilegeIds = Array.from(selectedPrivileges);
     if (privilegeIds.some((id) => id < 0)) {
       setError(t("errors.notLoaded"));
@@ -248,352 +266,379 @@ export default function PrivilegePackageAdminPage() {
     setIsSaving(true);
     try {
       const code = packageName.trim().toUpperCase()
-        .replace(/[\u0600-\u06FF\s]+/g, "_").replace(/[^A-Z0-9_]/g, "")
+        .replace(/[\u0600-\u06FF\s]+/g, "_")
+        .replace(/[^A-Z0-9_]/g, "")
         .replace(/^_+|_+$/g, "") || `PKG_${Date.now()}`;
       await api.post("/staff/packages", {
-        code, name_en: packageName.trim(), name_ar: packageName.trim(),
-        description: description.trim() || undefined, privilege_ids: privilegeIds,
+        code,
+        name_en: packageName.trim(),
+        name_ar: packageName.trim(),
+        description: description.trim() || undefined,
+        privilege_ids: privilegeIds,
       });
       toast({ title: t("toast.saveSuccessTitle"), description: t("toast.saveSuccessDesc") });
       handleReset();
     } catch (err) {
-      console.error(err);
-      setError(t("errors.saveError"));
+      setError(getApiErrorMessage(err, tCommon, t("errors.saveError")));
     } finally {
       setIsSaving(false);
     }
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  const activeModuleSelectedCount = activeModule
+    ? activeModule.privileges.filter((p) => selectedPrivileges.has(p.id)).length
+    : 0;
+  const activeModuleAllSelected = activeModule
+    ? activeModule.privileges.length > 0 && activeModuleSelectedCount === activeModule.privileges.length
+    : false;
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col overflow-hidden" dir={isRTL ? "rtl" : "ltr"} style={{ backgroundColor: theme.background }}>
-
-      {/* ── Compact Header ── */}
-      <div className="flex items-center justify-between px-6 py-3 border-b bg-white shrink-0" style={{ borderColor: theme.border }}>
-        <div className={isRTL ? "text-right" : "text-left"}>
-          <h1 className="text-xl font-bold" style={{ color: theme.primaryDark }}>{t("page.title")}</h1>
-          <p className="text-xs text-gray-500 mt-0.5">
-            {loadingModules ? t("page.loading") : t("page.stats", { total: totalPrivileges, modules: modules.length })}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Progress pill */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold border"
-            style={{ borderColor: theme.accentBlue, color: theme.accentBlue, backgroundColor: `${theme.accentBlue}12` }}>
-            <span>{selectedCount}</span>
-            <span className="text-gray-400 font-normal">/</span>
-            <span className="text-gray-500 font-normal">{totalPrivileges}</span>
-            <span className="text-gray-500 font-normal text-xs">{t("page.selected")}</span>
+    <div
+      className="h-[calc(100vh-4rem)] flex flex-col overflow-hidden"
+      dir={isRTL ? "rtl" : "ltr"}
+      lang={language}
+      style={{ backgroundColor: theme.background, fontFamily: localeFontFamily(language) }}
+    >
+      {/* Header */}
+      <div className="shrink-0 border-b bg-white px-6 py-4" style={{ borderColor: theme.border }}>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className={isRTL ? "text-right" : "text-left"}>
+            <h1 className="text-xl font-bold flex items-center gap-2" style={{ color: theme.primaryDark }}>
+              <Package className="w-5 h-5" style={{ color: theme.accentBlue }} />
+              {t("page.title")}
+            </h1>
+            <p className="text-xs text-gray-500 mt-1">
+              {loadingModules ? t("page.loading") : t("page.stats", { total: totalPrivileges, modules: modules.length })}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="rounded-lg border px-3 py-2 text-center min-w-[88px]" style={{ borderColor: theme.border, backgroundColor: `${theme.accentBlue}08` }}>
+              <p className="text-[10px] uppercase tracking-wide text-gray-500">{t("page.selectedPrivileges")}</p>
+              <p className="text-lg font-bold" style={{ color: theme.accentBlue }}>{selectedCount}</p>
+            </div>
+            <div className="rounded-lg border px-3 py-2 text-center min-w-[88px]" style={{ borderColor: theme.border }}>
+              <p className="text-[10px] uppercase tracking-wide text-gray-500">{t("page.total")}</p>
+              <p className="text-lg font-bold text-gray-800">{totalPrivileges}</p>
+            </div>
+            <div className="rounded-lg border px-3 py-2 text-center min-w-[88px]" style={{ borderColor: `${theme.primaryDark}40`, backgroundColor: `${theme.primaryDark}08` }}>
+              <p className="text-[10px] uppercase tracking-wide" style={{ color: theme.primaryDark }}>{t("page.modulesCount")}</p>
+              <p className="text-lg font-bold" style={{ color: theme.primaryDark }}>{modules.length}</p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ── 3-column body ── */}
-      <div className="flex flex-1 min-h-0 gap-0">
+      {/* Main scroll area */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-[1600px] mx-auto px-4 lg:px-6 py-5 space-y-6">
 
-        {/* ── LEFT: Package form (sticky, 25%) ── */}
-        <div className={`w-64 shrink-0 flex flex-col ${isRTL ? "border-l" : "border-r"} overflow-y-auto bg-white`} style={{ borderColor: theme.border }}>
-          <div className="p-4 space-y-4 flex-1">
-            <p className={`text-xs font-bold uppercase tracking-widest text-gray-400 ${isRTL ? "text-right" : "text-left"}`}>{t("page.packageDetails")}</p>
+          {/* Package details — horizontal form row */}
+          <section className="rounded-xl border bg-white shadow-sm overflow-hidden" style={{ borderColor: theme.border }}>
+            <div className="px-5 py-4 border-b bg-gray-50/80" style={{ borderColor: theme.border }}>
+              <h2 className="font-semibold text-base text-gray-900">{t("page.packageDetails")}</h2>
+              <p className="text-xs text-gray-500 mt-1">{t("page.packageDetailsSubtitle")}</p>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-semibold text-gray-700 mb-1.5 ${isRTL ? "text-right" : "text-left"}`}>
+                    {t("page.packageName")}
+                  </label>
+                  <Input
+                    value={packageName}
+                    onChange={(e) => { setPackageName(e.target.value); setError(""); }}
+                    placeholder={t("page.packageNamePlaceholder")}
+                    className="h-10"
+                    dir="auto"
+                    style={{ borderColor: error && !packageName.trim() ? "#EF4444" : undefined }}
+                  />
+                </div>
+                <div>
+                  <label className={`block text-sm font-semibold text-gray-700 mb-1.5 ${isRTL ? "text-right" : "text-left"}`}>
+                    {t("page.description")}{" "}
+                    <span className="text-gray-400 font-normal">{t("page.optional")}</span>
+                  </label>
+                  <Input
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder={t("page.descriptionPlaceholder")}
+                    className="h-10"
+                    dir="auto"
+                  />
+                </div>
+              </div>
+              <FormErrorAlert message={error} onDismiss={() => setError("")} />
+            </div>
+          </section>
 
-            {/* Package name */}
-            <div>
-              <label className={`block text-sm font-semibold text-gray-700 mb-1.5 ${isRTL ? "text-right" : "text-left"}`}>{t("page.packageName")}</label>
-              <input
-                type="text"
-                value={packageName}
-                onChange={(e) => setPackageName(e.target.value)}
-                placeholder={t("page.packageNamePlaceholder")}
-                className="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-all"
-                style={{ borderColor: error && !packageName.trim() ? "#EF4444" : theme.border }}
-                dir="auto"
-              />
+          {/* Privileges — horizontal tabs + grid */}
+          <section className="rounded-xl border bg-white shadow-sm overflow-hidden" style={{ borderColor: theme.border }}>
+            <div className="px-5 py-4 border-b bg-gray-50/80 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4" style={{ borderColor: theme.border }}>
+              <div>
+                <h2 className="font-semibold text-base flex items-center gap-2 text-gray-900">
+                  <Shield className="w-4 h-4" style={{ color: theme.accentBlue }} />
+                  {t("page.privilegesTitle")}
+                </h2>
+                <p className="text-xs text-gray-500 mt-1">{t("page.privilegesSubtitle")}</p>
+              </div>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 lg:flex-1 lg:max-w-xl lg:ms-auto">
+                <div className="relative flex-1">
+                  <Search className={`absolute ${isRTL ? "right-3" : "left-3"} top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none`} />
+                  <Input
+                    value={globalSearch}
+                    onChange={(e) => setGlobalSearch(e.target.value)}
+                    placeholder={t("page.searchPlaceholder")}
+                    className={`h-9 ${isRTL ? "pr-9" : "pl-9"} text-sm`}
+                  />
+                </div>
+              </div>
             </div>
 
-            {/* Description */}
-            <div>
-              <label className={`block text-sm font-semibold text-gray-700 mb-1.5 ${isRTL ? "text-right" : "text-left"}`}>
-                {t("page.description")} <span className="text-gray-400 font-normal">{t("page.optional")}</span>
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder={t("page.descriptionPlaceholder")}
-                rows={3}
-                className="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-all resize-none"
-                style={{ borderColor: theme.border }}
-                dir="auto"
-              />
-            </div>
-
-            {/* Error */}
-            {error && (
-              <div className={`text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 ${isRTL ? "text-right" : "text-left"}`}>
-                {error}
-              </div>
-            )}
-
-            {/* Stats */}
-            <div className="rounded-xl p-3 border space-y-2" style={{ borderColor: theme.border, backgroundColor: `${theme.accentBlue}08` }}>
-              <p className={`text-xs font-bold text-gray-500 uppercase tracking-wide ${isRTL ? "text-right" : "text-left"}`}>{t("page.statsTitle")}</p>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-600">{t("page.selectedPrivileges")}</span>
-                <span className="font-bold" style={{ color: theme.accentBlue }}>{selectedCount}</span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-600">{t("page.total")}</span>
-                <span className="font-bold text-gray-700">{totalPrivileges}</span>
-              </div>
-              {/* Progress bar */}
-              <div className="w-full h-1.5 rounded-full bg-gray-200 overflow-hidden" dir="ltr">
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{ width: `${totalPrivileges > 0 ? (selectedCount / totalPrivileges) * 100 : 0}%`, backgroundColor: theme.accentBlue }}
-                />
-              </div>
-              <div className={`text-[10px] text-gray-400 ${isRTL ? "text-right" : "text-left"}`} dir="ltr">
-                {totalPrivileges > 0 ? Math.round((selectedCount / totalPrivileges) * 100) : 0}%
-              </div>
-            </div>
-
-            {/* Module breakdown */}
-            {selectedCount > 0 && (
-              <div className="space-y-1">
-                <p className={`text-xs font-bold text-gray-400 uppercase tracking-wide ${isRTL ? "text-right" : "text-left"}`}>{t("page.moduleDistribution")}</p>
-                {modules.map((m) => {
-                  const count = m.privileges.filter((p) => selectedPrivileges.has(p.id)).length;
-                  if (count === 0) return null;
-                  return (
-                    <div key={m.id} className="flex items-center justify-between text-xs py-1">
-                      <span className="text-gray-600 truncate">{m.name}</span>
-                      <span className={`shrink-0 font-semibold text-gray-800 ${isRTL ? "ml-1" : "mr-1"}`} dir="ltr">{count}/{m.privileges.length}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── CENTER: Modules accordion (scrollable, 50%) ── */}
-        <div className={`flex-1 flex flex-col min-w-0 ${isRTL ? "border-l" : "border-r"}`} style={{ borderColor: theme.border }}>
-
-          {/* Search + filter bar */}
-          <div className="px-4 py-3 border-b bg-white shrink-0" style={{ borderColor: theme.border }}>
-            <div className="relative mb-3">
-              <Search className={`absolute ${isRTL ? "right-3" : "left-3"} top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400`} />
-              <input
-                type="text"
-                value={globalSearch}
-                onChange={(e) => setGlobalSearch(e.target.value)}
-                placeholder={t("page.searchPlaceholder")}
-                className={`w-full ${isRTL ? "pr-10 pl-3" : "pl-10 pr-3"} py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-all`}
-                style={{ borderColor: theme.border }}
-              />
-            </div>
-            {/* Quick filter pills */}
-            <div className="flex gap-1.5 flex-wrap">
+            <div className="px-5 py-3 border-b flex flex-wrap gap-1.5" style={{ borderColor: theme.border }}>
               {(["all", "selected", "unselected"] as const).map((f) => (
                 <button
                   key={f}
+                  type="button"
                   onClick={() => setViewFilter(f)}
-                  className="px-3 py-1 rounded-full text-xs font-semibold transition-all"
+                  className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
                   style={viewFilter === f
                     ? { backgroundColor: theme.primaryDark, color: "white" }
-                    : { backgroundColor: theme.border, color: "#4B5563" }
-                  }
+                    : { backgroundColor: theme.border, color: "#4B5563" }}
                 >
                   {f === "all" ? t("page.all") : f === "selected" ? t("page.selectedFilter", { count: selectedCount }) : t("page.unselectedFilter")}
                 </button>
               ))}
               {(globalSearch || viewFilter !== "all") && (
                 <button
+                  type="button"
                   onClick={() => { setGlobalSearch(""); setViewFilter("all"); }}
-                  className="px-2 py-1 rounded-full text-xs text-gray-500 hover:text-red-500 transition-colors flex items-center gap-1"
+                  className="px-2 py-1.5 rounded-full text-xs text-gray-500 hover:text-red-500 transition-colors inline-flex items-center gap-1"
                 >
                   <X className="w-3 h-3" /> {t("page.clear")}
                 </button>
               )}
             </div>
-          </div>
 
-          {/* Accordion list */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {loadingModules ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-14 rounded-xl bg-white border animate-pulse" style={{ borderColor: theme.border }} />
-              ))
-            ) : filteredModules.length === 0 ? (
-              <div className="py-16 text-center text-gray-400 text-sm">{t("page.noResults")}</div>
-            ) : (
-              filteredModules.map((m) => {
-                const isExpanded = expandedModules.has(m.id);
-                const moduleSelected = m.privileges.filter((p) => selectedPrivileges.has(p.id)).length;
-                const allSel = moduleSelected === m.privileges.length && m.privileges.length > 0;
-                const someSel = moduleSelected > 0 && !allSel;
-
-                return (
-                  <div key={m.id} className="bg-white rounded-xl border shadow-sm overflow-hidden" style={{ borderColor: theme.border }}>
-                    {/* Module header */}
-                    <div className="flex items-center gap-3 px-4 py-3 cursor-pointer select-none hover:bg-gray-50 transition-colors"
-                      onClick={() => toggleExpand(m.id)}>
-                      <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform shrink-0 ${isExpanded ? "" : (isRTL ? "rotate-90" : "-rotate-90")}`} />
-                      <div className={`flex-1 min-w-0 ${isRTL ? "text-right" : "text-left"}`}>
-                        <p className="font-semibold text-gray-800 text-sm truncate">{m.name}</p>
-                        <p className="text-[11px] text-gray-400">{t("page.privilegeCount", { count: m.privileges.length })}</p>
-                      </div>
-
-                      {/* Selection badge */}
-                      {moduleSelected > 0 && (
-                        <span className="shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
-                          style={{ backgroundColor: allSel ? theme.accentBlue : `${theme.accentBlue}99` }} dir="ltr">
-                          {moduleSelected}/{m.privileges.length}
-                        </span>
-                      )}
-
-                      {/* Select all / None toggle */}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); toggleModule(m.id); }}
-                        className="shrink-0 flex items-center gap-1 text-xs px-2 py-1 rounded-lg border transition-all hover:shadow-sm"
-                        style={allSel
-                          ? { borderColor: theme.accentBlue, color: theme.accentBlue, backgroundColor: `${theme.accentBlue}12` }
-                          : { borderColor: theme.border, color: "#6B7280" }
-                        }
-                        title={allSel ? t("page.deselectAll") : t("page.selectAll")}
-                      >
-                        {allSel ? <CheckSquare className="w-3.5 h-3.5" /> : someSel ? <CheckSquare className="w-3.5 h-3.5 opacity-50" /> : <Square className="w-3.5 h-3.5" />}
-                        {allSel ? t("page.deselectAll") : t("page.selectAll")}
-                      </button>
+            <div className="p-5">
+              {loadingModules ? (
+                <div className="flex items-center justify-center gap-3 py-12 text-gray-500">
+                  <Loader2 className="w-6 h-6 animate-spin" style={{ color: theme.accentBlue }} />
+                  <p className="text-sm">{t("page.loading")}</p>
+                </div>
+              ) : filteredModules.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-gray-400 border border-dashed rounded-xl bg-gray-50/50" style={{ borderColor: theme.border }}>
+                  <Shield className="w-10 h-10 opacity-30 mb-3" />
+                  <p className="text-sm font-medium">{t("page.noResults")}</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 shrink-0"
+                      onClick={() => scrollModuleTabs("back")}
+                      aria-label={t("page.scrollPrev")}
+                    >
+                      {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                    </Button>
+                    <div ref={moduleTabsRef} className={`flex gap-2 flex-1 min-w-0 pb-1 ${hiddenHorizontalScrollbar}`}>
+                      {filteredModules.map((m) => {
+                        const moduleSelectedCount = m.privileges.filter((p) => selectedPrivileges.has(p.id)).length;
+                        const isActive = m.id === currentModuleTab;
+                        return (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => setActiveModuleTab(m.id)}
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-colors border"
+                            style={isActive
+                              ? { backgroundColor: theme.primaryDark, color: "white", borderColor: theme.primaryDark }
+                              : { backgroundColor: "#F9FAFB", color: "#6B7280", borderColor: theme.border }}
+                          >
+                            {getPrivilegeModuleLabel(m.moduleKey, language)}
+                            {moduleSelectedCount > 0 && (
+                              <span
+                                className="text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none"
+                                style={isActive
+                                  ? { backgroundColor: "rgba(255,255,255,0.2)", color: "white" }
+                                  : { backgroundColor: `${theme.accentBlue}20`, color: theme.accentBlue }}
+                                dir="ltr"
+                              >
+                                {moduleSelectedCount}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
-
-                    {/* Privilege chips */}
-                    {isExpanded && (
-                      <div className="px-4 pb-4 pt-1 flex flex-wrap gap-2 border-t" style={{ borderColor: theme.border }}>
-                        {m.privileges.map((p) => {
-                          const sel = selectedPrivileges.has(p.id);
-                          return (
-                            <button
-                              key={p.id}
-                              onClick={() => togglePrivilege(p.id)}
-                              className="px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-150 border"
-                              style={sel
-                                ? { backgroundColor: theme.accentBlue, color: "white", borderColor: theme.accentBlue }
-                                : { backgroundColor: "white", color: "#374151", borderColor: theme.border }
-                              }
-                            >
-                              {privilegeDisplayName(p, language, t)}
-                            </button>
-                          );
-                        })}
-                      </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 shrink-0"
+                      onClick={() => scrollModuleTabs("forward")}
+                      aria-label={t("page.scrollNext")}
+                    >
+                      {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </Button>
+                    {activeModule && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0 h-8 text-xs gap-1.5 hidden sm:inline-flex"
+                        onClick={() => toggleModule(activeModule.id)}
+                      >
+                        {activeModuleAllSelected ? t("page.deselectAll") : t("page.selectAll")}
+                      </Button>
                     )}
                   </div>
-                );
-              })
-            )}
-          </div>
-        </div>
 
-        {/* ── RIGHT: Selected privileges sidebar (sticky, 25%) ── */}
-        <div className={`w-64 shrink-0 flex flex-col bg-white ${isRTL ? "border-r" : "border-l"}`} style={{ borderColor: theme.border }}>
-          <div className="px-4 py-3 border-b shrink-0" style={{ borderColor: theme.border }}>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-bold uppercase tracking-widest text-gray-400">{t("page.selectedTitle")}</p>
-              {selectedCount > 0 && (
-                <button
-                  onClick={() => setSelectedPrivileges(new Set())}
-                  className="text-[11px] text-red-500 hover:text-red-600 transition-colors font-medium"
-                >
-                  {t("page.clearAll")}
-                </button>
+                  {activeModule ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2">
+                      {activeModule.privileges.map((p) => {
+                        const isSelected = selectedPrivileges.has(p.id);
+                        const displayName = privilegeDisplayName(p, language, t);
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => togglePrivilege(p.id)}
+                            className="group flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-start transition-all min-h-[52px]"
+                            style={isSelected
+                              ? { borderColor: theme.accentBlue, backgroundColor: `${theme.accentBlue}10`, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }
+                              : { borderColor: theme.border, backgroundColor: "white" }}
+                          >
+                            <div
+                              className="w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors"
+                              style={isSelected
+                                ? { backgroundColor: theme.accentBlue, borderColor: theme.accentBlue, color: "white" }
+                                : { borderColor: "#D1D5DB", backgroundColor: "white" }}
+                            >
+                              {isSelected && <Check className="w-2.5 h-2.5" />}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p
+                                className="text-xs font-semibold leading-tight line-clamp-2"
+                                style={{ color: isSelected ? theme.accentBlue : "#111827" }}
+                              >
+                                {displayName}
+                              </p>
+                              {p.code && shouldShowPrivilegeCode(language) && (
+                                <p className="text-[10px] font-mono text-gray-400 mt-0.5 truncate">{p.code}</p>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
               )}
             </div>
-            {selectedCount > 0 && (
-              <div className="relative">
-                <Search className={`absolute ${isRTL ? "right-2.5" : "left-2.5"} top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400`} />
-                <input
-                  type="text"
-                  value={sidebarSearch}
-                  onChange={(e) => setSidebarSearch(e.target.value)}
-                  placeholder={t("page.sidebarSearch")}
-                  className={`w-full ${isRTL ? "pr-8 pl-2" : "pl-8 pr-2"} py-1.5 text-xs border rounded-lg focus:outline-none focus:ring-1 transition-all`}
-                  style={{ borderColor: theme.border }}
-                />
-              </div>
-            )}
-          </div>
+          </section>
 
-          <div className="flex-1 overflow-y-auto p-3">
-            {selectedCount === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center py-8 text-gray-400">
-                <div className="w-12 h-12 rounded-full mb-3 flex items-center justify-center"
-                  style={{ backgroundColor: `${theme.accentBlue}12` }}>
-                  <CheckSquare className="w-6 h-6" style={{ color: theme.accentBlue }} />
-                </div>
-                <p className="text-sm font-medium text-gray-500">{t("page.noSelectedTitle")}</p>
-                <p className="text-xs mt-1 leading-relaxed">{t("page.noSelectedDesc")}</p>
+          {/* Selected preview — horizontal chips */}
+          <section className="rounded-xl border bg-white shadow-sm overflow-hidden" style={{ borderColor: theme.border }}>
+            <div className="px-5 py-4 border-b bg-gray-50/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3" style={{ borderColor: theme.border }}>
+              <div>
+                <h2 className="font-semibold text-base text-gray-900">{t("page.selectedTitle")}</h2>
+                <p className="text-xs text-gray-500 mt-1">{t("page.selectedPreviewSubtitle")}</p>
               </div>
-            ) : sidebarGroups.length === 0 ? (
-              <p className="text-xs text-gray-400 text-center py-6">{t("page.noSidebarResults")}</p>
-            ) : (
-              <div className="space-y-4">
-                {sidebarGroups.map((g) => (
-                  <div key={g.moduleId}>
-                    <p className={`text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5 px-1 ${isRTL ? "text-right" : "text-left"}`}>{g.moduleName}</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {g.items.map((p) => (
-                        <span
-                          key={p.id}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium text-white"
-                          style={{ backgroundColor: theme.accentBlue }}
-                        >
-                          {privilegeDisplayName(p, language, t)}
-                          <button
-                            onClick={() => togglePrivilege(p.id)}
-                            className="hover:bg-white/20 rounded-full p-0.5 transition-colors"
-                            title={t("page.remove")}
-                          >
-                            <X className="w-2.5 h-2.5" />
-                          </button>
-                        </span>
-                      ))}
+              <div className="flex items-center gap-2 flex-wrap">
+                {selectedCount > 0 && (
+                  <>
+                    <div className="relative w-full sm:w-48">
+                      <Search className={`absolute ${isRTL ? "right-2.5" : "left-2.5"} top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none`} />
+                      <Input
+                        value={selectedSearch}
+                        onChange={(e) => setSelectedSearch(e.target.value)}
+                        placeholder={t("page.sidebarSearch")}
+                        className={`h-8 text-xs ${isRTL ? "pr-8" : "pl-8"}`}
+                      />
                     </div>
-                  </div>
-                ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => setSelectedPrivileges(new Set())}
+                    >
+                      {t("page.clearAll")}
+                    </Button>
+                  </>
+                )}
+                {selectedCount > 0 && (
+                  <Badge className="shrink-0" style={{ backgroundColor: `${theme.accentBlue}15`, color: theme.accentBlue }}>
+                    {selectedCount}
+                  </Badge>
+                )}
               </div>
-            )}
-          </div>
+            </div>
+            <div className="p-5">
+              {selectedCount === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 text-center text-gray-400 border border-dashed rounded-xl bg-gray-50/40" style={{ borderColor: theme.border }}>
+                  <Check className="w-8 h-8 mb-3 opacity-30" style={{ color: theme.accentBlue }} />
+                  <p className="text-sm font-medium text-gray-500">{t("page.noSelectedTitle")}</p>
+                  <p className="text-xs mt-1 max-w-sm">{t("page.noSelectedDesc")}</p>
+                </div>
+              ) : selectedItems.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-6">{t("page.noSidebarResults")}</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {selectedItems.map(({ moduleKey, privilege: p }) => (
+                    <span
+                      key={p.id}
+                      className="inline-flex items-center gap-1.5 max-w-full rounded-lg border px-2.5 py-1.5 text-xs font-medium text-white"
+                      style={{ backgroundColor: theme.accentBlue, borderColor: theme.accentBlue }}
+                    >
+                      <span className="truncate">{privilegeDisplayName(p, language, t)}</span>
+                      <span className="opacity-70 text-[10px] shrink-0 hidden sm:inline">
+                        ({getPrivilegeModuleLabel(moduleKey, language)})
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => togglePrivilege(p.id)}
+                        className="hover:bg-white/20 rounded-full p-0.5 transition-colors shrink-0"
+                        aria-label={t("page.remove")}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
         </div>
       </div>
 
-      {/* ── Floating action bar ── */}
+      {/* Footer */}
       <div
-        className="flex items-center justify-between px-6 py-3 border-t shrink-0"
-        style={{ backgroundColor: "white", borderColor: theme.border }}
+        className="shrink-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-6 py-4 border-t bg-white"
+        style={{ borderColor: theme.border }}
       >
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-600">
-            <span className="font-bold mx-1" style={{ color: theme.accentBlue }}>{selectedCount}</span> {t("page.selectedSummarySuffix")}
-          </span>
-          {error && <span className="text-xs text-red-500">{error}</span>}
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleReset}
-            disabled={isSaving}
-            className="px-5 py-2 rounded-lg text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-40"
-          >
+        <p className="text-sm text-gray-600">
+          <span className="font-bold mx-1" style={{ color: theme.accentBlue }}>{selectedCount}</span>
+          {t("page.selectedSummarySuffix")}
+        </p>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button type="button" variant="outline" onClick={handleReset} disabled={isSaving} className="gap-2">
+            <RotateCcw className="h-4 w-4" />
             {t("page.cancel")}
-          </button>
-          <button
+          </Button>
+          <Button
+            type="button"
             onClick={() => void handleSave()}
             disabled={isSaving}
-            className="px-6 py-2 rounded-lg text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+            className="gap-2 min-w-[140px] text-white"
             style={{ backgroundColor: theme.primaryDark }}
           >
+            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {isSaving ? t("page.saving") : t("page.save")}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

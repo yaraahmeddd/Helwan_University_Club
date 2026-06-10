@@ -23,8 +23,11 @@ const MemberDashboard = lazy(() => import('./pages/MemberDashboard'));
 const MemberPendingPage = lazy(() => import('./pages/MemberPendingPage'));
 
 import ProtectedRoute from './components/ProtectedRoute';
-const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage'));
 import { AuthProvider } from './context/AuthContext';
+import { AppErrorBoundaryWrapper } from './components/shared/AppErrorBoundaryWrapper';
+import { GlobalErrorListener } from './components/shared/GlobalErrorListener';
+import { Toaster } from './components/StaffPagesComponents/ui/toaster';
+import { Toaster as Sonner } from './components/StaffPagesComponents/ui/sonner';
 const TeamMemberDashboard = lazy(() => import('./pages/teammemberdashboard'));
 const PublicPostDetailsPage = lazy(() => import('./pages/PublicPostDetailsPage'));
 const TeamMemberSportPaymentPage = lazy(() => import('./pages/TeamMemberSportPaymentPage'));
@@ -36,12 +39,17 @@ const MediaTestingPage = lazy(() => import('./pages/MediaTestingPage'));
 const MediaManagerPage = lazy(() => import('./pages/MediaManagerPage'));
 const MediaViewerPage = lazy(() => import('./pages/MediaViewerPage'));
 const SportInfoPage = lazy(() => import('./pages/SportInfoPage'));
+const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage'));
 
 const Router: React.FC = () => {
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <GlobalErrorListener />
+          <AppErrorBoundaryWrapper>
           <Suspense fallback={<AppLoader />}>
             <Routes>
             <Route path="/" element={<Landingpage />} />
@@ -140,6 +148,7 @@ const Router: React.FC = () => {
             <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
+          </AppErrorBoundaryWrapper>
         </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>

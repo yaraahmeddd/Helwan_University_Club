@@ -14,8 +14,8 @@ import { useLanguage } from "../hooks/useLanguage";
 import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
-import { buildPersonName, getLanguageOnlyText } from "../lib/localizedDisplay";
-import { getPrivilegeModuleLabel } from "../lib/privilegeModuleLabels";
+import { buildPersonName } from "../lib/localizedDisplay";
+import { getPrivilegeDisplayName, getPrivilegeModuleLabel, shouldShowPrivilegeCode } from "../lib/privilegeModuleLabels";
 import { filterStaffListRows, mapStaffApiItem, staffTypeOptionsFromApi, type StaffListApiItem } from "../lib/staffListUtils";
 import { AdminStaffListToolbar } from "../components/StaffPagesComponents/shared/AdminStaffListToolbar";
 import { useStaffJobLabels } from "../lib/staffJobLabel";
@@ -550,7 +550,7 @@ export default function RevokePrivilegesPage() {
                             <div className="p-2 space-y-1">
                                 {group.items.map((priv) => {
                                     const marked = priv.markedForRevocation;
-                                    const displayName = getLanguageOnlyText(priv.nameAr, priv.nameEn, language) || priv.code;
+                                    const displayName = getPrivilegeDisplayName(priv.nameAr, priv.nameEn, priv.code, language) || "—";
                                     return (
                                         <label
                                             key={priv.code}
@@ -570,9 +570,11 @@ export default function RevokePrivilegesPage() {
                                                 <span className={`block text-xs font-semibold truncate ${marked ? "text-destructive line-through" : "text-foreground"}`}>
                                                     {displayName}
                                                 </span>
+                                                {shouldShowPrivilegeCode(language) && (
                                                 <span className={`block text-[10px] font-mono truncate ${marked ? "text-destructive/70 line-through" : "text-muted-foreground"}`}>
                                                     {priv.code}
                                                 </span>
+                                                )}
                                             </span>
                                             <Badge
                                                 variant="outline"

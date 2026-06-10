@@ -1,6 +1,4 @@
 import { lazy, Suspense } from "react";
-import { Toaster } from "../components/StaffPagesComponents/ui/toaster";
-import { Toaster as Sonner } from "../components/StaffPagesComponents/ui/sonner";
 import { TooltipProvider } from "../components/StaffPagesComponents/ui/tooltip";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { MainLayout } from "../components/StaffPagesComponents/layout/MainLayout";
@@ -8,6 +6,7 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import { CredentialChangeModal } from "../components/CredentialChangeModal";
 import { useAuth } from "../context/AuthContext";
 import AppLoader from "../components/AppLoader";
+import { AppErrorBoundaryWrapper } from "../components/shared/AppErrorBoundaryWrapper";
 import './staffDashboard.css'
 
 // All admin pages are lazy-loaded so the staff dashboard chunk stays small
@@ -88,10 +87,9 @@ function SmartIndexRedirect() {
 const StaffDashboard = () => {
   return (
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
       <CredentialChangeModal />
       <MainLayout>
+        <AppErrorBoundaryWrapper compact>
         <Suspense fallback={<AppLoader />}>
           <Routes>
             <Route index element={<SmartIndexRedirect />} />
@@ -129,6 +127,7 @@ const StaffDashboard = () => {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
+        </AppErrorBoundaryWrapper>
       </MainLayout>
     </TooltipProvider>
   );

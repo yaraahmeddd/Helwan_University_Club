@@ -5,13 +5,21 @@ import api from "../services/axios";
 import { useToast } from "../hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../hooks/useLanguage";
-import { getLocalizedText, localeFontFamily, type DisplayLanguage } from "../lib/localizedDisplay";
+import { getLanguageOnlyText, localeFontFamily, type DisplayLanguage } from "../lib/localizedDisplay";
+import {
+  getPrivilegeDisplayName,
+  getPrivilegeModuleLabel,
+  shouldShowPrivilegeCode,
+} from "../lib/privilegeModuleLabels";
 
 const packageLabel = (pkg: Package, language: DisplayLanguage) =>
-  getLocalizedText(pkg.name_ar, pkg.name_en, language) || pkg.code;
+  getLanguageOnlyText(pkg.name_ar, pkg.name_en, language) || "—";
+
+const packageDescription = (pkg: Package, language: DisplayLanguage) =>
+  getLanguageOnlyText(pkg.description_ar, pkg.description_en, language);
 
 const privilegeLabel = (p: Privilege, language: DisplayLanguage) =>
-  getLocalizedText(p.name_ar, p.name_en, language) || p.code || "";
+  getPrivilegeDisplayName(p.name_ar, p.name_en, p.code ?? "", language) || "—";
 
 const theme = {
   primaryDark: "#1F3A5F",
@@ -33,7 +41,8 @@ interface Package {
   code: string;
   name_en: string;
   name_ar?: string;
-  description?: string;
+  description_en?: string;
+  description_ar?: string;
   privileges?: Privilege[];
 }
 
@@ -55,8 +64,8 @@ function PrivilegesModal({
     if (!q) return privileges;
     return privileges.filter((p) => {
       const label = privilegeLabel(p, language).toLowerCase();
-      const mod = (p.module || "").toLowerCase();
-      return label.includes(q) || mod.includes(q);
+      const modLabel = getPrivilegeModuleLabel(p.module || "", language).toLowerCase();
+      return label.includes(q) || modLabel.includes(q);
     });
   }, [privileges, search, language]);
 
@@ -146,7 +155,7 @@ function PrivilegesModal({
               {grouped.map(([mod, items]) => (
                 <div key={mod}>
                   <p className={`text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 px-1 ${isRTL ? "text-right" : "text-left"}`}>
-                    {mod}
+                    {getPrivilegeModuleLabel(mod, language)}
                     <span className="mx-1.5 text-gray-300">({items.length})</span>
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -253,22 +262,22 @@ function EditModal({
   isSaving,
 }: {
   pkg: Package;
-  onSave: (id: number, name: string, description: string) => void;
+  onSave: (id: number, name: string, description: string, language: DisplayLanguage) => void;
   onCancel: () => void;
   isSaving: boolean;
 }) {
   const { t } = useTranslation("PackageManagementPage");
   const { language, isRTL } = useLanguage();
 
-  const initialName = packageLabel(pkg, language);
-  
+  const initialName = getLanguageOnlyText(pkg.name_ar, pkg.name_en, language);
+
   const [name, setName] = useState(initialName);
-  const [description, setDescription] = useState(pkg.description || "");
+  const [description, setDescription] = useState(packageDescription(pkg, language));
   const [error, setError] = useState("");
 
   const handleSubmit = () => {
     if (!name.trim()) { setError(t("editModal.nameRequired")); return; }
-    onSave(pkg.id, name.trim(), description.trim());
+    onSave(pkg.id, name.trim(), description.trim(), language);
   };
 
   return (
@@ -343,6 +352,7 @@ function PackageCard({
   const privCount = pkg.privileges?.length ?? 0;
 
   const displayName = packageLabel(pkg, language);
+  const displayDescription = packageDescription(pkg, language);
 
   return (
     <div className="bg-white rounded-xl border shadow-sm hover:shadow-md transition-shadow overflow-hidden" style={{ borderColor: theme.border }}>
@@ -360,9 +370,13 @@ function PackageCard({
               >
                 {displayName}
               </p>
-              <span className="inline-block mt-1 text-[11px] font-mono px-2 py-0.5 rounded bg-gray-100 text-gray-500">{pkg.code}</span>
-              {pkg.description && (
-                <p className="text-sm text-gray-500 mt-2 leading-relaxed line-clamp-2" dir="auto">{pkg.description}</p>
+              {shouldShowPrivilegeCode(language) && (
+                <span className="inline-block mt-1 text-[11px] font-mono px-2 py-0.5 rounded bg-gray-100 text-gray-500">{pkg.code}</span>
+              )}
+              {displayDescription && (
+                <p className="text-sm text-gray-500 mt-2 leading-relaxed line-clamp-2" dir="auto">
+                  {displayDescription}
+                </p>
               )}
             </div>
           </div>
@@ -456,14 +470,21 @@ export default function PackageManagementPage() {
 
   useEffect(() => { void fetchPackages(); }, []);
 
-  const handleEdit = async (id: number, name: string, description: string) => {
+  const handleEdit = async (id: number, name: string, description: string, language: DisplayLanguage) => {
     setIsSaving(true);
     try {
-      await api.put(`/staff/packages/${id}`, {
-        name_en: name,
-        name_ar: name,
-        description: description || undefined,
-      });
+      const payload =
+        language === "ar"
+          ? {
+              name_ar: name,
+              ...(description ? { description_ar: description } : {}),
+            }
+          : {
+              name_en: name,
+              ...(description ? { description_en: description } : {}),
+            };
+
+      await api.put(`/staff/packages/${id}`, payload);
       toast({ title: t("toast.editSuccessTitle"), description: t("toast.editSuccessDesc") });
       setEditTarget(null);
       void fetchPackages();

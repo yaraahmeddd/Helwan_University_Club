@@ -9,9 +9,22 @@ const MODULE_NAMES_AR: Record<string, string> = {
   finance: 'الشؤون المالية',
   staff_management: 'إدارة الموظفين',
   audit: 'التدقيق',
+  audit_logs: 'سجلات التدقيق',
   media: 'الوسائط',
   membership: 'العضويات',
+  memberships: 'العضويات',
+  members: 'الأعضاء',
   faculties: 'الكليات',
+  branches: 'الفروع',
+  fields: 'الملاعب',
+  sports: 'الرياضة',
+  teams: 'الفرق',
+  staff: 'الموظفون',
+  posts: 'المنشورات',
+  professions: 'المهن',
+  packages: 'الحزم',
+  privileges: 'الصلاحيات',
+  invitations: 'الدعوات',
   system_admin: 'إدارة النظام',
   admin_management: 'الإدارة',
   MEMBERS: 'الأعضاء',
@@ -46,9 +59,22 @@ const MODULE_NAMES_EN: Record<string, string> = {
   finance: 'Finance',
   staff_management: 'Staff Management',
   audit: 'Audit',
+  audit_logs: 'Audit Logs',
   media: 'Media',
   membership: 'Membership',
+  memberships: 'Memberships',
+  members: 'Members',
   faculties: 'Faculties',
+  branches: 'Branches',
+  fields: 'Fields',
+  sports: 'Sports',
+  teams: 'Teams',
+  staff: 'Staff',
+  posts: 'Posts',
+  professions: 'Professions',
+  packages: 'Packages',
+  privileges: 'Privileges',
+  invitations: 'Invitations',
   system_admin: 'System Administration',
   admin_management: 'Administration',
   MEMBERS: 'Members',
@@ -83,16 +109,33 @@ function lookupModuleLabel(module: string, map: Record<string, string>): string 
   return undefined;
 }
 
+function safeLocaleCompare(a: string, b: string, locale: string): number {
+  try {
+    return a.localeCompare(b, locale);
+  } catch {
+    return a.localeCompare(b);
+  }
+}
+
 function humanizeModuleKey(module: string): string {
   return module.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+export function compareLocalizedText(a: string, b: string, language: DisplayLanguage): number {
+  const locale = language === 'ar' ? 'ar' : 'en';
+  return safeLocaleCompare(a, b, locale);
 }
 
 export function getPrivilegeModuleLabel(module: string, language: DisplayLanguage): string {
   const key = (module || 'General').trim();
   const map = language === 'ar' ? MODULE_NAMES_AR : MODULE_NAMES_EN;
-  return lookupModuleLabel(key, map) ?? humanizeModuleKey(key);
+  const label = lookupModuleLabel(key, map);
+  if (label) return label;
+  if (language === 'ar') return MODULE_NAMES_AR.General ?? 'عام';
+  return humanizeModuleKey(key);
 }
 
+/** Privilege label for UI — Arabic shows Arabic name only; English shows English name, then code. */
 export function getPrivilegeDisplayName(
   nameAr: string | undefined | null,
   nameEn: string | undefined | null,
@@ -101,6 +144,11 @@ export function getPrivilegeDisplayName(
 ): string {
   const ar = (nameAr ?? '').trim();
   const en = (nameEn ?? '').trim();
-  if (language === 'ar') return ar || code;
+  if (language === 'ar') return ar;
   return en || code;
+}
+
+/** Privilege codes (e.g. CREATE_MEMBER) are English — hide them in Arabic UI. */
+export function shouldShowPrivilegeCode(language: DisplayLanguage): boolean {
+  return language !== 'ar';
 }

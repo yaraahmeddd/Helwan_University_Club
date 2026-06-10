@@ -1,11 +1,10 @@
 import { lazy, Suspense } from "react";
-import { Toaster } from "../components/StaffPagesComponents/ui/toaster";
-import { Toaster as Sonner } from "../components/StaffPagesComponents/ui/sonner";
 import { TooltipProvider } from "../components/StaffPagesComponents/ui/tooltip";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { MainLayout } from "../components/StaffPagesComponents/layout/MainLayout";
 import { useToast } from "../components/StaffPagesComponents/ui/use-toast";
 import AppLoader from "../components/AppLoader";
+import { AppErrorBoundaryWrapper } from "../components/shared/AppErrorBoundaryWrapper";
 
 const MemberHomePage = lazy(() => import("./MemberHomePage"));
 const MemberProfilePage = lazy(() => import("./MemberProfilePage"));
@@ -26,10 +25,9 @@ const MemberDashboard = () => {
 
     return (
         <TooltipProvider>
-            <Toaster />
-            <Sonner />
             <MainLayout>
                 <div className="p-4 md:p-6 max-w-7xl mx-auto w-full min-h-full pb-8">
+                    <AppErrorBoundaryWrapper compact>
                     <Suspense fallback={<AppLoader />}>
                         <Routes>
                             <Route index element={<Navigate to="home" replace />} />
@@ -42,6 +40,7 @@ const MemberDashboard = () => {
                             <Route path="*" element={<Navigate to="home" replace />} />
                         </Routes>
                     </Suspense>
+                    </AppErrorBoundaryWrapper>
                 </div>
             </MainLayout>
         </TooltipProvider>
