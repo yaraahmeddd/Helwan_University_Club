@@ -124,5 +124,16 @@
     "page": "صفحة {{page}} من {{totalPages}}",
     "previous": "السابق",
     "next": "التالي"
+  },
+  "export": {
+    "exportReport": "تصدير",
+    "generatingExcel": "جاري إنشاء Excel…",
+    "generatingPdf": "جاري إنشاء PDF…",
+    "excel": "تصدير Excel",
+    "excelDesc": ".xlsx — ملف جدول بيانات",
+    "pdf": "تصدير PDF",
+    "pdfDesc": ".pdf — ملف قابل للطباعة",
+    "tooltip": "تصدير {{count}} سجل",
+    "tooltipGeneric": "تصدير التقرير"
   }
 }

@@ -73,7 +73,7 @@ function makeTable<T>(rows: T[], startIdx: number, config: ReportConfig<T>, ta: 
   }).join('');
 
   return `
-<table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+<table dir="${isAr ? 'rtl' : 'ltr'}" style="width:100%;border-collapse:collapse;table-layout:fixed;">
   <thead><tr>${thCells}</tr></thead>
   <tbody>${dataRows}</tbody>
 </table>`;

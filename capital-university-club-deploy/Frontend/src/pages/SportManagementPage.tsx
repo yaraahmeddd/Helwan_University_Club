@@ -360,7 +360,8 @@ export default function SportManagementPage() {
             {
                 headerEn: "Status",
                 headerAr: "الحالة",
-                accessor: (m: ApiMember) => m.status,
+                accessor: (m: ApiMember) =>
+                    tStatus(getAdminStatusConfig(m.status).labelKey, { defaultValue: m.status }),
                 width: 12,
             },
         ],

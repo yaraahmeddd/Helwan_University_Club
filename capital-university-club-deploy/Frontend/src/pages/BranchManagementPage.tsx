@@ -20,6 +20,9 @@ import { AdminTableCodeChip } from "../components/StaffPagesComponents/shared/Ad
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
 import { getBilingualFieldPlaceholder, getLocalizedText } from "../lib/localizedDisplay";
 import { useLanguage } from "../hooks/useLanguage";
+import { useTableExport } from "../utils/reportExport/useTableExport";
+import { ExportReportButton } from "../components/StaffPagesComponents/shared/ExportReportButton";
+import { getAdminStatusConfig } from "../components/StaffPagesComponents/shared/adminMemberStatus";
 import { useAdminFieldValidation } from "../hooks/useAdminFieldValidation";
 import { validateAdminBranchForm, validateMemberAssignId, toErrorArrayMap } from "../lib/validation/adminForms";
 
@@ -54,6 +57,7 @@ const PAGE_SIZE = ADMIN_PAGE_SIZE;
 
 export default function BranchManagementPage() {
     const { t } = useTranslation('BranchManagementPage');
+    const { t: tStatus } = useTranslation('common');
     const { language, isRTL } = useLanguage();
     const { toast } = useToast();
     const { tVal, handleArabicChange, handleEnglishChange, handleCodeChange, handleDigitsChange } = useAdminFieldValidation();
@@ -360,6 +364,46 @@ export default function BranchManagementPage() {
     const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
     const pagedRows = filteredRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+    const exportHandle = useTableExport({
+        reportId: "branch-management",
+        titleEn: "Branches Report",
+        titleAr: "تقرير الفروع",
+        columns: [
+            {
+                headerEn: "Name",
+                headerAr: "الاسم",
+                accessor: (b: Branch) => getLocalizedText(b.name_ar, b.name_en, language),
+                width: 22,
+            },
+            {
+                headerEn: "Code",
+                headerAr: "الكود",
+                accessor: (b: Branch) => b.code ?? "—",
+                width: 12,
+            },
+            {
+                headerEn: "Location",
+                headerAr: "الموقع",
+                accessor: (b: Branch) => getLocalizedText(b.location_ar, b.location_en, language) || "—",
+                width: 22,
+            },
+            {
+                headerEn: "Status",
+                headerAr: "الحالة",
+                accessor: (b: Branch) =>
+                    b.status ? tStatus(getAdminStatusConfig(b.status).labelKey) : "—",
+                width: 12,
+            },
+            {
+                headerEn: "Sports Count",
+                headerAr: "عدد الرياضات",
+                accessor: (b: Branch) => String(b.sports_count ?? "—"),
+                width: 12,
+            },
+        ],
+        rows: filteredRows,
+    });
+
     return (
         <div className="h-[calc(100vh-4rem)] flex flex-col bg-background" dir={isRTL ? "rtl" : "ltr"}>
 
@@ -373,12 +417,15 @@ export default function BranchManagementPage() {
                     </>
                 }
                 actions={
-                    <RoleGuard privilege="CREATE_BRANCH">
-                        <Button size="sm" className="gap-2" onClick={openAdd}>
-                            <Plus className="w-4 h-4" />
-                            {t('header.addBranch')}
-                        </Button>
-                    </RoleGuard>
+                    <>
+                        <ExportReportButton {...exportHandle} rowCount={filteredRows.length} />
+                        <RoleGuard privilege="CREATE_BRANCH">
+                            <Button size="sm" className="gap-2" onClick={openAdd}>
+                                <Plus className="w-4 h-4" />
+                                {t('header.addBranch')}
+                            </Button>
+                        </RoleGuard>
+                    </>
                 }
             />
 

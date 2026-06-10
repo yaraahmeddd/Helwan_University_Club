@@ -28,8 +28,6 @@ import {
 import api from "../services/api";
 import { useToast } from "../hooks/use-toast";
 import { useLanguage } from "../hooks/useLanguage";
-import { useTableExport } from "../utils/reportExport/useTableExport";
-import { ExportReportButton } from "../components/StaffPagesComponents/shared/ExportReportButton";
 
 // Types
 
@@ -345,27 +343,6 @@ export default function SportsMembersPage() {
   // Pagination
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
-  const exportHandle = useTableExport({
-    reportId: "assign-sports",
-    titleEn: "Assign Sports Report",
-    titleAr: "تقرير تعيين الرياضات",
-    columns: [
-      {
-        headerEn: "Name",
-        headerAr: "الاسم",
-        accessor: (m: MemberRow) => getMemberDisplayName(m, language),
-        width: 28,
-      },
-      {
-        headerEn: "Sports Count",
-        headerAr: "عدد الرياضات",
-        accessor: (m: MemberRow) => String(m.sports.length),
-        width: 12,
-      },
-    ],
-    rows: members,
-  });
-
   // Sports dialog filtering
   const filteredSports = useMemo(() => {
     let list = allSports;
@@ -605,19 +582,16 @@ export default function SportsMembersPage() {
         title={t("header.title")}
         subtitle={t("header.subtitle", { count: totalCount })}
         actions={
-          <>
-            <ExportReportButton {...exportHandle} rowCount={totalCount} />
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() => void fetchPage(currentPage, search, memberTab)}
-              disabled={isLoading}
-            >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
-              {t("header.refresh")}
-            </Button>
-          </>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => void fetchPage(currentPage, search, memberTab)}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+            {t("header.refresh")}
+          </Button>
         }
       />
 

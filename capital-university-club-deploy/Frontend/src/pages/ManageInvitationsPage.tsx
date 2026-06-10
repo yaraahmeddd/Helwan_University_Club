@@ -296,6 +296,13 @@ export default function ManageInvitationsPage() {
         width: 14,
       },
       {
+        headerEn: "Time",
+        headerAr: "الوقت",
+        accessor: (inv: Invitation) =>
+          `${formatTime(inv.booking_time?.start, dateLocale)} - ${formatTime(inv.booking_time?.end, dateLocale)}`,
+        width: 16,
+      },
+      {
         headerEn: "Field",
         headerAr: "الملعب",
         accessor: (inv: Invitation) =>
@@ -303,9 +310,16 @@ export default function ManageInvitationsPage() {
         width: 18,
       },
       {
+        headerEn: "Sport",
+        headerAr: "الرياضة",
+        accessor: (inv: Invitation) =>
+          getLocalizedText(inv.sport?.name_ar, inv.sport?.name_en, language) || t("cell.noSport"),
+        width: 16,
+      },
+      {
         headerEn: "Status",
         headerAr: "الحالة",
-        accessor: (inv: Invitation) => inv.status,
+        accessor: (inv: Invitation) => tStatus(getAdminStatusConfig(inv.status).labelKey),
         width: 14,
       },
       {

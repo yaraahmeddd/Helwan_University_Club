@@ -15,8 +15,10 @@ import { AdminPagination } from "../components/StaffPagesComponents/shared/Admin
 import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
 import { AdminTableCodeChip } from "../components/StaffPagesComponents/shared/AdminTableSharedCells";
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
-import { getBilingualFieldPlaceholder } from "../lib/localizedDisplay";
+import { getBilingualFieldPlaceholder, getLocalizedText } from "../lib/localizedDisplay";
 import { useLanguage } from "../hooks/useLanguage";
+import { useTableExport } from "../utils/reportExport/useTableExport";
+import { ExportReportButton } from "../components/StaffPagesComponents/shared/ExportReportButton";
 import { FieldInlineError } from "../components/StaffPagesComponents/shared/FieldInlineError";
 import { useAdminFieldValidation } from "../hooks/useAdminFieldValidation";
 import { validateAdminCodeNameForm, validateMemberAssignId } from "../lib/validation/adminForms";
@@ -101,6 +103,27 @@ export default function FacultyManagementPage() {
 
     const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
     const pagedRows = filteredRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+    const exportHandle = useTableExport({
+        reportId: "faculty-management",
+        titleEn: "Faculties Report",
+        titleAr: "تقرير الكليات",
+        columns: [
+            {
+                headerEn: "Name",
+                headerAr: "الاسم",
+                accessor: (f: Faculty) => getLocalizedText(f.name_ar, f.name_en, language),
+                width: 40,
+            },
+            {
+                headerEn: "Code",
+                headerAr: "الكود",
+                accessor: (f: Faculty) => f.code,
+                width: 20,
+            },
+        ],
+        rows: filteredRows,
+    });
 
     // Handlers
     const openAdd = () => {
@@ -228,12 +251,15 @@ export default function FacultyManagementPage() {
                     </>
                 }
                 actions={
-                    <RoleGuard privilege="CREATE_FACULTY">
-                        <Button size="sm" className="gap-2" onClick={openAdd}>
-                            <Plus className="w-4 h-4" />
-                            {t("page.addFacultyBtn")}
-                        </Button>
-                    </RoleGuard>
+                    <>
+                        <ExportReportButton {...exportHandle} rowCount={filteredRows.length} />
+                        <RoleGuard privilege="CREATE_FACULTY">
+                            <Button size="sm" className="gap-2" onClick={openAdd}>
+                                <Plus className="w-4 h-4" />
+                                {t("page.addFacultyBtn")}
+                            </Button>
+                        </RoleGuard>
+                    </>
                 }
             />
 

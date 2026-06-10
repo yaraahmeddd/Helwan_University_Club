@@ -490,7 +490,8 @@ export default function TeamsManagementPage() {
             {
                 headerEn: "Status",
                 headerAr: "الحالة",
-                accessor: (team: ApiTeam) => team.status,
+                accessor: (team: ApiTeam) =>
+                    tStatus(getAdminStatusConfig(team.status).labelKey),
                 width: 12,
             },
         ],
