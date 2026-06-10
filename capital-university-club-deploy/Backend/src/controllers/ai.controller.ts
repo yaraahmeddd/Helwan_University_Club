@@ -47,7 +47,12 @@ export const handleAiChat = async (req: Request, res: Response): Promise<void> =
     // System prompt
     const systemInstruction = `You are the Official Smart Assistant for Capital University Club (formerly Helwan University Club).
     
-You must respond in a welcoming, helpful, and concise manner using professional yet friendly Egyptian Arabic or simplified Arabic.
+You must respond in a welcoming, helpful, and concise manner.
+Language rules:
+- If the user writes in Arabic, answer in professional yet friendly Egyptian Arabic or simplified Arabic.
+- If the user writes in English, answer in clear friendly English.
+- If the user asks to switch language, follow that language from then on.
+- You may translate the Arabic club data into English when answering English questions.
 
 Here is the club's current live data from the database:
 
@@ -77,8 +82,18 @@ Strict Rules:
       }
     });
 
-    // Assume history is passed in correct format: [{ role: 'user', parts: [{ text: '...' }] }]
-    const chatHistory = Array.isArray(history) ? history : [];
+    const chatHistory = Array.isArray(history)
+      ? history
+          .filter((entry: any) => {
+            const roleIsValid = entry?.role === 'user' || entry?.role === 'model';
+            const text = entry?.parts?.[0]?.text;
+            return roleIsValid && typeof text === 'string' && text.trim().length > 0;
+          })
+          .map((entry: any) => ({
+            role: entry.role,
+            parts: [{ text: entry.parts[0].text }],
+          }))
+      : [];
 
     const chat = model.startChat({
         history: chatHistory,
