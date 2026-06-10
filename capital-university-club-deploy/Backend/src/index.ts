@@ -32,6 +32,7 @@ import FacultyRoutes from './routes/FacultyRoutes';
 import BranchRoutes from './routes/BranchRoutes';
 import BranchSportRoutes from './routes/BranchSportRoutes';
 import ProfessionRoutes from './routes/ProfessionRoutes';
+import AiRoutes from './routes/AiRoutes';
 import publicRoutes from './routes/publicRoutes';
 import { memberTeamRouter } from './routes/MemberTeamRoutes';
 import participantRegistrationRoutes from './routes/participantRegistration';
@@ -201,6 +202,7 @@ app.use('/api/faculties', FacultyRoutes);
 app.use('/api/branches', BranchRoutes);
 app.use('/api', BranchSportRoutes);
 app.use('/api/professions', ProfessionRoutes);
+app.use('/api/ai', AiRoutes);
 app.use('/api/seed', SeedRoutes);
 app.use('/api/paymob', PaymobRoutes);
 
