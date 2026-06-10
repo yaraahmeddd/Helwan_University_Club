@@ -13,6 +13,7 @@ import {
   shouldShowPrivilegeCode,
 } from "../lib/privilegeModuleLabels";
 import { Button } from "../components/StaffPagesComponents/ui/button";
+import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
 
 const packageLabel = (pkg: Package, language: DisplayLanguage) =>
   getLanguageOnlyText(pkg.name_ar, pkg.name_en, language) || "—";
@@ -805,7 +806,7 @@ export default function PackageManagementPage() {
   };
 
   return (
-    <div className="min-h-screen" dir={isRTL ? "rtl" : "ltr"} style={{ backgroundColor: theme.background }}>
+    <div className="h-[calc(100vh-4rem)] flex flex-col bg-background" dir={isRTL ? "rtl" : "ltr"}>
 
       {viewTarget && (
         <PrivilegesModal pkg={viewTarget} onClose={() => setViewTarget(null)} />
@@ -827,24 +828,23 @@ export default function PackageManagementPage() {
         />
       )}
 
-      <div className="bg-white border-b px-6 py-4 flex items-center justify-between" style={{ borderColor: theme.border }}>
-        <div className={isRTL ? "text-right" : "text-left"}>
-          <h1 className="text-xl font-bold" style={{ color: theme.primaryDark }}>{t("page.title")}</h1>
-          <p className="text-xs text-gray-500 mt-0.5">
-            {loading ? t("page.loading") : t("page.packageCount", { count: packages.length })}
-          </p>
-        </div>
-        <button
-          onClick={() => navigate("/staff/dashboard/admin/privilege-packages")}
-          className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold text-white shadow-md hover:opacity-90 transition-all"
-          style={{ backgroundColor: theme.primaryDark }}
-        >
-          <Plus className="w-4 h-4" />
-          {t("page.addNew")}
-        </button>
-      </div>
+      <AdminPageHeader
+        icon={ShieldCheck}
+        title={t("page.title")}
+        subtitle={loading ? t("page.loading") : t("page.packageCount", { count: packages.length })}
+        actions={
+          <Button
+            size="sm"
+            className="gap-2"
+            onClick={() => navigate("/staff/dashboard/admin/privilege-packages")}
+          >
+            <Plus className="w-4 h-4" />
+            {t("page.addNew")}
+          </Button>
+        }
+      />
 
-      <div className="p-6">
+      <div className="flex-1 overflow-y-auto p-6 min-h-0">
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -858,14 +858,14 @@ export default function PackageManagementPage() {
             </div>
             <h2 className="text-lg font-bold text-gray-700 mb-2">{t("page.emptyStateTitle")}</h2>
             <p className="text-sm text-gray-400 mb-6">{t("page.emptyStateDesc")}</p>
-            <button
+            <Button
+              size="sm"
+              className="gap-2"
               onClick={() => navigate("/staff/dashboard/admin/privilege-packages")}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold text-white shadow-md"
-              style={{ backgroundColor: theme.primaryDark }}
             >
               <Plus className="w-4 h-4" />
               {t("page.createPackage")}
-            </button>
+            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">

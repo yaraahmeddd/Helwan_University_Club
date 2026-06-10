@@ -21,6 +21,7 @@ import { useTranslation } from "react-i18next";
 import { useLanguage } from "../hooks/useLanguage";
 import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
+import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
 import { getLocalizedText, localeFontFamily } from "../lib/localizedDisplay";
 import { RoleGuard } from "../components/StaffPagesComponents/RoleGuard";
@@ -279,30 +280,23 @@ export default function ManageInvitationsPage() {
 
   return (
     <div
-      className="flex-1 space-y-6 p-6 min-h-screen relative"
+      className="h-[calc(100vh-4rem)] flex flex-col bg-background"
       dir={isRTL ? 'rtl' : 'ltr'}
       lang={language}
-      style={{ fontFamily: localeFontFamily(language) }}
     >
-      {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-[#1a365d] flex items-center gap-2">
-            <Link2 className="h-6 w-6 text-primary" />
-            {t('header.title')}
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            {t('header.subtitle')}
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={() => fetchData(pagination.page)} disabled={loading} className="gap-2">
+      <AdminPageHeader
+        icon={Link2}
+        title={t('header.title')}
+        subtitle={t('header.subtitle')}
+        actions={
+          <Button variant="outline" size="sm" onClick={() => fetchData(pagination.page)} disabled={loading} className="gap-2">
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             {t('header.refresh')}
           </Button>
-        </div>
-      </div>
+        }
+      />
+
+      <div className="flex-1 overflow-y-auto min-h-0 p-6 space-y-6">
 
       {/* Controls: Filters */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
@@ -468,6 +462,7 @@ export default function ManageInvitationsPage() {
           isRTL={isRTL}
           disabled={loading}
         />
+      </div>
       </div>
 
       {/* Slide-over Detail Panel */}

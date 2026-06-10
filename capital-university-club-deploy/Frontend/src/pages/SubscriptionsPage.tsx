@@ -263,11 +263,11 @@ export default function SubscriptionsPage() {
 
             <div className="px-6 py-4 border-b border-border bg-background shrink-0 flex items-center justify-between">
                 <div>
-                    <h1 className="text-xl font-bold flex items-center gap-2">
-                        <CreditCard className="w-5 h-5 text-primary" />
+                    <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+                        <CreditCard className="w-6 h-6 text-primary" />
                         {t("subscriptions.title")}
                     </h1>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="text-sm text-muted-foreground mt-0.5">
                         {t("subscriptions.subtitle")}
                     </p>
                 </div>

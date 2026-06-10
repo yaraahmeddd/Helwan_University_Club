@@ -17,6 +17,8 @@ import {
 import type { AuditLog } from "../services/auditLogApi";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
+import { Button } from "../components/StaffPagesComponents/ui/button";
 import { useLanguage } from "../hooks/useLanguage";
 import { useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
 import {
@@ -189,90 +191,26 @@ const AuditLogPage: React.FC = () => {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: colors.background,
-        direction: isRTL ? "rtl" : "ltr",
-        fontFamily: "'Cairo', sans-serif",
-      }}
-    >
-      <div style={{ display: "flex" }}>
-        <div style={{ flex: 1, padding: "24px" }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-start",
-              marginBottom: "24px",
-            }}
-          >
-            <div>
-              <h1
-                style={{
-                  fontSize: "28px",
-                  fontWeight: 700,
-                  color: colors.primaryDark,
-                  margin: "0 0 8px 0",
-                }}
-              >
-                {t("header.title")}
-              </h1>
-              <p
-                style={{
-                  fontSize: "14px",
-                  color: colors.gray[600],
-                  margin: 0,
-                }}
-              >
-                {t("header.subtitle")}
-              </p>
-            </div>
-            <div style={{ display: "flex", gap: "12px" }}>
-              <button
-                onClick={handleResetFilters}
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: colors.gray[200],
-                  color: colors.gray[700],
-                  border: "none",
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  transition: "all 0.2s",
-                  fontFamily: "'Cairo', sans-serif",
-                }}
-              >
-                <RotateCcw size={16} />
-                {t("actions.clearFilters")}
-              </button>
-              <button
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: colors.accentOrange,
-                  color: colors.white,
-                  border: "none",
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  transition: "all 0.2s",
-                  fontFamily: "'Cairo', sans-serif",
-                }}
-              >
-                <Download size={16} />
-                {t("actions.exportLog")}
-              </button>
-            </div>
-          </div>
-
+    <div className="h-[calc(100vh-4rem)] flex flex-col bg-background" dir={isRTL ? "rtl" : "ltr"}>
+      <AdminPageHeader
+        icon={FileText}
+        title={t("header.title")}
+        subtitle={t("header.subtitle")}
+        actions={
+          <>
+            <Button variant="outline" size="sm" onClick={handleResetFilters} className="gap-2">
+              <RotateCcw className="w-4 h-4" />
+              {t("actions.clearFilters")}
+            </Button>
+            <Button size="sm" className="gap-2">
+              <Download className="w-4 h-4" />
+              {t("actions.exportLog")}
+            </Button>
+          </>
+        }
+      />
+      <div className="flex-1 overflow-y-auto min-h-0 p-6">
+        <div>
           <div
             style={{
               display: "grid",

@@ -333,9 +333,9 @@ export default function AttendancePage() {
 
             {/* ── Page Header with segmented-control tabs ── */}
             <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-background shrink-0">
-                <div className="flex items-center gap-2.5">
-                    <ClipboardList className="w-5 h-5 text-primary shrink-0" />
-                    <h1 className="text-xl font-bold">إدارة الحضور والانصراف</h1>
+                <div className="flex items-center gap-2">
+                    <ClipboardList className="w-6 h-6 text-primary shrink-0" />
+                    <h1 className="text-2xl font-bold tracking-tight">إدارة الحضور والانصراف</h1>
                 </div>
 
                 {/* Segmented-control Tabs */}

@@ -339,7 +339,7 @@ export default function RegistrationManagementPage() {
 
     return (
         <TooltipProvider>
-        <div className="min-h-screen flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="h-[calc(100vh-4rem)] flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
 
             {/* ── Header ── */}
             <div className="px-6 py-4 border-b border-border bg-background shrink-0">

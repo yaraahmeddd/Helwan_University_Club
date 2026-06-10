@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
+import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
 import { getBilingualFieldPlaceholder, getLocalizedText } from "../lib/localizedDisplay";
 import { useLanguage } from "../hooks/useLanguage";
@@ -347,34 +348,26 @@ export default function BranchManagementPage() {
     const pagedRows = filteredRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     return (
-        <div className="h-[calc(100vh-4rem)] flex flex-col gap-0 bg-zinc-50/50" dir={isRTL ? "rtl" : "ltr"}>
+        <div className="h-[calc(100vh-4rem)] flex flex-col bg-background" dir={isRTL ? "rtl" : "ltr"}>
 
-            {/* ── Page Header ── */}
-            <div className="flex items-center justify-between px-8 py-6 border-b border-zinc-200/60 bg-white shrink-0 z-10 shadow-[0_1px_3px_0_rgb(0,0,0,0.01)]">
-                <div>
-                    <h1 className="text-2xl font-black tracking-tight flex items-center gap-3 text-zinc-900">
-                        <div className="h-9 w-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                            <MapPin className="w-5 h-5 text-primary" />
-                        </div>
-                        {t('header.title')}
-                    </h1>
-                    <p className="text-[13px] font-medium text-zinc-500 mt-1.5 pe-12">
-                        {t('header.totalBranches')}: <strong className="text-zinc-800">{branches.length}</strong>
-                    </p>
-                </div>
-                <div className="flex items-center gap-3">
+            <AdminPageHeader
+                icon={MapPin}
+                title={t('header.title')}
+                subtitle={
+                    <>
+                        {t('header.totalBranches')}:{' '}
+                        <strong className="text-foreground">{branches.length}</strong>
+                    </>
+                }
+                actions={
                     <RoleGuard privilege="CREATE_BRANCH">
-                         <Button
-                            size="sm"
-                            className="gap-2 h-10 px-5 rounded-xl font-bold bg-zinc-900 text-white hover:bg-zinc-800 shadow-md shadow-zinc-900/10 transition-all"
-                            onClick={openAdd}
-                        >
+                        <Button size="sm" className="gap-2" onClick={openAdd}>
                             <Plus className="w-4 h-4" />
                             {t('header.addBranch')}
                         </Button>
                     </RoleGuard>
-                </div>
-            </div>
+                }
+            />
 
             {/* ── Main area (Table + Toolbar) ── */}
             <div className="flex flex-1 p-6 overflow-hidden">

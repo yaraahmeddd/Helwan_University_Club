@@ -7,13 +7,13 @@ import api from "../services/axios";
 import { useToast } from "../hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../hooks/useLanguage";
-import { localeFontFamily } from "../lib/localizedDisplay";
 import { compareLocalizedText, getPrivilegeDisplayName, getPrivilegeModuleLabel, shouldShowPrivilegeCode } from "../lib/privilegeModuleLabels";
 import { FormErrorAlert } from "../components/shared/FormErrorAlert";
 import { getApiErrorMessage } from "../lib/appErrors";
 import { Input } from "../components/StaffPagesComponents/ui/input";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Badge } from "../components/StaffPagesComponents/ui/badge";
+import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
 
 const theme = {
   primaryDark: "#1F3A5F",
@@ -294,42 +294,38 @@ export default function PrivilegePackageAdminPage() {
 
   return (
     <div
-      className="h-[calc(100vh-4rem)] flex flex-col overflow-hidden"
+      className="h-[calc(100vh-4rem)] flex flex-col bg-background overflow-hidden"
       dir={isRTL ? "rtl" : "ltr"}
       lang={language}
-      style={{ backgroundColor: theme.background, fontFamily: localeFontFamily(language) }}
     >
-      {/* Header */}
-      <div className="shrink-0 border-b bg-white px-6 py-4" style={{ borderColor: theme.border }}>
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className={isRTL ? "text-right" : "text-left"}>
-            <h1 className="text-xl font-bold flex items-center gap-2" style={{ color: theme.primaryDark }}>
-              <Package className="w-5 h-5" style={{ color: theme.accentBlue }} />
-              {t("page.title")}
-            </h1>
-            <p className="text-xs text-gray-500 mt-1">
-              {loadingModules ? t("page.loading") : t("page.stats", { total: totalPrivileges, modules: modules.length })}
-            </p>
-          </div>
+      <AdminPageHeader
+        icon={Package}
+        title={t("page.title")}
+        subtitle={
+          loadingModules
+            ? t("page.loading")
+            : t("page.stats", { total: totalPrivileges, modules: modules.length })
+        }
+        actions={
           <div className="flex flex-wrap items-center gap-2">
-            <div className="rounded-lg border px-3 py-2 text-center min-w-[88px]" style={{ borderColor: theme.border, backgroundColor: `${theme.accentBlue}08` }}>
-              <p className="text-[10px] uppercase tracking-wide text-gray-500">{t("page.selectedPrivileges")}</p>
-              <p className="text-lg font-bold" style={{ color: theme.accentBlue }}>{selectedCount}</p>
+            <div className="rounded-lg border border-border bg-primary/5 px-3 py-2 text-center min-w-[88px]">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{t("page.selectedPrivileges")}</p>
+              <p className="text-lg font-bold text-primary">{selectedCount}</p>
             </div>
-            <div className="rounded-lg border px-3 py-2 text-center min-w-[88px]" style={{ borderColor: theme.border }}>
-              <p className="text-[10px] uppercase tracking-wide text-gray-500">{t("page.total")}</p>
-              <p className="text-lg font-bold text-gray-800">{totalPrivileges}</p>
+            <div className="rounded-lg border border-border bg-background px-3 py-2 text-center min-w-[88px]">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{t("page.total")}</p>
+              <p className="text-lg font-bold text-foreground">{totalPrivileges}</p>
             </div>
-            <div className="rounded-lg border px-3 py-2 text-center min-w-[88px]" style={{ borderColor: `${theme.primaryDark}40`, backgroundColor: `${theme.primaryDark}08` }}>
-              <p className="text-[10px] uppercase tracking-wide" style={{ color: theme.primaryDark }}>{t("page.modulesCount")}</p>
-              <p className="text-lg font-bold" style={{ color: theme.primaryDark }}>{modules.length}</p>
+            <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-center min-w-[88px]">
+              <p className="text-[10px] uppercase tracking-wide text-primary">{t("page.modulesCount")}</p>
+              <p className="text-lg font-bold text-primary">{modules.length}</p>
             </div>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Main scroll area */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto min-h-0">
         <div className="max-w-[1600px] mx-auto px-4 lg:px-6 py-5 space-y-6">
 
           {/* Package details — horizontal form row */}
