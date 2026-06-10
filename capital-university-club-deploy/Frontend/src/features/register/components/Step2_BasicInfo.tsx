@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { IdCard, AlertCircle, ChevronRight, ChevronLeft, User, Mail, Phone, Lock, Calendar, Users, Check, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../../hooks/useLanguage';
+import { useAdminFieldValidation } from '../../../hooks/useAdminFieldValidation';
 import { getBilingualFieldPlaceholder } from '../../../lib/localizedDisplay';
 import type { RegisterFormValues } from '../schemas/validation';
 
@@ -136,8 +137,34 @@ export const Step2BasicInfo = ({ onNext, onPrev, embedded = false }: Step2BasicI
         formState: { errors, touchedFields },
     } = useFormContext<RegisterFormValues>();
 
+    const {
+        handleArabicChange,
+        handleEnglishChange,
+        handleDigitsChange,
+        handlePhoneChange: filterPhoneChange,
+    } = useAdminFieldValidation();
+
     const category = watch('category');
     const password = watch('password');
+    const firstNameAr = watch('first_name_ar');
+    const lastNameAr = watch('last_name_ar');
+    const firstNameEn = watch('first_name_en');
+    const lastNameEn = watch('last_name_en');
+    const nationalId = watch('nationalId');
+    const passportNumber = watch('passportNumber');
+    const phone = watch('phone');
+
+    const firstNameArField = register('first_name_ar');
+    const lastNameArField = register('last_name_ar');
+    const firstNameEnField = register('first_name_en');
+    const lastNameEnField = register('last_name_en');
+    const nationalIdField = register('nationalId');
+    const passportNumberField = register('passportNumber');
+    const phoneField = register('phone');
+
+    const setRegisterField = (name: keyof RegisterFormValues, value: string) => {
+        setValue(name, value, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+    };
 
     // Determine what to show based on category
     const isForeigner = category === 'foreigner';
@@ -159,19 +186,6 @@ export const Step2BasicInfo = ({ onNext, onPrev, embedded = false }: Step2BasicI
 
         setPasswordStrength(Math.min(strength, 4));
     }, [password]);
-
-    // Phone number formatting
-    const formatPhoneNumber = (value: string) => {
-        const cleaned = value.replace(/\D/g, '').slice(0, 11);
-        if (cleaned.length <= 3) return cleaned;
-        if (cleaned.length <= 7) return `${cleaned.slice(0, 3)} ${cleaned.slice(3)}`;
-        return `${cleaned.slice(0, 3)} ${cleaned.slice(3, 7)} ${cleaned.slice(7)}`;
-    };
-
-    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const formatted = formatPhoneNumber(e.target.value);
-        setValue('phone', formatted.replace(/\s/g, ''), { shouldValidate: true, shouldDirty: true, shouldTouch: true });
-    };
 
     // Safe error accessor using optional chaining
     // Show errors only if field is touched OR user attempted to proceed
@@ -313,7 +327,16 @@ export const Step2BasicInfo = ({ onNext, onPrev, embedded = false }: Step2BasicI
                 >
                     <input
                         id="first_name_ar"
-                        {...register('first_name_ar')}
+                        name={firstNameArField.name}
+                        ref={firstNameArField.ref}
+                        onBlur={firstNameArField.onBlur}
+                        value={firstNameAr ?? ''}
+                        onChange={(e) => handleArabicChange(
+                            e.target.value,
+                            (v) => setRegisterField('first_name_ar', v),
+                            () => {},
+                            'name',
+                        )}
                         className={inputClasses}
                         placeholder={getBilingualFieldPlaceholder('ar', 'register', 'step2.firstNameArPlaceholder')}
                         maxLength={20}
@@ -335,7 +358,16 @@ export const Step2BasicInfo = ({ onNext, onPrev, embedded = false }: Step2BasicI
                 >
                     <input
                         id="last_name_ar"
-                        {...register('last_name_ar')}
+                        name={lastNameArField.name}
+                        ref={lastNameArField.ref}
+                        onBlur={lastNameArField.onBlur}
+                        value={lastNameAr ?? ''}
+                        onChange={(e) => handleArabicChange(
+                            e.target.value,
+                            (v) => setRegisterField('last_name_ar', v),
+                            () => {},
+                            'name',
+                        )}
                         className={inputClasses}
                         placeholder={getBilingualFieldPlaceholder('ar', 'register', 'step2.lastNameArPlaceholder')}
                         maxLength={20}
@@ -356,7 +388,16 @@ export const Step2BasicInfo = ({ onNext, onPrev, embedded = false }: Step2BasicI
                 >
                     <input
                         id="first_name_en"
-                        {...register('first_name_en')}
+                        name={firstNameEnField.name}
+                        ref={firstNameEnField.ref}
+                        onBlur={firstNameEnField.onBlur}
+                        value={firstNameEn ?? ''}
+                        onChange={(e) => handleEnglishChange(
+                            e.target.value,
+                            (v) => setRegisterField('first_name_en', v),
+                            () => {},
+                            'name',
+                        )}
                         className={`${inputClasses} text-left`}
                         placeholder={getBilingualFieldPlaceholder('en', 'register', 'step2.firstNameEnPlaceholder')}
                         dir="ltr"
@@ -376,7 +417,16 @@ export const Step2BasicInfo = ({ onNext, onPrev, embedded = false }: Step2BasicI
                 >
                     <input
                         id="last_name_en"
-                        {...register('last_name_en')}
+                        name={lastNameEnField.name}
+                        ref={lastNameEnField.ref}
+                        onBlur={lastNameEnField.onBlur}
+                        value={lastNameEn ?? ''}
+                        onChange={(e) => handleEnglishChange(
+                            e.target.value,
+                            (v) => setRegisterField('last_name_en', v),
+                            () => {},
+                            'name',
+                        )}
                         className={`${inputClasses} text-left`}
                         placeholder={getBilingualFieldPlaceholder('en', 'register', 'step2.lastNameEnPlaceholder')}
                         dir="ltr"
@@ -411,7 +461,14 @@ export const Step2BasicInfo = ({ onNext, onPrev, embedded = false }: Step2BasicI
                             >
                                 <input
                                     id="passportNumber"
-                                    {...register('passportNumber')}
+                                    name={passportNumberField.name}
+                                    ref={passportNumberField.ref}
+                                    onBlur={passportNumberField.onBlur}
+                                    value={passportNumber ?? ''}
+                                    onChange={(e) => setRegisterField(
+                                        'passportNumber',
+                                        e.target.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 20),
+                                    )}
                                     className={`${inputClasses} tracking-wide font-mono text-lg`}
                                     placeholder="Passport Number"
                                     maxLength={20}
@@ -439,11 +496,20 @@ export const Step2BasicInfo = ({ onNext, onPrev, embedded = false }: Step2BasicI
                             >
                                 <input
                                     id="nationalId"
-                                    {...register('nationalId')}
+                                    name={nationalIdField.name}
+                                    ref={nationalIdField.ref}
+                                    onBlur={nationalIdField.onBlur}
+                                    value={nationalId ?? ''}
+                                    onChange={(e) => handleDigitsChange(
+                                        e.target.value,
+                                        (v) => setRegisterField('nationalId', v),
+                                        14,
+                                    )}
                                     className={`${inputClasses} tracking-wide font-mono text-lg`}
                                     placeholder={t('step2.nationalIdPlaceholder')}
                                     maxLength={14}
                                     dir="ltr"
+                                    inputMode="numeric"
                                     aria-required="true"
                                     aria-invalid={!!getError('nationalId')}
                                 />
@@ -505,18 +571,21 @@ export const Step2BasicInfo = ({ onNext, onPrev, embedded = false }: Step2BasicI
                 >
                     <input
                         id="phone"
-                        {...register('phone')}
+                        name={phoneField.name}
+                        ref={phoneField.ref}
+                        onBlur={phoneField.onBlur}
+                        value={phone ?? ''}
+                        onChange={(e) => filterPhoneChange(
+                            e.target.value,
+                            (v) => setRegisterField('phone', v),
+                        )}
                         className={`${inputClasses} font-mono`}
-                        placeholder="01x xxx xxxx"
+                        placeholder="01xxxxxxxxx"
                         maxLength={11}
                         dir="ltr"
+                        inputMode="numeric"
                         aria-required="true"
                         aria-invalid={!!getError('phone')}
-                        onChange={(e) => {
-                            const formatted = formatPhoneNumber(e.target.value);
-                            e.target.value = formatted;
-                            handlePhoneChange(e);
-                        }}
                     />
                 </InputGroup>
 
