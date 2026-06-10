@@ -29,6 +29,7 @@ import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE } fro
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
 import { getLocalizedText, type DisplayLanguage } from "../lib/localizedDisplay";
+import { useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
 
 // Types
 
@@ -152,6 +153,7 @@ export default function SportManagementPage() {
     const { toast } = useToast();
     const { t } = useTranslation("SportManagementPage");
     const { language, isRTL } = useLanguage();
+    const { fmtDate } = useAdminFormatters();
 
     // Sports
     const [sports, setSports] = useState<Sport[]>([]);
@@ -526,11 +528,7 @@ export default function SportManagementPage() {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className={adminCellClass({ size: "muted", className: "tabular-nums" })}>
-                                                    <span dir="ltr">
-                                                        {m.created_at
-                                                            ? new Date(m.created_at).toLocaleDateString(language === "ar" ? "ar-EG" : "en-US")
-                                                            : "-"}
-                                                    </span>
+                                                    <span dir="ltr">{fmtDate(m.created_at)}</span>
                                                 </TableCell>
                                                 <TableCell className={adminCellClass({ center: true })}>
                                                     <span className={`inline-flex text-[11px] font-semibold rounded-full px-2.5 py-0.5 ${STATUS_CLASSES[m.status] ?? "bg-muted text-muted-foreground"}`}>

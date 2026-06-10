@@ -17,6 +17,8 @@
 import { useState, useRef, useEffect } from "react";
 import { CalendarDays, ChevronDown, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "../../../hooks/useLanguage";
+import { formatAdminDate, getAdminLocale } from "./adminFormatters";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -126,20 +128,13 @@ const PRESETS: Omit<Preset, 'label'> & { key: string; get: () => DateRange }[] =
 
 // ─── Formatted label ──────────────────────────────────────────────────────────
 
-function fmtDate(iso: string): string {
-    try {
-        return new Date(iso).toLocaleDateString("ar-EG", {
-            day: "numeric", month: "short", year: "numeric",
-        });
-    } catch { return iso; }
-}
-
-function rangeLabel(value: DateRange): string | null {
+function rangeLabel(value: DateRange, locale: string): string | null {
+    const fmt = (iso: string) => formatAdminDate(iso, locale);
     if (!value.from && !value.to) return null;
-    if (value.from === value.to) return fmtDate(value.from!);
-    if (value.from && value.to) return `${fmtDate(value.from)} — ${fmtDate(value.to)}`;
-    if (value.from) return `${fmtDate(value.from)} →`;
-    return `→ ${fmtDate(value.to!)}`;
+    if (value.from === value.to) return fmt(value.from!);
+    if (value.from && value.to) return `${fmt(value.from)} — ${fmt(value.to)}`;
+    if (value.from) return `${fmt(value.from)} →`;
+    return `→ ${fmt(value.to!)}`;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -151,6 +146,8 @@ export default function DateRangeFilter({
     className = "",
 }: DateRangeFilterProps) {
     const { t } = useTranslation(["common"]);
+    const { language, isRTL } = useLanguage();
+    const locale = getAdminLocale(language);
     const finalPlaceholder = placeholder || t("dateRange.placeholder");
     const [open, setOpen] = useState(false);
     const [customFrom, setCustomFrom] = useState(value.from ?? "");
@@ -187,11 +184,11 @@ export default function DateRangeFilter({
         setCustomTo("");
     };
 
-    const label = rangeLabel(value);
+    const label = rangeLabel(value, locale);
     const hasValue = !!(value.from || value.to);
 
     return (
-        <div ref={wrapperRef} className={`relative inline-block ${className}`} dir="rtl">
+        <div ref={wrapperRef} className={`relative inline-block ${className}`} dir={isRTL ? "rtl" : "ltr"}>
             {/* ── Trigger button ── */}
             <button
                 type="button"

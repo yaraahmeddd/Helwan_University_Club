@@ -24,6 +24,7 @@ import { AdminPagination } from "../components/StaffPagesComponents/shared/Admin
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
 import { getLocalizedText, localeFontFamily } from "../lib/localizedDisplay";
 import { RoleGuard } from "../components/StaffPagesComponents/RoleGuard";
+import { useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
 
 import { useToast } from "../hooks/use-toast";
 import api from "../services/axios";
@@ -176,6 +177,7 @@ export default function ManageInvitationsPage() {
   const { t } = useTranslation("ManageInvitationsPage");
   const { language, isRTL } = useLanguage();
   const { toast } = useToast();
+  const { fmtDate } = useAdminFormatters();
   const dateLocale = language === "ar" ? ar : enUS;
 
   const [invitations, setInvitations] = useState<Invitation[]>([]);
@@ -393,7 +395,7 @@ export default function ManageInvitationsPage() {
                         <div className="flex items-center gap-1.5 text-slate-800 font-bold bg-slate-50 rounded-md px-2 py-1 w-fit border border-slate-100">
                           <CalendarDays className="h-3.5 w-3.5 text-primary" />
                           <span className="text-sm">
-                            {inv.booking_date ? format(new Date(inv.booking_date), "d MMM yyyy", { locale: dateLocale }) : "—"}
+                            {fmtDate(inv.booking_date)}
                           </span>
                         </div>
                         <span className="text-xs font-semibold text-slate-500 flex items-center gap-1.5 px-1">
@@ -516,7 +518,7 @@ export default function ManageInvitationsPage() {
                       <span className="text-xs font-medium">{t('panel.date')}</span>
                     </div>
                     <div className="font-semibold text-sm">
-                      {selectedInv.booking_date ? format(new Date(selectedInv.booking_date), "d MMM yyyy", { locale: dateLocale }) : "—"}
+                      {fmtDate(selectedInv.booking_date)}
                     </div>
                   </div>
                   <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
@@ -666,7 +668,7 @@ export default function ManageInvitationsPage() {
               {t('cancelDialog.booking')}{" "}
               {getLocalizedText(cancelDialog?.field?.name_ar, cancelDialog?.field?.name_en, language)}{" "}
               {t('cancelDialog.day')}{" "}
-              {cancelDialog?.booking_date ? format(new Date(cancelDialog.booking_date), "d MMM yyyy", { locale: dateLocale }) : ""}
+              {fmtDate(cancelDialog?.booking_date)}
             </p>
           </div>
           <DialogFooter className="flex gap-2 sm:justify-start">

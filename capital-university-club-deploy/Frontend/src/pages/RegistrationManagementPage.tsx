@@ -13,7 +13,7 @@ import { useLocalizedTranslation } from "../hooks/useLocalizedTranslation";
 import { adminTableStyles, adminHeadClass, adminCellClass, adminDialogStyles, ADMIN_PAGE_SIZE, adminTableBadgeClass, adminTableStatusBadgeClass, adminPageStyles } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { AdminSortableHead, type SortDirection } from "../components/StaffPagesComponents/shared/AdminSortableHead";
-import { formatAdminDate, formatAdminTime } from "../components/StaffPagesComponents/shared/adminFormatters";
+import { formatAdminDate, getAdminLocale } from "../components/StaffPagesComponents/shared/adminFormatters";
 import { adminFieldIcons } from "../components/StaffPagesComponents/shared/adminRecordFields";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
 import {
@@ -116,7 +116,7 @@ export default function RegistrationManagementPage() {
             lastNameEn: m.last_name_en,
         }, language).primary;
     };
-    const locale = isRTL ? 'ar-EG' : 'en-US';
+    const locale = getAdminLocale(language);
 
     // ── Fetch both regular members and team members ──────────────────────────
     const fetchRecords = async () => {
@@ -742,7 +742,7 @@ export default function RegistrationManagementPage() {
                                                     const age = Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
                                                     return (
                                                         <>
-                                                            {dob.toLocaleDateString(locale)}
+                                                            {formatAdminDate(raw, locale)}
                                                             <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-xs font-normal text-primary`}>({age} {t('review.age')})</span>
                                                         </>
                                                     );

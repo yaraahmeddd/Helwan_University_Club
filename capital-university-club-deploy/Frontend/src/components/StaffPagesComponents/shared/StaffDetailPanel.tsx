@@ -28,6 +28,7 @@ import { useLanguage } from '../../../hooks/useLanguage';
 import { useLocalizedTranslation } from '../../../hooks/useLocalizedTranslation';
 import { buildPersonName, getBilingualFieldPlaceholder } from '../../../lib/localizedDisplay';
 import { validateStaffEdit } from '../../../lib/validation';
+import { useAdminFormatters } from './adminFormatters';
 import { adminDialogStyles } from './adminTableStyles';
 import { adminFieldIcons } from './adminRecordFields';
 import {
@@ -114,15 +115,6 @@ const getFileUrl = (f?: string | null): string => {
   return encodeURI(url);
 };
 
-const formatDisplayDate = (v: string | null | undefined, locale: string) => {
-  if (!v) return '—';
-  try {
-    return new Date(v).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' });
-  } catch {
-    return v;
-  }
-};
-
 function staffIsActive(row: StaffRow, details?: StaffDetailsData | null) {
   const status = (details?.status ?? row.status ?? '').toLowerCase();
   if (status === 'cancelled' || status === 'inactive') return false;
@@ -144,8 +136,7 @@ export function StaffDetailPanel({
   const { t: tVal } = useTranslation('validation');
   const { language, isRTL } = useLanguage();
   const { toast } = useToast();
-  const dateLocale = language === 'en' ? 'en-US' : 'ar-EG';
-  const fmtDate = (v?: string | null) => formatDisplayDate(v, dateLocale);
+  const { fmtDate } = useAdminFormatters();
   const notAvailable = t('common:notAvailable', { defaultValue: '—' });
 
   const [detailTab, setDetailTab] = useState<'info' | 'photos'>('info');

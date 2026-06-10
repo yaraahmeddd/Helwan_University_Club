@@ -58,7 +58,9 @@
     "legendIncluded": "Included in package",
     "legendExcluded": "Excluded from package",
     "legendExtra": "Selected as extra privilege",
-    "legendNone": "Not selected"
+    "legendNone": "Not selected",
+    "scrollPrev": "Scroll modules back",
+    "scrollNext": "Scroll modules forward"
   },
   "actions": {
     "cancel": "Cancel",

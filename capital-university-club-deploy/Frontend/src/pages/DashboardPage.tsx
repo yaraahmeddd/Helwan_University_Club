@@ -47,6 +47,7 @@ import api from "../services/axios";
 import { useAuth } from "../context/AuthContext";
 import i18n from "../i18n";
 import { buildPersonName } from "../lib/localizedDisplay";
+import { useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
 
 type SectionKey = "members" | "sports" | "plans" | "tasks" | "audit" | "privileges";
 
@@ -202,6 +203,7 @@ export default function DashboardPage() {
   const { hasPrivilege, user } = useAuth();
   const { t } = useTranslation(["DashboardPage", "nav"]);
   const { language } = useLanguage();
+  const { fmtDate } = useAdminFormatters();
   const [dashboard, setDashboard] = useState<DashboardState>(INITIAL_STATE);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -822,7 +824,7 @@ export default function DashboardPage() {
                       <Badge className={taskStatusClassName(task.status)}>{taskStatusLabel(task.status)}</Badge>
                     </TableCell>
                     <TableCell className={adminCellClass()}>{task.createdBy}</TableCell>
-                    <TableCell className={adminCellClass()}>{task.createdAt ? new Date(task.createdAt).toLocaleDateString(language === "ar" ? "ar-EG" : "en-US") : "-"}</TableCell>
+                    <TableCell className={adminCellClass({ className: "tabular-nums" })} dir="ltr">{fmtDate(task.createdAt)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

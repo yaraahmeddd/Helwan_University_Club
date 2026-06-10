@@ -20,6 +20,7 @@ import DateRangeFilter from "../components/StaffPagesComponents/shared/DateRange
 import type { DateRange } from "../components/StaffPagesComponents/shared/DateRangeFilter";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 import { useLocalizedTranslation } from "../hooks/useLocalizedTranslation";
+import { useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -118,14 +119,6 @@ function getMemberId(sub: SportSubscription): string {
     return id != null ? `TM-${String(id).padStart(3, "0")}` : "—";
 }
 
-function formatArabicDate(dateStr: string): string {
-    try {
-        return new Date(dateStr).toLocaleDateString("ar-EG");
-    } catch {
-        return dateStr;
-    }
-}
-
 // ─── Stats Card ───────────────────────────────────────────────────────────────
 
 function StatCard({
@@ -152,6 +145,7 @@ function StatCard({
 export default function SportsRequestsPage() {
     const { toast } = useToast();
     const { t: tCommon } = useLocalizedTranslation('common');
+    const { fmtDate } = useAdminFormatters();
 
     const [records, setRecords] = useState<SportSubscription[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -469,7 +463,7 @@ export default function SportsRequestsPage() {
 
                                         {/* Date */}
                                         <TableCell className="px-4 py-3 text-sm text-muted-foreground tabular-nums align-middle">
-                                            {formatArabicDate(sub.created_at)}
+                                            {fmtDate(sub.created_at)}
                                         </TableCell>
 
                                         {/* Actions */}

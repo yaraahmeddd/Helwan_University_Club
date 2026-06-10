@@ -20,6 +20,7 @@
  */
 
 import React from "react";
+import { useAdminFormatters } from "../shared/adminFormatters";
 import {
     Trophy,
     Pencil,
@@ -85,20 +86,6 @@ export type SortDir = "asc" | "desc";
 
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-export const fmtDateShort = (v?: string | null) => {
-    if (!v) return "—";
-    try {
-        return new Date(v).toLocaleDateString("ar-EG", {
-            year: "2-digit",
-            month: "numeric",
-            day: "numeric",
-        });
-    } catch {
-        return v;
-    }
-};
-
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
@@ -340,6 +327,7 @@ export function MemberTable({
     onDelete,
     skeletonRows = 8,
 }: MemberTableProps) {
+    const { fmtDate } = useAdminFormatters();
     return (
         <TooltipProvider>
             <div
@@ -431,8 +419,8 @@ export function MemberTable({
                                     </td>
 
                                     {/* Registration date */}
-                                    <td className="px-4 py-3 text-center text-[10px] text-muted-foreground whitespace-nowrap align-middle">
-                                        {fmtDateShort(row.createdAt)}
+                                    <td className="px-4 py-3 text-center text-[10px] text-muted-foreground whitespace-nowrap align-middle tabular-nums" dir="ltr">
+                                        {fmtDate(row.createdAt)}
                                     </td>
 
                                     {/* Actions */}

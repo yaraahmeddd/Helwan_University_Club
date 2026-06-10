@@ -20,6 +20,7 @@ import { filterStaffListRows, mapStaffApiItem, staffTypeOptionsFromApi, type Sta
 import { AdminStaffListToolbar } from "../components/StaffPagesComponents/shared/AdminStaffListToolbar";
 import { useStaffJobLabels } from "../lib/staffJobLabel";
 import { useTranslation } from "react-i18next";
+import { useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -69,13 +70,6 @@ const PAGE_SIZE = ADMIN_PAGE_SIZE;
 const isRecord = (v: unknown): v is Record<string, unknown> =>
     typeof v === "object" && v !== null;
 
-const formatDisplayDate = (v: string | null | undefined, locale: string) => {
-    if (!v) return "—";
-    try {
-        return new Date(v).toLocaleDateString(locale, { year: "numeric", month: "short", day: "numeric" });
-    } catch { return v; }
-};
-
 const parseGrantedPrivileges = (response: unknown): Omit<GrantedPrivilege, "markedForRevocation">[] => {
     const out: Omit<GrantedPrivilege, "markedForRevocation">[] = [];
     if (!isRecord(response)) return out;
@@ -117,11 +111,7 @@ export default function RevokePrivilegesPage() {
     const { language, isRTL } = useLanguage();
     const { toast } = useToast();
     const { resolveJobLabel } = useStaffJobLabels(language);
-    const dateLocale = language === "en" ? "en-US" : "ar-EG";
-    const fmtDate = useCallback(
-        (v?: string | null) => formatDisplayDate(v, dateLocale),
-        [dateLocale],
-    );
+    const { fmtDate } = useAdminFormatters();
 
     // ── VIEW STATE ──────────────────────────────────────────────────────────────
     const [step, setStep] = useState<"table" | "revoke">("table");

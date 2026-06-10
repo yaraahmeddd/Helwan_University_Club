@@ -18,6 +18,7 @@ import type { AuditLog } from "../services/auditLogApi";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { useLanguage } from "../hooks/useLanguage";
+import { useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
 import {
   getAuditLogs,
   getAuditLogFilters,
@@ -63,6 +64,7 @@ const colors = {
 const AuditLogPage: React.FC = () => {
   const { t } = useTranslation("AuditLogPage");
   const { language, isRTL } = useLanguage();
+  const { fmtDateTime } = useAdminFormatters();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [totalLogs, setTotalLogs] = useState(0);
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
@@ -517,7 +519,7 @@ const AuditLogPage: React.FC = () => {
                         <TableCell className={adminCellClass({ size: "muted" })}>{log.module}</TableCell>
                         <TableCell className={adminCellClass({ size: "muted", className: "max-w-[250px]" })}>{log.description}</TableCell>
                         <TableCell className={adminCellClass()}>{getStatusBadge(log.status)}</TableCell>
-                        <TableCell className={adminCellClass({ size: "muted", className: "tabular-nums" })} dir="ltr">{new Date(log.dateTime).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US')}</TableCell>
+                        <TableCell className={adminCellClass({ size: "muted", className: "tabular-nums" })} dir="ltr">{fmtDateTime(log.dateTime)}</TableCell>
                         <TableCell className={adminCellClass({ center: true })}>
                           <button
                             onClick={() => handleViewDetails(log)}

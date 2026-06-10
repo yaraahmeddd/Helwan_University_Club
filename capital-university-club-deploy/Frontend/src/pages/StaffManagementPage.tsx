@@ -44,6 +44,7 @@ import { useLocalizedTranslation } from '../hooks/useLocalizedTranslation';
 import { useTranslation } from 'react-i18next';
 import { validateStaffEdit } from '../lib/validation';
 import { Badge } from '../components/StaffPagesComponents/ui/badge';
+import { useAdminFormatters } from '../components/StaffPagesComponents/shared/adminFormatters';
 
 type StaffType = {
   id: number;
@@ -78,15 +79,6 @@ const STATIC_STAFF_TYPES: StaffType[] = [
   { id: 2, code: 'CEO', name_ar: 'المدير التنفيذى', name_en: 'Executive Director' },
 ];
 
-const formatDisplayDate = (v: string | null | undefined, locale: string) => {
-  if (!v) return '—';
-  try {
-    return new Date(v).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' });
-  } catch {
-    return v;
-  }
-};
-
 function normalizeStaffStatus(status?: string, isActive?: boolean): string {
   const s = (status ?? '').toLowerCase();
   if (s === 'cancelled' || s === 'inactive' || isActive === false) return 'cancelled';
@@ -115,8 +107,7 @@ export default function StaffManagementPage() {
   const { language, isRTL } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const dateLocale = language === 'en' ? 'en-US' : 'ar-EG';
-  const fmtDate = useCallback((v?: string | null) => formatDisplayDate(v, dateLocale), [dateLocale]);
+  const { fmtDate } = useAdminFormatters();
 
   const [rows, setRows] = useState<StaffRow[]>([]);
   const [page, setPage] = useState(1);

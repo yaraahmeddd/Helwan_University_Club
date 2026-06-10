@@ -20,6 +20,7 @@ import { compareLocalizedText, getPrivilegeDisplayName, getPrivilegeModuleLabel,
 import { filterStaffListRows, mapStaffApiItem, staffTypeOptionsFromApi, type StaffListApiItem } from "../lib/staffListUtils";
 import { useStaffJobLabels } from "../lib/staffJobLabel";
 import { useTranslation } from "react-i18next";
+import { useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -84,13 +85,6 @@ const isRecord = (v: unknown): v is Record<string, unknown> =>
 
 // ─── Helpers (same as StaffManagementPage) ───────────────────────────────────
 
-const formatDisplayDate = (v: string | null | undefined, locale: string) => {
-  if (!v) return "—";
-  try {
-    return new Date(v).toLocaleDateString(locale, { year: "numeric", month: "short", day: "numeric" });
-  } catch { return v; }
-};
-
 const normalizePrivilegesResponse = (response: unknown): PrivilegeApiItem[] => {
   if (!isRecord(response)) return [];
   const payload = response.data;
@@ -150,11 +144,7 @@ export default function AssignStaffPrivilegesPage() {
   const { language, isRTL } = useLanguage();
   const { toast } = useToast();
   const { resolveJobLabel } = useStaffJobLabels(language);
-  const dateLocale = language === "en" ? "en-US" : "ar-EG";
-  const fmtDate = useCallback(
-    (v?: string | null) => formatDisplayDate(v, dateLocale),
-    [dateLocale],
-  );
+  const { fmtDate } = useAdminFormatters();
 
   // ── VIEW STATE ──────────────────────────────────────────────────────────────
   const [step, setStep] = useState<"table" | "assign">("table");

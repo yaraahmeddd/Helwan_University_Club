@@ -21,6 +21,7 @@ import { Pencil, Trash2, Eye, Plus, Loader2, UploadCloud, ImageOff, X, Clock, Al
 import { useToast } from "../hooks/use-toast";
 import api from "../services/axios";
 import { useTranslation } from "react-i18next";
+import { useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -376,6 +377,7 @@ const getSportStatus = (sport: Sport, t: any) => {
 export default function SportsPage() {
   const { t } = useTranslation('SportsPage');
   const { language, isRTL } = useLanguage();
+  const { fmtDate } = useAdminFormatters();
 
   const [sports, setSports] = useState<Sport[]>([]);
   const [editSport, setEditSport] = useState<Sport | null>(null);
@@ -1323,7 +1325,7 @@ export default function SportsPage() {
                             {statusLabel}
                           </span>
                         </TableCell>
-                        <TableCell className={adminCellClass({ size: "muted" })} dir="ltr">{m.created_at ? new Date(m.created_at).toLocaleDateString(language === "ar" ? "ar-EG" : "en-US") : "—"}</TableCell>
+                        <TableCell className={adminCellClass({ size: "muted", className: "tabular-nums" })} dir="ltr">{fmtDate(m.created_at)}</TableCell>
                       </TableRow>
                     );
                   })

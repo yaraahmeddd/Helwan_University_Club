@@ -58,7 +58,9 @@
     "legendIncluded": "مشمول في الحزمة",
     "legendExcluded": "مستثنى من الحزمة",
     "legendExtra": "محدد كصلاحية إضافية",
-    "legendNone": "غير محدد"
+    "legendNone": "غير محدد",
+    "scrollPrev": "التمرير للخلف",
+    "scrollNext": "التمرير للأمام"
   },
   "actions": {
     "cancel": "إلغاء",

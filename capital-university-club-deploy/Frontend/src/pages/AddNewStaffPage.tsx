@@ -334,6 +334,19 @@ function DocumentUploadCard({
 
 // Module labels handled via getPrivilegeModuleLabel()
 
+/** Wider, responsive grid for package & privilege pickers */
+const PICKER_GRID_CLASS =
+  "grid w-full grid-cols-1 min-[520px]:grid-cols-2 xl:grid-cols-3 gap-3 auto-rows-fr";
+
+const PICKER_CARD_BASE =
+  "flex h-full w-full items-start gap-3 rounded-lg border px-4 py-3 text-start transition-all min-h-[58px]";
+
+const PICKER_CHECKBOX_BASE =
+  "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 transition-colors";
+
+const hiddenHorizontalScrollbar =
+  "overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]";
+
 export default function AddNewStaffPage() {
   const { t, i18n } = useTranslation("AddNewStaffPage");
   const { toast } = useToast();
@@ -424,6 +437,18 @@ export default function AddNewStaffPage() {
   const [createdCredentials, setCreatedCredentials] = useState<{ national_id: string } | null>(null);
   const [copiedNationalId, setCopiedNationalId] = useState(false);
   const [activePrivilegeTab, setActivePrivilegeTab] = useState<string | null>(null);
+  const privilegeModuleTabsRef = useRef<HTMLDivElement>(null);
+  const isRTL = i18n.language === 'ar';
+
+  const scrollPrivilegeModuleTabs = useCallback((direction: "back" | "forward") => {
+    const el = privilegeModuleTabsRef.current;
+    if (!el) return;
+    const amount = Math.max(220, Math.floor(el.clientWidth * 0.55));
+    const delta = direction === "back"
+      ? (isRTL ? amount : -amount)
+      : (isRTL ? -amount : amount);
+    el.scrollBy({ left: delta, behavior: "smooth" });
+  }, [isRTL]);
 
   // Dynamic Staff Types State — starts with static fallback, replaced by API on mount
   const [staffTypes, setStaffTypes] = useState<StaffType[]>(STATIC_STAFF_TYPES);
@@ -945,18 +970,19 @@ export default function AddNewStaffPage() {
 
             {/* Package Selection Section */}
             <div className="pt-6 mt-2 border-t border-border space-y-4">
-              <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <Label className="text-base font-semibold block text-primary">
                   {t("packages.title")}
                 </Label>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
+                  <span className="text-xs text-muted-foreground sm:whitespace-nowrap">
                     {t("packages.selectedCount", { count: selectedPackageKeys.length })}
                   </span>
                   <Button
                     type="button"
                     size="sm"
                     variant="outline"
+                    className="w-full sm:w-auto shrink-0 whitespace-nowrap"
                     onClick={() => navigate("/staff/dashboard/admin/staff/assign-privileges")}
                   >
                     {t("packages.assignBtn")}
@@ -980,7 +1006,7 @@ export default function AddNewStaffPage() {
                   <span>{t("packages.empty")}</span>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className={PICKER_GRID_CLASS}>
                   {packageOptions.map((pkg) => {
                     const isSelected = selectedPackageKeys.includes(pkg.key);
                     return (
@@ -989,35 +1015,31 @@ export default function AddNewStaffPage() {
                         type="button"
                         onClick={() => togglePackage(pkg.key)}
                         className={`
-                          p-3 rounded-lg border-2 text-left transition-all
+                          ${PICKER_CARD_BASE}
                           ${isSelected
-                            ? "border-primary bg-primary/10"
-                            : "border-border bg-card hover:bg-muted/30"
+                            ? "border-primary bg-primary/10 shadow-sm"
+                            : "border-border bg-card hover:border-primary/30 hover:bg-muted/40"
                           }
                         `}
                       >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 space-y-1">
-                            <div className="font-semibold text-sm">{pkg.name}</div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-[10px] text-muted-foreground">
-                                {t("packages.privilegeCount", { count: pkg.privilegeCodes.length })}
-                              </span>
-                            </div>
-                            {pkg.description && (
-                              <div className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                                {pkg.description}
-                              </div>
-                            )}
-                          </div>
-                          <div
-                            className={`
-                              w-5 h-5 rounded border-2 flex items-center justify-center shrink-0
-                              ${isSelected ? "border-primary bg-primary" : "border-muted-foreground"}
-                            `}
-                          >
-                            {isSelected && <span className="text-primary-foreground text-xs">✓</span>}
-                          </div>
+                        <span
+                          className={`
+                            ${PICKER_CHECKBOX_BASE}
+                            ${isSelected ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/50 bg-background"}
+                          `}
+                        >
+                          {isSelected && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
+                        </span>
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <p className="text-sm font-semibold leading-snug line-clamp-2">{pkg.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {t("packages.privilegeCount", { count: pkg.privilegeCodes.length })}
+                          </p>
+                          {pkg.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                              {pkg.description}
+                            </p>
+                          )}
                         </div>
                       </button>
                     );
@@ -1042,7 +1064,7 @@ export default function AddNewStaffPage() {
                 </div>
 
                 {/* Body */}
-                <div className="p-6">
+                <div className="p-4">
                   {loadingPrivileges ? (
                     <div className="flex items-center gap-2 py-6 justify-center text-sm text-muted-foreground">
                       <span className="animate-spin">⏳</span> {t("privileges.loading")}
@@ -1065,7 +1087,21 @@ export default function AddNewStaffPage() {
                       <div className="space-y-3">
 
                         {/* Tab bar */}
-                        <div className="flex gap-1 flex-wrap border-b border-border pb-3">
+                        <div className="flex items-center gap-2 border-b border-border pb-3">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8 shrink-0"
+                            onClick={() => scrollPrivilegeModuleTabs("back")}
+                            aria-label={t("privileges.scrollPrev")}
+                          >
+                            {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                          </Button>
+                          <div
+                            ref={privilegeModuleTabsRef}
+                            className={`flex flex-1 min-w-0 gap-1.5 pb-1 ${hiddenHorizontalScrollbar}`}
+                          >
                           {groupedPrivileges.map((group) => {
                             const extraCount = group.items.filter(
                               (p) => selectedExtraPrivilegeIds.includes(p.id)
@@ -1077,8 +1113,8 @@ export default function AddNewStaffPage() {
                                 type="button"
                                 onClick={() => setActivePrivilegeTab(group.module)}
                                 className={`
-                                  relative flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium
-                                  transition-all duration-150
+                                  relative flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium
+                                  transition-all duration-150 whitespace-nowrap
                                   ${isActive
                                     ? "bg-primary text-primary-foreground shadow-sm"
                                     : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -1097,16 +1133,35 @@ export default function AddNewStaffPage() {
                               </button>
                             );
                           })}
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8 shrink-0"
+                            onClick={() => scrollPrivilegeModuleTabs("forward")}
+                            aria-label={t("privileges.scrollNext")}
+                          >
+                            {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                          </Button>
                         </div>
 
                         {/* Active tab content */}
                         {activeGroup && (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 min-h-[260px]">
+                          <div className={PICKER_GRID_CLASS}>
                             {activeGroup.items.map((privilege) => {
                               const inPackage = selectedPackagePrivilegeCodes.has(privilege.code);
                               const isExtra = selectedExtraPrivilegeIds.includes(privilege.id);
                               const isExcluded = excludedPackagePrivilegeIds.includes(privilege.id);
                               const isSelected = inPackage && !isExcluded;
+
+                              const checkboxClass = isSelected
+                                ? "border-emerald-500 bg-emerald-500 text-white"
+                                : isExcluded
+                                  ? "border-red-400 bg-white text-red-500"
+                                  : isExtra
+                                    ? "border-primary bg-primary text-white"
+                                    : "border-muted-foreground/50 bg-background group-hover:border-primary/60";
 
                               return (
                                 <button
@@ -1114,72 +1169,38 @@ export default function AddNewStaffPage() {
                                   type="button"
                                   onClick={() => togglePrivilege(privilege.id, inPackage)}
                                   className={`
-                                    group flex items-center gap-3 p-3 rounded-lg border text-right
-                                    transition-all duration-150 w-full
+                                    group ${PICKER_CARD_BASE}
                                     ${isSelected
-                                      ? "border-emerald-200 bg-emerald-50/60"
+                                      ? "border-emerald-200 bg-emerald-50/70"
                                       : isExcluded
-                                        ? "border-red-200 bg-red-50/60"
+                                        ? "border-red-200 bg-red-50/70"
                                         : isExtra
-                                          ? "border-primary/40 bg-primary/5 shadow-sm"
+                                          ? "border-primary/40 bg-primary/5"
                                           : "border-border bg-card hover:border-primary/30 hover:bg-muted/40"
                                     }
                                   `}
                                 >
-                                  {/* Checkbox indicator */}
-                                  <div className={`
-                                    shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center
-                                    transition-colors duration-150
-                                    ${isSelected
-                                      ? "border-emerald-400 bg-emerald-400"
-                                      : isExcluded
-                                        ? "border-red-400 bg-white"
-                                        : isExtra
-                                          ? "border-primary bg-primary"
-                                          : "border-muted-foreground/50 group-hover:border-primary/60"
-                                    }
-                                  `}>
-                                    {isSelected && (
-                                      <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 12 12">
-                                        <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                      </svg>
+                                  <span className={`${PICKER_CHECKBOX_BASE} ${checkboxClass}`}>
+                                    {isSelected && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
+                                    {isExcluded && !isSelected && (
+                                      <span className="block h-0.5 w-2 rounded-full bg-red-400" />
                                     )}
-                                    {isExcluded && (
-                                      <svg className="w-2.5 h-2.5 text-red-400" fill="none" viewBox="0 0 12 12">
-                                        <line x1="2" y1="6" x2="10" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                                      </svg>
+                                    {isExtra && !isSelected && !isExcluded && (
+                                      <Check className="h-2.5 w-2.5" strokeWidth={3} />
                                     )}
-                                    {isExtra && (
-                                      <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 12 12">
-                                        <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                      </svg>
-                                    )}
-                                  </div>
+                                  </span>
 
-                                  {/* Text */}
-                                  <div className="flex-1 text-right min-w-0">
-                                    <p className={`text-xs font-medium truncate ${isSelected ? "text-emerald-700" : isExcluded ? "text-red-700" : "text-foreground"
+                                  <div className="min-w-0 flex-1 text-start">
+                                    <p className={`text-sm font-medium leading-snug line-clamp-2 ${isSelected ? "text-emerald-800" : isExcluded ? "text-red-800" : "text-foreground"
                                       }`}>
                                       {getPrivilegeDisplayName(privilege.name_ar, privilege.name_en, privilege.code, uiLanguage) || "—"}
                                     </p>
                                     {shouldShowPrivilegeCode(uiLanguage) && (
-                                    <p className="text-[10px] font-mono text-muted-foreground truncate mt-0.5">
+                                    <p className="text-xs font-mono text-muted-foreground truncate mt-1">
                                       {privilege.code}
                                     </p>
                                     )}
                                   </div>
-
-                                  {/* State badge */}
-                                  {isSelected && (
-                                    <span className="shrink-0 text-[9px] font-medium text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded uppercase tracking-wide">
-                                      {t("privileges.inPackage")}
-                                    </span>
-                                  )}
-                                  {isExcluded && (
-                                    <span className="shrink-0 text-[9px] font-medium text-red-600 bg-red-100 px-1.5 py-0.5 rounded uppercase tracking-wide">
-                                      {t("privileges.excluded")}
-                                    </span>
-                                  )}
                                 </button>
                               );
                             })}
@@ -1219,15 +1240,22 @@ export default function AddNewStaffPage() {
               </div>
             </div>
 
-                <div className="flex justify-between mt-12 pt-6 border-t border-gray-100">
-                  <button type="button" onClick={() => navigate("/staff/dashboard/admin/staff/list")} className="px-8 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold transition-colors flex items-center gap-2">
-                    {i18n.language === 'ar' ? <ChevronRight size={20} /> : null}
-                    {t("actions.cancel")}
-                    {i18n.language !== 'ar' ? <ChevronLeft size={20} /> : null}
+                <div className="flex flex-col-reverse gap-3 mt-12 pt-6 border-t border-gray-100 sm:flex-row sm:items-center sm:justify-between">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/staff/dashboard/admin/staff/list")}
+                    className="w-full sm:w-auto px-8 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold transition-colors flex items-center justify-center gap-2"
+                  >
+                    {isRTL ? <ChevronRight size={20} aria-hidden /> : <ChevronLeft size={20} aria-hidden />}
+                    <span>{t("actions.cancel")}</span>
                   </button>
-                  <button type="button" onClick={handleNextStep} className="px-8 py-3 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-bold shadow-lg shadow-primary-200 transition-all flex items-center gap-2">
-                    {i18n.language === 'ar' ? 'التالي' : 'Next'}
-                    {i18n.language === 'ar' ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="w-full sm:w-auto px-8 py-3 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-bold shadow-md transition-all flex items-center justify-center gap-2"
+                  >
+                    <span>{t("actions.next")}</span>
+                    {isRTL ? <ChevronLeft size={20} aria-hidden /> : <ChevronRight size={20} aria-hidden />}
                   </button>
                 </div>
               </motion.div>
@@ -1300,11 +1328,11 @@ export default function AddNewStaffPage() {
                   </div>
 
                   <div className="flex flex-col-reverse md:flex-row justify-between mt-12 pt-6 border-t border-gray-100 gap-4">
-                    <button type="button" onClick={() => setStep(1)} className="px-8 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold transition-colors flex items-center justify-center gap-2">
-                      {i18n.language === 'ar' ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-                      {i18n.language === 'ar' ? 'السابق' : 'Previous'}
+                    <button type="button" onClick={() => setStep(1)} className="w-full sm:w-auto px-8 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600 font-bold transition-colors flex items-center justify-center gap-2">
+                      {isRTL ? <ChevronRight size={20} aria-hidden /> : <ChevronLeft size={20} aria-hidden />}
+                      <span>{t("actions.previous")}</span>
                     </button>
-                    <button type="submit" disabled={isSubmitting || isManualSubmitting} className="flex-1 md:flex-none px-10 py-3 rounded-xl bg-primary-700 hover:bg-primary-800 text-white font-bold shadow-lg shadow-primary-200 transition-all flex items-center justify-center gap-3">
+                    <button type="submit" disabled={isSubmitting || isManualSubmitting} className="w-full sm:w-auto sm:flex-none px-10 py-3 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-bold shadow-md transition-all flex items-center justify-center gap-3">
                       {isSubmitting || isManualSubmitting ? <span className="animate-spin text-xl">⏳</span> : <Check size={24} />}
                       {isSubmitting || isManualSubmitting ? t("actions.saving") : t("actions.save")}
                     </button>

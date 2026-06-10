@@ -9,6 +9,7 @@ import { useLocalizedTranslation } from "../hooks/useLocalizedTranslation";
 import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
 import { buildPersonName, getLocalizedText } from "../lib/localizedDisplay";
+import { useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
 import { RecordViewProfileHeader } from "../components/StaffPagesComponents/shared/RecordViewPrimitives";
 import { Label } from "../components/StaffPagesComponents/ui/label";
 import {
@@ -131,19 +132,6 @@ const STATIC_STAFF_TYPES: StaffType[] = [
     { id: 20, code: "SPORT_SPECIALIST", name_en: "Sport Activity Specialist", name_ar: "أخصائي الأنشطة الرياضية" },
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const formatDate = (value?: string | null) => {
-    if (!value) return "—";
-    try {
-        return new Date(value).toLocaleDateString("ar-EG", {
-            year: "numeric", month: "long", day: "numeric",
-        });
-    } catch {
-        return value;
-    }
-};
-
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status?: string }) {
@@ -166,6 +154,7 @@ function StatusBadge({ status }: { status?: string }) {
 export default function StaffListPage() {
     const { toast } = useToast();
     const { language, isRTL } = useLanguage();
+    const { fmtDate } = useAdminFormatters();
     const { t: tCommon } = useLocalizedTranslation('common');
 
     // List state
@@ -419,7 +408,7 @@ export default function StaffListPage() {
                                             <TableCell className={adminCellClass({ size: "xs" })}>{row.staffTypeLabel}</TableCell>
                                             <TableCell className={adminCellClass({ className: "tabular-nums" })} dir="ltr">{row.phone}</TableCell>
                                             <TableCell className={adminCellClass()}><StatusBadge status={row.status} /></TableCell>
-                                            <TableCell className={adminCellClass({ size: "muted" })}>{formatDate(row.employmentStartDate)}</TableCell>
+                                            <TableCell className={adminCellClass({ size: "muted", className: "tabular-nums" })} dir="ltr">{fmtDate(row.employmentStartDate)}</TableCell>
                                             <TableCell className={adminCellClass({ center: true })}>
                                                 <div className={adminTableStyles.actions}>
                                                     <Button
@@ -563,7 +552,7 @@ export default function StaffListPage() {
                                                     بداية التوظيف
                                                 </div>
                                                 <p className="text-sm font-semibold text-foreground">
-                                                    {formatDate(d?.employment_start_date ?? fb?.employmentStartDate)}
+                                                    {fmtDate(d?.employment_start_date ?? fb?.employmentStartDate)}
                                                 </p>
                                             </div>
                                             {/* Matches the orange-accented "رسوم التجديد" tile in MemberMembershipPage */}
@@ -573,7 +562,7 @@ export default function StaffListPage() {
                                                     نهاية التوظيف
                                                 </div>
                                                 <p className="text-sm font-bold text-[#1F3A5F]">
-                                                    {formatDate(d?.employment_end_date ?? fb?.employmentEndDate)}
+                                                    {fmtDate(d?.employment_end_date ?? fb?.employmentEndDate)}
                                                 </p>
                                             </div>
                                         </div>

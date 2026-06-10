@@ -7,6 +7,7 @@ import { Button } from "../components/StaffPagesComponents/ui/button";
 import { useToast } from "../hooks/use-toast";
 import api from "../services/axios";
 import { LoadingState } from "../components/shared/LoadingState";
+import { useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
 
 // Helper to translate Backend TaskType to Arabic
 const taskTypeMap: Record<string, string> = {
@@ -27,6 +28,7 @@ interface Task {
 }
 
 export default function TaskApprovalPage() {
+  const { fmtDate } = useAdminFormatters();
   const [tasks, setTasks] = useState<Task[]>([]);
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -102,7 +104,7 @@ export default function TaskApprovalPage() {
                   <p className="text-sm text-muted-foreground">{task.description}</p>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">بواسطة: {task.created_by || "غير محدد"}</span>
-                    <span className="text-xs text-muted-foreground">{new Date(task.created_at).toLocaleDateString('ar-EG')}</span>
+                    <span className="text-xs text-muted-foreground tabular-nums" dir="ltr">{fmtDate(task.created_at)}</span>
                   </div>
 
                   <div className="flex justify-end pt-2">

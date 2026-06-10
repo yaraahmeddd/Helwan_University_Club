@@ -19,7 +19,7 @@ import {
 import { useToast } from "../hooks/use-toast";
 import api from "../services/axios";
 import { useLocalizedTranslation } from "../hooks/useLocalizedTranslation";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
+import { useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
 
 // ─── API shape types ────────────────────────────────────────────────────────
 type SportApiItem = { id: number; name_ar: string; name_en: string };
@@ -87,6 +87,7 @@ const AttendanceToggle = ({
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
 export default function AttendancePage() {
+    const { fmtDate } = useAdminFormatters();
     const { t: tCommon } = useLocalizedTranslation('common');
     const { toast } = useToast();
     const [activeTab, setActiveTab] = useState("register");
@@ -290,9 +291,7 @@ export default function AttendancePage() {
         <TableCell>${row.memberNameAr} (${row.memberCode})</TableCell>
         <TableCell>${row.sportNameAr}</TableCell>
         <TableCell>${row.totalAbsences}</TableCell>
-        <TableCell>${row.lastAbsenceDate
-                ? new Date(row.lastAbsenceDate).toLocaleDateString("ar-EG")
-                : "—"}</TableCell>
+        <TableCell>${row.lastAbsenceDate ? fmtDate(row.lastAbsenceDate) : "—"}</TableCell>
       </TableRow>
     `).join("");
 
@@ -309,7 +308,7 @@ export default function AttendancePage() {
       </style></head>
       <body>
         <h2>سجل الغيابات — نادي جامعة العاصمة</h2>
-        <p>تاريخ التصدير: ${new Date().toLocaleDateString("ar-EG")}</p>
+        <p>تاريخ التصدير: ${fmtDate(new Date().toISOString())}</p>
         <Table>
           <TableHeader><TableRow>
             <TableHead>#</TableHead><TableHead>اللاعب</TableHead><TableHead>الرياضة</TableHead>
@@ -662,7 +661,7 @@ export default function AttendancePage() {
                                                     </span>
                                                 </TableCell>
                                                 <TableCell className="text-sm text-muted-foreground py-2.5">
-                                                    {row.lastAbsenceDate ? new Date(row.lastAbsenceDate).toLocaleDateString("ar-EG", { day: "numeric", month: "long", year: "numeric" }) : "—"}
+                                                    {fmtDate(row.lastAbsenceDate)}
                                                 </TableCell>
                                                 <TableCell className="text-center py-2.5">
                                                     <button
@@ -725,9 +724,7 @@ export default function AttendancePage() {
                                         </p>
                                     ) : (
                                         <p className="text-xs text-muted-foreground">
-                                            آخر غياب: {lastDate
-                                                ? new Date(lastDate).toLocaleDateString("ar-EG", { day: "numeric", month: "long", year: "numeric" })
-                                                : "—"}
+                                            آخر غياب: {fmtDate(lastDate)}
                                         </p>
                                     )}
                                 </div>

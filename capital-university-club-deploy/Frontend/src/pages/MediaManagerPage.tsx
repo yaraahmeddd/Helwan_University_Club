@@ -3,6 +3,7 @@ import api from '../services/axios';
 import { CloudUpload, Search, Image as ImageIcon, Video, FileText, Edit2, Trash2, Calendar, Plus, UploadCloud, AlertTriangle, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { CustomDatePicker } from '../components/StaffPagesComponents/ui/CustomDatePicker';
 import { useTranslation } from "react-i18next";
+import { formatAdminDate, getAdminLocale } from '../components/StaffPagesComponents/shared/adminFormatters';
 
 interface MediaPost {
     id: string;
@@ -370,19 +371,7 @@ const MediaViewModal: React.FC<{ post: MediaPost | null; onClose: () => void }> 
 
     const images = post.images?.map(img => img.startsWith('http') ? img : `${BACKEND_URL}/${img}`) || [];
 
-    const formatDateStr = (dateStr: string) => {
-        try {
-            const date = new Date(dateStr);
-            if (isNaN(date.getTime())) return dateStr;
-            return new Intl.DateTimeFormat(isRTL ? 'ar-EG' : 'en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            }).format(date);
-        } catch {
-            return dateStr;
-        }
-    };
+    const formatDateStr = (dateStr: string) => formatAdminDate(dateStr, getAdminLocale(i18n.language));
 
     return (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-0 lg:p-8 font-['Cairo']" dir={isRTL ? "rtl" : "ltr"}>
@@ -564,19 +553,7 @@ const MediaManagerPage: React.FC = () => {
         currentPage * ITEMS_PER_PAGE
     );
 
-    const formatDate = (dateStr: string) => {
-        try {
-            const date = new Date(dateStr);
-            if (isNaN(date.getTime())) return dateStr;
-            return new Intl.DateTimeFormat(isRTL ? 'ar-EG' : 'en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            }).format(date);
-        } catch {
-            return dateStr;
-        }
-    };
+    const formatDate = (dateStr: string) => formatAdminDate(dateStr, getAdminLocale(isRTL ? 'ar' : 'en'));
 
     return (
         <div className="min-h-screen bg-[#f8f9fa] text-gray-900 font-['Cairo'] pb-24" dir={isRTL ? "rtl" : "ltr"}>

@@ -76,7 +76,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from ".
 import { adminTableStyles, adminHeadClass, adminCellClass, adminDialogStyles, ADMIN_PAGE_SIZE, adminTableBadgeClass, adminTableStatusBadgeClass, adminPageStyles } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
-import { formatAdminDate, formatAdminTime } from "../components/StaffPagesComponents/shared/adminFormatters";
+import { formatAdminDate, formatAdminTime, getAdminLocale, useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
 import { adminFieldIcons } from "../components/StaffPagesComponents/shared/adminRecordFields";
 import { MemberEditPanel } from "../components/StaffPagesComponents/shared/MemberEditPanel";
 import {
@@ -430,25 +430,6 @@ const GENDER_LABELS: Record<string, string> = {
 
 const PAGE_SIZE = ADMIN_PAGE_SIZE;
 
-
-
-const toArabicDigits = (str: string) => {
-    const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    return str.replace(/[0-9]/g, (w) => arabicDigits[+w]);
-};
-
-const fmtDate = (v?: string | null, isRTL = false) => {
-    if (!v) return "—";
-    try {
-        const d = new Date(v);
-        const day = d.getDate().toString().padStart(2, '0');
-        const month = (d.getMonth() + 1).toString().padStart(2, '0');
-        const year = d.getFullYear().toString();
-        const baseDate = `${day}/${month}/${year}`;
-        return isRTL ? toArabicDigits(baseDate) : baseDate;
-    } catch { return v; }
-};
-
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
 
@@ -516,7 +497,8 @@ type PanelProps = {
 function DetailPanel({ row, details, loading, sports, onEdit, onChangeStatus, onDelete }: PanelProps) {
     const { t } = useTranslation('MemberManagementPage');
     const { language, isRTL } = useLanguage();
-    const locale = language === 'ar' ? 'ar-EG' : 'en-US';
+    const { fmtDate } = useAdminFormatters();
+    const locale = getAdminLocale(language);
     const d = details;
     const createdAt = d?.created_at ?? row.createdAt;
     const { primary: displayName, secondary: subtitleName } = buildPersonName(row, language);
@@ -605,7 +587,7 @@ function DetailPanel({ row, details, loading, sports, onEdit, onChangeStatus, on
                                     if (nat.toLowerCase() === 'foreigner' || nat.toLowerCase() === 'non-egyptian') return isRTL ? 'أجنبى' : 'Foreigner';
                                     return nat;
                                 })()} fallback={notAvailable} />
-                                <RecordViewField icon={adminFieldIcons.birthdate} label={t('detail.fieldBirthdate')} value={fmtDate(d?.birthdate ?? row.birthdate, isRTL)} fallback={notAvailable} />
+                                <RecordViewField icon={adminFieldIcons.birthdate} label={t('detail.fieldBirthdate')} value={fmtDate(d?.birthdate ?? row.birthdate)} ltr fallback={notAvailable} />
                                 <RecordViewField icon={adminFieldIcons.nationalId} label={t('detail.fieldNationalId')} value={d?.national_id ?? row.nationalId} ltr alignEnd={isRTL} fallback={notAvailable} />
                             </div>
                         </RecordViewSection>
@@ -653,7 +635,7 @@ function DetailPanel({ row, details, loading, sports, onEdit, onChangeStatus, on
                                         <div className="space-y-1">
                                             <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" />{t('detail.payment.lastPayment')}</p>
                                             <div className="text-sm font-semibold" dir="ltr">
-                                                <p>{new Date(payment.lastPaymentDate).toLocaleDateString("ar-EG", { day: "numeric", month: "long", year: "numeric" })}</p>
+                                                <p>{fmtDate(payment.lastPaymentDate)}</p>
                                                 <p className="text-[10px] text-muted-foreground font-medium">EGP {payment.lastPaymentAmount.toLocaleString("ar-EG")}</p>
                                             </div>
                                         </div>
@@ -662,7 +644,7 @@ function DetailPanel({ row, details, loading, sports, onEdit, onChangeStatus, on
                                             <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" />{t('detail.payment.nextRenewal')}</p>
                                             <div className="text-sm font-semibold" dir="ltr">
                                                 <p className={`${status === "overdue" ? "text-rose-600" : status === "expiring" ? "text-amber-600" : ""}`}>
-                                                    {new Date(payment.nextRenewalDate).toLocaleDateString("ar-EG", { day: "numeric", month: "long", year: "numeric" })}
+                                                    {fmtDate(payment.nextRenewalDate)}
                                                 </p>
                                                 {status !== "active" && (
                                                     <p className={`text-[10px] font-bold ${status === "overdue" ? "text-rose-500" : "text-amber-500"}`}>
@@ -892,6 +874,7 @@ const getFileUrl = (f?: string | null): string => {
 export default function MemberManagementPage() {
     const { t } = useTranslation('MemberManagementPage');
     const { language, isRTL } = useLanguage();
+    const { fmtDate } = useAdminFormatters();
     const { toast } = useToast();
     const memberEditSchema = useMemberEditSchema();
 
@@ -2461,7 +2444,7 @@ export default function MemberManagementPage() {
                                                 </TableCell>
 
                                                 <TableCell className={adminCellClass({ size: "muted", className: "tabular-nums whitespace-nowrap" })}>
-                                                    {formatAdminDate(row.createdAt, language === 'ar' ? 'ar-EG' : 'en-US')}
+                                                    {fmtDate(row.createdAt)}
                                                 </TableCell>
 
                                                 <TableCell className={adminCellClass({ center: true })}>
