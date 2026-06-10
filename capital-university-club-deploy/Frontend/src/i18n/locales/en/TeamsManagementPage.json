@@ -9,6 +9,8 @@
     "searchPlaceholder": "Search for a team...",
     "statusFilter": "Status",
     "sportFilter": "Sport",
+    "daysFilter": "Training days",
+    "membershipFilter": "Membership",
     "clearFilter": "Clear",
     "clearAll": "Clear Filters ×",
     "results": "result(s)",

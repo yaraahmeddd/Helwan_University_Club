@@ -168,6 +168,34 @@ export function validateMaxLength(value: string, max: number, key: string): Fiel
   return ok();
 }
 
+export function validatePositiveInteger(
+  value: string,
+  required = false,
+  max = 99999,
+): FieldValidation {
+  const trimmed = value.trim();
+  if (!trimmed) return required ? fail('positiveInt.required') : ok();
+  if (!PATTERNS.NUMBERS_ONLY.test(trimmed)) return fail('positiveInt.invalid');
+  const n = Number(trimmed);
+  if (n < 1) return fail('positiveInt.min');
+  if (n > max) return fail('positiveInt.max', { max });
+  return ok();
+}
+
+export function validateMoneyAmount(value: string, required = false): FieldValidation {
+  const trimmed = value.trim();
+  if (!trimmed) return required ? fail('money.required') : ok();
+  if (!/^\d+(\.\d{1,2})?$/.test(trimmed)) return fail('money.invalid');
+  if (Number(trimmed) < 0) return fail('money.min');
+  return ok();
+}
+
+export function validateSportSelection(value: string | number | undefined | null, required = true): FieldValidation {
+  const id = value === undefined || value === null ? '' : String(value).trim();
+  if (!id) return required ? fail('sport.required') : ok();
+  return ok();
+}
+
 /** Resolve a validation result to a localized message. */
 export function formatValidationError(
   result: FieldValidation,

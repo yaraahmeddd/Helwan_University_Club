@@ -28,6 +28,9 @@ import { useLanguage } from '../../../hooks/useLanguage';
 import { useLocalizedTranslation } from '../../../hooks/useLocalizedTranslation';
 import { buildPersonName, getBilingualFieldPlaceholder } from '../../../lib/localizedDisplay';
 import { validateStaffEdit } from '../../../lib/validation';
+import { validateAdminStaffContactForm } from '../../../lib/validation/adminForms';
+import { useAdminFieldValidation } from '../../../hooks/useAdminFieldValidation';
+import { FieldInlineError } from './FieldInlineError';
 import { useAdminFormatters } from './adminFormatters';
 import { adminDialogStyles } from './adminTableStyles';
 import { adminFieldIcons } from './adminRecordFields';
@@ -137,6 +140,8 @@ export function StaffDetailPanel({
   const { language, isRTL } = useLanguage();
   const { toast } = useToast();
   const { fmtDate } = useAdminFormatters();
+  const { handleArabicChange, handleEnglishChange, handlePhoneChange } = useAdminFieldValidation();
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
   const notAvailable = t('common:notAvailable', { defaultValue: '—' });
 
   const [detailTab, setDetailTab] = useState<'info' | 'photos'>('info');
@@ -199,10 +204,18 @@ export function StaffDetailPanel({
       },
       tVal,
     );
-    if (validationError) {
-      toast({ title: t('toasts.dataError.title'), description: validationError, variant: 'destructive' });
+    const contactErrors = validateAdminStaffContactForm({ phone: editPhone, address: editAddress }, tVal);
+    const mergedErrors = { ...(validationError ? { _form: validationError } : {}), ...contactErrors };
+    if (Object.keys(mergedErrors).length > 0) {
+      if (validationError) {
+        toast({ title: t('toasts.dataError.title'), description: validationError, variant: 'destructive' });
+      } else {
+        setFieldErrors(contactErrors);
+        toast({ title: t('toasts.dataError.title'), description: Object.values(contactErrors)[0], variant: 'destructive' });
+      }
       return;
     }
+    setFieldErrors({});
     try {
       const payload: Partial<EditFormData> = {};
       if (editFirstNameAr !== (details?.first_name_ar ?? row.firstNameAr ?? '')) payload.first_name_ar = editFirstNameAr;
@@ -304,7 +317,14 @@ export function StaffDetailPanel({
                         <label className="text-[11px] text-muted-foreground">{label}</label>
                         <input
                           value={value}
-                          onChange={(e) => setValue(e.target.value)}
+                          onChange={(e) => {
+                            const next = e.target.value;
+                            if (dir === 'ltr') {
+                              handleEnglishChange(next, setValue, (message) => setFieldErrors((prev) => ({ ...prev, [label]: message })), 'name');
+                            } else {
+                              handleArabicChange(next, setValue, (message) => setFieldErrors((prev) => ({ ...prev, [label]: message })), 'name');
+                            }
+                          }}
                           dir={dir}
                           placeholder={placeholder}
                           className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
@@ -320,20 +340,29 @@ export function StaffDetailPanel({
                       <label className="text-[11px] text-muted-foreground">{t('detailPanel.fields.phone')}</label>
                       <input
                         value={editPhone}
-                        onChange={(e) => setEditPhone(e.target.value)}
+                        onChange={(e) => {
+                          handlePhoneChange(e.target.value, setEditPhone);
+                          setFieldErrors((prev) => ({ ...prev, phone: undefined }));
+                        }}
                         dir="ltr"
                         type="tel"
-                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                        inputMode="numeric"
+                        className={`w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:border-primary ${fieldErrors.phone ? 'border-destructive' : 'border-border'}`}
                       />
+                      <FieldInlineError message={fieldErrors.phone} />
                     </div>
                     <div className="space-y-1 sm:col-span-2">
                       <label className="text-[11px] text-muted-foreground">{t('detailPanel.fields.address')}</label>
                       <input
                         value={editAddress}
-                        onChange={(e) => setEditAddress(e.target.value)}
+                        onChange={(e) => {
+                          setEditAddress(e.target.value);
+                          setFieldErrors((prev) => ({ ...prev, address: undefined }));
+                        }}
                         placeholder={t('detailPanel.placeholders.address')}
-                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                        className={`w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:border-primary ${fieldErrors.address ? 'border-destructive' : 'border-border'}`}
                       />
+                      <FieldInlineError message={fieldErrors.address} />
                     </div>
                   </div>
                 </RecordViewSection>

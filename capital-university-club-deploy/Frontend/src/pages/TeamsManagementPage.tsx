@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { RoleGuard } from "../components/StaffPagesComponents/RoleGuard";
@@ -25,7 +25,10 @@ import {
 } from "lucide-react";
 import { useToast } from "../hooks/use-toast";
 import { useLanguage } from "../hooks/useLanguage";
-import { adminTableStyles, adminHeadClass, adminCellClass, adminDialogStyles, adminPageStyles } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { adminTableStyles, adminHeadClass, adminCellClass, adminDialogStyles, adminPageStyles, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
+import { useTableExport } from "../utils/reportExport/useTableExport";
+import { ExportReportButton } from "../components/StaffPagesComponents/shared/ExportReportButton";
 import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
 import { AdminMemberStatusBadge } from "../components/StaffPagesComponents/shared/AdminMemberStatusBadge";
 import { getAdminStatusConfig } from "../components/StaffPagesComponents/shared/adminMemberStatus";
@@ -35,7 +38,8 @@ import { useAdminFormatters } from "../components/StaffPagesComponents/shared/ad
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
 import { getBilingualFieldPlaceholder, getEntityName, getLocalizedText } from "../lib/localizedDisplay";
 import api from "../services/axios";
-import { PATTERNS } from "../lib/validation";
+import { useAdminFieldValidation } from "../hooks/useAdminFieldValidation";
+import { validateAdminTeamForm } from "../lib/validation/adminForms";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -119,9 +123,6 @@ const emptyForm = (): TeamFormState => ({
     visibility: "", price: "",
     training: emptyTraining(),
 });
-
-const isArabicOnly = (s: string) => PATTERNS.ARABIC_TEXT.test(s);
-const isEnglishOnly = (s: string) => PATTERNS.ENGLISH_TEXT.test(s);
 
 const TEAM_STATUS_OPTIONS: TeamStatus[] = ["active", "inactive", "suspended", "archived"];
 
@@ -215,6 +216,7 @@ export default function TeamsManagementPage() {
     const { language, isRTL } = useLanguage();
     const { locale } = useAdminFormatters();
     const { toast } = useToast();
+    const { tVal, handleArabicChange, handleEnglishChange } = useAdminFieldValidation();
 
     // ── Data ────────────────────────────────────────────────────────────────────
     const [teams, setTeams] = useState<ApiTeam[]>([]);
@@ -227,7 +229,12 @@ export default function TeamsManagementPage() {
     const [sportPopoverOpen, setSportPopoverOpen] = useState(false);
     const [filterStatuses, setFilterStatuses] = useState<TeamStatus[]>([]);
     const [statusPopoverOpen, setStatusPopoverOpen] = useState(false);
+    const [filterDays, setFilterDays] = useState<string[]>([]);
+    const [daysPopoverOpen, setDaysPopoverOpen] = useState(false);
+    const [filterMembership, setFilterMembership] = useState<string[]>([]);
+    const [membershipPopoverOpen, setMembershipPopoverOpen] = useState(false);
     const [search, setSearch] = useState("");
+    const [page, setPage] = useState(1);
 
     // ── Form/modal state ────────────────────────────────────────────────────────
     const [isAddOpen, setIsAddOpen] = useState(false);
@@ -266,13 +273,24 @@ export default function TeamsManagementPage() {
     useEffect(() => { void fetchTeams(); }, [fetchTeams]);
 
     // ── Filtered list (client-side status + search) ──────────────────────────────
-    const filtered = teams.filter(t => {
+    const filtered = useMemo(() => teams.filter(t => {
         const matchStatus = filterStatuses.length === 0 || filterStatuses.includes(t.status);
         const matchSport = filterSports.length === 0 || filterSports.includes(t.sport_id);
+        const schedDays = t.training_schedules?.[0]?.days_ar ?? "";
+        const matchDays = filterDays.length === 0 || filterDays.some((day) => schedDays.includes(day));
+        const matchMembership = filterMembership.length === 0
+            || (t.visibility_type && filterMembership.includes(t.visibility_type));
         const q = search.trim().toLowerCase();
         const matchSearch = !q || t.name_ar.includes(search.trim()) || t.name_en.toLowerCase().includes(q);
-        return matchStatus && matchSport && matchSearch;
-    });
+        return matchStatus && matchSport && matchDays && matchMembership && matchSearch;
+    }), [teams, filterStatuses, filterSports, filterDays, filterMembership, search]);
+
+    useEffect(() => { setPage(1); }, [search, filterSports, filterStatuses, filterDays, filterMembership]);
+
+    const pagedTeams = useMemo(
+        () => filtered.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE),
+        [filtered, page],
+    );
 
     // ── Open add ────────────────────────────────────────────────────────────────
     const openAdd = () => {
@@ -307,31 +325,33 @@ export default function TeamsManagementPage() {
     };
 
     const handleNameArChange = (value: string) => {
-        if (value === "" || isArabicOnly(value)) {
-            setForm((prev) => ({ ...prev, nameAr: value }));
-            setFieldErrors((prev) => ({ ...prev, nameAr: undefined }));
-            return;
-        }
-        setFieldErrors((prev) => ({ ...prev, nameAr: t('validation.arOnly') }));
+        handleArabicChange(
+            value,
+            (nameAr) => setForm((prev) => ({ ...prev, nameAr })),
+            (message) => setFieldErrors((prev) => ({ ...prev, nameAr: message })),
+        );
     };
 
     const handleNameEnChange = (value: string) => {
-        if (value === "" || isEnglishOnly(value)) {
-            setForm((prev) => ({ ...prev, nameEn: value }));
-            setFieldErrors((prev) => ({ ...prev, nameEn: undefined }));
-            return;
-        }
-        setFieldErrors((prev) => ({ ...prev, nameEn: t('validation.enOnly') }));
+        handleEnglishChange(
+            value,
+            (nameEn) => setForm((prev) => ({ ...prev, nameEn })),
+            (message) => setFieldErrors((prev) => ({ ...prev, nameEn: message })),
+        );
     };
 
     const collectFieldErrors = (): TeamFormFieldErrors => {
-        const errors: TeamFormFieldErrors = {};
-        if (!form.nameAr.trim()) errors.nameAr = t('validation.nameArRequired');
-        if (!form.nameEn.trim()) errors.nameEn = t('validation.nameEnRequired');
-        if (!editTeam && !form.sportId) errors.sportId = t('validation.sportRequired');
-        if (!form.maxParticipants || Number(form.maxParticipants) <= 0) {
-            errors.maxParticipants = t('validation.maxParticipantsRequired');
-        }
+        const errors: TeamFormFieldErrors = validateAdminTeamForm(
+            {
+                nameAr: form.nameAr,
+                nameEn: form.nameEn,
+                sportId: form.sportId,
+                maxParticipants: form.maxParticipants,
+                trainingFee: form.training.trainingFee,
+                requireSport: !editTeam,
+            },
+            tVal,
+        );
         if (form.training.selectedDays.length === 0) errors.trainingDays = t('validation.daysRequired');
         if (!form.training.startTime) errors.startTime = t('validation.startTimeRequired');
         if (!form.training.endTime) errors.endTime = t('validation.endTimeRequired');
@@ -339,7 +359,6 @@ export default function TeamsManagementPage() {
             errors.endTime = t('validation.timeRangeInvalid');
         }
         if (fields.length > 0 && !form.training.fieldId) errors.fieldId = t('validation.fieldRequired');
-        if (!form.training.trainingFee.trim()) errors.trainingFee = t('validation.trainingFeeRequired');
         return errors;
     };
 
@@ -443,7 +462,40 @@ export default function TeamsManagementPage() {
     };
 
     const isEdit = !!editTeam;
-    const hasFilters = filterSports.length > 0 || filterStatuses.length > 0 || search.trim() !== "";
+    const hasFilters = filterSports.length > 0 || filterStatuses.length > 0 || filterDays.length > 0 || filterMembership.length > 0 || search.trim() !== "";
+
+    const exportHandle = useTableExport({
+        reportId: "teams-management",
+        titleEn: "Teams Management Report",
+        titleAr: "تقرير إدارة الفرق",
+        columns: [
+            {
+                headerEn: "Team Name",
+                headerAr: "اسم الفريق",
+                accessor: (team: ApiTeam) => getLocalizedText(team.name_ar, team.name_en, language),
+                width: 22,
+            },
+            {
+                headerEn: "Sport",
+                headerAr: "الرياضة",
+                accessor: (team: ApiTeam) => getEntityName(team.sport, language) || "—",
+                width: 16,
+            },
+            {
+                headerEn: "Max Participants",
+                headerAr: "الحد الأقصى",
+                accessor: (team: ApiTeam) => String(team.max_participants),
+                width: 12,
+            },
+            {
+                headerEn: "Status",
+                headerAr: "الحالة",
+                accessor: (team: ApiTeam) => team.status,
+                width: 12,
+            },
+        ],
+        rows: filtered,
+    });
 
     // ─── Render ──────────────────────────────────────────────────────────────────
     return (
@@ -467,6 +519,7 @@ export default function TeamsManagementPage() {
                 }
                 actions={
                     <>
+                        <ExportReportButton {...exportHandle} rowCount={filtered.length} />
                         <Button
                             variant="outline"
                             size="sm"
@@ -538,6 +591,60 @@ export default function TeamsManagementPage() {
                     </PopoverContent>
                 </Popover>
 
+                {/* Days filter */}
+                <Popover open={daysPopoverOpen} onOpenChange={setDaysPopoverOpen}>
+                    <PopoverTrigger asChild>
+                        <button className={`flex items-center gap-1.5 h-9 px-3 rounded-md border text-xs transition-colors ${
+                            filterDays.length > 0 ? "border-primary bg-primary/5 text-primary" : "border-border bg-background text-muted-foreground hover:bg-muted"}`}>
+                            {t('toolbar.daysFilter')}
+                            {filterDays.length > 0 && (
+                                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-primary text-primary-foreground text-[9px] font-bold">{filterDays.length}</span>
+                            )}
+                        </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-52 p-0" dir={isRTL ? 'rtl' : 'ltr'}>
+                        <div className="py-1">
+                            {DAYS.map((day) => (
+                                <label key={day.ar} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-muted/60 transition-colors">
+                                    <input type="checkbox" checked={filterDays.includes(day.ar)}
+                                        onChange={() => setFilterDays(prev => prev.includes(day.ar) ? prev.filter(d => d !== day.ar) : [...prev, day.ar])}
+                                        className="w-3.5 h-3.5 rounded accent-primary cursor-pointer" />
+                                    <span className="text-xs font-medium">{isRTL ? day.ar : day.en}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </PopoverContent>
+                </Popover>
+
+                {/* Membership filter */}
+                <Popover open={membershipPopoverOpen} onOpenChange={setMembershipPopoverOpen}>
+                    <PopoverTrigger asChild>
+                        <button className={`flex items-center gap-1.5 h-9 px-3 rounded-md border text-xs transition-colors ${
+                            filterMembership.length > 0 ? "border-primary bg-primary/5 text-primary" : "border-border bg-background text-muted-foreground hover:bg-muted"}`}>
+                            {t('toolbar.membershipFilter')}
+                            {filterMembership.length > 0 && (
+                                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-primary text-primary-foreground text-[9px] font-bold">{filterMembership.length}</span>
+                            )}
+                        </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-52 p-0" dir={isRTL ? 'rtl' : 'ltr'}>
+                        <div className="py-1">
+                            {([
+                                { key: 'INTERNAL', label: t('form.visibilityInternal') },
+                                { key: 'EXTERNAL', label: t('form.visibilityExternal') },
+                                { key: 'BOTH', label: t('form.visibilityBoth') },
+                            ]).map(({ key, label }) => (
+                                <label key={key} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-muted/60 transition-colors">
+                                    <input type="checkbox" checked={filterMembership.includes(key)}
+                                        onChange={() => setFilterMembership(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])}
+                                        className="w-3.5 h-3.5 rounded accent-primary cursor-pointer" />
+                                    <span className="text-xs font-medium">{label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </PopoverContent>
+                </Popover>
+
                 {/* Sport filter */}
                 <Popover open={sportPopoverOpen} onOpenChange={setSportPopoverOpen}>
                     <PopoverTrigger asChild>
@@ -571,17 +678,15 @@ export default function TeamsManagementPage() {
 
                 <Filter className="w-4 h-4 text-muted-foreground shrink-0" />
                 {hasFilters && (
-                    <button onClick={() => { setFilterSports([]); setFilterStatuses([]); setSearch(""); void fetchTeams(); }} className="text-xs text-primary hover:underline">
+                    <button onClick={() => { setFilterSports([]); setFilterStatuses([]); setFilterDays([]); setFilterMembership([]); setSearch(""); void fetchTeams(); }} className="text-xs text-primary hover:underline">
                         {t('toolbar.clearAll')}
                     </button>
                 )}
             </div>
 
 
-            {/* ── Table area ── */}
-            <div className={`${adminTableStyles.container} pb-6`}>
-
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="shadow-sm">
+            <div className={adminTableStyles.shell}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <Table>
                     <TableHeader className={adminTableStyles.header}>
                         <TableRow>
@@ -591,7 +696,7 @@ export default function TeamsManagementPage() {
                             <TableHead className={adminHeadClass()}>{t('table.colSchedule')}</TableHead>
                             <TableHead className={adminHeadClass()}>{t('table.colMaxParticipants')}</TableHead>
                             <TableHead className={adminHeadClass({ center: true, className: "whitespace-nowrap" })}>{t('table.colPrice')}</TableHead>
-                            <TableHead className={adminHeadClass({ className: "whitespace-nowrap" })}>{t('table.colStatus')}</TableHead>
+                            <TableHead className={adminHeadClass({ center: true, className: "whitespace-nowrap" })}>{t('table.colStatus')}</TableHead>
                             <TableHead className={adminHeadClass({ center: true, className: "w-[148px]" })}>{t('table.colActions')}</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -616,7 +721,7 @@ export default function TeamsManagementPage() {
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                filtered.map((team, idx) => {
+                                pagedTeams.map((team, idx) => {
                                     const sched = team.training_schedules?.[0];
                                     const schedDays = sched
                                         ? getLocalizedText(sched.days_ar, sched.days_en, language)
@@ -632,7 +737,7 @@ export default function TeamsManagementPage() {
                                             exit={{ opacity: 0 }}
                                             className={adminTableStyles.row}
                                         >
-                                            <TableCell className={adminCellClass({ size: "muted" })}>{idx + 1}</TableCell>
+                                            <TableCell className={adminCellClass({ size: "muted" })}>{(page - 1) * ADMIN_PAGE_SIZE + idx + 1}</TableCell>
                                             <TableCell className={adminCellClass()}>
                                                 <BilingualText ar={team.name_ar} en={team.name_en} language={language} primaryClassName="font-medium" />
                                             </TableCell>
@@ -644,7 +749,7 @@ export default function TeamsManagementPage() {
                                             <TableCell className={adminCellClass({ center: true, className: "tabular-nums font-medium whitespace-nowrap" })}>
                                                 {formatTeamPrice(team)}
                                             </TableCell>
-                                            <TableCell className={adminCellClass({ className: "whitespace-nowrap" })}>
+                                            <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
                                                 <AdminMemberStatusBadge status={team.status} compact />
                                             </TableCell>
                                             <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
@@ -675,6 +780,14 @@ export default function TeamsManagementPage() {
                     </TableBody>
                 </Table>
             </motion.div>
+            <AdminPagination
+                page={page}
+                totalCount={filtered.length}
+                pageSize={ADMIN_PAGE_SIZE}
+                onPageChange={setPage}
+                isRTL={isRTL}
+                disabled={loading}
+            />
             </div>
             <Dialog open={isAddOpen} onOpenChange={(open) => { if (!open) closeFormDialog(); }}>
                 <DialogContent className={`${adminDialogStyles.content} max-w-3xl`} dir={isRTL ? 'rtl' : 'ltr'}>

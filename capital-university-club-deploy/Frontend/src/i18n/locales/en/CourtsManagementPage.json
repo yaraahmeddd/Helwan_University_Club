@@ -20,7 +20,10 @@
     "status": "Status",
     "clear": "Clear",
     "refresh": "Refresh",
-    "results": "{{count}} result(s)"
+    "results": "{{count}} result(s)",
+    "bookingAll": "Booking availability",
+    "bookingYes": "Available for booking",
+    "bookingNo": "Not for booking"
   },
   "table": {
     "colCourtName": "Court Name",

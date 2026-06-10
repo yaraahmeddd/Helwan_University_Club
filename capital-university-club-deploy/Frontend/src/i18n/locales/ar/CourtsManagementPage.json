@@ -20,7 +20,10 @@
     "status": "الحالة",
     "clear": "مسح",
     "refresh": "تحديث",
-    "results": "{{count}} نتيجة"
+    "results": "{{count}} نتيجة",
+    "bookingAll": "توفر الحجز",
+    "bookingYes": "متاح للحجز",
+    "bookingNo": "غير متاح للحجز"
   },
   "table": {
     "colCourtName": "اسم الملعب",

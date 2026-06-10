@@ -26,6 +26,10 @@ import {
     RecordViewProfileHeader,
 } from "../components/StaffPagesComponents/shared/RecordViewPrimitives";
 import { buildPersonName, getBilingualFieldPlaceholder, getLocalizedText } from "../lib/localizedDisplay";
+import { FieldInlineError } from "../components/StaffPagesComponents/shared/FieldInlineError";
+import { useAdminFieldValidation } from "../hooks/useAdminFieldValidation";
+import { validateAdminRegistrationMemberForm } from "../lib/validation/adminForms";
+import { normalizePhone } from "../lib/validation/rules";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 import {
     TooltipProvider,
@@ -79,6 +83,7 @@ const toArabicDigits = (str: string | undefined | null) => {
 export default function RegistrationManagementPage() {
     const { t, language, isRTL } = useLocalizedTranslation(["RegistrationManagementPage", "common"]);
     const { toast } = useToast();
+    const { tVal, handleArabicChange, handleEnglishChange, handleDigitsChange } = useAdminFieldValidation();
     const [records, setRecords] = useState<RegistrationRecord[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [search, setSearch] = useState("");
@@ -109,6 +114,7 @@ export default function RegistrationManagementPage() {
         job: "",
         children_count: 0
     });
+    const [memberFieldErrors, setMemberFieldErrors] = useState<Record<string, string | undefined>>({});
 
     const getDisplayName = (m?: Pick<RegistrationRecord, 'first_name_ar' | 'last_name_ar' | 'first_name_en' | 'last_name_en'> | null) => {
         if (!m) return '';
@@ -260,6 +266,13 @@ export default function RegistrationManagementPage() {
     };
 
     const handleAddMember = async () => {
+        const errors = validateAdminRegistrationMemberForm(newMember, tVal);
+        if (Object.keys(errors).length > 0) {
+            setMemberFieldErrors(errors);
+            toast({ title: t('toast.error'), description: Object.values(errors)[0], variant: "destructive" });
+            return;
+        }
+        setMemberFieldErrors({});
         setIsAddingMember(true);
         try {
             const [firstAr, ...lastAr] = newMember.name_ar.trim().split(' ');
@@ -283,6 +296,7 @@ export default function RegistrationManagementPage() {
             setAddDialogOpen(false);
             void fetchRecords();
             setNewMember({ name_ar: "", name_en: "", national_id: "", phone: "", birth_date: "", gender: "", address: "", social_status: "", job: "", children_count: 0 });
+            setMemberFieldErrors({});
         } catch (error) {
             toast({ title: t('toast.error'), description: t('toast.addMemberFailed'), variant: "destructive" });
         } finally {
@@ -617,7 +631,7 @@ export default function RegistrationManagementPage() {
             />
 
             {/* Add New Member Dialog */}
-            <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+            <Dialog open={addDialogOpen} onOpenChange={(open) => { setAddDialogOpen(open); if (!open) setMemberFieldErrors({}); }}>
                 <DialogContent className="max-w-3xl" dir={isRTL ? 'rtl' : 'ltr'}>
                     <DialogHeader>
                         <DialogTitle>{t('addMember.title')}</DialogTitle>
@@ -626,37 +640,92 @@ export default function RegistrationManagementPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
                         <div className="space-y-2">
                             <Label>{t('addMember.nameAr')}</Label>
-                            <Input value={newMember.name_ar} onChange={e => setNewMember({ ...newMember, name_ar: e.target.value })} placeholder={getBilingualFieldPlaceholder('ar', 'RegistrationManagementPage', 'addMember.nameArPlaceholder')} />
+                            <Input
+                                value={newMember.name_ar}
+                                onChange={(e) => handleArabicChange(
+                                    e.target.value,
+                                    (name_ar) => setNewMember({ ...newMember, name_ar }),
+                                    (message) => setMemberFieldErrors((prev) => ({ ...prev, name_ar: message })),
+                                )}
+                                placeholder={getBilingualFieldPlaceholder('ar', 'RegistrationManagementPage', 'addMember.nameArPlaceholder')}
+                                className={memberFieldErrors.name_ar ? "border-destructive" : ""}
+                            />
+                            <FieldInlineError message={memberFieldErrors.name_ar} />
                         </div>
                         <div className="space-y-2">
                             <Label>{t('addMember.nameEn')}</Label>
-                            <Input value={newMember.name_en} onChange={e => setNewMember({ ...newMember, name_en: e.target.value })} placeholder={getBilingualFieldPlaceholder('en', 'RegistrationManagementPage', 'addMember.nameEnPlaceholder')} className="text-left" dir="ltr" />
+                            <Input
+                                value={newMember.name_en}
+                                onChange={(e) => handleEnglishChange(
+                                    e.target.value,
+                                    (name_en) => setNewMember({ ...newMember, name_en }),
+                                    (message) => setMemberFieldErrors((prev) => ({ ...prev, name_en: message })),
+                                )}
+                                placeholder={getBilingualFieldPlaceholder('en', 'RegistrationManagementPage', 'addMember.nameEnPlaceholder')}
+                                className={`text-left ${memberFieldErrors.name_en ? "border-destructive" : ""}`}
+                                dir="ltr"
+                            />
+                            <FieldInlineError message={memberFieldErrors.name_en} />
                         </div>
                         <div className="space-y-2">
                             <Label>{t('addMember.nationalId')}</Label>
-                            <Input value={newMember.national_id} onChange={e => setNewMember({ ...newMember, national_id: e.target.value })} placeholder={t('addMember.nationalIdPlaceholder')} type="number" />
+                            <Input
+                                value={newMember.national_id}
+                                onChange={(e) => handleDigitsChange(e.target.value, (national_id) => setNewMember({ ...newMember, national_id }), 14)}
+                                placeholder={t('addMember.nationalIdPlaceholder')}
+                                inputMode="numeric"
+                                className={`text-left ${memberFieldErrors.national_id ? "border-destructive" : ""}`}
+                                dir="ltr"
+                            />
+                            <FieldInlineError message={memberFieldErrors.national_id} />
                         </div>
                         <div className="space-y-2">
                             <Label>{t('addMember.phone')}</Label>
-                            <Input value={newMember.phone} onChange={e => setNewMember({ ...newMember, phone: e.target.value })} placeholder={t('addMember.phonePlaceholder')} type="tel" className="text-left" dir="ltr" />
+                            <Input
+                                value={newMember.phone}
+                                onChange={(e) => handleDigitsChange(e.target.value, (phone) => setNewMember({ ...newMember, phone: normalizePhone(phone) }), 11)}
+                                placeholder={t('addMember.phonePlaceholder')}
+                                type="tel"
+                                inputMode="numeric"
+                                className={`text-left ${memberFieldErrors.phone ? "border-destructive" : ""}`}
+                                dir="ltr"
+                            />
+                            <FieldInlineError message={memberFieldErrors.phone} />
                         </div>
                         <div className="space-y-2">
                             <Label>{t('addMember.birthDate')}</Label>
-                            <Input value={newMember.birth_date} onChange={e => setNewMember({ ...newMember, birth_date: e.target.value })} type="date" />
+                            <Input
+                                value={newMember.birth_date}
+                                onChange={(e) => { setNewMember({ ...newMember, birth_date: e.target.value }); setMemberFieldErrors((prev) => ({ ...prev, birth_date: undefined })); }}
+                                type="date"
+                                className={memberFieldErrors.birth_date ? "border-destructive" : ""}
+                            />
+                            <FieldInlineError message={memberFieldErrors.birth_date} />
                         </div>
                         <div className="space-y-2">
                             <Label>{t('addMember.gender')}</Label>
-                            <Select onValueChange={v => setNewMember({ ...newMember, gender: v })}>
-                                <SelectTrigger><SelectValue placeholder={t('addMember.selectGender')} /></SelectTrigger>
+                            <Select onValueChange={v => { setNewMember({ ...newMember, gender: v }); setMemberFieldErrors((prev) => ({ ...prev, gender: undefined })); }}>
+                                <SelectTrigger className={memberFieldErrors.gender ? "border-destructive" : ""}><SelectValue placeholder={t('addMember.selectGender')} /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="male">{t('addMember.male')}</SelectItem>
                                     <SelectItem value="female">{t('addMember.female')}</SelectItem>
                                 </SelectContent>
                             </Select>
+                            <FieldInlineError message={memberFieldErrors.gender} />
                         </div>
                         <div className="space-y-2 md:col-span-2">
                             <Label>{t('addMember.address')}</Label>
-                            <Input value={newMember.address} onChange={e => setNewMember({ ...newMember, address: e.target.value })} placeholder={t('addMember.addressPlaceholder')} />
+                            <Input
+                                value={newMember.address}
+                                onChange={(e) => {
+                                    const address = e.target.value.slice(0, 200);
+                                    setNewMember({ ...newMember, address });
+                                    setMemberFieldErrors((prev) => ({ ...prev, address: undefined }));
+                                }}
+                                placeholder={t('addMember.addressPlaceholder')}
+                                className={memberFieldErrors.address ? "border-destructive" : ""}
+                            />
+                            <FieldInlineError message={memberFieldErrors.address} />
                         </div>
                         <div className="space-y-2">
                             <Label>{t('addMember.socialStatus')}</Label>
@@ -672,11 +741,34 @@ export default function RegistrationManagementPage() {
                         </div>
                         <div className="space-y-2">
                             <Label>{t('addMember.job')}</Label>
-                            <Input value={newMember.job} onChange={e => setNewMember({ ...newMember, job: e.target.value })} placeholder={t('addMember.jobPlaceholder')} />
+                            <Input
+                                value={newMember.job}
+                                onChange={(e) => {
+                                    const job = e.target.value.slice(0, 100);
+                                    setNewMember({ ...newMember, job });
+                                    setMemberFieldErrors((prev) => ({ ...prev, job: undefined }));
+                                }}
+                                placeholder={t('addMember.jobPlaceholder')}
+                                className={memberFieldErrors.job ? "border-destructive" : ""}
+                            />
+                            <FieldInlineError message={memberFieldErrors.job} />
                         </div>
                         <div className="space-y-2">
                             <Label>{t('addMember.childrenCount')}</Label>
-                            <Input value={newMember.children_count} onChange={e => setNewMember({ ...newMember, children_count: parseInt(e.target.value) || 0 })} type="number" min={0} />
+                            <Input
+                                value={newMember.children_count}
+                                onChange={(e) => {
+                                    handleDigitsChange(e.target.value, (digits) => {
+                                        setNewMember({ ...newMember, children_count: digits === '' ? 0 : Number(digits) });
+                                    }, 2);
+                                    setMemberFieldErrors((prev) => ({ ...prev, children_count: undefined }));
+                                }}
+                                type="text"
+                                inputMode="numeric"
+                                className={`text-left ${memberFieldErrors.children_count ? "border-destructive" : ""}`}
+                                dir="ltr"
+                            />
+                            <FieldInlineError message={memberFieldErrors.children_count} />
                         </div>
                     </div>
                     <DialogFooter className={isRTL ? 'flex-row-reverse' : ''}>

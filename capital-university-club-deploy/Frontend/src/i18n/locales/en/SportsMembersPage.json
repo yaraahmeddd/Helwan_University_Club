@@ -15,7 +15,9 @@
   },
   "tabs": {
     "members": "Club Members",
-    "teamMembers": "Players"
+    "teamMembers": "Players",
+    "editSports": "Edit Sports",
+    "assignTeam": "Assign Team"
   },
   "toolbar": {
     "searchPlaceholder": "Search by name or national ID...",

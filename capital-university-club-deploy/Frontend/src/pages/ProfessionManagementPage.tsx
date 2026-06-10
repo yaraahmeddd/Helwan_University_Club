@@ -9,12 +9,17 @@ import { useToast } from "../hooks/use-toast";
 import api from "../services/axios";
 import { useTranslation } from "react-i18next";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
-import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE, adminPageStyles } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { AdminActionButton, AdminRowActions } from "../components/StaffPagesComponents/shared/AdminRowActions";
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
+import { AdminTableCodeChip } from "../components/StaffPagesComponents/shared/AdminTableSharedCells";
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
 import { getBilingualFieldPlaceholder } from "../lib/localizedDisplay";
 import { useLanguage } from "../hooks/useLanguage";
+import { FieldInlineError } from "../components/StaffPagesComponents/shared/FieldInlineError";
+import { useAdminFieldValidation } from "../hooks/useAdminFieldValidation";
+import { validateAdminCodeNameForm, validateMemberAssignId } from "../lib/validation/adminForms";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,6 +38,7 @@ export default function ProfessionManagementPage() {
     const { toast } = useToast();
     const { t } = useTranslation("ProfessionManagementPage");
     const { language, isRTL } = useLanguage();
+    const { tVal, handleArabicChange, handleEnglishChange, handleCodeChange, handleDigitsChange } = useAdminFieldValidation();
 
     // ── Data state ──────────────────────────────────────────────────────────
     const [professions, setProfessions] = useState<Profession[]>([]);
@@ -87,26 +93,31 @@ export default function ProfessionManagementPage() {
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [editProfession, setEditProfession] = useState<Profession | null>(null);
     const [form, setForm] = useState({ code: "", name_ar: "", name_en: "" });
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
     const [saveLoading, setSaveLoading] = useState(false);
 
     const openAdd = () => {
         setEditProfession(null);
         setForm({ code: "", name_ar: "", name_en: "" });
+        setFieldErrors({});
         setIsAddOpen(true);
     };
 
     const openEdit = (profession: Profession) => {
         setEditProfession(profession);
         setForm({ code: profession.code, name_ar: profession.name_ar, name_en: profession.name_en });
+        setFieldErrors({});
         setIsAddOpen(true);
     };
 
     const handleSave = async () => {
-        if (!form.code.trim() || !form.name_ar.trim() || !form.name_en.trim()) {
+        const errors = validateAdminCodeNameForm(form, tVal, { requireCode: true, requireNameEn: true });
+        if (Object.keys(errors).length > 0) {
+            setFieldErrors(errors);
             toast({ title: t("errors.missingDataTitle"), description: t("errors.missingDataDesc"), variant: "destructive" });
             return;
         }
-        setSaveLoading(true);
+        setFieldErrors({});        setSaveLoading(true);
         try {
             const body = { code: form.code, name_ar: form.name_ar, name_en: form.name_en };
             if (editProfession) {
@@ -182,8 +193,13 @@ export default function ProfessionManagementPage() {
     }, [memberIdForAssign, t]);
 
     const handleAssign = async () => {
-        if (!assignProfession || !memberIdForAssign.trim()) {
-            toast({ title: t("errors.missingDataTitle"), description: t("errors.missingMemberDesc"), variant: "destructive" });
+        const memberIdError = validateMemberAssignId(memberIdForAssign, tVal);
+        if (!assignProfession || memberIdError) {
+            toast({
+                title: t("errors.missingDataTitle"),
+                description: memberIdError ?? t("errors.missingMemberDesc"),
+                variant: "destructive",
+            });
             return;
         }
         setAssignLoading(true);
@@ -226,37 +242,30 @@ export default function ProfessionManagementPage() {
                     }
                 />
 
-                {/* ── Main area ── */}
-                <div className="flex flex-1 p-6 overflow-hidden">
-                    <div className="flex flex-col w-full bg-white border border-zinc-200/80 rounded-2xl shadow-sm overflow-hidden flex-1">
+                <div className={adminPageStyles.toolbar}>
+                    <div className="relative flex-1 min-w-[180px] max-w-sm">
+                        <Search className={`absolute ${isRTL ? "right-3.5" : "left-3.5"} top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none`} />
+                        <Input
+                            placeholder={t("page.searchPlaceholder")}
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className={`${adminPageStyles.toolbarSearch} ${isRTL ? "pr-10 pl-4" : "pl-10 pr-4"}`}
+                        />
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className={`${adminPageStyles.refreshBtn} h-10`}
+                        onClick={() => { void fetchProfessions(); }}
+                        disabled={loading}
+                    >
+                        <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+                        {t("page.refreshBtn")}
+                    </Button>
+                </div>
 
-                        {/* Toolbar: Search + Refresh */}
-                        <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-100 bg-white shrink-0 flex-wrap">
-
-                            {/* Search */}
-                            <div className="relative w-full sm:w-80">
-                                <Search className={`absolute ${isRTL ? "right-3.5" : "left-3.5"} top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none`} />
-                                <Input
-                                    placeholder={t("page.searchPlaceholder")}
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    className={`${isRTL ? "pr-10 pl-4" : "pl-10 pr-4"} h-10 text-[13px] bg-zinc-50/50 border-zinc-200/80 rounded-xl focus-visible:ring-primary/20 focus-visible:bg-white transition-all shadow-inner`}
-                                />
-                            </div>
-
-                            {/* Refresh */}
-                            <button
-                                onClick={() => { void fetchProfessions(); }}
-                                disabled={loading}
-                                className="p-2.5 rounded-xl hover:bg-zinc-100 transition-colors text-zinc-500 disabled:opacity-40 border border-transparent hover:border-zinc-200"
-                                title={t("page.refreshBtn")}
-                            >
-                                <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-                            </button>
-                        </div>
-
-                        {/* Table area */}
-                        <div className={adminTableStyles.container} style={{ scrollbarWidth: "none" }}>
+                <div className={adminTableStyles.shell}>
+                        <div className={adminTableStyles.container}>
                             {loading ? (
                                 <div className="py-24 text-center text-zinc-400">
                                     <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-4" />
@@ -277,8 +286,8 @@ export default function ProfessionManagementPage() {
                                     <TableHeader className={adminTableStyles.header}>
                                         <TableRow>
                                             <TableHead className={adminHeadClass({ className: "w-12" })}>{t("table.serial")}</TableHead>
-                                            <TableHead className={adminHeadClass()}>{t("table.code")}</TableHead>
                                             <TableHead className={adminHeadClass()}>{t("table.name")}</TableHead>
+                                            <TableHead className={adminHeadClass()}>{t("table.code")}</TableHead>
                                             <TableHead className={adminHeadClass({ center: true })}>{t("table.actions")}</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -290,12 +299,6 @@ export default function ProfessionManagementPage() {
                                                 </TableCell>
 
                                                 <TableCell className={adminCellClass()}>
-                                                    <span className="bg-muted text-muted-foreground px-2.5 py-1 rounded-md text-[11px] font-mono font-bold uppercase tracking-widest border border-border" dir="ltr">
-                                                        {profession.code}
-                                                    </span>
-                                                </TableCell>
-
-                                                <TableCell className={adminCellClass()}>
                                                     <BilingualText
                                                         ar={profession.name_ar}
                                                         en={profession.name_en}
@@ -304,40 +307,39 @@ export default function ProfessionManagementPage() {
                                                     />
                                                 </TableCell>
 
-                                                <TableCell className={adminCellClass({ center: true })}>
-                                                    <div className={`${adminTableStyles.actions} transition-opacity`}>
+                                                <TableCell className={adminCellClass()}>
+                                                    <AdminTableCodeChip>{profession.code}</AdminTableCodeChip>
+                                                </TableCell>
 
+                                                <TableCell className={adminCellClass({ center: true })}>
+                                                    <AdminRowActions>
                                                         <RoleGuard privilege="UPDATE_PROFESSION">
-                                                            <button
-                                                                title={t("actions.edit")}
+                                                            <AdminActionButton
+                                                                tooltip={t("actions.edit")}
+                                                                icon={Pencil}
+                                                                variant="edit"
                                                                 onClick={() => openEdit(profession)}
-                                                                className="p-1.5 rounded-lg hover:bg-zinc-900 hover:text-white text-zinc-500 transition-all shadow-sm border border-transparent hover:border-zinc-800"
-                                                            >
-                                                                <Pencil className="w-4 h-4" />
-                                                            </button>
+                                                            />
                                                         </RoleGuard>
 
                                                         <RoleGuard privilege="ASSIGN_PROFESSION_TO_MEMBER">
-                                                            <button
-                                                                title={t("actions.assignMember")}
+                                                            <AdminActionButton
+                                                                tooltip={t("actions.assignMember")}
+                                                                icon={Eye}
+                                                                variant="view"
                                                                 onClick={() => { setAssignProfession(profession); setMemberIdForAssign(""); setMemberName(""); setMemberLookupState("idle"); }}
-                                                                className="p-1.5 rounded-lg hover:bg-zinc-900 hover:text-white text-zinc-500 transition-all shadow-sm border border-transparent hover:border-zinc-800"
-                                                            >
-                                                                <Eye className="w-4 h-4" />
-                                                            </button>
+                                                            />
                                                         </RoleGuard>
 
                                                         <RoleGuard privilege="DELETE_PROFESSION">
-                                                            <button
-                                                                title={t("actions.delete")}
+                                                            <AdminActionButton
+                                                                tooltip={t("actions.delete")}
+                                                                icon={Trash2}
+                                                                variant="delete"
                                                                 onClick={() => setDeleteId(profession.id)}
-                                                                className="p-1.5 rounded-lg hover:bg-rose-500 hover:text-white text-zinc-500 transition-all shadow-sm border border-transparent hover:border-rose-600"
-                                                            >
-                                                                <Trash2 className="w-4 h-4" />
-                                                            </button>
+                                                            />
                                                         </RoleGuard>
-
-                                                    </div>
+                                                    </AdminRowActions>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -353,8 +355,6 @@ export default function ProfessionManagementPage() {
                             isRTL={isRTL}
                             disabled={loading}
                         />
-
-                    </div>
                 </div>
 
             </div>
@@ -377,32 +377,48 @@ export default function ProfessionManagementPage() {
                             <Input
                                 id="prof-code"
                                 dir="ltr"
-                                className="text-left font-mono uppercase"
+                                className={`text-left font-mono uppercase ${fieldErrors.code ? "border-destructive" : ""}`}
                                 value={form.code}
-                                onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
+                                onChange={(e) => handleCodeChange(
+                                    e.target.value,
+                                    (code) => setForm({ ...form, code }),
+                                    (message) => setFieldErrors((prev) => ({ ...prev, code: message })),
+                                )}
                                 placeholder={t("modalAdd.codePlaceholder")}
                             />
+                            <FieldInlineError message={fieldErrors.code} />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="prof-name-ar" className={isRTL ? "text-right" : "text-left"}>{t("modalAdd.nameArLabel")}</Label>
                             <Input
                                 id="prof-name-ar"
                                 value={form.name_ar}
-                                onChange={(e) => setForm({ ...form, name_ar: e.target.value })}
+                                onChange={(e) => handleArabicChange(
+                                    e.target.value,
+                                    (name_ar) => setForm({ ...form, name_ar }),
+                                    (message) => setFieldErrors((prev) => ({ ...prev, name_ar: message })),
+                                )}
                                 placeholder={getBilingualFieldPlaceholder("ar", "ProfessionManagementPage", "modalAdd.nameArPlaceholder")}
                                 dir={isRTL ? "rtl" : "auto"}
+                                className={fieldErrors.name_ar ? "border-destructive" : ""}
                             />
+                            <FieldInlineError message={fieldErrors.name_ar} />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="prof-name-en" className={isRTL ? "text-right" : "text-left"}>{t("modalAdd.nameEnLabel")}</Label>
                             <Input
                                 id="prof-name-en"
                                 dir="ltr"
-                                className="text-left"
+                                className={`text-left ${fieldErrors.name_en ? "border-destructive" : ""}`}
                                 value={form.name_en}
-                                onChange={(e) => setForm({ ...form, name_en: e.target.value })}
+                                onChange={(e) => handleEnglishChange(
+                                    e.target.value,
+                                    (name_en) => setForm({ ...form, name_en }),
+                                    (message) => setFieldErrors((prev) => ({ ...prev, name_en: message })),
+                                )}
                                 placeholder={getBilingualFieldPlaceholder("en", "ProfessionManagementPage", "modalAdd.nameEnPlaceholder")}
                             />
+                            <FieldInlineError message={fieldErrors.name_en} />
                         </div>
                     </div>
 
@@ -456,7 +472,7 @@ export default function ProfessionManagementPage() {
                                 className={`text-left font-mono ${isRTL ? 'pr-8 pl-3' : 'pr-3 pl-8'}`}
                                 placeholder={t("modalAssign.memberIdPlaceholder")}
                                 value={memberIdForAssign}
-                                onChange={(e) => setMemberIdForAssign(e.target.value)}
+                                onChange={(e) => handleDigitsChange(e.target.value, setMemberIdForAssign)}
                             />
                             {memberLookupState === "loading" && (
                                 <Loader2 className={`absolute ${isRTL ? 'right-2.5' : 'left-2.5'} top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground`} />

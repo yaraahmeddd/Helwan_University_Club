@@ -24,7 +24,7 @@ export const adminTableBadgeClass =
 
 /** Status pills — slightly smaller than type badges */
 export const adminTableStatusBadgeClass =
-  'admin-table-status-badge inline-flex items-center gap-0.5 px-1.5 py-px rounded-full font-semibold leading-none whitespace-nowrap';
+  'admin-table-status-badge inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded-full font-semibold leading-none whitespace-nowrap';
 
 /** View / edit dialogs — +50px vs max-w-3xl @ 88vh (see .admin-detail-dialog in CSS) */
 export const adminDialogStyles = {
@@ -34,8 +34,11 @@ export const adminDialogStyles = {
 
 /** Shared admin table styling — matches MemberManagementPage. */
 export const adminTableStyles = {
+  /** White table shell with scroll when content overflows */
+  shell:
+    'flex-1 overflow-hidden border-t border-border bg-white flex flex-col min-h-0',
   container:
-    'flex-1 overflow-auto [&::-webkit-scrollbar]:hidden',
+    'flex-1 overflow-auto bg-white [&::-webkit-scrollbar]:thin',
   /** Action button groups — horizontal, no wrapping */
   actions: 'inline-flex items-center justify-center gap-2 flex-nowrap',
   table: `w-full ${ADMIN_TEXT} leading-snug [font-family:var(--admin-font-body)]`,
@@ -43,16 +46,16 @@ export const adminTableStyles = {
   icon: ADMIN_ICON,
   /** Row action column icons — slightly larger than badges */
   actionIcon: ADMIN_ACTION_ICON,
-  /** Icon-only ghost buttons in action columns */
+  /** Icon-only ghost buttons in action columns — prefer AdminActionButton with a colored variant */
   iconAction:
-    'admin-icon-btn inline-flex h-10 w-10 items-center justify-center rounded-md cursor-pointer transition-all duration-150 text-muted-foreground hover:bg-muted hover:text-foreground hover:scale-105 active:scale-95',
-  header: 'sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10',
+    'admin-row-action-btn inline-flex h-10 w-10 items-center justify-center rounded-md cursor-pointer transition-all duration-150 bg-blue-50 text-blue-600 border border-blue-200/90 hover:bg-blue-100 hover:scale-105 active:scale-95',
+  header: 'sticky top-0 bg-white border-b border-border z-10',
   head: `px-4 py-2 ${adminFontClass.tableHead} text-muted-foreground whitespace-nowrap select-none align-middle`,
   headSortable: 'admin-head-sortable cursor-pointer hover:text-foreground hover:bg-muted/60',
   headCenter: 'text-center',
   headStart: 'text-start',
   body: 'divide-y divide-border',
-  row: 'transition-colors hover:bg-muted/40 group',
+  row: 'transition-colors hover:bg-muted/20 group bg-white',
   cell: `px-4 py-1.5 ${adminFontClass.tableCell} align-middle !h-auto`,
   cellXs: `px-4 py-1.5 ${adminFontClass.tableCell} align-middle !h-auto`,
   cellMuted: `px-4 py-1.5 ${adminFontClass.tableCell} text-muted-foreground align-middle !h-auto`,
@@ -97,7 +100,7 @@ export const adminPageStyles = {
     `admin-filter-btn flex items-center gap-1.5 h-10 px-3 rounded-md border ${ADMIN_TEXT} cursor-pointer transition-all duration-150 hover:bg-muted hover:border-muted-foreground/30 hover:text-foreground`,
   toolbarResults: `inline-flex items-center ${ADMIN_TEXT} text-muted-foreground`,
   pagination:
-    `flex flex-col items-center justify-center gap-2 px-4 py-3 border-t border-border bg-muted/20 shrink-0 ${ADMIN_TEXT} ${adminFontClass.ui}`,
+    `flex flex-col items-center justify-center gap-2 px-4 py-3 border-t border-border bg-white shrink-0 ${ADMIN_TEXT} ${adminFontClass.ui}`,
   paginationMeta: `${ADMIN_TEXT} text-muted-foreground text-center`,
   paginationControls: 'flex items-center justify-center gap-1 flex-wrap',
   paginationBtn: `h-9 px-3 ${ADMIN_TEXT} cursor-pointer transition-colors duration-150 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50`,

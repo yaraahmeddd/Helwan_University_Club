@@ -9,6 +9,8 @@
     "searchPlaceholder": "ابحث عن فريق...",
     "statusFilter": "الحالة",
     "sportFilter": "الرياضة",
+    "daysFilter": "أيام التدريب",
+    "membershipFilter": "العضوية",
     "clearFilter": "مسح",
     "clearAll": "مسح الفلاتر ×",
     "results": "نتيجة",

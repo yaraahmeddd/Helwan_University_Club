@@ -9,7 +9,6 @@ import {
   X,
   User,
   Phone,
-  ArrowRight,
   ShieldAlert,
   CalendarDays,
 } from "lucide-react";
@@ -19,7 +18,7 @@ import type { Locale } from "date-fns";
 
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../hooks/useLanguage";
-import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE, adminPageStyles } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
@@ -34,6 +33,9 @@ import { Input } from "../components/StaffPagesComponents/ui/input";
 import { Badge } from "../components/StaffPagesComponents/ui/badge";
 import { AdminMemberStatusBadge } from "../components/StaffPagesComponents/shared/AdminMemberStatusBadge";
 import { getAdminStatusConfig } from "../components/StaffPagesComponents/shared/adminMemberStatus";
+import { AdminActionButton, AdminRowActions, AdminViewButton } from "../components/StaffPagesComponents/shared/AdminRowActions";
+import { useTableExport } from "../utils/reportExport/useTableExport";
+import { ExportReportButton } from "../components/StaffPagesComponents/shared/ExportReportButton";
 import {
   Table,
   TableBody,
@@ -266,6 +268,54 @@ export default function ManageInvitationsPage() {
     }
   };
 
+  const exportHandle = useTableExport({
+    reportId: "manage-invitations",
+    titleEn: "Invitations Report",
+    titleAr: "تقرير الدعوات",
+    columns: [
+      {
+        headerEn: "Booker",
+        headerAr: "الحاجز",
+        accessor: (inv: Invitation) =>
+          getPersonDisplayName(inv.booker?.name_ar, inv.booker?.name_en, language, inv.booker?.name, t("cell.unknown")),
+        width: 24,
+      },
+      {
+        headerEn: "Phone",
+        headerAr: "الهاتف",
+        accessor: (inv: Invitation) => inv.booker?.phone ?? t("cell.noPhone"),
+        width: 16,
+      },
+      {
+        headerEn: "Date",
+        headerAr: "التاريخ",
+        accessor: (inv: Invitation) => fmtDate(inv.booking_date),
+        width: 14,
+      },
+      {
+        headerEn: "Field",
+        headerAr: "الملعب",
+        accessor: (inv: Invitation) =>
+          getLocalizedText(inv.field?.name_ar, inv.field?.name_en, language) || t("cell.noField"),
+        width: 18,
+      },
+      {
+        headerEn: "Status",
+        headerAr: "الحالة",
+        accessor: (inv: Invitation) => inv.status,
+        width: 14,
+      },
+      {
+        headerEn: "Participants",
+        headerAr: "المشاركون",
+        accessor: (inv: Invitation) =>
+          `${inv.stats?.registered_count ?? 0}/${inv.stats?.expected_participants ?? 0}`,
+        width: 12,
+      },
+    ],
+    rows: invitations,
+  });
+
   return (
     <div
       className="h-[calc(100vh-4rem)] flex flex-col bg-background"
@@ -277,43 +327,40 @@ export default function ManageInvitationsPage() {
         title={t('header.title')}
         subtitle={t('header.subtitle')}
         actions={
-          <Button variant="outline" size="sm" onClick={() => fetchData(pagination.page)} disabled={loading} className="gap-2">
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            {t('header.refresh')}
-          </Button>
+          <>
+            <ExportReportButton {...exportHandle} rowCount={pagination.total} />
+            <Button variant="outline" size="sm" onClick={() => fetchData(pagination.page)} disabled={loading} className="gap-2">
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              {t('header.refresh')}
+            </Button>
+          </>
         }
       />
 
-      <div className="flex-1 overflow-y-auto min-h-0 p-6 space-y-6">
-
-      {/* Controls: Filters */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-        <div className="flex flex-col sm:flex-row gap-3 items-center w-full xl:w-auto">
-          <div className="relative w-full sm:w-[320px]">
-            <Search className="absolute end-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input 
-              placeholder={t('filters.searchPlaceholder')} 
-              className="ps-3 pe-9 w-full rounded-lg bg-slate-50 border-slate-200 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all font-medium"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-[180px] rounded-lg bg-slate-50 border-slate-200 font-medium focus:ring-2 focus:ring-primary/20">
-              <SelectValue placeholder={t('filters.statusPlaceholder')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('filters.allStatuses')}</SelectItem>
-              <SelectItem value="confirmed">{tStatus(getAdminStatusConfig("confirmed").labelKey)}</SelectItem>
-              <SelectItem value="pending_payment">{tStatus(getAdminStatusConfig("pending_payment").labelKey)}</SelectItem>
-              <SelectItem value="cancelled">{tStatus(getAdminStatusConfig("cancelled").labelKey)}</SelectItem>
-            </SelectContent>
-          </Select>
+      <div className={adminPageStyles.toolbar}>
+        <div className="relative flex-1 min-w-[180px] max-w-sm">
+          <Search className={`absolute ${isRTL ? "right-3" : "left-3"} top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none`} />
+          <Input
+            placeholder={t('filters.searchPlaceholder')}
+            className={`${adminPageStyles.toolbarSearch} ${isRTL ? "pr-9 pl-3" : "pl-9 pr-3"}`}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className={`${adminPageStyles.toolbarSelect} w-[11rem]`}>
+            <SelectValue placeholder={t('filters.statusPlaceholder')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('filters.allStatuses')}</SelectItem>
+            <SelectItem value="confirmed">{tStatus(getAdminStatusConfig("confirmed").labelKey)}</SelectItem>
+            <SelectItem value="pending_payment">{tStatus(getAdminStatusConfig("pending_payment").labelKey)}</SelectItem>
+            <SelectItem value="cancelled">{tStatus(getAdminStatusConfig("cancelled").labelKey)}</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Table */}
-      <div className="rounded-xl border border-border shadow-sm bg-background overflow-hidden flex flex-col">
+      <div className={adminTableStyles.shell}>
         <div className={adminTableStyles.container}>
           <Table>
             <TableHeader className={adminTableStyles.header}>
@@ -322,7 +369,7 @@ export default function ManageInvitationsPage() {
                 <TableHead className={adminHeadClass({ className: "w-[140px]" })}>{t('table.phone')}</TableHead>
                 <TableHead className={adminHeadClass({ className: "w-[180px]" })}>{t('table.dateTime')}</TableHead>
                 <TableHead className={adminHeadClass()}>{t('table.fieldSport')}</TableHead>
-                <TableHead className={adminHeadClass({ className: "w-[1%] whitespace-nowrap" })}>{t('table.status')}</TableHead>
+                <TableHead className={adminHeadClass({ center: true, className: "w-[1%] whitespace-nowrap" })}>{t('table.status')}</TableHead>
                 <TableHead className={adminHeadClass({ center: true, className: "w-[1%] whitespace-nowrap" })}>{t('table.participants')}</TableHead>
                 <TableHead className={adminHeadClass({ center: true, className: "w-[140px]" })}>{t('table.actions')}</TableHead>
               </TableRow>
@@ -402,7 +449,7 @@ export default function ManageInvitationsPage() {
                       </div>
                     </TableCell>
 
-                    <TableCell className={adminCellClass({ className: "whitespace-nowrap" })}>
+                    <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
                       <StatusBadge status={inv.status} />
                     </TableCell>
 
@@ -414,27 +461,18 @@ export default function ManageInvitationsPage() {
                     </TableCell>
 
                     <TableCell className={adminCellClass({ center: true })}>
-                      <div className={adminTableStyles.actions}>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 shadow-sm text-primary border-primary/20 hover:bg-primary hover:text-white transition-colors"
+                      <AdminRowActions>
+                        <AdminViewButton
+                          tooltip={t('actions.viewDetails')}
                           onClick={() => setSelectedInv(inv)}
-                          title={t('actions.viewDetails')}
-                        >
-                          <span className="hidden sm:inline-block ms-1.5">{t('actions.details')}</span>
-                          <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-slate-400 hover:text-primary hover:bg-primary/10 hover:shadow-sm border border-transparent hover:border-primary/20 transition-all rounded-md"
+                        />
+                        <AdminActionButton
+                          tooltip={t('actions.copyLink')}
+                          icon={Link2}
+                          variant="copy"
                           onClick={() => copyToClipboard(formatShareUrl(inv.share_url))}
-                          title={t('actions.copyLink')}
-                        >
-                          <Link2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                        />
+                      </AdminRowActions>
                     </TableCell>
                   </TableRow>
                 ))
@@ -450,7 +488,6 @@ export default function ManageInvitationsPage() {
           isRTL={isRTL}
           disabled={loading}
         />
-      </div>
       </div>
 
       {/* Slide-over Detail Panel */}
@@ -536,7 +573,7 @@ export default function ManageInvitationsPage() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">{t('panel.shareLink')}</span>
-                      <Button variant="outline" size="sm" className="h-7 text-xs px-2 gap-1.5" onClick={() => copyToClipboard(formatShareUrl(selectedInv.share_url))}>
+                      <Button variant="outline" size="sm" className="h-7 text-xs px-2 gap-1.5 border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800" onClick={() => copyToClipboard(formatShareUrl(selectedInv.share_url))}>
                         <Link2 className="h-3 w-3" />{t('cell.copyLink')}
                       </Button>
                     </div>

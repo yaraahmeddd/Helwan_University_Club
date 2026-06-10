@@ -4,6 +4,8 @@ import { CloudUpload, Search, Image as ImageIcon, Video, FileText, Edit2, Trash2
 import { CustomDatePicker } from '../components/StaffPagesComponents/ui/CustomDatePicker';
 import { useTranslation } from "react-i18next";
 import { formatAdminDate, getAdminLocale } from '../components/StaffPagesComponents/shared/adminFormatters';
+import { useAdminFieldValidation } from '../hooks/useAdminFieldValidation';
+import { validateAdminMediaForm } from '../lib/validation/adminForms';
 
 interface MediaPost {
     id: string;
@@ -42,6 +44,7 @@ interface CreateMediaModalProps {
 const CreateMediaModal: React.FC<CreateMediaModalProps> = ({ isOpen, onClose, onSuccess, editPost }) => {
     const { t, i18n } = useTranslation("MediaManagerPage");
     const isRTL = i18n.language === 'ar';
+    const { tVal } = useAdminFieldValidation();
 
     const [formData, setFormData] = useState({
         title: '',
@@ -54,7 +57,7 @@ const CreateMediaModal: React.FC<CreateMediaModalProps> = ({ isOpen, onClose, on
     const [existingImages, setExistingImages] = useState<string[]>([]);
     const [videoUrl, setVideoUrl] = useState('');
     const [videoFile, setVideoFile] = useState<File | null>(null);
-    const [errors, setErrors] = useState<{ title?: string; media?: string }>({});
+    const [errors, setErrors] = useState<{ title?: string; media?: string; description?: string; videoUrl?: string }>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
@@ -112,8 +115,10 @@ const CreateMediaModal: React.FC<CreateMediaModalProps> = ({ isOpen, onClose, on
     };
 
     const handleSubmit = async () => {
-        const newErrors: { title?: string; media?: string } = {};
-        if (!formData.title.trim()) newErrors.title = t("errors.titleRequired");
+        const newErrors = validateAdminMediaForm(
+            { title: formData.title, description: formData.description, videoUrl },
+            tVal,
+        );
         if (formData.category !== 'فيديو' && uploadedImages.length === 0 && existingImages.length === 0) {
             newErrors.media = t("errors.imageRequired");
         }

@@ -9,31 +9,44 @@ import { getAdminStatusConfig } from './adminMemberStatus';
 type AdminMemberStatusBadgeProps = {
   status: string;
   compact?: boolean;
+  centered?: boolean;
   className?: string;
 };
 
 export function AdminMemberStatusBadge({
   status,
   compact = false,
+  centered,
   className,
 }: AdminMemberStatusBadgeProps) {
   const { t } = useTranslation('common');
   const cfg = getAdminStatusConfig(status);
   const Icon = cfg.icon;
+  const shouldCenter = centered ?? compact;
 
-  return (
+  const badge = (
     <span
       className={cn(
-        'inline-flex items-center gap-0.5 rounded-full font-semibold border',
+        'inline-flex items-center justify-center gap-0.5 rounded-full font-semibold border',
         cfg.color,
         cfg.bg,
         cfg.border,
-        compact ? adminTableStatusBadgeClass : 'px-3 py-1 text-[15px] gap-1',
-        className,
+        compact ? adminTableStatusBadgeClass : 'px-3 py-1 text-[20px] gap-1',
+        !shouldCenter && className,
       )}
     >
-      <Icon className={compact ? 'w-[11px] h-[11px] shrink-0' : adminTableStyles.icon} />
+      <Icon className={compact ? 'w-4 h-4 shrink-0' : adminTableStyles.icon} />
       {t(cfg.labelKey, { defaultValue: status })}
     </span>
+  );
+
+  if (!shouldCenter) {
+    return badge;
+  }
+
+  return (
+    <div className={cn('flex w-full items-center justify-center', className)}>
+      {badge}
+    </div>
   );
 }

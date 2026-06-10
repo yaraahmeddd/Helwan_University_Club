@@ -28,6 +28,7 @@ import { buildPersonName, getBilingualFieldPlaceholder, getEntityName, type Disp
 import { formatAdminDate, formatAdminTime } from './adminFormatters';
 import { adminFieldIcons } from './adminRecordFields';
 import { adminDialogStyles } from './adminTableStyles';
+import { FieldInlineError } from './FieldInlineError';
 import {
   RecordViewEditableField,
   RecordViewField,
@@ -67,6 +68,7 @@ export type MemberEditPanelProps = {
   editSaving: boolean;
   onSave: () => void;
   onCancel: () => void;
+  fieldErrors?: Record<string, string | undefined>;
   fields: {
     firstNameAr: string;
     firstNameEn: string;
@@ -137,6 +139,10 @@ export type MemberEditPanelProps = {
 
 const fieldInputClass = 'h-10';
 
+function fieldClass(base: string, fieldErrors: Record<string, string | undefined> | undefined, key: string) {
+  return fieldErrors?.[key] ? `${base} border-destructive` : base;
+}
+
 export function MemberEditPanel({
   row,
   details,
@@ -151,6 +157,7 @@ export function MemberEditPanel({
   editSaving,
   onSave,
   onCancel,
+  fieldErrors,
   fields: f,
   onChange: set,
 }: MemberEditPanelProps) {
@@ -235,17 +242,19 @@ export function MemberEditPanel({
               <Input
                 value={f.firstNameAr}
                 onChange={(e) => set.setFirstNameAr(e.target.value)}
-                className={fieldInputClass}
+                className={fieldClass(fieldInputClass, fieldErrors, 'firstNameAr')}
                 placeholder={getBilingualFieldPlaceholder('ar', 'MemberManagementPage', 'editModal.placeholders.firstNameAr')}
               />
+              <FieldInlineError message={fieldErrors?.firstNameAr} />
             </RecordViewEditableField>
             <RecordViewEditableField icon={User} label={t('editModal.fields.lastNameAr')}>
               <Input
                 value={f.lastNameAr}
                 onChange={(e) => set.setLastNameAr(e.target.value)}
-                className={fieldInputClass}
+                className={fieldClass(fieldInputClass, fieldErrors, 'lastNameAr')}
                 placeholder={getBilingualFieldPlaceholder('ar', 'MemberManagementPage', 'editModal.placeholders.lastNameAr')}
               />
+              <FieldInlineError message={fieldErrors?.lastNameAr} />
             </RecordViewEditableField>
             <RecordViewEditableField
               icon={User}
@@ -255,10 +264,11 @@ export function MemberEditPanel({
               <Input
                 value={f.firstNameEn}
                 onChange={(e) => set.setFirstNameEn(e.target.value)}
-                className={fieldInputClass}
+                className={fieldClass(fieldInputClass, fieldErrors, 'firstNameEn')}
                 placeholder={getBilingualFieldPlaceholder('en', 'MemberManagementPage', 'editModal.placeholders.firstNameEn')}
                 dir="ltr"
               />
+              <FieldInlineError message={fieldErrors?.firstNameEn} />
             </RecordViewEditableField>
             <RecordViewEditableField
               icon={User}
@@ -268,19 +278,21 @@ export function MemberEditPanel({
               <Input
                 value={f.lastNameEn}
                 onChange={(e) => set.setLastNameEn(e.target.value)}
-                className={fieldInputClass}
+                className={fieldClass(fieldInputClass, fieldErrors, 'lastNameEn')}
                 placeholder={getBilingualFieldPlaceholder('en', 'MemberManagementPage', 'editModal.placeholders.lastNameEn')}
                 dir="ltr"
               />
+              <FieldInlineError message={fieldErrors?.lastNameEn} />
             </RecordViewEditableField>
             <RecordViewEditableField icon={CreditCard} label={t('editModal.fields.nationalId')}>
               <Input
                 value={f.nationalId}
                 onChange={(e) => set.setNationalId(e.target.value)}
-                className={fieldInputClass}
+                className={fieldClass(fieldInputClass, fieldErrors, 'nationalId')}
                 placeholder={t('editModal.placeholders.nationalId')}
                 dir="ltr"
               />
+              <FieldInlineError message={fieldErrors?.nationalId} />
             </RecordViewEditableField>
             <RecordViewEditableField icon={User} label={t('editModal.fields.gender')}>
               <Select value={f.gender} onValueChange={set.setGender}>
@@ -297,19 +309,21 @@ export function MemberEditPanel({
               <Input
                 value={f.birthdate}
                 onChange={(e) => set.setBirthdate(e.target.value)}
-                className={fieldInputClass}
+                className={fieldClass(fieldInputClass, fieldErrors, 'birthdate')}
                 type="date"
                 dir="ltr"
               />
+              <FieldInlineError message={fieldErrors?.birthdate} />
             </RecordViewEditableField>
             <RecordViewEditableField icon={Globe} label={t('editModal.fields.nationality')}>
               <Input
                 value={f.nationality}
                 onChange={(e) => set.setNationality(e.target.value)}
-                className={fieldInputClass}
+                className={fieldClass(fieldInputClass, fieldErrors, 'nationality')}
                 placeholder={t('editModal.placeholders.nationality')}
                 dir="ltr"
               />
+              <FieldInlineError message={fieldErrors?.nationality} />
             </RecordViewEditableField>
             <RecordViewEditableField
               icon={HeartPulse}
@@ -319,9 +333,10 @@ export function MemberEditPanel({
               <Input
                 value={f.health}
                 onChange={(e) => set.setHealth(e.target.value)}
-                className={fieldInputClass}
+                className={fieldClass(fieldInputClass, fieldErrors, 'health')}
                 placeholder={t('editModal.placeholders.healthStatus')}
               />
+              <FieldInlineError message={fieldErrors?.health} />
             </RecordViewEditableField>
           </div>
         </RecordViewSection>
@@ -332,21 +347,23 @@ export function MemberEditPanel({
               <Input
                 value={f.email}
                 onChange={(e) => set.setEmail(e.target.value)}
-                className={fieldInputClass}
+                className={fieldClass(fieldInputClass, fieldErrors, 'email')}
                 placeholder={t('editModal.placeholders.email')}
                 dir="ltr"
                 type="email"
               />
+              <FieldInlineError message={fieldErrors?.email} />
             </RecordViewEditableField>
             <RecordViewEditableField icon={adminFieldIcons.phone} label={t('editModal.fields.phone')}>
               <Input
                 value={f.phone}
                 onChange={(e) => set.setPhone(e.target.value)}
-                className={fieldInputClass}
+                className={fieldClass(fieldInputClass, fieldErrors, 'phone')}
                 placeholder={t('editModal.placeholders.phone')}
                 dir="ltr"
                 type="tel"
               />
+              <FieldInlineError message={fieldErrors?.phone} />
             </RecordViewEditableField>
             <RecordViewEditableField
               icon={adminFieldIcons.address}
@@ -356,9 +373,10 @@ export function MemberEditPanel({
               <Input
                 value={f.address}
                 onChange={(e) => set.setAddress(e.target.value)}
-                className={fieldInputClass}
+                className={fieldClass(fieldInputClass, fieldErrors, 'address')}
                 placeholder={t('editModal.placeholders.address')}
               />
+              <FieldInlineError message={fieldErrors?.address} />
             </RecordViewEditableField>
           </div>
         </RecordViewSection>
@@ -427,16 +445,18 @@ export function MemberEditPanel({
                 <Input
                   value={f.departmentEn}
                   onChange={(e) => set.setDepartmentEn(e.target.value)}
-                  className={fieldInputClass}
+                  className={fieldClass(fieldInputClass, fieldErrors, 'departmentEn')}
                   dir="ltr"
                 />
+                <FieldInlineError message={fieldErrors?.departmentEn} />
               </RecordViewEditableField>
               <RecordViewEditableField icon={User} label={t('editModal.fields.departmentAr')}>
                 <Input
                   value={f.departmentAr}
                   onChange={(e) => set.setDepartmentAr(e.target.value)}
-                  className={fieldInputClass}
+                  className={fieldClass(fieldInputClass, fieldErrors, 'departmentAr')}
                 />
+                <FieldInlineError message={fieldErrors?.departmentAr} />
               </RecordViewEditableField>
             </div>
           </RecordViewSection>
@@ -470,16 +490,18 @@ export function MemberEditPanel({
                 <Input
                   value={f.formerDepartmentEn}
                   onChange={(e) => set.setFormerDepartmentEn(e.target.value)}
-                  className={fieldInputClass}
+                  className={fieldClass(fieldInputClass, fieldErrors, 'formerDepartmentEn')}
                   dir="ltr"
                 />
+                <FieldInlineError message={fieldErrors?.formerDepartmentEn} />
               </RecordViewEditableField>
               <RecordViewEditableField icon={User} label={t('editModal.fields.formerDepartmentAr')}>
                 <Input
                   value={f.formerDepartmentAr}
                   onChange={(e) => set.setFormerDepartmentAr(e.target.value)}
-                  className={fieldInputClass}
+                  className={fieldClass(fieldInputClass, fieldErrors, 'formerDepartmentAr')}
                 />
+                <FieldInlineError message={fieldErrors?.formerDepartmentAr} />
               </RecordViewEditableField>
               <RecordViewEditableField icon={CreditCard} label={t('editModal.fields.lastSalary')}>
                 <Input
@@ -554,16 +576,18 @@ export function MemberEditPanel({
                 <Input
                   value={f.jobTitleEn}
                   onChange={(e) => set.setJobTitleEn(e.target.value)}
-                  className={fieldInputClass}
+                  className={fieldClass(fieldInputClass, fieldErrors, 'jobTitleEn')}
                   dir="ltr"
                 />
+                <FieldInlineError message={fieldErrors?.jobTitleEn} />
               </RecordViewEditableField>
               <RecordViewEditableField icon={User} label={t('editModal.fields.jobTitleAr')}>
                 <Input
                   value={f.jobTitleAr}
                   onChange={(e) => set.setJobTitleAr(e.target.value)}
-                  className={fieldInputClass}
+                  className={fieldClass(fieldInputClass, fieldErrors, 'jobTitleAr')}
                 />
+                <FieldInlineError message={fieldErrors?.jobTitleAr} />
               </RecordViewEditableField>
             </div>
           </RecordViewSection>

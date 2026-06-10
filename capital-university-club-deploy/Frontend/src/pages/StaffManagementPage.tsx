@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { RefreshCw, UserPlus, Users, Eye, Pencil, Trash2 } from 'lucide-react';
+import { RefreshCw, UserPlus, Users, Pencil, Trash2 } from 'lucide-react';
 import { useTableExport } from '../utils/reportExport/useTableExport';
 import { ExportReportButton } from '../components/StaffPagesComponents/shared/ExportReportButton';
 import api from '../services/axios';
@@ -31,6 +31,8 @@ import {
   adminDialogStyles,
   ADMIN_PAGE_SIZE,
 } from '../components/StaffPagesComponents/shared/adminTableStyles';
+import { AdminActionButton, AdminRowActions, AdminViewButton } from '../components/StaffPagesComponents/shared/AdminRowActions';
+import { AdminMemberStatusBadge } from '../components/StaffPagesComponents/shared/AdminMemberStatusBadge';
 import { AdminPagination } from '../components/StaffPagesComponents/shared/AdminPagination';
 import { AdminStaffListToolbar } from '../components/StaffPagesComponents/shared/AdminStaffListToolbar';
 import { PersonNameDisplay } from '../components/StaffPagesComponents/shared/PersonNameDisplay';
@@ -45,7 +47,6 @@ import { useLanguage } from '../hooks/useLanguage';
 import { useLocalizedTranslation } from '../hooks/useLocalizedTranslation';
 import { useTranslation } from 'react-i18next';
 import { validateStaffEdit } from '../lib/validation';
-import { Badge } from '../components/StaffPagesComponents/ui/badge';
 import { useAdminFormatters } from '../components/StaffPagesComponents/shared/adminFormatters';
 
 type StaffType = {
@@ -87,20 +88,8 @@ function normalizeStaffStatus(status?: string, isActive?: boolean): string {
   return 'active';
 }
 
-function StatusBadge({ status }: { status?: string }) {
-  const { t } = useLocalizedTranslation('StaffManagementPage');
-  const isActive = normalizeStaffStatus(status) === 'active';
-  return (
-    <Badge
-      className={
-        isActive
-          ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-0 text-[11px]'
-          : 'bg-rose-100 text-rose-700 hover:bg-rose-100 border-0 text-[11px]'
-      }
-    >
-      {isActive ? t('status.active') : t('status.cancelled')}
-    </Badge>
-  );
+function staffStatusForBadge(status?: string, isActive?: boolean): string {
+  return normalizeStaffStatus(status, isActive);
 }
 
 export default function StaffManagementPage() {
@@ -523,43 +512,34 @@ export default function StaffManagementPage() {
                       {fmtDate(row.employmentStartDate)}
                     </TableCell>
                     <TableCell className={adminCellClass({ center: true })}>
-                      <StatusBadge status={row.status} />
+                      <AdminMemberStatusBadge status={staffStatusForBadge(row.status)} compact />
                     </TableCell>
                     <TableCell className={adminCellClass({ center: true })} onClick={(e) => e.stopPropagation()}>
-                      <div className={adminTableStyles.actions}>
-                        <button
-                          title={t('table.actions.view')}
+                      <AdminRowActions>
+                        <AdminViewButton
+                          tooltip={t('table.actions.view')}
                           onClick={() => void openDetail(row)}
-                          className={adminTableStyles.iconAction}
-                        >
-                          <Eye className={adminTableStyles.actionIcon} />
-                        </button>
+                        />
                         <RoleGuard privilege="UPDATE_STAFF">
-                          <button
-                            title={t('table.actions.edit')}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              void openDetail(row, true);
-                            }}
-                            className={`${adminTableStyles.iconAction} hover:bg-amber-100 hover:text-amber-600`}
-                          >
-                            <Pencil className={adminTableStyles.actionIcon} />
-                          </button>
+                          <AdminActionButton
+                            tooltip={t('table.actions.edit')}
+                            icon={Pencil}
+                            variant="edit"
+                            onClick={() => void openDetail(row, true)}
+                          />
                         </RoleGuard>
                         <RoleGuard privilege="TERMINATE_STAFF">
-                          <button
-                            title={t('table.actions.deactivate')}
-                            onClick={(e) => {
-                              e.stopPropagation();
+                          <AdminActionButton
+                            tooltip={t('table.actions.deactivate')}
+                            icon={Trash2}
+                            variant="delete"
+                            onClick={() => {
                               setDeleteTarget(row);
                               setDeleteOpen(true);
                             }}
-                            className={`${adminTableStyles.iconAction} hover:bg-rose-100 hover:text-rose-600`}
-                          >
-                            <Trash2 className={adminTableStyles.actionIcon} />
-                          </button>
+                          />
                         </RoleGuard>
-                      </div>
+                      </AdminRowActions>
                     </TableCell>
                   </TableRow>
                 ))

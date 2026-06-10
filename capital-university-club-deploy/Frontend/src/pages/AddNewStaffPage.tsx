@@ -34,6 +34,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useStaffFormSchema } from "../hooks/useValidation";
 import type { StaffFormValues } from "../lib/validation/schemas";
+import { useAdminFieldValidation } from "../hooks/useAdminFieldValidation";
 import { StaffService } from "../services/staffService";
 
 import { Button } from "../components/StaffPagesComponents/ui/button";
@@ -378,7 +379,29 @@ export default function AddNewStaffPage() {
     },
   });
 
+  const {
+    handleArabicChange,
+    handleEnglishChange,
+    handleDigitsChange,
+    handlePhoneChange,
+  } = useAdminFieldValidation();
+
   const staffTypeId = watch("staff_type_id");
+  const firstNameAr = watch("first_name_ar");
+  const lastNameAr = watch("last_name_ar");
+  const firstNameEn = watch("first_name_en");
+  const lastNameEn = watch("last_name_en");
+  const nationalId = watch("national_id");
+  const phone = watch("phone");
+  const address = watch("address");
+
+  const firstNameArField = register("first_name_ar");
+  const lastNameArField = register("last_name_ar");
+  const firstNameEnField = register("first_name_en");
+  const lastNameEnField = register("last_name_en");
+  const nationalIdField = register("national_id");
+  const phoneField = register("phone");
+  const addressField = register("address");
   const uiLanguage = (i18n.language === 'ar' ? 'ar' : 'en') as 'ar' | 'en';
   const inputClasses = "w-full px-4 py-3 rounded-xl border border-border bg-muted/30 focus:bg-background focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-200 outline-none placeholder:text-muted-foreground text-foreground";
 
@@ -910,25 +933,96 @@ export default function AddNewStaffPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                   <InputGroup label={t("form.firstNameEn")} error={errors.first_name_en}>
-                    <input {...register("first_name_en")} dir="ltr" className={`${inputClasses} text-left`} maxLength={20} />
+                    <input
+                      name={firstNameEnField.name}
+                      ref={firstNameEnField.ref}
+                      onBlur={firstNameEnField.onBlur}
+                      value={firstNameEn ?? ""}
+                      onChange={(e) => handleEnglishChange(
+                        e.target.value,
+                        (v) => setValue("first_name_en", v, { shouldValidate: true, shouldDirty: true }),
+                        () => {},
+                        'name',
+                      )}
+                      dir="ltr"
+                      className={`${inputClasses} text-left`}
+                      maxLength={20}
+                    />
                   </InputGroup>
 
                   <InputGroup label={t("form.firstNameAr")} error={errors.first_name_ar}>
-                    <input {...register("first_name_ar")} className={inputClasses} maxLength={20} />
+                    <input
+                      name={firstNameArField.name}
+                      ref={firstNameArField.ref}
+                      onBlur={firstNameArField.onBlur}
+                      value={firstNameAr ?? ""}
+                      onChange={(e) => handleArabicChange(
+                        e.target.value,
+                        (v) => setValue("first_name_ar", v, { shouldValidate: true, shouldDirty: true }),
+                        () => {},
+                        'name',
+                      )}
+                      className={inputClasses}
+                      maxLength={20}
+                      dir="rtl"
+                    />
                   </InputGroup>
 
                   <InputGroup label={t("form.lastNameEn")} error={errors.last_name_en}>
-                    <input {...register("last_name_en")} dir="ltr" className={`${inputClasses} text-left`} maxLength={20} />
+                    <input
+                      name={lastNameEnField.name}
+                      ref={lastNameEnField.ref}
+                      onBlur={lastNameEnField.onBlur}
+                      value={lastNameEn ?? ""}
+                      onChange={(e) => handleEnglishChange(
+                        e.target.value,
+                        (v) => setValue("last_name_en", v, { shouldValidate: true, shouldDirty: true }),
+                        () => {},
+                        'name',
+                      )}
+                      dir="ltr"
+                      className={`${inputClasses} text-left`}
+                      maxLength={20}
+                    />
                   </InputGroup>
 
                   <InputGroup label={t("form.lastNameAr")} error={errors.last_name_ar}>
-                    <input {...register("last_name_ar")} className={inputClasses} maxLength={20} />
+                    <input
+                      name={lastNameArField.name}
+                      ref={lastNameArField.ref}
+                      onBlur={lastNameArField.onBlur}
+                      value={lastNameAr ?? ""}
+                      onChange={(e) => handleArabicChange(
+                        e.target.value,
+                        (v) => setValue("last_name_ar", v, { shouldValidate: true, shouldDirty: true }),
+                        () => {},
+                        'name',
+                      )}
+                      className={inputClasses}
+                      maxLength={20}
+                      dir="rtl"
+                    />
                   </InputGroup>
                   
                   <div className="md:col-span-2 h-px bg-gray-100 my-2" />
 
                   <InputGroup label={t("form.nationalId")} className="md:col-span-2" error={errors.national_id}>
-                    <input {...register("national_id")} type="text" dir="ltr" className={`${inputClasses} font-mono tracking-widest text-lg text-left`} maxLength={14} inputMode="numeric" />
+                    <input
+                      name={nationalIdField.name}
+                      ref={nationalIdField.ref}
+                      onBlur={nationalIdField.onBlur}
+                      value={nationalId ?? ""}
+                      onChange={(e) => handleDigitsChange(
+                        e.target.value,
+                        (v) => setValue("national_id", v, { shouldValidate: true, shouldDirty: true }),
+                        14,
+                      )}
+                      type="text"
+                      dir="ltr"
+                      className={`${inputClasses} font-mono tracking-widest text-lg text-left`}
+                      maxLength={14}
+                      inputMode="numeric"
+                    />
                   </InputGroup>
 
                   <InputGroup label={t("form.gender")}>
@@ -939,13 +1033,39 @@ export default function AddNewStaffPage() {
                   </InputGroup>
 
                   <InputGroup label={t("form.phone")} error={errors.phone}>
-                    <input {...register("phone")} type="tel" dir="ltr" className={`${inputClasses} text-left font-mono`} maxLength={11} inputMode="numeric" />
+                    <input
+                      name={phoneField.name}
+                      ref={phoneField.ref}
+                      onBlur={phoneField.onBlur}
+                      value={phone ?? ""}
+                      onChange={(e) => handlePhoneChange(
+                        e.target.value,
+                        (v) => setValue("phone", v, { shouldValidate: true, shouldDirty: true }),
+                      )}
+                      type="tel"
+                      dir="ltr"
+                      className={`${inputClasses} text-left font-mono`}
+                      maxLength={11}
+                      inputMode="numeric"
+                    />
                   </InputGroup>
 
                   <div className="md:col-span-2 h-px bg-gray-100 my-2" />
 
                   <InputGroup label={t("form.address")} className="md:col-span-2" error={errors.address}>
-                    <input {...register("address")} className={inputClasses} maxLength={100} />
+                    <input
+                      name={addressField.name}
+                      ref={addressField.ref}
+                      onBlur={addressField.onBlur}
+                      value={address ?? ""}
+                      onChange={(e) => setValue(
+                        "address",
+                        e.target.value.slice(0, 200),
+                        { shouldValidate: true, shouldDirty: true },
+                      )}
+                      className={inputClasses}
+                      maxLength={200}
+                    />
                   </InputGroup>
 
                   <InputGroup label={t("form.staffType")} error={errors.staff_type_id}>

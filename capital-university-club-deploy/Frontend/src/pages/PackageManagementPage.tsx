@@ -12,6 +12,8 @@ import {
   getPrivilegeModuleLabel,
   shouldShowPrivilegeCode,
 } from "../lib/privilegeModuleLabels";
+import { useAdminFieldValidation } from "../hooks/useAdminFieldValidation";
+import { validateAdminPackageForm } from "../lib/validation/adminForms";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
 
@@ -305,6 +307,7 @@ function EditModal({
 }) {
   const { t } = useTranslation("PackageManagementPage");
   const { language, isRTL } = useLanguage();
+  const { tVal } = useAdminFieldValidation();
   const uiLanguage = language;
 
   const initialName = getLanguageOnlyText(pkg.name_ar, pkg.name_en, language);
@@ -424,8 +427,9 @@ function EditModal({
   };
 
   const handleSubmit = () => {
-    if (!name.trim()) {
-      setError(t("editModal.nameRequired"));
+    const formErrors = validateAdminPackageForm({ name, description }, tVal);
+    if (Object.keys(formErrors).length > 0) {
+      setError(Object.values(formErrors)[0] ?? t("editModal.nameRequired"));
       return;
     }
     if (selectedIds.size === 0) {

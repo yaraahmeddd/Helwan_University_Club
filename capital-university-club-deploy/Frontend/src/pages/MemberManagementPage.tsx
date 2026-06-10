@@ -26,6 +26,8 @@ import api from "../services/axios";
 import { useToast } from "../hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useMemberEditSchema } from "../hooks/useValidation";
+import { useAdminFieldValidation } from "../hooks/useAdminFieldValidation";
+import { validateAdminMemberEditForm } from "../lib/validation/adminForms";
 
 import { Button } from "../components/StaffPagesComponents/ui/button";
 
@@ -855,6 +857,34 @@ export default function MemberManagementPage() {
     const locale = getAdminLocale(language);
     const { toast } = useToast();
     const memberEditSchema = useMemberEditSchema();
+    const {
+        tVal,
+        handleArabicChange,
+        handleEnglishChange,
+        handleDigitsChange,
+        handlePhoneChange,
+    } = useAdminFieldValidation();
+    const [editFieldErrors, setEditFieldErrors] = useState<Record<string, string | undefined>>({});
+
+    const mapMemberEditErrors = (errors: Record<string, string>): Record<string, string | undefined> => ({
+        firstNameAr: errors.first_name_ar,
+        lastNameAr: errors.last_name_ar,
+        firstNameEn: errors.first_name_en,
+        lastNameEn: errors.last_name_en,
+        phone: errors.phone,
+        email: errors.email,
+        nationalId: errors.national_id,
+        birthdate: errors.birthdate,
+        nationality: errors.nationality,
+        address: errors.address,
+        health: errors.health_status,
+        departmentAr: errors.department_ar,
+        departmentEn: errors.department_en,
+        jobTitleAr: errors.job_title_ar,
+        jobTitleEn: errors.job_title_en,
+        formerDepartmentAr: errors.former_department_ar,
+        formerDepartmentEn: errors.former_department_en,
+    });
 
     const getMemberDisplayName = useCallback((row: Pick<MemberRow, "firstNameAr" | "lastNameAr" | "firstNameEn" | "lastNameEn">) => {
         return buildPersonName(row, language).primary;
@@ -1795,12 +1825,44 @@ export default function MemberManagementPage() {
         }
 
         populateEditFields(target, d);
+        setEditFieldErrors({});
         setEditOpen(true);
     };
 
     const handleSaveEdit = async () => {
 
         if (!selectedRow) return;
+
+        const regexErrors = validateAdminMemberEditForm({
+            first_name_ar: editFirstNameAr.trim(),
+            last_name_ar: editLastNameAr.trim(),
+            first_name_en: editFirstNameEn.trim(),
+            last_name_en: editLastNameEn.trim(),
+            phone: editPhone.trim(),
+            email: editEmail.trim(),
+            national_id: editNationalId.trim(),
+            birthdate: editBirthdate.trim(),
+            nationality: editNationality.trim(),
+            address: editAddress.trim(),
+            health_status: editHealth.trim(),
+            department_ar: editDepartmentAr.trim(),
+            department_en: editDepartmentEn.trim(),
+            job_title_ar: editJobTitleAr.trim(),
+            job_title_en: editJobTitleEn.trim(),
+            former_department_ar: editFormerDepartmentAr.trim(),
+            former_department_en: editFormerDepartmentEn.trim(),
+        }, tVal);
+
+        if (Object.keys(regexErrors).length > 0) {
+            setEditFieldErrors(mapMemberEditErrors(regexErrors));
+            toast({
+                title: Object.values(regexErrors)[0] ?? t('toast.updateFailed'),
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        setEditFieldErrors({});
 
         const validation = memberEditSchema.safeParse({
             first_name_ar: editFirstNameAr.trim(),
@@ -2632,6 +2694,7 @@ export default function MemberManagementPage() {
                                 editSaving={editSaving}
                                 onSave={() => void handleSaveEdit()}
                                 onCancel={() => setEditOpen(false)}
+                                fieldErrors={editFieldErrors}
                                 fields={{
                                     firstNameAr: editFirstNameAr,
                                     firstNameEn: editFirstNameEn,
@@ -2666,27 +2729,27 @@ export default function MemberManagementPage() {
                                     employmentStatus: editEmploymentStatus,
                                 }}
                                 onChange={{
-                                    setFirstNameAr: setEditFirstNameAr,
-                                    setFirstNameEn: setEditFirstNameEn,
-                                    setLastNameAr: setEditLastNameAr,
-                                    setLastNameEn: setEditLastNameEn,
+                                    setFirstNameAr: (v) => handleArabicChange(v, setEditFirstNameAr, (m) => setEditFieldErrors((prev) => ({ ...prev, firstNameAr: m })), 'name'),
+                                    setFirstNameEn: (v) => handleEnglishChange(v, setEditFirstNameEn, (m) => setEditFieldErrors((prev) => ({ ...prev, firstNameEn: m })), 'name'),
+                                    setLastNameAr: (v) => handleArabicChange(v, setEditLastNameAr, (m) => setEditFieldErrors((prev) => ({ ...prev, lastNameAr: m })), 'name'),
+                                    setLastNameEn: (v) => handleEnglishChange(v, setEditLastNameEn, (m) => setEditFieldErrors((prev) => ({ ...prev, lastNameEn: m })), 'name'),
                                     setGender: setEditGender,
-                                    setPhone: setEditPhone,
+                                    setPhone: (v) => handlePhoneChange(v, setEditPhone),
                                     setBirthdate: setEditBirthdate,
-                                    setNationality: setEditNationality,
-                                    setAddress: setEditAddress,
-                                    setHealth: setEditHealth,
+                                    setNationality: (v) => setEditNationality(v.slice(0, 50)),
+                                    setAddress: (v) => setEditAddress(v.slice(0, 200)),
+                                    setHealth: (v) => setEditHealth(v.slice(0, 500)),
                                     setEmail: setEditEmail,
-                                    setNationalId: setEditNationalId,
+                                    setNationalId: (v) => handleDigitsChange(v, setEditNationalId, 14),
                                     setFacultyId: setEditFacultyId,
                                     setGraduationYear: setEditGraduationYear,
                                     setProfessionId: setEditProfessionId,
-                                    setDepartmentEn: setEditDepartmentEn,
-                                    setDepartmentAr: setEditDepartmentAr,
+                                    setDepartmentEn: (v) => handleEnglishChange(v, setEditDepartmentEn, (m) => setEditFieldErrors((prev) => ({ ...prev, departmentEn: m }))),
+                                    setDepartmentAr: (v) => handleArabicChange(v, setEditDepartmentAr, (m) => setEditFieldErrors((prev) => ({ ...prev, departmentAr: m }))),
                                     setSalary: setEditSalary,
                                     setProfessionCode: setEditProfessionCode,
-                                    setFormerDepartmentEn: setEditFormerDepartmentEn,
-                                    setFormerDepartmentAr: setEditFormerDepartmentAr,
+                                    setFormerDepartmentEn: (v) => handleEnglishChange(v, setEditFormerDepartmentEn, (m) => setEditFieldErrors((prev) => ({ ...prev, formerDepartmentEn: m }))),
+                                    setFormerDepartmentAr: (v) => handleArabicChange(v, setEditFormerDepartmentAr, (m) => setEditFieldErrors((prev) => ({ ...prev, formerDepartmentAr: m }))),
                                     setRetirementDate: setEditRetirementDate,
                                     setLastSalary: setEditLastSalary,
                                     setPassportNumber: setEditPassportNumber,
@@ -2694,8 +2757,8 @@ export default function MemberManagementPage() {
                                     setVisaStatus: setEditVisaStatus,
                                     setVisitorType: setEditVisitorType,
                                     setDurationMonths: setEditDurationMonths,
-                                    setJobTitleEn: setEditJobTitleEn,
-                                    setJobTitleAr: setEditJobTitleAr,
+                                    setJobTitleEn: (v) => handleEnglishChange(v, setEditJobTitleEn, (m) => setEditFieldErrors((prev) => ({ ...prev, jobTitleEn: m }))),
+                                    setJobTitleAr: (v) => handleArabicChange(v, setEditJobTitleAr, (m) => setEditFieldErrors((prev) => ({ ...prev, jobTitleAr: m }))),
                                     setEmploymentStatus: setEditEmploymentStatus,
                                 }}
                             />

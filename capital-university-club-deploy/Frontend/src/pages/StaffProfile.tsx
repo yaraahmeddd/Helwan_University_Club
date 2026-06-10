@@ -13,7 +13,8 @@ import { useLanguage } from '../hooks/useLanguage';
 import { buildPersonName, getNameInitials, resolveDisplayLanguage } from '../lib/localizedDisplay';
 import { useStaffJobLabels } from '../lib/staffJobLabel';
 import { formatValidationError, validatePassword, validatePasswordMatch } from '../lib/validation';
-import { useTranslation as useI18nTranslation } from 'react-i18next';
+import { useAdminFieldValidation } from '../hooks/useAdminFieldValidation';
+import { validateAdminStaffContactForm } from '../lib/validation/adminForms';
 
 // Design System - HUC Branding
 const colors = {
@@ -82,10 +83,11 @@ interface PasswordStrength {
 
 const StaffProfile: React.FC = () => {
     const { t, t: tCommon } = useLocalizedTranslation(['StaffProfile', 'common']);
-    const { t: tVal } = useI18nTranslation('validation');
     const { language, isRTL } = useLanguage();
     const displayLanguage = resolveDisplayLanguage(language);
     const { resolveJobLabel } = useStaffJobLabels(language);
+    const { tVal, handlePhoneChange } = useAdminFieldValidation();
+    const [profileFieldErrors, setProfileFieldErrors] = useState<Record<string, string | undefined>>({});
     const dateLocale = language === 'en' ? 'en-US' : 'ar-EG';
     const fmtDate = (value?: string) => {
         if (!value) return t('notAvailable');
@@ -263,6 +265,16 @@ const StaffProfile: React.FC = () => {
 
     const handleInputChange = (field: keyof UserProfile, value: string) => {
         if (!userData) return;
+        if (field === 'phone') {
+            handlePhoneChange(value, (phone) => setUserData((prev) => (prev ? { ...prev, phone } : null)));
+            setProfileFieldErrors((prev) => ({ ...prev, phone: undefined }));
+            return;
+        }
+        if (field === 'address') {
+            setUserData((prev) => (prev ? { ...prev, address: value } : null));
+            setProfileFieldErrors((prev) => ({ ...prev, address: undefined }));
+            return;
+        }
         setUserData(prev => prev ? ({ ...prev, [field]: value }) : null);
     };
 
@@ -284,6 +296,14 @@ const StaffProfile: React.FC = () => {
 
     const handleSaveProfile = async () => {
         if (!userData) return;
+
+        const errors = validateAdminStaffContactForm({ phone: userData.phone, address: userData.address }, tVal);
+        if (Object.keys(errors).length > 0) {
+            setProfileFieldErrors(errors);
+            toast.error(Object.values(errors)[0] ?? t('toasts.saveFailed'));
+            return;
+        }
+        setProfileFieldErrors({});
 
         try {
             // Split name back if needed or just update editable fields

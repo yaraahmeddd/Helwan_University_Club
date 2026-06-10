@@ -27,7 +27,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "../components/StaffPagesComponents/ui/select";
-import { Badge } from "../components/StaffPagesComponents/ui/badge";
+import { AdminTableYesNoBadge } from "../components/StaffPagesComponents/shared/AdminTableSharedCells";
 import {
     Popover,
     PopoverContent,
@@ -55,6 +55,10 @@ import { AdminActionButton, AdminRowActions } from "../components/StaffPagesComp
 import { FieldInlineError } from "../components/StaffPagesComponents/shared/FieldInlineError";
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
 import { getBilingualFieldPlaceholder, getLocalizedText } from "../lib/localizedDisplay";
+import { useTableExport } from "../utils/reportExport/useTableExport";
+import { ExportReportButton } from "../components/StaffPagesComponents/shared/ExportReportButton";
+import { useAdminFieldValidation } from "../hooks/useAdminFieldValidation";
+import { validateAdminCourtForm } from "../lib/validation/adminForms";
 
 type FieldStatus = Field["status"];
 
@@ -89,6 +93,7 @@ export default function CourtsManagementPage() {
     const [sportPopoverOpen, setSportPopoverOpen] = useState(false);
     const [filterStatuses, setFilterStatuses] = useState<string[]>([]);
     const [statusPopoverOpen, setStatusPopoverOpen] = useState(false);
+    const [bookingFilter, setBookingFilter] = useState<"all" | "yes" | "no">("all");
 
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editField, setEditField] = useState<Field | null>(null);
@@ -100,6 +105,7 @@ export default function CourtsManagementPage() {
     const { t } = useTranslation("CourtsManagementPage");
     const { t: tStatus } = useTranslation("common");
     const { language, isRTL } = useLanguage();
+    const { tVal, handleArabicChange, handleEnglishChange } = useAdminFieldValidation();
 
     const getFieldName = (field: Field) =>
         getLocalizedText(field.name_ar, field.name_en, language);
@@ -147,12 +153,18 @@ export default function CourtsManagementPage() {
             filterSports.length === 0 ? true : filterSports.includes(f.sport_id);
         const matchStatus =
             filterStatuses.length === 0 ? true : filterStatuses.includes(f.status);
-        return matchSearch && matchSport && matchStatus;
-    }), [fields, search, filterSports, filterStatuses]);
+        const matchBooking =
+            bookingFilter === "all"
+                ? true
+                : bookingFilter === "yes"
+                    ? f.is_available_for_booking
+                    : !f.is_available_for_booking;
+        return matchSearch && matchSport && matchStatus && matchBooking;
+    }), [fields, search, filterSports, filterStatuses, bookingFilter]);
 
     useEffect(() => {
         setPage(1);
-    }, [search, filterSports, filterStatuses]);
+    }, [search, filterSports, filterStatuses, bookingFilter]);
 
     const pagedFields = useMemo(
         () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
@@ -192,12 +204,15 @@ export default function CourtsManagementPage() {
     };
 
     const collectFieldErrors = (): FieldFormErrors => {
-        const errors: FieldFormErrors = {};
-        if (!form.name_ar.trim()) errors.name_ar = t("validation.nameArRequired");
-        if (!form.name_en.trim()) errors.name_en = t("validation.nameEnRequired");
-        if (!form.sportId) errors.sportId = t("validation.sportRequired");
-        if (form.capacity && Number(form.capacity) < 1) errors.capacity = t("validation.capacityInvalid");
-        return errors;
+        return validateAdminCourtForm(
+            {
+                name_ar: form.name_ar,
+                name_en: form.name_en,
+                sportId: form.sportId ? String(form.sportId) : "",
+                capacity: form.capacity,
+            },
+            tVal,
+        );
     };
 
     const handleSave = async () => {
@@ -317,6 +332,45 @@ export default function CourtsManagementPage() {
         }
     };
 
+    const exportHandle = useTableExport({
+        reportId: "courts-management",
+        titleEn: "Courts & Fields Report",
+        titleAr: "تقرير الملاعب والفيلدات",
+        columns: [
+            {
+                headerEn: "Court Name",
+                headerAr: "اسم الملعب",
+                accessor: (f: Field) => getFieldName(f),
+                width: 22,
+            },
+            {
+                headerEn: "Sport",
+                headerAr: "الرياضة",
+                accessor: (f: Field) => getSportName(f.sport) || t("common.notAvailable"),
+                width: 16,
+            },
+            {
+                headerEn: "Capacity",
+                headerAr: "السعة",
+                accessor: (f: Field) => String(f.capacity ?? t("common.notAvailable")),
+                width: 10,
+            },
+            {
+                headerEn: "Booking",
+                headerAr: "الحجز",
+                accessor: (f: Field) => f.is_available_for_booking ? t("common.yes") : t("common.no"),
+                width: 10,
+            },
+            {
+                headerEn: "Status",
+                headerAr: "الحالة",
+                accessor: (f: Field) => f.status,
+                width: 12,
+            },
+        ],
+        rows: filtered,
+    });
+
     return (
         <div className="h-[calc(100vh-4rem)] flex flex-col bg-background overflow-hidden" dir={isRTL ? "rtl" : "ltr"}>
             <AdminPageHeader
@@ -337,6 +391,7 @@ export default function CourtsManagementPage() {
                 }
                 actions={
                     <>
+                        <ExportReportButton {...exportHandle} rowCount={filtered.length} />
                         <Button variant="outline" size="sm" className="gap-2" onClick={() => void reloadData()} disabled={loading}>
                             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
                             {t("filters.refresh")}
@@ -468,14 +523,20 @@ export default function CourtsManagementPage() {
                         )}
                     </PopoverContent>
                 </Popover>
-                <span className={adminPageStyles.toolbarResults}>
-                    {t("filters.results", { count: filtered.length })}
-                </span>
+
+                <Select value={bookingFilter} onValueChange={(v) => setBookingFilter(v as "all" | "yes" | "no")}>
+                    <SelectTrigger className={`${adminPageStyles.toolbarSelect} w-[11rem]`}>
+                        <SelectValue placeholder={t("filters.bookingAll")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">{t("filters.bookingAll")}</SelectItem>
+                        <SelectItem value="yes">{t("filters.bookingYes")}</SelectItem>
+                        <SelectItem value="no">{t("filters.bookingNo")}</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
 
-            <div className="flex-1 overflow-hidden flex flex-col min-h-0">
-                <div className="flex-1 overflow-hidden border-t border-border bg-card flex flex-col">
-                    <div className={adminTableStyles.container}>
+            <div className={adminTableStyles.shell}>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <Table>
                     <TableHeader className={adminTableStyles.header}>
@@ -531,15 +592,11 @@ export default function CourtsManagementPage() {
                                             <TableCell className={adminCellClass({ center: true, className: "font-mono" })}>{field.capacity || t("common.notAvailable")}</TableCell>
 
                                             <TableCell className={adminCellClass({ center: true })}>
-                                                {field.is_available_for_booking ? (
-                                                    <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 gap-1">
-                                                        <Check className="h-3 w-3" /> {t("common.yes")}
-                                                    </Badge>
-                                                ) : (
-                                                    <Badge variant="outline" className="text-muted-foreground gap-1">
-                                                        <X className="h-3 w-3" /> {t("common.no")}
-                                                    </Badge>
-                                                )}
+                                                <AdminTableYesNoBadge
+                                                    value={!!field.is_available_for_booking}
+                                                    yesLabel={t("common.yes")}
+                                                    noLabel={t("common.no")}
+                                                />
                                             </TableCell>
 
                                             <TableCell className={adminCellClass({ center: true })}>
@@ -574,7 +631,6 @@ export default function CourtsManagementPage() {
                     </TableBody>
                 </Table>
             </motion.div>
-                    </div>
 
                     <AdminPagination
                         page={page}
@@ -584,7 +640,6 @@ export default function CourtsManagementPage() {
                         isRTL={isRTL}
                         disabled={loading}
                     />
-                </div>
             </div>
 
             <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); }}>
@@ -619,10 +674,11 @@ export default function CourtsManagementPage() {
                                 id="field-name-ar"
                                 placeholder={getBilingualFieldPlaceholder("ar", "CourtsManagementPage", "dialog.placeholders.nameAr")}
                                 value={form.name_ar}
-                                onChange={(e) => {
-                                    setForm({ ...form, name_ar: e.target.value });
-                                    setFieldErrors((prev) => ({ ...prev, name_ar: undefined }));
-                                }}
+                                onChange={(e) => handleArabicChange(
+                                    e.target.value,
+                                    (name_ar) => setForm({ ...form, name_ar }),
+                                    (message) => setFieldErrors((prev) => ({ ...prev, name_ar: message })),
+                                )}
                                 dir="rtl"
                                 className={`h-10 ${fieldErrors.name_ar ? "border-destructive" : ""}`}
                             />
@@ -635,10 +691,11 @@ export default function CourtsManagementPage() {
                                 id="field-name-en"
                                 placeholder={getBilingualFieldPlaceholder("en", "CourtsManagementPage", "dialog.placeholders.nameEn")}
                                 value={form.name_en}
-                                onChange={(e) => {
-                                    setForm({ ...form, name_en: e.target.value });
-                                    setFieldErrors((prev) => ({ ...prev, name_en: undefined }));
-                                }}
+                                onChange={(e) => handleEnglishChange(
+                                    e.target.value,
+                                    (name_en) => setForm({ ...form, name_en }),
+                                    (message) => setFieldErrors((prev) => ({ ...prev, name_en: message })),
+                                )}
                                 dir="ltr"
                                 className={`text-start h-10 ${fieldErrors.name_en ? "border-destructive" : ""}`}
                             />

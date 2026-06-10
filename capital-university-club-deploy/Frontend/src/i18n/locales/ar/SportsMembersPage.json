@@ -15,7 +15,9 @@
   },
   "tabs": {
     "members": "أعضاء النادي",
-    "teamMembers": "اللاعبين"
+    "teamMembers": "اللاعبين",
+    "editSports": "تعديل الرياضات",
+    "assignTeam": "تعيين فريق"
   },
   "toolbar": {
     "searchPlaceholder": "ابحث بالاسم أو الرقم القومي...",

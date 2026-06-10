@@ -3,13 +3,16 @@ import { motion } from "framer-motion";
 import api from "../services/axios";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Input } from "../components/StaffPagesComponents/ui/input";
-import { Badge } from "../components/StaffPagesComponents/ui/badge";
 import { useLanguage } from "../hooks/useLanguage";
 import { useLocalizedTranslation } from "../hooks/useLocalizedTranslation";
 import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { AdminMemberStatusBadge } from "../components/StaffPagesComponents/shared/AdminMemberStatusBadge";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
 import { buildPersonName, getLocalizedText } from "../lib/localizedDisplay";
 import { useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
+import { FieldInlineError } from "../components/StaffPagesComponents/shared/FieldInlineError";
+import { useAdminFieldValidation } from "../hooks/useAdminFieldValidation";
+import { validateAdminPersonNamesForm, validateAdminStaffContactForm } from "../lib/validation/adminForms";
 import { RecordViewProfileHeader } from "../components/StaffPagesComponents/shared/RecordViewPrimitives";
 import { Label } from "../components/StaffPagesComponents/ui/label";
 import {
@@ -132,23 +135,6 @@ const STATIC_STAFF_TYPES: StaffType[] = [
     { id: 20, code: "SPORT_SPECIALIST", name_en: "Sport Activity Specialist", name_ar: "أخصائي الأنشطة الرياضية" },
 ];
 
-// ─── Status Badge ─────────────────────────────────────────────────────────────
-
-function StatusBadge({ status }: { status?: string }) {
-    const isActive = status === "active";
-    return (
-        <Badge
-            className={
-                isActive
-                    ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-0 text-[11px]"
-                    : "bg-rose-100 text-rose-700 hover:bg-rose-100 border-0 text-[11px]"
-            }
-        >
-            {isActive ? "نشط" : (status || "غير نشط")}
-        </Badge>
-    );
-}
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function StaffListPage() {
@@ -156,6 +142,7 @@ export default function StaffListPage() {
     const { language, isRTL } = useLanguage();
     const { fmtDate } = useAdminFormatters();
     const { t: tCommon } = useLocalizedTranslation('common');
+    const { tVal, handleArabicChange, handleEnglishChange, handlePhoneChange } = useAdminFieldValidation();
 
     // List state
     const [staffRows, setStaffRows] = useState<StaffRow[]>([]);
@@ -183,6 +170,7 @@ export default function StaffListPage() {
     const [editLastNameAr, setEditLastNameAr] = useState("");
     const [editPhone, setEditPhone] = useState("");
     const [editAddress, setEditAddress] = useState("");
+    const [editFieldErrors, setEditFieldErrors] = useState<Record<string, string | undefined>>({});
     const [editSubmitting, setEditSubmitting] = useState(false);
 
     // Staff types
@@ -302,10 +290,25 @@ export default function StaffListPage() {
         setEditFirstNameEn(""); setEditFirstNameAr("");
         setEditLastNameEn(""); setEditLastNameAr("");
         setEditPhone(""); setEditAddress("");
+        setEditFieldErrors({});
     };
 
     const handleUpdateStaff = async () => {
         if (!editTarget) return;
+        const nameErrors = validateAdminPersonNamesForm({
+            first_name_ar: editFirstNameAr,
+            last_name_ar: editLastNameAr,
+            first_name_en: editFirstNameEn,
+            last_name_en: editLastNameEn,
+        }, tVal);
+        const contactErrors = validateAdminStaffContactForm({ phone: editPhone, address: editAddress }, tVal);
+        const errors = { ...nameErrors, ...contactErrors };
+        if (Object.keys(errors).length > 0) {
+            setEditFieldErrors(errors);
+            toast({ title: "بيانات غير صالحة", description: Object.values(errors)[0], variant: "destructive" });
+            return;
+        }
+        setEditFieldErrors({});
         setEditSubmitting(true);
         try {
             await api.put(`/staff/${editTarget.id}`, {
@@ -407,7 +410,7 @@ export default function StaffListPage() {
                                             </TableCell>
                                             <TableCell className={adminCellClass({ size: "xs" })}>{row.staffTypeLabel}</TableCell>
                                             <TableCell className={adminCellClass({ className: "tabular-nums" })} dir="ltr">{row.phone}</TableCell>
-                                            <TableCell className={adminCellClass()}><StatusBadge status={row.status} /></TableCell>
+                                            <TableCell className={adminCellClass({ center: true })}><AdminMemberStatusBadge status={row.status ?? "inactive"} compact /></TableCell>
                                             <TableCell className={adminCellClass({ size: "muted", className: "tabular-nums" })} dir="ltr">{fmtDate(row.employmentStartDate)}</TableCell>
                                             <TableCell className={adminCellClass({ center: true })}>
                                                 <div className={adminTableStyles.actions}>
@@ -505,7 +508,7 @@ export default function StaffListPage() {
                                         subtitle={subtitleName}
                                         badges={
                                             <>
-                                                <StatusBadge status={isActive ? "active" : "inactive"} />
+                                                <AdminMemberStatusBadge status={isActive ? "active" : "inactive"} compact />
                                                 <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full font-medium">{role}</span>
                                             </>
                                         }
@@ -637,27 +640,68 @@ export default function StaffListPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <Label>الاسم الأول (عربي)</Label>
-                            <Input value={editFirstNameAr} onChange={(e) => setEditFirstNameAr(e.target.value)} placeholder="محمد" />
+                            <Input
+                                value={editFirstNameAr}
+                                className={editFieldErrors.first_name_ar ? "border-destructive" : ""}
+                                onChange={(e) => handleArabicChange(e.target.value, setEditFirstNameAr, (message) => setEditFieldErrors((prev) => ({ ...prev, first_name_ar: message })), 'name')}
+                                placeholder="محمد"
+                            />
+                            <FieldInlineError message={editFieldErrors.first_name_ar} />
                         </div>
                         <div>
                             <Label>الاسم الأخير (عربي)</Label>
-                            <Input value={editLastNameAr} onChange={(e) => setEditLastNameAr(e.target.value)} placeholder="أحمد" />
+                            <Input
+                                value={editLastNameAr}
+                                className={editFieldErrors.last_name_ar ? "border-destructive" : ""}
+                                onChange={(e) => handleArabicChange(e.target.value, setEditLastNameAr, (message) => setEditFieldErrors((prev) => ({ ...prev, last_name_ar: message })), 'name')}
+                                placeholder="أحمد"
+                            />
+                            <FieldInlineError message={editFieldErrors.last_name_ar} />
                         </div>
                         <div>
                             <Label>الاسم الأول (EN)</Label>
-                            <Input value={editFirstNameEn} onChange={(e) => setEditFirstNameEn(e.target.value)} placeholder="Mohamed" dir="ltr" className="text-left" />
+                            <Input
+                                value={editFirstNameEn}
+                                className={`text-left ${editFieldErrors.first_name_en ? "border-destructive" : ""}`}
+                                onChange={(e) => handleEnglishChange(e.target.value, setEditFirstNameEn, (message) => setEditFieldErrors((prev) => ({ ...prev, first_name_en: message })), 'name')}
+                                placeholder="Mohamed"
+                                dir="ltr"
+                            />
+                            <FieldInlineError message={editFieldErrors.first_name_en} />
                         </div>
                         <div>
                             <Label>الاسم الأخير (EN)</Label>
-                            <Input value={editLastNameEn} onChange={(e) => setEditLastNameEn(e.target.value)} placeholder="Ahmed" dir="ltr" className="text-left" />
+                            <Input
+                                value={editLastNameEn}
+                                className={`text-left ${editFieldErrors.last_name_en ? "border-destructive" : ""}`}
+                                onChange={(e) => handleEnglishChange(e.target.value, setEditLastNameEn, (message) => setEditFieldErrors((prev) => ({ ...prev, last_name_en: message })), 'name')}
+                                placeholder="Ahmed"
+                                dir="ltr"
+                            />
+                            <FieldInlineError message={editFieldErrors.last_name_en} />
                         </div>
                         <div>
                             <Label>رقم الهاتف</Label>
-                            <Input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} placeholder="+201012345678" dir="ltr" className="text-left" type="tel" />
+                            <Input
+                                value={editPhone}
+                                className={`text-left ${editFieldErrors.phone ? "border-destructive" : ""}`}
+                                onChange={(e) => { handlePhoneChange(e.target.value, setEditPhone); setEditFieldErrors((prev) => ({ ...prev, phone: undefined })); }}
+                                placeholder="01012345678"
+                                dir="ltr"
+                                type="tel"
+                                inputMode="numeric"
+                            />
+                            <FieldInlineError message={editFieldErrors.phone} />
                         </div>
                         <div>
                             <Label>العنوان</Label>
-                            <Input value={editAddress} onChange={(e) => setEditAddress(e.target.value)} placeholder="القاهرة، مصر" />
+                            <Input
+                                value={editAddress}
+                                className={editFieldErrors.address ? "border-destructive" : ""}
+                                onChange={(e) => { setEditAddress(e.target.value); setEditFieldErrors((prev) => ({ ...prev, address: undefined })); }}
+                                placeholder="القاهرة، مصر"
+                            />
+                            <FieldInlineError message={editFieldErrors.address} />
                         </div>
                     </div>
 

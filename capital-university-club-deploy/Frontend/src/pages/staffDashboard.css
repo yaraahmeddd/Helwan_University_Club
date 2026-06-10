@@ -219,14 +219,14 @@ body.admin-module [role="dialog"] .admin-font-section {
 /* Status badges in table cells */
 .admin-module .admin-table-status-badge {
   font-family: var(--admin-font-body);
-  font-size: 10px !important;
+  font-size: 15px !important;
   line-height: 1.2;
   font-weight: 600;
 }
 
 .admin-module .admin-table-status-badge svg {
-  width: 11px !important;
-  height: 11px !important;
+  width: 16px !important;
+  height: 16px !important;
 }
 
 .admin-module :where(.text-xs, .text-sm) {

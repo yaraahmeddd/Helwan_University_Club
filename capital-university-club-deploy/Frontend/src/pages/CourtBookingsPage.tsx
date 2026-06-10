@@ -24,6 +24,8 @@ import {
 } from "../components/StaffPagesComponents/ui/select";
 import { Badge } from "../components/StaffPagesComponents/ui/badge";
 import { AdminMemberStatusBadge } from "../components/StaffPagesComponents/shared/AdminMemberStatusBadge";
+import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
+import { adminPageStyles } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import {
     Popover,
     PopoverContent,
@@ -48,6 +50,9 @@ import {
 import { useToast } from "../hooks/use-toast";
 import type { Booking, BookingStatus } from "../data/bookingsData";
 import api from "../services/axios";
+import { FieldInlineError } from "../components/StaffPagesComponents/shared/FieldInlineError";
+import { useAdminFieldValidation } from "../hooks/useAdminFieldValidation";
+import { validateBookingMemberId, validateAdminBlockReason } from "../lib/validation/adminForms";
 
 // ─── API Types ────────────────────────────────────────────────────────────────
 
@@ -499,16 +504,15 @@ function BookingDetailPanel({
             <div className="px-5 py-4 border-t border-border space-y-2 shrink-0">
                 {booking.member && (
                     <div className="flex gap-2">
-                        <Button size="sm" variant="outline" className="flex-1 gap-1.5" onClick={copyPhone}>
+                        <Button size="sm" variant="outline" className="flex-1 gap-1.5 border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800" onClick={copyPhone}>
                             <Phone className="h-3.5 w-3.5" />
                             {t("detail.actions.contact")}
                         </Button>
                         <Button
                             size="sm"
                             variant="outline"
-                            className="flex-1 gap-1.5"
+                            className="flex-1 gap-1.5 border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800"
                             onClick={() => {
-                                // TODO: Navigate to /staff/dashboard/members/manage?id=:memberId
                                 navigate("/staff/dashboard/members/manage");
                             }}
                         >
@@ -523,7 +527,7 @@ function BookingDetailPanel({
                         <Button
                             size="sm"
                             variant="outline"
-                            className="w-full gap-1.5"
+                            className="w-full gap-1.5 border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800"
                             onClick={() => onEdit(booking)}
                         >
                             <Pencil className="h-3.5 w-3.5" />
@@ -537,7 +541,7 @@ function BookingDetailPanel({
                         <Button
                             size="sm"
                             variant="outline"
-                            className="w-full gap-1.5 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                            className="w-full gap-1.5 border-red-200 bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800"
                             onClick={() => onCancel(booking.id)}
                         >
                             <X className="h-3.5 w-3.5" />
@@ -551,7 +555,7 @@ function BookingDetailPanel({
                         <Button
                             size="sm"
                             variant="outline"
-                            className="w-full gap-1.5 text-emerald-600 border-emerald-600 hover:bg-emerald-600 hover:text-white"
+                            className="w-full gap-1.5 border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:text-amber-800"
                             onClick={() => onUnblock(booking.id)}
                         >
                             <Lock className="h-3.5 w-3.5" />
@@ -617,8 +621,9 @@ function BookingFormDialog({
     const { t, i18n } = useTranslation("CourtBookingsPage");
     const language = getLanguage(i18n.resolvedLanguage ?? i18n.language);
     const isRTL = language === "ar";
-
-    // ── Hooks first (Rules of Hooks: useState before any derived values) ──────
+    const { toast } = useToast();
+    const { tVal, handleDigitsChange } = useAdminFieldValidation();
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
     const [form, setForm] = useState<BookingForm>(() =>
         isEdit && editBooking
             ? {
@@ -634,7 +639,6 @@ function BookingFormDialog({
             }
             : emptyBookingForm(defaultCourtId, defaultDate, defaultFrom)
     );
-    const { toast } = useToast();
     const [lookupState, setLookupState] = useState<"idle" | "loading" | "found" | "notfound">("idle");
 
     // ── Derived values (form is safe to use now) ──────────────────────────────
@@ -736,6 +740,13 @@ function BookingFormDialog({
     }, [open]);
 
     const handleSave = () => {
+        const memberErrors = validateBookingMemberId(form.memberId, tVal);
+        if (Object.keys(memberErrors).length > 0) {
+            setFieldErrors(memberErrors);
+            toast({ title: t("toast.validationTitle"), description: memberErrors.memberId, variant: "destructive" });
+            return;
+        }
+        setFieldErrors({});
         if (!form.courtId || !form.date || !form.from || !form.to || !form.memberId || !form.memberName) {
             toast({ title: t("toast.validationTitle"), description: t("validation.bookingRequired"), variant: "destructive" });
             return;
@@ -841,12 +852,16 @@ function BookingFormDialog({
                                 <Input
                                     id="booking-member-id"
                                     dir="ltr"
-                                    className="text-left font-mono pr-8"
+                                    className={`text-left font-mono pr-8 ${fieldErrors.memberId ? "border-destructive" : ""}`}
                                     placeholder="123"
+                                    inputMode="numeric"
                                     value={form.memberId}
                                     onChange={(e) => {
                                         setLookupState("idle");
-                                        setForm({ ...form, memberId: e.target.value, memberName: "", phone: "", nationalId: "" });
+                                        setFieldErrors((prev) => ({ ...prev, memberId: undefined }));
+                                        handleDigitsChange(e.target.value, (memberId) => {
+                                            setForm({ ...form, memberId, memberName: "", phone: "", nationalId: "" });
+                                        }, 14);
                                     }}
                                 />
                                 {lookupState === "loading" && (
@@ -856,6 +871,7 @@ function BookingFormDialog({
                                     <span className="absolute left-2 top-1/2 -translate-y-1/2 text-emerald-600 text-[10px] font-bold">✓</span>
                                 )}
                             </div>
+                            <FieldInlineError message={fieldErrors.memberId} />
                             {lookupState === "notfound" && (
                                 <p className="text-[11px] text-destructive">{t("bookingDialog.lookup.notFound")}</p>
                             )}
@@ -985,12 +1001,15 @@ function BlockSlotDialog({
     });
     const { toast } = useToast();
     const { t, i18n } = useTranslation("CourtBookingsPage");
+    const { tVal } = useAdminFieldValidation();
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
     const language = getLanguage(i18n.resolvedLanguage ?? i18n.language);
     const isRTL = language === "ar";
 
     useEffect(() => {
         if (!open) return;
         setForm({ courtId: defaultCourtId, date: defaultDate, from: defaultFrom, to: "", reason: "" });
+        setFieldErrors({});
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open]);
 
@@ -1007,6 +1026,13 @@ function BlockSlotDialog({
             toast({ title: t("validation.conflictTitle"), description: t("validation.timeConflict"), variant: "destructive" });
             return;
         }
+        const reasonErrors = validateAdminBlockReason(form.reason, tVal);
+        if (Object.keys(reasonErrors).length > 0) {
+            setFieldErrors(reasonErrors);
+            toast({ title: t("toast.validationTitle"), description: Object.values(reasonErrors)[0], variant: "destructive" });
+            return;
+        }
+        setFieldErrors({});
         onSave(form);
     };
 
@@ -1050,8 +1076,13 @@ function BlockSlotDialog({
                             id="block-reason"
                             placeholder={t("blockDialog.reasonPlaceholder")}
                             value={form.reason}
-                            onChange={(e) => setForm({ ...form, reason: e.target.value })}
+                            onChange={(e) => {
+                                setForm({ ...form, reason: e.target.value.slice(0, 200) });
+                                setFieldErrors((prev) => ({ ...prev, reason: undefined }));
+                            }}
+                            className={fieldErrors.reason ? "border-destructive" : ""}
                         />
+                        <FieldInlineError message={fieldErrors.reason} />
                     </div>
                 </div>
                 <DialogFooter className={`gap-2 ${isRTL ? "flex-row-reverse sm:justify-start" : "sm:justify-end"}`}>
@@ -1551,36 +1582,38 @@ export default function CourtBookingsPage() {
     // ─── Render ───────────────────────────────────────────────────────────────
 
     return (
-        <div className="h-full overflow-y-auto p-4 pb-8 space-y-4" dir={isRTL ? "rtl" : "ltr"}>
+        <div className="h-[calc(100vh-4rem)] flex flex-col bg-background overflow-hidden" dir={isRTL ? "rtl" : "ltr"}>
 
-            {/* Header */}
-            <div className="flex items-start justify-between gap-4">
-                <div>
-                    <h1 className="text-xl font-bold leading-tight">{t("header.title")}</h1>
-                    <p className="text-xs text-muted-foreground mt-1 font-normal flex items-center gap-1.5">
-                        {courtsLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : selectedCourtName}
-                        {!courtsLoading && <span className="mx-1.5 text-border">|</span>}
+            <AdminPageHeader
+                icon={CalendarCheck}
+                title={t("header.title")}
+                subtitle={
+                    <>
+                        {courtsLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin inline" /> : selectedCourtName}
+                        {!courtsLoading && <span className="mx-2 text-border">·</span>}
                         {weekLabel}
-                        {calendarLoading && <Loader2 className="h-3 w-3 animate-spin ms-2" />}
-                    </p>
-                </div>
-                <RoleGuard privilege="SCHEDULE_MATCH">
-                    <Button
-                        type="button"
-                        className="gap-2 shrink-0 shadow-sm px-4"
-                        onClick={() => { setEditBooking(null); setAddDialogOpen(true); }}
-                        aria-label={t("header.addManualAria")}
-                    >
-                        <Plus className="h-4 w-4" />
-                        {t("header.addManual")}
-                    </Button>
-                </RoleGuard>
-            </div>
+                        {calendarLoading && <Loader2 className={`h-3.5 w-3.5 animate-spin inline ${isRTL ? "mr-2" : "ml-2"}`} />}
+                    </>
+                }
+                actions={
+                    <RoleGuard privilege="SCHEDULE_MATCH">
+                        <Button
+                            type="button"
+                            size="sm"
+                            className="gap-2 shrink-0"
+                            onClick={() => { setEditBooking(null); setAddDialogOpen(true); }}
+                            aria-label={t("header.addManualAria")}
+                        >
+                            <Plus className="h-4 w-4" />
+                            {t("header.addManual")}
+                        </Button>
+                    </RoleGuard>
+                }
+            />
 
-            {/* Filter Bar */}
-            <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2">
+            <div className={`${adminPageStyles.toolbar} flex-wrap`}>
                 <Select value={selectedCourtId} onValueChange={setSelectedCourtId} disabled={courtsLoading}>
-                    <SelectTrigger className="w-52" aria-label={t("filters.courtAria")}>
+                    <SelectTrigger className={`${adminPageStyles.toolbarSelect} w-52`} aria-label={t("filters.courtAria")}>
                         <SelectValue placeholder={courtsLoading ? t("common.loading") : t("filters.selectCourt")} />
                     </SelectTrigger>
                     <SelectContent dir={isRTL ? "rtl" : "ltr"}>
@@ -1600,12 +1633,18 @@ export default function CourtBookingsPage() {
                     </SelectContent>
                 </Select>
 
-                <Button variant="outline" size="sm" onClick={() => void fetchCalendar()} disabled={calendarLoading || !selectedCourtId} className="gap-1">
-                    <RefreshCw className={`h-3.5 w-3.5 ${calendarLoading ? "animate-spin" : ""}`} />
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className={`${adminPageStyles.refreshBtn} h-10`}
+                    onClick={() => void fetchCalendar()}
+                    disabled={calendarLoading || !selectedCourtId}
+                >
+                    <RefreshCw className={`h-4 w-4 ${calendarLoading ? "animate-spin" : ""}`} />
                     {t("filters.refresh")}
                 </Button>
 
-                <div className="flex items-center gap-0 border border-border rounded-lg overflow-hidden">
+                <div className="flex items-center gap-0 border border-border rounded-lg overflow-hidden bg-background">
                     <button
                         type="button"
                         onClick={goWeekBack}
@@ -1626,11 +1665,13 @@ export default function CourtBookingsPage() {
                 </div>
 
                 {!isCurrentWeek && (
-                    <Button type="button" variant="outline" size="sm" onClick={goToday} aria-label={t("filters.currentWeek")}>{t("filters.today")}</Button>
+                    <Button type="button" variant="outline" size="sm" className="h-10" onClick={goToday} aria-label={t("filters.currentWeek")}>
+                        {t("filters.today")}
+                    </Button>
                 )}
             </div>
 
-            {/* Legend */}
+            <div className="flex-1 overflow-y-auto min-h-0 px-6 py-4 space-y-4">
             <div className="inline-flex items-center gap-5 rounded-md border border-border bg-muted/30 px-3 py-1.5">
                 <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                     <span className="inline-block w-3 h-3 rounded-sm bg-emerald-400 border border-emerald-500" />{t("status.confirmed")}
@@ -1857,6 +1898,7 @@ export default function CourtBookingsPage() {
                         );
                     })}
                 </div>
+            </div>
             </div>
 
             {/* Detail Panel */}

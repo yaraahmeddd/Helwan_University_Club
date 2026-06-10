@@ -10,7 +10,10 @@
     "all": "All",
     "active": "Active",
     "draft": "Draft",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "bookingAll": "Booking availability",
+    "bookingYes": "Available for booking",
+    "bookingNo": "Not for booking"
   },
   "table": {
     "name": "Sport Name",
@@ -35,7 +38,13 @@
   "actions": {
     "edit": "Edit",
     "delete": "Delete",
-    "viewMembers": "View members"
+    "viewMembers": "View members",
+    "viewSport": "View sport details"
+  },
+  "viewDialog": {
+    "subtitle": "Sport details and settings",
+    "close": "Close",
+    "edit": "Edit sport"
   },
   "dialog": {
     "editTitle": "Edit Sport",
@@ -69,6 +78,8 @@
     "teamTitle": "Team {{n}}",
     "teamNameArLabel": "Team Name (AR)",
     "teamNameArPlaceholder": "e.g. Under 18 Team",
+    "teamNameEnLabel": "Team Name (EN)",
+    "teamNameEnPlaceholder": "e.g. Under 18 Team",
     "maxParticipants": "Max Participants",
     "subscriptionPrice": "Subscription Price (EGP)",
     "trainingLabel": "Training Schedules",

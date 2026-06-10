@@ -80,6 +80,26 @@
     "required": "Code is required",
     "invalid": "Code may only contain letters, numbers, hyphens, and underscores"
   },
+  "positiveInt": {
+    "required": "This number is required",
+    "invalid": "Digits only",
+    "min": "Must be at least 1",
+    "max": "Must be at most {{max}}"
+  },
+  "money": {
+    "required": "Amount is required",
+    "invalid": "Enter a valid amount (up to 2 decimal places)",
+    "min": "Amount cannot be negative"
+  },
+  "sport": {
+    "required": "Please select a sport"
+  },
+  "membershipType": {
+    "required": "Please select a membership type"
+  },
+  "title": {
+    "max": "Maximum {{max}} characters"
+  },
   "url": {
     "required": "URL is required",
     "invalid": "Invalid URL (must start with http:// or https://)"

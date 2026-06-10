@@ -8,6 +8,7 @@ import { useLanguage } from "../hooks/useLanguage";
 import { adminTableStyles, adminHeadClass, adminCellClass, adminPageStyles, adminDialogStyles, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { AdminMemberStatusBadge } from "../components/StaffPagesComponents/shared/AdminMemberStatusBadge";
+import { AdminTableYesNoBadge } from "../components/StaffPagesComponents/shared/AdminTableSharedCells";
 import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
 import { AdminActionButton, AdminRowActions, AdminViewButton } from "../components/StaffPagesComponents/shared/AdminRowActions";
 import { FieldInlineError } from "../components/StaffPagesComponents/shared/FieldInlineError";
@@ -15,7 +16,9 @@ import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/Per
 import { getBilingualFieldPlaceholder, getLanguageOnlyText, getLocalizedText } from "../lib/localizedDisplay";
 import { SportImage } from "../components/StaffPagesComponents/shared/SportImage";
 import { TooltipProvider } from "../components/StaffPagesComponents/ui/tooltip";
-import { PATTERNS } from "../lib/validation";
+import { useAdminFieldValidation } from "../hooks/useAdminFieldValidation";
+import { validateAdminSportForm, validationMessage } from "../lib/validation/adminForms";
+import { validateArabicText, validateEnglishText, validatePositiveInteger } from "../lib/validation/rules";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Input } from "../components/StaffPagesComponents/ui/input";
 import { Label } from "../components/StaffPagesComponents/ui/label";
@@ -23,11 +26,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/StaffPagesComponents/ui/select";
 import { Switch } from "../components/StaffPagesComponents/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/StaffPagesComponents/ui/popover";
-import { Pencil, Trash2, Plus, Loader2, UploadCloud, X, Clock, AlertCircle, Trophy, RefreshCw } from "lucide-react";
+import { Pencil, Trash2, Plus, Loader2, UploadCloud, X, Clock, AlertCircle, Trophy, RefreshCw, Eye } from "lucide-react";
 import { useToast } from "../hooks/use-toast";
 import api from "../services/axios";
 import { useTranslation } from "react-i18next";
 import { useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
+import { useTableExport } from "../utils/reportExport/useTableExport";
+import { ExportReportButton } from "../components/StaffPagesComponents/shared/ExportReportButton";
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -374,6 +379,7 @@ export default function SportsPage() {
   const { t } = useTranslation('SportsPage');
   const { language, isRTL } = useLanguage();
   const { fmtDate } = useAdminFormatters();
+  const { tVal, handleArabicChange, handleEnglishChange } = useAdminFieldValidation();
 
   const [sports, setSports] = useState<Sport[]>([]);
   const [editSport, setEditSport] = useState<Sport | null>(null);
@@ -386,9 +392,8 @@ export default function SportsPage() {
   const [teamsError, setTeamsError] = useState("");
   const [requiresBooking, setRequiresBooking] = useState(false);
   const [filterTab, setFilterTab] = useState<"all" | "active" | "draft" | "inactive">("all");
-  const [membersSport, setMembersSport] = useState<Sport | null>(null);
-  const [dialogMembers, setDialogMembers] = useState<ApiMember[]>([]);
-  const [membersLoading, setMembersLoading] = useState(false);
+  const [bookingFilter, setBookingFilter] = useState<"all" | "yes" | "no">("all");
+  const [viewSport, setViewSport] = useState<Sport | null>(null);
   const [fields, setFields] = useState<ApiField[]>([]);
   const [branches, setBranches] = useState<ApiBranch[]>([]);
   const { toast } = useToast();
@@ -476,23 +481,18 @@ export default function SportsPage() {
   useEffect(() => { void fetchBranches(); }, [fetchBranches]);
 
   const handleSave = async () => {
-    const nextErrors: SportFormFieldErrors = {};
+    const nextErrors: SportFormFieldErrors = validateAdminSportForm(
+      {
+        nameAr: form.nameAr,
+        nameEn: form.nameEn,
+        branchId: form.branchId,
+        maxParticipants: form.maxParticipants,
+      },
+      tVal,
+    );
 
-    if (!form.nameAr.trim()) nextErrors.nameAr = t("validation.requiredNameAr");
-    else if (!isArabicOnly(form.nameAr.trim())) nextErrors.nameAr = t("validation.arOnly");
-
-    if (!form.nameEn.trim()) nextErrors.nameEn = t("validation.requiredNameEn");
-    else if (!isEnglishOnly(form.nameEn.trim())) nextErrors.nameEn = t("validation.enOnly");
-
-    if (!imagePreview) nextErrors.photo = t("validation.requiredPhoto");
-    if (!form.branchId) nextErrors.branchId = t("validation.requiredBranch");
-
-    if (form.maxParticipants.trim()) {
-      const maxP = Number(form.maxParticipants);
-      if (!Number.isFinite(maxP) || maxP < 0 || !Number.isInteger(maxP)) {
-        nextErrors.maxParticipants = t("validation.invalidMaxParticipants");
-      }
-    }
+    if (nextErrors.branchId) nextErrors.branchId = t("validation.requiredBranch");
+    if (!imagePreview && !editSport?.imageUrl) nextErrors.photo = t("validation.requiredPhoto");
 
     if (Object.keys(nextErrors).length > 0) {
       setFieldErrors(nextErrors);
@@ -502,18 +502,20 @@ export default function SportsPage() {
 
     // ─── Team validation (only when teams have been added) ───
     if (teams.length > 0) {
-      for (const t of teams) {
-        const teamName = t.nameAr || t.nameEn;
-        if (!t.nameAr.trim() || !t.nameEn.trim()) {
+      for (const team of teams) {
+        const teamName = team.nameAr || team.nameEn;
+        const arErr = validationMessage(validateArabicText(team.nameAr, true), tVal);
+        const enErr = validationMessage(validateEnglishText(team.nameEn, true), tVal);
+        if (arErr || enErr) {
           setTeamsError(t('toast.teamsErrorName'));
           return;
         }
-        const maxP = Number(t.maxParticipants);
-        if (!t.maxParticipants || isNaN(maxP) || maxP <= 0) {
+        const maxErr = validationMessage(validatePositiveInteger(team.maxParticipants, true), tVal);
+        if (maxErr) {
           setTeamsError(t('toast.teamsErrorMax'));
           return;
         }
-        const tr = t.training;
+        const tr = team.training;
         if (!tr.startTime || !tr.endTime) {
           setTeamsError(t('toast.teamsErrorTime', { name: teamName }));
           return;
@@ -546,9 +548,8 @@ export default function SportsPage() {
         name_ar: t.nameAr,
         name_en: t.nameEn,
         max_participants: Number(t.maxParticipants),
-        subscription_price: Number(t.subscriptionPrice) || 0,
+        subscription_price: 0,
         visibility_type: t.visibility || undefined,
-        price: t.price !== "" ? Number(t.price) : undefined,
         training: {
           days_ar: t.training.selectedDays.join(", "),
           days_en: t.training.selectedDays
@@ -585,9 +586,8 @@ export default function SportsPage() {
             name_ar: t.nameAr,
             name_en: t.nameEn,
             max_participants: Number(t.maxParticipants),
-            subscription_price: Number(t.subscriptionPrice) || 0,
+            subscription_price: 0,
             visibility_type: t.visibility || undefined,
-            price: t.price !== "" ? Number(t.price) : undefined,
             training: {
               days_ar: t.training.selectedDays.join(", "),
               days_en: t.training.selectedDays
@@ -721,72 +721,74 @@ export default function SportsPage() {
     setIsAddOpen(true);
   };
 
-  const fetchMembersForSport = useCallback(async (sportName: string) => {
-    console.log('[SportsPage][fetchMembersForSport] GET /api/sports/team-members/sport/', sportName);
-    setMembersLoading(true);
-    setDialogMembers([]);
-    try {
-      const encoded = encodeURIComponent(sportName);
-      const res = await api.get<{ success?: boolean; data?: ApiMember[] }>(
-        `/sports/team-members/sport/${encoded}`
-      );
-      const members = Array.isArray(res?.data?.data) ? res.data.data! : [];
-      setDialogMembers(members);
-      console.log('[SportsPage][fetchMembersForSport] تم تحميل', members.length, 'عضو');
-    } catch (err) {
-      console.warn('[SportsPage][fetchMembersForSport] فشل:', err);
-      setDialogMembers([]);
-    } finally {
-      setMembersLoading(false);
-    }
-  }, []);
-
-  const openMembers = (sport: Sport) => {
-    console.log('[SportsPage][openMembers] عرض أعضاء رياضة:', sport.nameAr || sport.nameEn);
-    setMembersSport(sport);
-    const apiName = sport.nameEn || sport.nameAr;
-    void fetchMembersForSport(apiName);
+  const openViewSport = (sport: Sport) => {
+    setViewSport(sport);
   };
-
-  const isArabicOnly = (text: string): boolean => PATTERNS.ARABIC_TEXT.test(text);
 
   const handleNameArChange = (value: string) => {
-    if (value === "" || isArabicOnly(value)) {
-      setForm({ ...form, nameAr: value });
-      setFieldErrors((prev) => ({ ...prev, nameAr: undefined }));
-      return;
-    }
-    setFieldErrors((prev) => ({ ...prev, nameAr: t("validation.arOnly") }));
+    handleArabicChange(
+      value,
+      (nameAr) => setForm({ ...form, nameAr }),
+      (message) => setFieldErrors((prev) => ({ ...prev, nameAr: message })),
+    );
   };
 
-  const isEnglishOnly = (text: string): boolean => PATTERNS.ENGLISH_TEXT.test(text);
-
   const handleNameEnChange = (value: string) => {
-    if (value === "" || isEnglishOnly(value)) {
-      setForm({ ...form, nameEn: value });
-      setFieldErrors((prev) => ({ ...prev, nameEn: undefined }));
-      return;
-    }
-    setFieldErrors((prev) => ({ ...prev, nameEn: t("validation.enOnly") }));
+    handleEnglishChange(
+      value,
+      (nameEn) => setForm({ ...form, nameEn }),
+      (message) => setFieldErrors((prev) => ({ ...prev, nameEn: message })),
+    );
   };
 
   const filteredSports = useMemo(() => sports.filter((sport) => {
+    if (bookingFilter === "yes" && !sport.requires_booking) return false;
+    if (bookingFilter === "no" && sport.requires_booking) return false;
     if (filterTab === "all") return true;
-    const hasSchedules = sport.schedules && sport.schedules.length > 0;
+    const hasSchedules = (sport.schedules && sport.schedules.length > 0) || sport.hasTeams;
     if (filterTab === "inactive") return sport.is_active === false;
     if (filterTab === "draft") return sport.is_active !== false && !hasSchedules;
     if (filterTab === "active") return sport.is_active !== false && hasSchedules;
     return true;
-  }), [sports, filterTab]);
+  }), [sports, filterTab, bookingFilter]);
 
   useEffect(() => {
     setPage(1);
-  }, [filterTab]);
+  }, [filterTab, bookingFilter]);
 
   const pagedSports = useMemo(
     () => filteredSports.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
     [filteredSports, page],
   );
+
+  const exportHandle = useTableExport({
+    reportId: 'sports-management',
+    titleEn: 'Sports Management Report',
+    titleAr: 'تقرير إدارة الرياضات',
+    columns: [
+      {
+        headerEn: 'Sport Name', headerAr: 'اسم الرياضة',
+        accessor: (s: Sport) => sportDisplayName(s),
+        width: 28,
+      },
+      {
+        headerEn: 'Max Participants', headerAr: 'الحد الأقصى',
+        accessor: (s: Sport) => s.maxParticipants > 0 ? String(s.maxParticipants) : t('table.unlimited'),
+        width: 16,
+      },
+      {
+        headerEn: 'Status', headerAr: 'الحالة',
+        accessor: (s: Sport) => resolveSportStatusKey(s),
+        width: 14,
+      },
+      {
+        headerEn: 'Booking Available', headerAr: 'متاح للحجز',
+        accessor: (s: Sport) => s.requires_booking ? t('table.bookingYes') : t('table.bookingNo'),
+        width: 14,
+      },
+    ],
+    rows: filteredSports,
+  });
 
   const filterTabs = (["all", "active", "draft", "inactive"] as const).map((tab) => ({
     id: tab,
@@ -815,6 +817,7 @@ export default function SportsPage() {
         subtitle={t('header.subtitle', { count: sports.length })}
         actions={
           <>
+            <ExportReportButton {...exportHandle} rowCount={filteredSports.length} />
             <Button
               variant="outline"
               size="sm"
@@ -849,21 +852,25 @@ export default function SportsPage() {
             </button>
           ))}
         </div>
-        <span className={adminPageStyles.toolbarResults}>
-          {t('header.results', { count: filteredSports.length })}
-        </span>
+        <Select value={bookingFilter} onValueChange={(v) => setBookingFilter(v as "all" | "yes" | "no")}>
+          <SelectTrigger className={`${adminPageStyles.toolbarSelect} w-[11rem]`}>
+            <SelectValue placeholder={t('filter.bookingAll')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('filter.bookingAll')}</SelectItem>
+            <SelectItem value="yes">{t('filter.bookingYes')}</SelectItem>
+            <SelectItem value="no">{t('filter.bookingNo')}</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <div className="flex-1 overflow-hidden flex flex-col min-h-0">
-        <div className="flex-1 overflow-hidden border-t border-border bg-card mx-0 flex flex-col">
-          <div className={adminTableStyles.container}>
+      <div className={adminTableStyles.shell}>
             <Table className={adminTableStyles.table}>
           <TableHeader className={adminTableStyles.header}>
             <TableRow>
-              <TableHead className={adminHeadClass({ className: "w-28" })}></TableHead>
               <TableHead className={adminHeadClass()}>{t('table.name')}</TableHead>
               <TableHead className={adminHeadClass({ center: true, className: "whitespace-nowrap" })}>{t('table.maxParticipants')}</TableHead>
-              <TableHead className={adminHeadClass({ className: "whitespace-nowrap" })}>{t('table.status')}</TableHead>
+              <TableHead className={adminHeadClass({ center: true, className: "whitespace-nowrap" })}>{t('table.status')}</TableHead>
               <TableHead className={adminHeadClass({ center: true, className: "whitespace-nowrap" })}>{t('table.bookingAvailable')}</TableHead>
               <TableHead className={adminHeadClass({ center: true, className: "w-[148px]" })}>{t('table.actions')}</TableHead>
             </TableRow>
@@ -872,7 +879,7 @@ export default function SportsPage() {
             <AnimatePresence>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12">
+                  <TableCell colSpan={5} className="text-center py-12">
                     <div className="flex items-center justify-center gap-2 text-muted-foreground">
                       <Loader2 className="h-5 w-5 animate-spin" />
                       <span>{t('loading')}</span>
@@ -881,7 +888,7 @@ export default function SportsPage() {
                 </TableRow>
               ) : filteredSports.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-16 text-muted-foreground text-sm">
+                  <TableCell colSpan={5} className="text-center py-16 text-muted-foreground text-sm">
                     <div className="flex flex-col items-center gap-3">
                       <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center">
                         <Trophy className="w-7 h-7 opacity-40" />
@@ -907,41 +914,37 @@ export default function SportsPage() {
                       exit={{ opacity: 0 }}
                       className={adminTableStyles.row}
                     >
-                      <TableCell className={adminCellClass({ className: "py-2" })}>
-                        <SportImage
-                          src={sport.imageUrl}
-                          nameEn={sport.nameEn}
-                          alt={sportDisplayName(sport)}
-                          size="table"
-                        />
-                      </TableCell>
                       <TableCell className={adminCellClass()}>
-                        <span className="font-medium" dir="auto">{sportDisplayName(sport)}</span>
+                        <div className="flex items-center gap-3">
+                          <SportImage
+                            src={sport.imageUrl}
+                            nameEn={sport.nameEn}
+                            alt={sportDisplayName(sport)}
+                            size="table"
+                          />
+                          <span className="font-medium" dir="auto">{sportDisplayName(sport)}</span>
+                        </div>
                       </TableCell>
                       <TableCell className={adminCellClass({ center: true, className: "tabular-nums font-medium" })}>
                         {formatMaxParticipants(sport.maxParticipants, t)}
                       </TableCell>
-                      <TableCell className={adminCellClass({ className: "whitespace-nowrap" })}>
+                      <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
                         <span title={isSportDraftStatus(sport) ? t('status.draftTooltip') : undefined}>
                           <AdminMemberStatusBadge status={statusKey} compact />
                         </span>
                       </TableCell>
                       <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-                            sport.requires_booking
-                              ? "bg-sky-100 text-sky-700 border-sky-200"
-                              : "bg-muted text-muted-foreground border-border"
-                          }`}
-                        >
-                          {sport.requires_booking ? t("table.bookingYes") : t("table.bookingNo")}
-                        </span>
+                        <AdminTableYesNoBadge
+                          value={!!sport.requires_booking}
+                          yesLabel={t("table.bookingYes")}
+                          noLabel={t("table.bookingNo")}
+                        />
                       </TableCell>
                       <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })} onClick={(e) => e.stopPropagation()}>
                         <AdminRowActions>
                           <AdminViewButton
-                            tooltip={t('actions.viewMembers')}
-                            onClick={() => openMembers(sport)}
+                            tooltip={t('actions.viewSport')}
+                            onClick={() => openViewSport(sport)}
                           />
                           <RoleGuard privilege="UPDATE_SPORT">
                             <AdminActionButton
@@ -968,7 +971,6 @@ export default function SportsPage() {
             </AnimatePresence>
           </TableBody>
             </Table>
-          </div>
 
           <AdminPagination
             page={page}
@@ -979,7 +981,62 @@ export default function SportsPage() {
             disabled={isLoading}
           />
         </div>
-      </div>
+
+      {/* View Sport Dialog */}
+      <Dialog open={viewSport !== null} onOpenChange={(open) => { if (!open) setViewSport(null); }}>
+        <DialogContent className={`${adminDialogStyles.content} max-w-2xl`} dir={isRTL ? 'rtl' : 'ltr'}>
+          {viewSport && (
+            <div className={`${adminDialogStyles.panel} max-h-[85vh]`}>
+              <div className="px-6 py-4 border-b border-border bg-muted/20 shrink-0">
+                <div className="flex items-start gap-4">
+                  <SportImage src={viewSport.imageUrl} nameEn={viewSport.nameEn} alt={sportDisplayName(viewSport)} size="banner" containerClassName="w-24 h-24 rounded-xl shrink-0" />
+                  <DialogHeader className="space-y-1 text-start flex-1">
+                    <DialogTitle className="text-lg font-bold">{sportDisplayName(viewSport)}</DialogTitle>
+                    <DialogDescription>{t('viewDialog.subtitle')}</DialogDescription>
+                    <div className="pt-2">
+                      <AdminMemberStatusBadge status={resolveSportStatusKey(viewSport)} compact />
+                    </div>
+                  </DialogHeader>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="rounded-lg border border-border p-3 bg-white">
+                    <p className="text-xs text-muted-foreground">{t('table.maxParticipants')}</p>
+                    <p className="font-semibold mt-1">{formatMaxParticipants(viewSport.maxParticipants, t)}</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-3 bg-white">
+                    <p className="text-xs text-muted-foreground">{t('table.bookingAvailable')}</p>
+                    <p className="font-semibold mt-1">{viewSport.requires_booking ? t('table.bookingYes') : t('table.bookingNo')}</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-3 bg-white">
+                    <p className="text-xs text-muted-foreground">{t('form.branch')}</p>
+                    <p className="font-semibold mt-1">
+                      {(() => {
+                        const b = branches.find(br => br.id === viewSport.branch_id);
+                        return b ? getLanguageOnlyText(b.name_ar, b.name_en, language) : t('form.noBranch');
+                      })()}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-border p-3 bg-white">
+                    <p className="text-xs text-muted-foreground">{t('form.status')}</p>
+                    <p className="font-semibold mt-1">{viewSport.is_active === false ? t('form.inactive') : t('form.active')}</p>
+                  </div>
+                </div>
+              </div>
+              <DialogFooter className="px-6 py-4 border-t border-border bg-muted/20 shrink-0 gap-2">
+                <Button variant="outline" onClick={() => setViewSport(null)}>{t('viewDialog.close')}</Button>
+                <RoleGuard privilege="UPDATE_SPORT">
+                  <Button className="gap-2" onClick={() => { setViewSport(null); void openEdit(viewSport); }}>
+                    <Pencil className="h-4 w-4" />
+                    {t('actions.edit')}
+                  </Button>
+                </RoleGuard>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Add/Edit Dialog */}
       <Dialog
@@ -1226,15 +1283,15 @@ export default function SportsPage() {
                               className="w-full h-8 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
                           </div>
                           <div>
-                            <Label className="text-xs mb-1 block">Team Name (EN) <span className="text-destructive">*</span></Label>
+                            <Label className="text-xs mb-1 block">{t('form.teamNameEnLabel')} <span className="text-destructive">*</span></Label>
                             <input type="text" dir="ltr" value={team.nameEn}
                               onChange={e => { upd({ nameEn: e.target.value }); if (teamsError) setTeamsError(""); }}
-                              placeholder="e.g. Under 18 Team"
+                              placeholder={getBilingualFieldPlaceholder('en', 'SportsPage', 'form.teamNameEnPlaceholder')}
                               className="w-full h-8 rounded-md border border-border bg-background px-3 text-sm text-start focus:outline-none focus:ring-2 focus:ring-ring" />
                           </div>
                         </div>
 
-                        {/* Max participants + Subscription price */}
+                        {/* Max participants + membership */}
                         <div className="grid grid-cols-2 gap-2">
                           <div className="flex items-center gap-2">
                             <Label className="text-xs whitespace-nowrap shrink-0">{t('form.maxParticipants')} <span className="text-destructive">*</span></Label>
@@ -1243,45 +1300,29 @@ export default function SportsPage() {
                               placeholder="20"
                               className="w-20 h-8 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Label className="text-xs whitespace-nowrap shrink-0">{t('form.subscriptionPrice')}</Label>
-                            <input type="number" min={0} value={team.subscriptionPrice}
-                              onChange={e => upd({ subscriptionPrice: e.target.value })}
-                              placeholder="0"
-                              className="w-20 h-8 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-                          </div>
-                        </div>
-
-                        {/* Visibility + Price — matches TeamsManagementPage */}
-                        <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <Label className="text-xs mb-1 block">العضوية</Label>
+                            <Label className="text-xs mb-1 block">{t('form.membership')}</Label>
                             <Select
                               value={team.visibility || "none"}
                               onValueChange={val => upd({ visibility: val === "none" ? "" : val })}
                             >
-                              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="اختر العضوية" /></SelectTrigger>
+                              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder={t('form.membershipPlaceholder')} /></SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="none" className="text-xs text-muted-foreground">— بدون تحديد —</SelectItem>
-                                <SelectItem value="INTERNAL" className="text-xs">داخلي</SelectItem>
-                                <SelectItem value="EXTERNAL" className="text-xs">خارجي</SelectItem>
-                                <SelectItem value="BOTH" className="text-xs">داخلي و خارجي</SelectItem>
+                                <SelectItem value="none" className="text-xs text-muted-foreground">{t('form.membershipNone')}</SelectItem>
+                                <SelectItem value="INTERNAL" className="text-xs">{t('form.membershipInternal')}</SelectItem>
+                                <SelectItem value="EXTERNAL" className="text-xs">{t('form.membershipExternal')}</SelectItem>
+                                <SelectItem value="BOTH" className="text-xs">{t('form.membershipBoth')}</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Label className="text-xs whitespace-nowrap shrink-0">السعر (ج.م)</Label>
-                            <input type="number" min={0} value={team.price}
-                              onChange={e => upd({ price: e.target.value })}
-                              placeholder="0"
-                              className="w-24 h-8 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-                          </div>
                         </div>
 
-                        {/* Training block */}
-                        <div className="space-y-2 rounded-md border border-border/60 bg-background p-2.5">
-                          <span className="text-xs font-semibold text-muted-foreground">{t('form.trainingLabel')}</span>
-
+                        {/* Training schedules */}
+                        <div className="rounded-xl border border-border bg-white overflow-hidden">
+                          <div className="px-3 py-2 border-b border-border bg-muted/30">
+                            <span className="text-xs font-semibold text-foreground">{t('form.trainingLabel')}</span>
+                          </div>
+                          <div className="p-3 space-y-3">
                           {/* Day chips */}
                           <div>
                             <Label className="text-xs mb-1.5 block">{t('form.trainingDays')} <span className="text-destructive">*</span></Label>
@@ -1346,6 +1387,7 @@ export default function SportsPage() {
                               onChange={e => updTr({ trainingFee: e.target.value })}
                               placeholder="200"
                               className="w-24 h-8 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                          </div>
                           </div>
                         </div>
                       </motion.div>
@@ -1447,104 +1489,6 @@ export default function SportsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Sport Members Dialog */}
-      <Dialog open={membersSport !== null} onOpenChange={() => { setMembersSport(null); setDialogMembers([]); }}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto" dir={isRTL ? 'rtl' : 'ltr'}>          <DialogHeader>
-          {/* Sport hero banner */}
-          {membersSport && (
-            <div className="relative mb-3 -mt-1">
-              <SportImage
-                src={membersSport.imageUrl}
-                nameEn={membersSport.nameEn}
-                alt={sportDisplayName(membersSport)}
-                size="banner"
-                containerClassName="rounded-xl"
-              />
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 rounded-b-xl bg-gradient-to-t from-black/60 to-transparent" />
-              <h2 className="absolute bottom-3 end-4 text-xl font-bold text-white drop-shadow">
-                {sportDisplayName(membersSport)}
-              </h2>
-            </div>
-          )}
-          <DialogTitle className={membersSport ? "sr-only" : ""}>
-            {membersSport ? t('membersDialog.title', { name: sportDisplayName(membersSport) }) : ""}
-            {!membersLoading && (
-              <span className="me-2 text-sm font-normal text-muted-foreground">{t('membersDialog.count', { n: dialogMembers.length })}</span>
-            )}
-          </DialogTitle>
-          {!membersSport && (
-            <DialogDescription>{t('membersDialog.description')}</DialogDescription>
-          )}
-        </DialogHeader>
-
-          {membersSport && !membersLoading && (
-            <p className="text-sm text-muted-foreground -mt-1 mb-1">
-              {t('membersDialog.countSubtitle', { n: dialogMembers.length })}
-            </p>
-          )}
-
-          {membersLoading ? (
-            <div className="flex items-center justify-center py-12 gap-2 text-muted-foreground">
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span className="text-sm">{t('membersDialog.loading')}</span>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader className={adminTableStyles.header}>
-                <TableRow>
-                  <TableHead className={adminHeadClass()}>{t('membersTable.name')}</TableHead>
-                  <TableHead className={adminHeadClass()}>{t('membersTable.nationalId')}</TableHead>
-                  <TableHead className={adminHeadClass()}>{t('membersTable.phone')}</TableHead>
-                  <TableHead className={adminHeadClass()}>{t('membersTable.status')}</TableHead>
-                  <TableHead className={adminHeadClass()}>{t('membersTable.registrationDate')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className={adminTableStyles.body}>
-                {dialogMembers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                      {t('membersDialog.empty')}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  dialogMembers.map((m) => {
-                    return (
-                      <TableRow key={m.id} className={adminTableStyles.row}>
-                        <TableCell className={adminCellClass()}>
-                          <PersonNameDisplay
-                            id={m.id}
-                            names={{
-                              firstNameAr: m.first_name_ar,
-                              lastNameAr: m.last_name_ar,
-                              firstNameEn: m.first_name_en,
-                              lastNameEn: m.last_name_en,
-                            }}
-                            language={language}
-                            showAvatar={false}
-                          />
-                        </TableCell>
-                        <TableCell className={adminCellClass({ size: 'nationalId' })} dir="ltr">{m.national_id}</TableCell>
-                        <TableCell className={adminCellClass({ size: 'phone' })} dir="ltr">{m.phone ?? "—"}</TableCell>
-                        <TableCell className={adminCellClass()}>
-                          <AdminMemberStatusBadge
-                            status={m.status === "approved" ? "approved" : m.status}
-                            compact
-                          />
-                        </TableCell>
-                        <TableCell className={adminCellClass({ size: "muted", className: "tabular-nums" })} dir="ltr">{fmtDate(m.created_at)}</TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          )}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setMembersSport(null); setDialogMembers([]); }}>{t('membersDialog.close')}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
     </TooltipProvider>
   );

@@ -37,6 +37,8 @@ import { AdminPageHeader } from "../components/StaffPagesComponents/shared/Admin
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
 import { getLocalizedText, type DisplayLanguage } from "../lib/localizedDisplay";
 import { useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
+import { useTableExport } from "../utils/reportExport/useTableExport";
+import { ExportReportButton } from "../components/StaffPagesComponents/shared/ExportReportButton";
 
 // Types
 
@@ -101,6 +103,9 @@ const fullNameAr = (m: ApiMember) =>
 
 const fullNameEn = (m: ApiMember) =>
     [m.first_name_en, m.last_name_en].filter(Boolean).join(" ");
+
+const fullName = (m: ApiMember, language: DisplayLanguage) =>
+    getLocalizedText(fullNameAr(m), fullNameEn(m), language);
 
 const getSportName = (sport: Sport, language: DisplayLanguage) =>
     getLocalizedText(sport.nameAr, sport.nameEn, language);
@@ -317,7 +322,50 @@ export default function SportManagementPage() {
 
     const thProps = { sortField, sortDir, onSort: handleSort, isRTL };
 
-
+    const exportHandle = useTableExport({
+        reportId: "members-by-sport",
+        titleEn: "Members by Sport Report",
+        titleAr: "تقرير الأعضاء حسب الرياضة",
+        columns: [
+            {
+                headerEn: "Member",
+                headerAr: "العضو",
+                accessor: (m: ApiMember) => fullName(m, language),
+                width: 24,
+            },
+            {
+                headerEn: "Phone",
+                headerAr: "الهاتف",
+                accessor: (m: ApiMember) => m.phone ?? "-",
+                width: 14,
+            },
+            {
+                headerEn: "National ID",
+                headerAr: "الرقم القومي",
+                accessor: (m: ApiMember) => m.national_id,
+                width: 16,
+            },
+            {
+                headerEn: "Teams",
+                headerAr: "الفرق",
+                accessor: (m: ApiMember) => sportTags(m).map((tag) => tag.team_name).join(", ") || "-",
+                width: 20,
+            },
+            {
+                headerEn: "Subscription Date",
+                headerAr: "تاريخ الاشتراك",
+                accessor: (m: ApiMember) => fmtDate(m.created_at),
+                width: 16,
+            },
+            {
+                headerEn: "Status",
+                headerAr: "الحالة",
+                accessor: (m: ApiMember) => m.status,
+                width: 12,
+            },
+        ],
+        rows: processed,
+    });
 
     return (
         <div className="h-[calc(100vh-4rem)] flex flex-col bg-background overflow-hidden" dir={isRTL ? "rtl" : "ltr"}>
@@ -342,16 +390,19 @@ export default function SportManagementPage() {
                     </>
                 }
                 actions={
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2"
-                        onClick={() => { void fetchSports(); void fetchMembers(selectedSport); }}
-                        disabled={membersLoading || sportsLoading}
-                    >
-                        <RefreshCw className={`h-4 w-4 ${(membersLoading || sportsLoading) ? "animate-spin" : ""}`} />
-                        {t("header.refresh")}
-                    </Button>
+                    <>
+                        <ExportReportButton {...exportHandle} rowCount={processed.length} />
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                            onClick={() => { void fetchSports(); void fetchMembers(selectedSport); }}
+                            disabled={membersLoading || sportsLoading}
+                        >
+                            <RefreshCw className={`h-4 w-4 ${(membersLoading || sportsLoading) ? "animate-spin" : ""}`} />
+                            {t("header.refresh")}
+                        </Button>
+                    </>
                 }
             />
 
@@ -411,9 +462,6 @@ export default function SportManagementPage() {
                             </Select>
                         </div>
 
-                        <span className={adminPageStyles.toolbarResults}>
-                            {t("toolbar.results", { count: processed.length })}
-                        </span>
                     </div>
 
                     {selectedSport && (
@@ -466,7 +514,7 @@ export default function SportManagementPage() {
                         </div>
                     )}
 
-                    <div className="flex-1 overflow-hidden border-t border-border bg-card flex flex-col min-h-0">
+                    <div className={adminTableStyles.shell}>
                     <div className={adminTableStyles.container}>
                         {membersLoading ? (
                             <div className="py-20 flex flex-col items-center gap-3 text-muted-foreground">

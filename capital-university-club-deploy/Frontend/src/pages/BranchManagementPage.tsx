@@ -11,12 +11,17 @@ import { useToast } from "../hooks/use-toast";
 import api from "../services/axios";
 import { useTranslation } from "react-i18next";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
-import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE, adminPageStyles } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { AdminActionButton, AdminRowActions, AdminViewButton } from "../components/StaffPagesComponents/shared/AdminRowActions";
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
+import { AdminMemberStatusBadge } from "../components/StaffPagesComponents/shared/AdminMemberStatusBadge";
+import { AdminTableCodeChip } from "../components/StaffPagesComponents/shared/AdminTableSharedCells";
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
 import { getBilingualFieldPlaceholder, getLocalizedText } from "../lib/localizedDisplay";
 import { useLanguage } from "../hooks/useLanguage";
+import { useAdminFieldValidation } from "../hooks/useAdminFieldValidation";
+import { validateAdminBranchForm, validateMemberAssignId, toErrorArrayMap } from "../lib/validation/adminForms";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -51,6 +56,7 @@ export default function BranchManagementPage() {
     const { t } = useTranslation('BranchManagementPage');
     const { language, isRTL } = useLanguage();
     const { toast } = useToast();
+    const { tVal, handleArabicChange, handleEnglishChange, handleCodeChange, handleDigitsChange } = useAdminFieldValidation();
     
     // State
     const [branches, setBranches] = useState<Branch[]>([]);
@@ -111,11 +117,13 @@ export default function BranchManagementPage() {
     };
 
     const handleSave = async () => {
-        setFormErrors({});
-        if (!form.name_ar.trim() || !form.location_ar.trim() || (!editBranch && !form.code.trim())) {
+        const clientErrors = validateAdminBranchForm(form, tVal, { requireCode: !editBranch });
+        if (Object.keys(clientErrors).length > 0) {
+            setFormErrors(toErrorArrayMap(clientErrors));
             toast({ title: t('toasts.missingDataTitle'), description: t('toasts.missingDataDesc'), variant: "destructive" });
             return;
         }
+        setFormErrors({});
 
         setSaveLoading(true);
         try {
@@ -196,8 +204,13 @@ export default function BranchManagementPage() {
     }, [memberIdForAssign]);
 
     const handleAssign = async () => {
-        if (!assignBranch || !memberIdForAssign.trim()) {
-            toast({ title: t('toasts.missingDataTitle'), description: t('toasts.assignMissingDataDesc'), variant: "destructive" });
+        const memberIdError = validateMemberAssignId(memberIdForAssign, tVal);
+        if (!assignBranch || memberIdError) {
+            toast({
+                title: t('toasts.missingDataTitle'),
+                description: memberIdError ?? t('toasts.assignMissingDataDesc'),
+                variant: "destructive",
+            });
             return;
         }
         setAssignLoading(true);
@@ -369,37 +382,30 @@ export default function BranchManagementPage() {
                 }
             />
 
-            {/* ── Main area (Table + Toolbar) ── */}
-            <div className="flex flex-1 p-6 overflow-hidden">
-                <div className="flex flex-col w-full bg-white border border-zinc-200/80 rounded-2xl shadow-sm overflow-hidden flex-1">
+            <div className={adminPageStyles.toolbar}>
+                <div className="relative flex-1 min-w-[180px] max-w-sm">
+                    <Search className={`absolute ${isRTL ? "right-3" : "left-3"} top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none`} />
+                    <Input
+                        placeholder={t('toolbar.searchPlaceholder')}
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className={`${adminPageStyles.toolbarSearch} ${isRTL ? "pr-9 pl-3" : "pl-9 pr-3"}`}
+                    />
+                </div>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className={`${adminPageStyles.refreshBtn} h-10`}
+                    onClick={() => { void fetchBranches(); }}
+                    disabled={loading}
+                >
+                    <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+                    {t('toolbar.refresh')}
+                </Button>
+            </div>
 
-                    {/* Toolbar: Search + Refresh */}
-                    <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-100 bg-white shrink-0 flex-wrap">
-
-                        {/* Search Input */}
-                        <div className="relative w-full sm:w-80">
-                            <Search className="absolute end-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
-                            <Input
-                                placeholder={t('toolbar.searchPlaceholder')}
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="pe-10 h-10 text-[13px] bg-zinc-50/50 border-zinc-200/80 rounded-xl focus-visible:ring-primary/20 focus-visible:bg-white transition-all shadow-inner"
-                            />
-                        </div>
-
-                        {/* Refresh */}
-                        <button
-                            onClick={() => { void fetchBranches(); }}
-                            disabled={loading}
-                            className="p-2.5 rounded-xl hover:bg-zinc-100 transition-colors text-zinc-500 disabled:opacity-40 border border-transparent hover:border-zinc-200"
-                            title={t('toolbar.refresh')}
-                        >
-                            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-                        </button>
-                    </div>
-
-                    {/* Native HTML Table */}
-                    <div className={adminTableStyles.container} style={{ scrollbarWidth: "none" }}>
+            <div className={adminTableStyles.shell}>
+                    <div className={adminTableStyles.container}>
                         {loading ? (
                             <div className="py-24 text-center text-zinc-400">
                                 <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-4" />
@@ -423,7 +429,7 @@ export default function BranchManagementPage() {
                                         <TableHead className={adminHeadClass()}>{t('table.columns.name')}</TableHead>
                                         <TableHead className={adminHeadClass()}>{t('table.columns.code')}</TableHead>
                                         <TableHead className={adminHeadClass()}>{t('table.columns.location')}</TableHead>
-                                        <TableHead className={adminHeadClass()}>{t('table.columns.status')}</TableHead>
+                                        <TableHead className={adminHeadClass({ center: true, className: "whitespace-nowrap" })}>{t('table.columns.status')}</TableHead>
                                         <TableHead className={adminHeadClass({ center: true })}>{t('table.columns.sportsCount')}</TableHead>
                                         <TableHead className={adminHeadClass({ center: true })}>{t('table.columns.actions')}</TableHead>
                                     </TableRow>
@@ -447,7 +453,7 @@ export default function BranchManagementPage() {
 
                                                 <TableCell className={adminCellClass()}>
                                                     {branch.code ? (
-                                                        <span className="text-[11px] font-mono font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded border border-border" dir="ltr">{branch.code}</span>
+                                                        <AdminTableCodeChip>{branch.code}</AdminTableCodeChip>
                                                     ) : "—"}
                                                 </TableCell>
 
@@ -455,76 +461,60 @@ export default function BranchManagementPage() {
                                                     {getLocalizedText(branch.location_ar, branch.location_en, language) || "—"}
                                                 </TableCell>
 
-                                                <TableCell className={adminCellClass()}>
+                                                <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
                                                     {branch.status ? (
-                                                        <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-widest border ${
-                                                            branch.status === 'active' 
-                                                                ? 'bg-emerald-100 text-emerald-700 border-emerald-200' 
-                                                                : branch.status === 'inactive'
-                                                                ? 'bg-zinc-100 text-zinc-700 border-zinc-200'
-                                                                : 'bg-amber-100 text-amber-700 border-amber-200'
-                                                        }`}>
-                                                            {branch.status === 'active' ? t('table.status.active') : branch.status === 'inactive' ? t('table.status.inactive') : t('table.status.archived')}
-                                                        </span>
+                                                        <AdminMemberStatusBadge status={branch.status} compact />
                                                     ) : "—"}
                                                 </TableCell>
 
                                                 <TableCell className={adminCellClass({ center: true })}>
-                                                    <span className="bg-muted text-muted-foreground px-2.5 py-1 rounded-md text-[11px] font-mono font-bold border border-border">
-                                                        {branch.sports_count ?? "—"}
-                                                    </span>
+                                                    <AdminTableCodeChip>{branch.sports_count ?? "—"}</AdminTableCodeChip>
                                                 </TableCell>
 
                                                 <TableCell className={adminCellClass({ center: true })}>
-                                                    <div className={`${adminTableStyles.actions} transition-opacity`}>
-                                                        
+                                                    <AdminRowActions>
                                                         <RoleGuard privilege="UPDATE_BRANCH">
-                                                            <button
-                                                                title={t('table.actions.edit')}
+                                                            <AdminActionButton
+                                                                tooltip={t('table.actions.edit')}
+                                                                icon={Pencil}
+                                                                variant="edit"
                                                                 onClick={() => openEdit(branch)}
-                                                                className="p-1.5 rounded-lg hover:bg-zinc-900 hover:text-white text-zinc-500 transition-all shadow-sm border border-transparent hover:border-zinc-800"
-                                                            >
-                                                                <Pencil className="w-4 h-4" />
-                                                            </button>
+                                                            />
                                                         </RoleGuard>
 
                                                         <RoleGuard privilege="ASSIGN_BRANCH_TO_MEMBER">
-                                                            <button
-                                                                title={t('table.actions.assign')}
+                                                            <AdminActionButton
+                                                                tooltip={t('table.actions.assign')}
+                                                                icon={Eye}
+                                                                variant="view"
                                                                 onClick={() => setAssignBranch(branch)}
-                                                                className="p-1.5 rounded-lg hover:bg-zinc-900 hover:text-white text-zinc-500 transition-all shadow-sm border border-transparent hover:border-zinc-800"
-                                                            >
-                                                                <Eye className="w-4 h-4" />
-                                                            </button>
+                                                            />
                                                         </RoleGuard>
 
                                                         <RoleGuard privilege="CREATE_BRANCH">
-                                                            <button
-                                                                title={t('table.actions.sports')}
+                                                            <AdminActionButton
+                                                                tooltip={t('table.actions.sports')}
+                                                                icon={Link}
+                                                                variant={expandedBranchId === branch.id ? "approve" : "assign"}
                                                                 onClick={() => toggleExpand(branch.id)}
-                                                                className={`p-1.5 rounded-lg transition-all shadow-sm border border-transparent ${expandedBranchId === branch.id ? 'bg-emerald-600 text-white' : 'hover:bg-emerald-600 hover:text-white text-zinc-500 hover:border-emerald-700'}`}
-                                                            >
-                                                                <Link className="w-4 h-4" />
-                                                            </button>
+                                                            />
                                                         </RoleGuard>
 
                                                         <RoleGuard privilege="DELETE_BRANCH">
-                                                            <button
-                                                                title={t('table.actions.delete')}
+                                                            <AdminActionButton
+                                                                tooltip={t('table.actions.delete')}
+                                                                icon={Trash2}
+                                                                variant="delete"
                                                                 onClick={() => setDeleteId(branch.id)}
-                                                                className="p-1.5 rounded-lg hover:bg-rose-500 hover:text-white text-zinc-500 transition-all shadow-sm border border-transparent hover:border-rose-600"
-                                                            >
-                                                                <Trash2 className="w-4 h-4" />
-                                                            </button>
+                                                            />
                                                         </RoleGuard>
-
-                                                    </div>
+                                                    </AdminRowActions>
                                                 </TableCell>
                                             </TableRow>
                                             {/* EXPANDED PANEL HERE */}
                                             {expandedBranchId === branch.id && (
-                                                <TableRow className="bg-zinc-50/80 border-b border-zinc-200/80">
-                                                    <TableCell colSpan={7} className="p-0 border-s-4 border-s-emerald-500 shadow-inner">
+                                                <TableRow className="bg-muted/20 border-b border-border">
+                                                    <TableCell colSpan={7} className="p-0 border-s-4 border-s-primary/40">
                                                         <div className="p-6">
                                                             <div className="flex items-center justify-between mb-4">
                                                                 <h4 className="text-[13px] font-bold text-zinc-800 flex items-center gap-2">
@@ -568,11 +558,9 @@ export default function BranchManagementPage() {
                                                                                             primaryClassName="font-semibold text-xs"
                                                                                         />
                                                                                     </TableCell>
-                                                                                    <TableCell className={adminCellClass({ center: true })}>
+                                                                                    <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
                                                                                         <RoleGuard privilege="UPDATE_BRANCH" fallback={
-                                                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${bs.status === 'active' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-zinc-100 text-zinc-600 border border-zinc-200'}`}>
-                                                                                                {bs.status === 'active' ? t('table.status.active') : t('table.status.inactive')}
-                                                                                            </span>
+                                                                                            <AdminMemberStatusBadge status={bs.status} compact />
                                                                                         }>
                                                                                             <div title={t('sportsPanel.actions.toggleStatus')}>
                                                                                                 <Switch 
@@ -584,11 +572,14 @@ export default function BranchManagementPage() {
                                                                                     </TableCell>
                                                                                     <TableCell className={adminCellClass({ center: true })}>
                                                                                         <RoleGuard privilege="DELETE_BRANCH">
-                                                                                            <div className="flex justify-center">
-                                                                                                <button onClick={() => setDeleteBranchSportId(bs.id)} className="p-1.5 rounded-md text-zinc-400 hover:bg-rose-100 hover:text-rose-600 transition-colors" title={t('sportsPanel.actions.remove')}>
-                                                                                                    <Trash2 className="w-4 h-4" />
-                                                                                                </button>
-                                                                                            </div>
+                                                                                            <AdminRowActions>
+                                                                                                <AdminActionButton
+                                                                                                    tooltip={t('sportsPanel.actions.remove')}
+                                                                                                    icon={Trash2}
+                                                                                                    variant="delete"
+                                                                                                    onClick={() => setDeleteBranchSportId(bs.id)}
+                                                                                                />
+                                                                                            </AdminRowActions>
                                                                                         </RoleGuard>
                                                                                     </TableCell>
                                                                                 </TableRow>
@@ -615,8 +606,6 @@ export default function BranchManagementPage() {
                         isRTL={isRTL}
                         disabled={loading}
                     />
-
-                </div>
             </div>
             
             {/* ── Dialogs ── */}
@@ -638,7 +627,11 @@ export default function BranchManagementPage() {
                                     dir="ltr"
                                     className={`text-left font-mono uppercase ${formErrors.code?.length ? "border-destructive focus-visible:ring-destructive/20" : ""}`}
                                     value={form.code}
-                                    onChange={(e) => { setForm({ ...form, code: e.target.value.toUpperCase() }); setFormErrors({...formErrors, code: []}); }}
+                                    onChange={(e) => handleCodeChange(
+                                        e.target.value,
+                                        (code) => setForm({ ...form, code }),
+                                        (message) => setFormErrors({ ...formErrors, code: message ? [message] : [] }),
+                                    )}
                                     placeholder={t('modals.addEdit.fields.codePlaceholder')}
                                     maxLength={50}
                                 />
@@ -651,7 +644,11 @@ export default function BranchManagementPage() {
                             <Input 
                                 id="name_ar" 
                                 value={form.name_ar} 
-                                onChange={(e) => { setForm({ ...form, name_ar: e.target.value }); setFormErrors({...formErrors, name_ar: []}); }} 
+                                onChange={(e) => handleArabicChange(
+                                    e.target.value,
+                                    (name_ar) => setForm({ ...form, name_ar }),
+                                    (message) => setFormErrors({ ...formErrors, name_ar: message ? [message] : [] }),
+                                )} 
                                 placeholder={getBilingualFieldPlaceholder('ar', 'BranchManagementPage', 'modals.addEdit.fields.nameArPlaceholder')} 
                                 className={formErrors.name_ar?.length ? "border-destructive focus-visible:ring-destructive/20" : ""}
                             />
@@ -663,7 +660,11 @@ export default function BranchManagementPage() {
                                 id="name_en" 
                                 dir="ltr" 
                                 value={form.name_en} 
-                                onChange={(e) => { setForm({ ...form, name_en: e.target.value }); setFormErrors({...formErrors, name_en: []}); }} 
+                                onChange={(e) => handleEnglishChange(
+                                    e.target.value,
+                                    (name_en) => setForm({ ...form, name_en }),
+                                    (message) => setFormErrors({ ...formErrors, name_en: message ? [message] : [] }),
+                                )} 
                                 placeholder={getBilingualFieldPlaceholder('en', 'BranchManagementPage', 'modals.addEdit.fields.nameEnPlaceholder')} 
                                 className={`text-start ${formErrors.name_en?.length ? "border-destructive focus-visible:ring-destructive/20" : ""}`}
                             />
@@ -674,7 +675,11 @@ export default function BranchManagementPage() {
                             <Input 
                                 id="location_ar" 
                                 value={form.location_ar} 
-                                onChange={(e) => { setForm({ ...form, location_ar: e.target.value }); setFormErrors({...formErrors, location_ar: []}); }} 
+                                onChange={(e) => handleArabicChange(
+                                    e.target.value,
+                                    (location_ar) => setForm({ ...form, location_ar }),
+                                    (message) => setFormErrors({ ...formErrors, location_ar: message ? [message] : [] }),
+                                )} 
                                 placeholder={getBilingualFieldPlaceholder('ar', 'BranchManagementPage', 'modals.addEdit.fields.locationArPlaceholder')} 
                                 className={formErrors.location_ar?.length ? "border-destructive focus-visible:ring-destructive/20" : ""}
                             />
@@ -686,7 +691,11 @@ export default function BranchManagementPage() {
                                 id="location_en" 
                                 dir="ltr" 
                                 value={form.location_en} 
-                                onChange={(e) => { setForm({ ...form, location_en: e.target.value }); setFormErrors({...formErrors, location_en: []}); }} 
+                                onChange={(e) => handleEnglishChange(
+                                    e.target.value,
+                                    (location_en) => setForm({ ...form, location_en }),
+                                    (message) => setFormErrors({ ...formErrors, location_en: message ? [message] : [] }),
+                                )} 
                                 placeholder={getBilingualFieldPlaceholder('en', 'BranchManagementPage', 'modals.addEdit.fields.locationEnPlaceholder')} 
                                 className={`text-start ${formErrors.location_en?.length ? "border-destructive focus-visible:ring-destructive/20" : ""}`}
                             />
@@ -757,7 +766,7 @@ export default function BranchManagementPage() {
                                 className="text-start font-mono pe-8"
                                 placeholder={t('modals.assign.fields.memberIdPlaceholder')}
                                 value={memberIdForAssign}
-                                onChange={(e) => setMemberIdForAssign(e.target.value)}
+                                onChange={(e) => handleDigitsChange(e.target.value, setMemberIdForAssign)}
                             />
                             {memberLookupState === "loading" && (
                                 <Loader2 className="absolute end-2.5 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />

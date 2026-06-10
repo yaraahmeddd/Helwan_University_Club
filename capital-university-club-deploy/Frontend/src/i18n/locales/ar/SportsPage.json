@@ -10,7 +10,10 @@
     "all": "الكل",
     "active": "مفعّلة",
     "draft": "مسودة",
-    "inactive": "معطّلة"
+    "inactive": "معطّلة",
+    "bookingAll": "توفر الحجز",
+    "bookingYes": "متاح للحجز",
+    "bookingNo": "غير متاح للحجز"
   },
   "table": {
     "name": "اسم الرياضة",
@@ -35,7 +38,13 @@
   "actions": {
     "edit": "تعديل",
     "delete": "حذف",
-    "viewMembers": "عرض الأعضاء"
+    "viewMembers": "عرض الأعضاء",
+    "viewSport": "عرض تفاصيل الرياضة"
+  },
+  "viewDialog": {
+    "subtitle": "تفاصيل الرياضة وإعداداتها",
+    "close": "إغلاق",
+    "edit": "تعديل الرياضة"
   },
   "dialog": {
     "editTitle": "تعديل رياضة",
@@ -69,6 +78,8 @@
     "teamTitle": "فريق {{n}}",
     "teamNameArLabel": "اسم الفريق (AR)",
     "teamNameArPlaceholder": "مثال: فريق تحت 18 سنة",
+    "teamNameEnLabel": "اسم الفريق (EN)",
+    "teamNameEnPlaceholder": "Enter English team name only",
     "maxParticipants": "الحد الأقصى",
     "subscriptionPrice": "سعر الاشتراك (ج.م)",
     "trainingLabel": "مواعيد التدريب",

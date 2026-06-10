@@ -28,6 +28,8 @@ import {
 import api from "../services/api";
 import { useToast } from "../hooks/use-toast";
 import { useLanguage } from "../hooks/useLanguage";
+import { useTableExport } from "../utils/reportExport/useTableExport";
+import { ExportReportButton } from "../components/StaffPagesComponents/shared/ExportReportButton";
 
 // Types
 
@@ -129,6 +131,7 @@ export default function SportsMembersPage() {
   // Modal state
   const [selectedMember, setSelectedMember] = useState<MemberRow | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [modalTab, setModalTab] = useState<"edit" | "assign">("edit");
   const [sportTab, setSportTab] = useState<"all" | "subscribed" | "unsubscribed">("all");
   const [sportSearch, setSportSearch] = useState("");
   const [memberSports, setMemberSports] = useState<Set<number>>(new Set());
@@ -141,12 +144,10 @@ export default function SportsMembersPage() {
 
   // Assign-team modal state
   const [assignModal, setAssignModal] = useState<{
-    open: boolean;
-    member: MemberRow | null;
     step: 1 | 2;
     selectedSport: SportItem | null;
     selectedTeam: { id: string; name_ar: string; name_en?: string } | null;
-  }>({ open: false, member: null, step: 1, selectedSport: null, selectedTeam: null });
+  }>({ step: 1, selectedSport: null, selectedTeam: null });
 
   const [assignTeams, setAssignTeams] = useState<{
     list: { id: string; name_ar: string; name_en?: string; max_participants: number }[];
@@ -344,6 +345,27 @@ export default function SportsMembersPage() {
   // Pagination
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
+  const exportHandle = useTableExport({
+    reportId: "assign-sports",
+    titleEn: "Assign Sports Report",
+    titleAr: "تقرير تعيين الرياضات",
+    columns: [
+      {
+        headerEn: "Name",
+        headerAr: "الاسم",
+        accessor: (m: MemberRow) => getMemberDisplayName(m, language),
+        width: 28,
+      },
+      {
+        headerEn: "Sports Count",
+        headerAr: "عدد الرياضات",
+        accessor: (m: MemberRow) => String(m.sports.length),
+        width: 12,
+      },
+    ],
+    rows: members,
+  });
+
   // Sports dialog filtering
   const filteredSports = useMemo(() => {
     let list = allSports;
@@ -357,6 +379,7 @@ export default function SportsMembersPage() {
 
   const openEdit = useCallback((member: MemberRow) => {
     setSelectedMember(member);
+    setModalTab("edit");
     setMemberSports(new Set(member.sports.map((s) => s.id)));
     setSportTab("all");
     setSportSearch("");
@@ -510,15 +533,20 @@ export default function SportsMembersPage() {
     }
   };
 
-  const openAssignModal = (member: MemberRow) => {
-    setAssignModal({ open: true, member, step: 1, selectedSport: null, selectedTeam: null });
-    setAssignTeams({ list: [], loading: false });
-  };
-
-  const closeAssignModal = () => {
-    setAssignModal({ open: false, member: null, step: 1, selectedSport: null, selectedTeam: null });
+  const resetMemberDialog = () => {
+    setSelectedTeams({});
+    setSportTeams({});
+    setAssignModal({ step: 1, selectedSport: null, selectedTeam: null });
     setAssignTeams({ list: [], loading: false });
     setAssignSaving(false);
+  };
+
+  const openAssignModal = (member: MemberRow) => {
+    setSelectedMember(member);
+    setModalTab("assign");
+    setAssignModal({ step: 1, selectedSport: null, selectedTeam: null });
+    setAssignTeams({ list: [], loading: false });
+    setShowModal(true);
   };
 
   const handleAssignSportSelect = (sport: SportItem) => {
@@ -536,27 +564,28 @@ export default function SportsMembersPage() {
   };
 
   const handleAssignTeam = async () => {
-    if (!assignModal.member || !assignModal.selectedSport || !assignModal.selectedTeam) return;
+    if (!selectedMember || !assignModal.selectedSport || !assignModal.selectedTeam) return;
     setAssignSaving(true);
     try {
-      if (assignModal.member.isTeamPlayer) {
-        await api.post(`/team-members/${assignModal.member.id}/sports`, {
+      if (selectedMember.isTeamPlayer) {
+        await api.post(`/team-members/${selectedMember.id}/sports`, {
           sport_id: assignModal.selectedSport.id,
           team_id: assignModal.selectedTeam.id,
         });
       } else {
-        await api.post(`/member-teams/member/${assignModal.member.id}/choose-sport`, {
+        await api.post(`/member-teams/member/${selectedMember.id}/choose-sport`, {
           team_id: assignModal.selectedTeam.id,
         });
       }
       toast({
         title: t("toasts.assignTeamSuccess.title"),
         description: t("toasts.assignTeamSuccess.description", {
-          member: getMemberDisplayName(assignModal.member, language),
+          member: getMemberDisplayName(selectedMember, language),
           team: getTeamName(assignModal.selectedTeam, language),
         }),
       });
-      closeAssignModal();
+      setShowModal(false);
+      resetMemberDialog();
       void fetchPage(currentPage, search, memberTab);
     } catch (err) {
       const e = err as { response?: { data?: { message?: string } }; message?: string };
@@ -576,16 +605,19 @@ export default function SportsMembersPage() {
         title={t("header.title")}
         subtitle={t("header.subtitle", { count: totalCount })}
         actions={
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2"
-            onClick={() => void fetchPage(currentPage, search, memberTab)}
-            disabled={isLoading}
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
-            {t("header.refresh")}
-          </Button>
+          <>
+            <ExportReportButton {...exportHandle} rowCount={totalCount} />
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => void fetchPage(currentPage, search, memberTab)}
+              disabled={isLoading}
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+              {t("header.refresh")}
+            </Button>
+          </>
         }
       />
 
@@ -620,13 +652,9 @@ export default function SportsMembersPage() {
             className={`${isRTL ? "pr-9" : "pl-9"} h-10`}
           />
         </div>
-        <span className={adminPageStyles.toolbarResults}>
-          {t("toolbar.results", { count: totalCount })}
-        </span>
       </div>
 
-      <div className="flex flex-col flex-1 overflow-hidden min-h-0">
-      <div className="flex-1 overflow-hidden border-t border-border bg-card flex flex-col">
+      <div className={adminTableStyles.shell}>
       <div className={adminTableStyles.container}>
         {isLoading ? (
           <div className="py-20 text-center text-muted-foreground">
@@ -651,7 +679,6 @@ export default function SportsMembersPage() {
               <TableRow>
                 <TableHead className={adminHeadClass({ className: "w-10" })}>#</TableHead>
                 <TableHead className={adminHeadClass()}>{t("table.name")}</TableHead>
-                <TableHead className={adminHeadClass({ center: true })}>{t("table.status")}</TableHead>
                 <TableHead className={adminHeadClass({ center: true })}>{t("table.sports")}</TableHead>
                 <TableHead className={adminHeadClass({ center: true, className: "w-[180px]" })}>{t("table.actions")}</TableHead>
               </TableRow>
@@ -676,9 +703,6 @@ export default function SportsMembersPage() {
                       />
                     </TableCell>
                     <TableCell className={adminCellClass({ center: true })}>
-                      <AdminMemberStatusBadge status={member.status} compact />
-                    </TableCell>
-                    <TableCell className={adminCellClass({ center: true })}>
                       <span className={`inline-flex items-center gap-1 text-xs font-medium ${member.sports.length >= MAX_SPORTS_PER_MEMBER
                         ? "text-amber-600 font-semibold"
                         : "text-muted-foreground"
@@ -699,7 +723,7 @@ export default function SportsMembersPage() {
                         <AdminActionButton
                           tooltip={t("actions.assignTeam")}
                           icon={UserPlus}
-                          variant="view"
+                          variant="assign"
                           onClick={() => openAssignModal(member)}
                         />
                       </AdminRowActions>
@@ -720,40 +744,61 @@ export default function SportsMembersPage() {
         disabled={isLoading}
       />
       </div>
-      </div>
 
       <Dialog open={showModal} onOpenChange={(open) => {
-        if (!isSaving) {
+        if (!isSaving && !assignSaving) {
           setShowModal(open);
-          if (!open) {
-            setSelectedTeams({});
-            setSportTeams({});
-          }
+          if (!open) resetMemberDialog();
         }
       }}>
         <DialogContent className={`${adminDialogStyles.content} max-w-2xl`} dir={isRTL ? "rtl" : "ltr"}>
           <div className={`${adminDialogStyles.panel} max-h-[90vh]`}>
-            <div className="px-6 py-4 border-b border-border bg-muted/20 shrink-0">
+            <div className="px-6 py-4 border-b border-border bg-muted/20 shrink-0 space-y-3">
               <div className="flex items-start gap-3">
                 <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                  <Pencil className="w-5 h-5 text-primary" />
+                  {modalTab === "edit" ? <Pencil className="w-5 h-5 text-primary" /> : <UserPlus className="w-5 h-5 text-primary" />}
                 </div>
-                <DialogHeader className="space-y-1 text-start">
+                <DialogHeader className="space-y-1 text-start flex-1">
                   <DialogTitle className="text-lg font-bold">
                     {selectedMember
-                      ? t("sportsModal.titleWithMember", { member: getMemberDisplayName(selectedMember, language) })
+                      ? getMemberDisplayName(selectedMember, language)
                       : t("sportsModal.title")}
                   </DialogTitle>
                   <DialogDescription>
-                    {t("sportsModal.description")}
-                    <span className="block mt-0.5 text-amber-600 font-medium">
-                      {t("sportsModal.maxSports", { max: MAX_SPORTS_PER_MEMBER })}
-                    </span>
+                    {modalTab === "edit"
+                      ? t("sportsModal.description")
+                      : selectedMember
+                        ? t("assignTeamModal.member", { member: getMemberDisplayName(selectedMember, language) })
+                        : ""}
                   </DialogDescription>
                 </DialogHeader>
               </div>
+              <div className={adminPageStyles.toolbarTabGroup}>
+                <button
+                  type="button"
+                  className={`${adminPageStyles.toolbarTab} ${modalTab === "edit" ? adminPageStyles.toolbarTabActive : adminPageStyles.toolbarTabInactive}`}
+                  onClick={() => setModalTab("edit")}
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  {t("tabs.editSports")}
+                </button>
+                <button
+                  type="button"
+                  className={`${adminPageStyles.toolbarTab} ${modalTab === "assign" ? adminPageStyles.toolbarTabActive : adminPageStyles.toolbarTabInactive}`}
+                  onClick={() => {
+                    setModalTab("assign");
+                    setAssignModal({ step: 1, selectedSport: null, selectedTeam: null });
+                    setAssignTeams({ list: [], loading: false });
+                  }}
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  {t("tabs.assignTeam")}
+                </button>
+              </div>
             </div>
 
+          {modalTab === "edit" ? (
+          <>
           <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 min-h-0">
             <div className="flex gap-2 border-b border-border">
               {(["all", "subscribed", "unsubscribed"] as const).map((tab) => (
@@ -887,36 +932,9 @@ export default function SportsMembersPage() {
                   )}
                 </Button>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={assignModal.open}
-        onOpenChange={(open) => { if (!open) closeAssignModal(); }}
-      >
-        <DialogContent className={`${adminDialogStyles.content} max-w-lg`} dir={isRTL ? "rtl" : "ltr"}>
-          <div className={`${adminDialogStyles.panel} max-h-[90vh]`}>
-            <div className="px-6 py-4 border-b border-border bg-muted/20 shrink-0">
-              <div className="flex items-start gap-3">
-                <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                  <UserPlus className="w-5 h-5 text-primary" />
-                </div>
-                <DialogHeader className="space-y-1 text-start">
-                  <DialogTitle className="text-lg font-bold">
-                    {assignModal.step === 1
-                      ? t("assignTeamModal.titleStepSport")
-                      : t("assignTeamModal.titleStepTeam")}
-                  </DialogTitle>
-                  <DialogDescription>
-                    {assignModal.member
-                      ? t("assignTeamModal.member", { member: getMemberDisplayName(assignModal.member, language) })
-                      : ""}
-                  </DialogDescription>
-                </DialogHeader>
-              </div>
-            </div>
-
+          </>
+          ) : (
+          <>
           <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 min-h-0">
             {assignModal.step === 1 ? (
               allSports.length === 0 ? (
@@ -996,7 +1014,7 @@ export default function SportsMembersPage() {
                 <span />
               )}
               <div className="flex gap-2">
-                <Button variant="outline" onClick={closeAssignModal} disabled={assignSaving}>
+                <Button variant="outline" onClick={() => setShowModal(false)} disabled={assignSaving}>
                   {t("common.cancel")}
                 </Button>
                 {assignModal.step === 2 && (
@@ -1017,6 +1035,8 @@ export default function SportsMembersPage() {
                 )}
               </div>
             </div>
+          </>
+          )}
           </div>
         </DialogContent>
       </Dialog>

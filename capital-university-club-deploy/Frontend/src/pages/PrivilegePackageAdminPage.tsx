@@ -10,6 +10,8 @@ import { useLanguage } from "../hooks/useLanguage";
 import { compareLocalizedText, getPrivilegeDisplayName, getPrivilegeModuleLabel, shouldShowPrivilegeCode } from "../lib/privilegeModuleLabels";
 import { FormErrorAlert } from "../components/shared/FormErrorAlert";
 import { getApiErrorMessage } from "../lib/appErrors";
+import { useAdminFieldValidation } from "../hooks/useAdminFieldValidation";
+import { validateAdminPackageForm } from "../lib/validation/adminForms";
 import { Input } from "../components/StaffPagesComponents/ui/input";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Badge } from "../components/StaffPagesComponents/ui/badge";
@@ -56,6 +58,7 @@ export default function PrivilegePackageAdminPage() {
   const { t } = useTranslation("PrivilegePackageAdminPage");
   const { t: tCommon } = useTranslation("common");
   const { language, isRTL } = useLanguage();
+  const { tVal } = useAdminFieldValidation();
 
   const mockModules: ModuleItem[] = useMemo(() => [
     {
@@ -250,8 +253,9 @@ export default function PrivilegePackageAdminPage() {
 
   const handleSave = async () => {
     setError("");
-    if (!packageName.trim()) {
-      setError(t("errors.nameRequired"));
+    const formErrors = validateAdminPackageForm({ name: packageName, description }, tVal);
+    if (Object.keys(formErrors).length > 0) {
+      setError(Object.values(formErrors)[0] ?? t("errors.nameRequired"));
       return;
     }
     if (selectedPrivileges.size === 0) {

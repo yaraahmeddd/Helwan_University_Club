@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
-import { Badge } from "../components/StaffPagesComponents/ui/badge";
+import { AdminMemberStatusBadge } from "../components/StaffPagesComponents/shared/AdminMemberStatusBadge";
 import { Input } from "../components/StaffPagesComponents/ui/input";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../components/StaffPagesComponents/ui/dialog";
@@ -18,6 +18,9 @@ import { AdminPagination } from "../components/StaffPagesComponents/shared/Admin
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
 import { getLocalizedText } from "../lib/localizedDisplay";
 import api from "../services/axios";
+import { FieldInlineError } from "../components/StaffPagesComponents/shared/FieldInlineError";
+import { useAdminFieldValidation } from "../hooks/useAdminFieldValidation";
+import { validateAdminMembershipPlanForm } from "../lib/validation/adminForms";
 
 type MembershipApiItem = {
   id: number;
@@ -64,6 +67,7 @@ const PAGE_SIZE = ADMIN_PAGE_SIZE;
 export default function MembershipsPage() {
   const { t } = useTranslation("MemberShipsPage");
   const { language, isRTL } = useLanguage();
+  const { tVal, handleArabicChange, handleEnglishChange, handleCodeChange, handleMoneyChange } = useAdminFieldValidation();
   
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -97,6 +101,8 @@ export default function MembershipsPage() {
     is_active: true,
   });
   const [saving, setSaving] = useState(false);
+  const [createFieldErrors, setCreateFieldErrors] = useState<Record<string, string | undefined>>({});
+  const [editFieldErrors, setEditFieldErrors] = useState<Record<string, string | undefined>>({});
   const [deleting, setDeleting] = useState(false);
   const [toggling, setToggling] = useState<number | null>(null);
   const { toast } = useToast();
@@ -168,10 +174,18 @@ export default function MembershipsPage() {
       renewal_price: "",
       is_active: true,
     });
+    setCreateFieldErrors({});
     setCreateOpen(true);
   };
 
   const saveCreate = async () => {
+    const errors = validateAdminMembershipPlanForm(createForm, tVal, { requireMemberType: true });
+    if (Object.keys(errors).length > 0) {
+      setCreateFieldErrors(errors);
+      toast({ title: t("toast.createErrorTitle"), description: Object.values(errors)[0], variant: "destructive" });
+      return;
+    }
+    setCreateFieldErrors({});
     setCreating(true);
     try {
       const payload: Record<string, unknown> = {
@@ -210,10 +224,18 @@ export default function MembershipsPage() {
       renewal_price: String(plan.renewal_price ?? ""),
       is_active: !!plan.is_active,
     });
+    setEditFieldErrors({});
   };
 
   const saveEdit = async () => {
     if (!editPlan) return;
+    const errors = validateAdminMembershipPlanForm(editForm, tVal);
+    if (Object.keys(errors).length > 0) {
+      setEditFieldErrors(errors);
+      toast({ title: t("toast.editErrorTitle"), description: Object.values(errors)[0], variant: "destructive" });
+      return;
+    }
+    setEditFieldErrors({});
     setSaving(true);
     try {
       const payload: Record<string, unknown> = {
@@ -342,7 +364,7 @@ export default function MembershipsPage() {
                 <TableHead className={adminHeadClass()}>{t("table.name")}</TableHead>
                 <TableHead className={adminHeadClass()}>{t("table.price")}</TableHead>
                 <TableHead className={adminHeadClass()}>{t("table.durationMonths")}</TableHead>
-                <TableHead className={adminHeadClass()}>{t("table.status")}</TableHead>
+                <TableHead className={adminHeadClass({ center: true, className: "whitespace-nowrap" })}>{t("table.status")}</TableHead>
                 <TableHead className={adminHeadClass({ center: true, className: "w-[260px]" })}>{t("table.actions")}</TableHead>
               </TableRow>
             </TableHeader>
@@ -363,10 +385,8 @@ export default function MembershipsPage() {
                     </TableCell>
                     <TableCell className={adminCellClass({ className: "font-poppins" })}>{m.price} {m.currency}</TableCell>
                     <TableCell className={adminCellClass({ className: "font-poppins" })}>{m.duration_months}</TableCell>
-                    <TableCell className={adminCellClass()}>
-                      <Badge className={m.is_active ? "bg-success text-success-foreground" : "bg-destructive text-destructive-foreground"}>
-                        {m.is_active ? t("status.active") : t("status.inactive")}
-                      </Badge>
+                    <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
+                      <AdminMemberStatusBadge status={m.is_active ? "active" : "inactive"} compact />
                     </TableCell>
                     <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
                       <AdminRowActions>
@@ -485,31 +505,77 @@ export default function MembershipsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <div className="mb-2 text-sm font-medium">{t("table.code")}</div>
-                <Input value={editForm.plan_code} onChange={(e) => setEditForm((p) => ({ ...p, plan_code: e.target.value }))} />
+                <Input
+                  value={editForm.plan_code}
+                  className={editFieldErrors.plan_code ? "border-destructive" : ""}
+                  onChange={(e) => handleCodeChange(
+                    e.target.value,
+                    (plan_code) => setEditForm((p) => ({ ...p, plan_code })),
+                    (message) => setEditFieldErrors((prev) => ({ ...prev, plan_code: message })),
+                  )}
+                />
+                <FieldInlineError message={editFieldErrors.plan_code} />
               </div>
               <div>
                 <div className="mb-2 text-sm font-medium">{t("edit.currency")}</div>
-                <Input value={editForm.currency} onChange={(e) => setEditForm((p) => ({ ...p, currency: e.target.value }))} dir="ltr" className="text-left" />
+                <Input value={editForm.currency} onChange={(e) => setEditForm((p) => ({ ...p, currency: e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3) }))} dir="ltr" className="text-left" />
               </div>
               <div>
                 <div className="mb-2 text-sm font-medium">{t("detail.nameAr")}</div>
-                <Input value={editForm.name_ar} onChange={(e) => setEditForm((p) => ({ ...p, name_ar: e.target.value }))} />
+                <Input
+                  value={editForm.name_ar}
+                  className={editFieldErrors.name_ar ? "border-destructive" : ""}
+                  onChange={(e) => handleArabicChange(
+                    e.target.value,
+                    (name_ar) => setEditForm((p) => ({ ...p, name_ar })),
+                    (message) => setEditFieldErrors((prev) => ({ ...prev, name_ar: message })),
+                  )}
+                />
+                <FieldInlineError message={editFieldErrors.name_ar} />
               </div>
               <div>
                 <div className="mb-2 text-sm font-medium">{t("detail.nameEn")}</div>
-                <Input value={editForm.name_en} onChange={(e) => setEditForm((p) => ({ ...p, name_en: e.target.value }))} dir="ltr" className="text-left" />
+                <Input
+                  value={editForm.name_en}
+                  className={`text-left ${editFieldErrors.name_en ? "border-destructive" : ""}`}
+                  onChange={(e) => handleEnglishChange(
+                    e.target.value,
+                    (name_en) => setEditForm((p) => ({ ...p, name_en })),
+                    (message) => setEditFieldErrors((prev) => ({ ...prev, name_en: message })),
+                  )}
+                  dir="ltr"
+                />
+                <FieldInlineError message={editFieldErrors.name_en} />
               </div>
               <div>
                 <div className="mb-2 text-sm font-medium">{t("table.price")}</div>
-                <Input type="number" value={editForm.price} onChange={(e) => setEditForm((p) => ({ ...p, price: e.target.value }))} />
+                <Input
+                  value={editForm.price}
+                  onChange={(e) => handleMoneyChange(e.target.value, (price) => setEditForm((p) => ({ ...p, price })))}
+                  dir="ltr"
+                  className={`text-left ${editFieldErrors.price ? "border-destructive" : ""}`}
+                />
+                <FieldInlineError message={editFieldErrors.price} />
               </div>
               <div>
                 <div className="mb-2 text-sm font-medium">{t("detail.renewalPrice")}</div>
-                <Input type="number" value={editForm.renewal_price} onChange={(e) => setEditForm((p) => ({ ...p, renewal_price: e.target.value }))} />
+                <Input
+                  value={editForm.renewal_price}
+                  onChange={(e) => handleMoneyChange(e.target.value, (renewal_price) => setEditForm((p) => ({ ...p, renewal_price })))}
+                  dir="ltr"
+                  className={`text-left ${editFieldErrors.renewal_price ? "border-destructive" : ""}`}
+                />
+                <FieldInlineError message={editFieldErrors.renewal_price} />
               </div>
               <div>
                 <div className="mb-2 text-sm font-medium">{t("table.durationMonths")}</div>
-                <Input type="number" value={editForm.duration_months} onChange={(e) => setEditForm((p) => ({ ...p, duration_months: e.target.value }))} />
+                <Input
+                  value={editForm.duration_months}
+                  onChange={(e) => handleMoneyChange(e.target.value.replace(/\./g, ''), (duration_months) => setEditForm((p) => ({ ...p, duration_months })))}
+                  dir="ltr"
+                  className={`text-left ${editFieldErrors.duration_months ? "border-destructive" : ""}`}
+                />
+                <FieldInlineError message={editFieldErrors.duration_months} />
               </div>
               <div className="flex items-center gap-2 mt-7">
                 <input
@@ -541,10 +607,10 @@ export default function MembershipsPage() {
                 <div className="mb-2 text-sm font-medium">{t("table.memberType")}</div>
                 <Select
                   value={String(createForm.member_type_id)}
-                  onValueChange={(val) => setCreateForm((p) => ({ ...p, member_type_id: val }))}
+                  onValueChange={(val) => { setCreateForm((p) => ({ ...p, member_type_id: val })); setCreateFieldErrors((prev) => ({ ...prev, member_type_id: undefined })); }}
                   dir={isRTL ? "rtl" : "ltr"}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className={createFieldErrors.member_type_id ? "border-destructive" : ""}>
                     <SelectValue placeholder={t("create.selectMemberType")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -555,19 +621,29 @@ export default function MembershipsPage() {
                     ))}
                   </SelectContent>
                 </Select>
+                <FieldInlineError message={createFieldErrors.member_type_id} />
               </div>
               <div>
                 <div className="mb-2 text-sm font-medium">{t("edit.currency")}</div>
                 <Input
                   value={createForm.currency}
-                  onChange={(e) => setCreateForm((p) => ({ ...p, currency: e.target.value }))}
+                  onChange={(e) => setCreateForm((p) => ({ ...p, currency: e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3) }))}
                   dir="ltr"
                   className="text-left"
                 />
               </div>
               <div>
                 <div className="mb-2 text-sm font-medium">{t("table.code")}</div>
-                <Input value={createForm.plan_code} onChange={(e) => setCreateForm((p) => ({ ...p, plan_code: e.target.value }))} />
+                <Input
+                  value={createForm.plan_code}
+                  className={createFieldErrors.plan_code ? "border-destructive" : ""}
+                  onChange={(e) => handleCodeChange(
+                    e.target.value,
+                    (plan_code) => setCreateForm((p) => ({ ...p, plan_code })),
+                    (message) => setCreateFieldErrors((prev) => ({ ...prev, plan_code: message })),
+                  )}
+                />
+                <FieldInlineError message={createFieldErrors.plan_code} />
               </div>
               <div className="flex items-center gap-2 mt-7">
                 <input
@@ -580,36 +656,60 @@ export default function MembershipsPage() {
               </div>
               <div>
                 <div className="mb-2 text-sm font-medium">{t("detail.nameAr")}</div>
-                <Input value={createForm.name_ar} onChange={(e) => setCreateForm((p) => ({ ...p, name_ar: e.target.value }))} />
+                <Input
+                  value={createForm.name_ar}
+                  className={createFieldErrors.name_ar ? "border-destructive" : ""}
+                  onChange={(e) => handleArabicChange(
+                    e.target.value,
+                    (name_ar) => setCreateForm((p) => ({ ...p, name_ar })),
+                    (message) => setCreateFieldErrors((prev) => ({ ...prev, name_ar: message })),
+                  )}
+                />
+                <FieldInlineError message={createFieldErrors.name_ar} />
               </div>
               <div>
                 <div className="mb-2 text-sm font-medium">{t("detail.nameEn")}</div>
                 <Input
                   value={createForm.name_en}
-                  onChange={(e) => setCreateForm((p) => ({ ...p, name_en: e.target.value }))}
+                  className={`text-left ${createFieldErrors.name_en ? "border-destructive" : ""}`}
+                  onChange={(e) => handleEnglishChange(
+                    e.target.value,
+                    (name_en) => setCreateForm((p) => ({ ...p, name_en })),
+                    (message) => setCreateFieldErrors((prev) => ({ ...prev, name_en: message })),
+                  )}
                   dir="ltr"
-                  className="text-left"
                 />
+                <FieldInlineError message={createFieldErrors.name_en} />
               </div>
               <div>
                 <div className="mb-2 text-sm font-medium">{t("table.price")}</div>
-                <Input type="number" value={createForm.price} onChange={(e) => setCreateForm((p) => ({ ...p, price: e.target.value }))} />
+                <Input
+                  value={createForm.price}
+                  onChange={(e) => handleMoneyChange(e.target.value, (price) => setCreateForm((p) => ({ ...p, price })))}
+                  dir="ltr"
+                  className={`text-left ${createFieldErrors.price ? "border-destructive" : ""}`}
+                />
+                <FieldInlineError message={createFieldErrors.price} />
               </div>
               <div>
                 <div className="mb-2 text-sm font-medium">{t("detail.renewalPrice")}</div>
                 <Input
-                  type="number"
                   value={createForm.renewal_price}
-                  onChange={(e) => setCreateForm((p) => ({ ...p, renewal_price: e.target.value }))}
+                  onChange={(e) => handleMoneyChange(e.target.value, (renewal_price) => setCreateForm((p) => ({ ...p, renewal_price })))}
+                  dir="ltr"
+                  className={`text-left ${createFieldErrors.renewal_price ? "border-destructive" : ""}`}
                 />
+                <FieldInlineError message={createFieldErrors.renewal_price} />
               </div>
               <div>
                 <div className="mb-2 text-sm font-medium">{t("table.durationMonths")}</div>
                 <Input
-                  type="number"
                   value={createForm.duration_months}
-                  onChange={(e) => setCreateForm((p) => ({ ...p, duration_months: e.target.value }))}
+                  onChange={(e) => handleMoneyChange(e.target.value.replace(/\./g, ''), (duration_months) => setCreateForm((p) => ({ ...p, duration_months })))}
+                  dir="ltr"
+                  className={`text-left ${createFieldErrors.duration_months ? "border-destructive" : ""}`}
                 />
+                <FieldInlineError message={createFieldErrors.duration_months} />
               </div>
             </div>
 
