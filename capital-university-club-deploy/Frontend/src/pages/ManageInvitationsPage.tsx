@@ -32,6 +32,8 @@ import api from "../services/axios";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Input } from "../components/StaffPagesComponents/ui/input";
 import { Badge } from "../components/StaffPagesComponents/ui/badge";
+import { AdminMemberStatusBadge } from "../components/StaffPagesComponents/shared/AdminMemberStatusBadge";
+import { getAdminStatusConfig } from "../components/StaffPagesComponents/shared/adminMemberStatus";
 import {
   Table,
   TableBody,
@@ -117,22 +119,7 @@ type Pagination = {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: Invitation["status"] }) {
-  const { t } = useTranslation("ManageInvitationsPage");
-  const nowrap = "whitespace-nowrap shrink-0";
-  switch (status) {
-    case "confirmed":
-    case "payment_completed":
-    case "completed":
-      return <Badge className={`bg-emerald-100 text-emerald-700 border-emerald-200 ${nowrap}`}>{t('status.confirmed')}</Badge>;
-    case "pending_payment":
-      return <Badge className={`bg-amber-100 text-amber-700 border-amber-200 ${nowrap}`}>{t('status.pending_payment')}</Badge>;
-    case "cancelled":
-      return <Badge variant="outline" className={`text-muted-foreground ${nowrap}`}>{t('status.cancelled')}</Badge>;
-    case "in_progress":
-      return <Badge className={`bg-blue-100 text-blue-700 border-blue-200 ${nowrap}`}>{t('status.in_progress')}</Badge>;
-    default:
-      return <Badge variant="outline" className={nowrap}>{status}</Badge>;
-  }
+  return <AdminMemberStatusBadge status={status} compact />;
 }
 
 function truncate(str: string, length = 8) {
@@ -176,6 +163,7 @@ function formatTime(timeStr: string, dateLocale: Locale) {
 
 export default function ManageInvitationsPage() {
   const { t } = useTranslation("ManageInvitationsPage");
+  const { t: tStatus } = useTranslation("common");
   const { language, isRTL } = useLanguage();
   const { toast } = useToast();
   const { fmtDate } = useAdminFormatters();
@@ -316,9 +304,9 @@ export default function ManageInvitationsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t('filters.allStatuses')}</SelectItem>
-              <SelectItem value="confirmed">{t('status.confirmed')}</SelectItem>
-              <SelectItem value="pending_payment">{t('status.pending_payment')}</SelectItem>
-              <SelectItem value="cancelled">{t('status.cancelled')}</SelectItem>
+              <SelectItem value="confirmed">{tStatus(getAdminStatusConfig("confirmed").labelKey)}</SelectItem>
+              <SelectItem value="pending_payment">{tStatus(getAdminStatusConfig("pending_payment").labelKey)}</SelectItem>
+              <SelectItem value="cancelled">{tStatus(getAdminStatusConfig("cancelled").labelKey)}</SelectItem>
             </SelectContent>
           </Select>
         </div>

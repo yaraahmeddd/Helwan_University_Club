@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { Search, RefreshCw, Trophy, Loader2, Users } from "lucide-react";
+import { Search, RefreshCw, Trophy, Loader2, Users, Pencil, UserPlus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   Dialog,
@@ -8,9 +8,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from "../components/StaffPagesComponents/ui/dialog";
+import { adminDialogStyles, adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE, adminPageStyles } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
+import { AdminActionButton, AdminRowActions } from "../components/StaffPagesComponents/shared/AdminRowActions";
+import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
+import { AdminMemberStatusBadge } from "../components/StaffPagesComponents/shared/AdminMemberStatusBadge";
+import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
+import { getLocalizedText, type DisplayLanguage } from "../lib/localizedDisplay";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 import { Input } from "../components/StaffPagesComponents/ui/input";
 import { Button } from "../components/StaffPagesComponents/ui/button";
-import { Badge } from "../components/StaffPagesComponents/ui/badge";
 import {
   Select,
   SelectContent,
@@ -21,11 +28,6 @@ import {
 import api from "../services/api";
 import { useToast } from "../hooks/use-toast";
 import { useLanguage } from "../hooks/useLanguage";
-import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
-import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
-import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
-import { getLocalizedText, type DisplayLanguage } from "../lib/localizedDisplay";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 
 // Types
 
@@ -568,45 +570,39 @@ export default function SportsMembersPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col" dir={isRTL ? "rtl" : "ltr"}>
-      <div className="px-6 py-4 border-b border-border bg-background shrink-0">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-              <Trophy className="w-6 h-6 text-primary" />
-              {t("header.title")}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {t("header.subtitle", { page: currentPage, totalPages, count: totalCount })}
-            </p>
-          </div>
-          <button
+    <div className="h-[calc(100vh-4rem)] flex flex-col bg-background overflow-hidden" dir={isRTL ? "rtl" : "ltr"}>
+      <AdminPageHeader
+        icon={Trophy}
+        title={t("header.title")}
+        subtitle={t("header.subtitle", { count: totalCount })}
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
             onClick={() => void fetchPage(currentPage, search, memberTab)}
             disabled={isLoading}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border hover:bg-muted transition-colors text-sm text-muted-foreground disabled:opacity-40"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
             {t("header.refresh")}
-          </button>
-        </div>
+          </Button>
+        }
+      />
 
-        <div className="flex items-center gap-1 mt-3">
+      <div className={`${adminPageStyles.toolbar} shrink-0 flex-col items-stretch sm:flex-row sm:items-center gap-3`}>
+        <div className={adminPageStyles.toolbarTabGroup}>
           <button
+            type="button"
             onClick={() => handleTabChange("members")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${memberTab === "members"
-              ? "bg-primary text-primary-foreground shadow-sm"
-              : "text-muted-foreground hover:bg-muted"
-              }`}
+            className={`${adminPageStyles.toolbarTab} ${memberTab === "members" ? adminPageStyles.toolbarTabActive : adminPageStyles.toolbarTabInactive}`}
           >
             <Users className="w-3.5 h-3.5" />
             {t("tabs.members")}
           </button>
           <button
+            type="button"
             onClick={() => handleTabChange("team-members")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${memberTab === "team-members"
-              ? "bg-primary text-primary-foreground shadow-sm"
-              : "text-muted-foreground hover:bg-muted"
-              }`}
+            className={`${adminPageStyles.toolbarTab} ${memberTab === "team-members" ? adminPageStyles.toolbarTabActive : adminPageStyles.toolbarTabInactive}`}
           >
             <Trophy className="w-3.5 h-3.5" />
             {t("tabs.teamMembers")}
@@ -614,7 +610,7 @@ export default function SportsMembersPage() {
         </div>
       </div>
 
-      <div className="flex items-center gap-3 px-6 py-4 border-b border-border bg-muted/20 shrink-0 flex-wrap">
+      <div className={`${adminPageStyles.toolbar} shrink-0`}>
         <div className="relative w-full sm:w-80 md:w-96">
           <Search className={`absolute ${isRTL ? "right-3" : "left-3"} top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none`} />
           <Input
@@ -624,14 +620,13 @@ export default function SportsMembersPage() {
             className={`${isRTL ? "pr-9" : "pl-9"} h-10`}
           />
         </div>
-        <Badge variant="outline" className="text-xs text-muted-foreground shrink-0">
+        <span className={adminPageStyles.toolbarResults}>
           {t("toolbar.results", { count: totalCount })}
-        </Badge>
-
-        <div className="flex-1" />
+        </span>
       </div>
 
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex flex-col flex-1 overflow-hidden min-h-0">
+      <div className="flex-1 overflow-hidden border-t border-border bg-card flex flex-col">
       <div className={adminTableStyles.container}>
         {isLoading ? (
           <div className="py-20 text-center text-muted-foreground">
@@ -658,7 +653,7 @@ export default function SportsMembersPage() {
                 <TableHead className={adminHeadClass()}>{t("table.name")}</TableHead>
                 <TableHead className={adminHeadClass({ center: true })}>{t("table.status")}</TableHead>
                 <TableHead className={adminHeadClass({ center: true })}>{t("table.sports")}</TableHead>
-                <TableHead className={adminHeadClass({ center: true })}>{t("table.actions")}</TableHead>
+                <TableHead className={adminHeadClass({ center: true, className: "w-[180px]" })}>{t("table.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className={adminTableStyles.body}>
@@ -681,13 +676,7 @@ export default function SportsMembersPage() {
                       />
                     </TableCell>
                     <TableCell className={adminCellClass({ center: true })}>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${isActiveStatus(member.status)
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-amber-100 text-amber-800"
-                        }`}
-                      >
-                        {t(`status.${member.status}`, { defaultValue: t("status.inactive") })}
-                      </span>
+                      <AdminMemberStatusBadge status={member.status} compact />
                     </TableCell>
                     <TableCell className={adminCellClass({ center: true })}>
                       <span className={`inline-flex items-center gap-1 text-xs font-medium ${member.sports.length >= MAX_SPORTS_PER_MEMBER
@@ -699,25 +688,21 @@ export default function SportsMembersPage() {
                         {member.sports.length} / {MAX_SPORTS_PER_MEMBER}
                       </span>
                     </TableCell>
-                    <TableCell className={adminCellClass({ center: true })}>
-                      <div className={adminTableStyles.actions}>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 px-3 gap-1.5 border-primary/40 text-primary hover:bg-primary/10"
+                    <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
+                      <AdminRowActions>
+                        <AdminActionButton
+                          tooltip={t("actions.editSports")}
+                          icon={Pencil}
+                          variant="edit"
                           onClick={() => openEdit(member)}
-                        >
-                          {t("actions.editSports")}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 px-3 gap-1.5 border-amber-400/60 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+                        />
+                        <AdminActionButton
+                          tooltip={t("actions.assignTeam")}
+                          icon={UserPlus}
+                          variant="view"
                           onClick={() => openAssignModal(member)}
-                        >
-                          {t("actions.assignTeam")}
-                        </Button>
-                      </div>
+                        />
+                      </AdminRowActions>
                     </TableCell>
                   </TableRow>
               ))}
@@ -729,10 +714,12 @@ export default function SportsMembersPage() {
       <AdminPagination
         page={currentPage}
         totalCount={totalCount}
+        pageSize={PAGE_SIZE}
         onPageChange={setCurrentPage}
         isRTL={isRTL}
         disabled={isLoading}
       />
+      </div>
       </div>
 
       <Dialog open={showModal} onOpenChange={(open) => {
@@ -744,22 +731,30 @@ export default function SportsMembersPage() {
           }
         }
       }}>
-        <DialogContent className="max-w-2xl" dir={isRTL ? "rtl" : "ltr"}>
-          <DialogHeader>
-            <DialogTitle>
-              {selectedMember
-                ? t("sportsModal.titleWithMember", { member: getMemberDisplayName(selectedMember, language) })
-                : t("sportsModal.title")}
-            </DialogTitle>
-            <DialogDescription>
-              {t("sportsModal.description")}
-              <span className="block mt-0.5 text-amber-600 font-medium">
-                {t("sportsModal.maxSports", { max: MAX_SPORTS_PER_MEMBER })}
-              </span>
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className={`${adminDialogStyles.content} max-w-2xl`} dir={isRTL ? "rtl" : "ltr"}>
+          <div className={`${adminDialogStyles.panel} max-h-[90vh]`}>
+            <div className="px-6 py-4 border-b border-border bg-muted/20 shrink-0">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                  <Pencil className="w-5 h-5 text-primary" />
+                </div>
+                <DialogHeader className="space-y-1 text-start">
+                  <DialogTitle className="text-lg font-bold">
+                    {selectedMember
+                      ? t("sportsModal.titleWithMember", { member: getMemberDisplayName(selectedMember, language) })
+                      : t("sportsModal.title")}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {t("sportsModal.description")}
+                    <span className="block mt-0.5 text-amber-600 font-medium">
+                      {t("sportsModal.maxSports", { max: MAX_SPORTS_PER_MEMBER })}
+                    </span>
+                  </DialogDescription>
+                </DialogHeader>
+              </div>
+            </div>
 
-          <div className="space-y-4 py-2">
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 min-h-0">
             <div className="flex gap-2 border-b border-border">
               {(["all", "subscribed", "unsubscribed"] as const).map((tab) => (
                 <button
@@ -866,7 +861,10 @@ export default function SportsMembersPage() {
               >
                 {t("sportsModal.selectedCount", { count: memberSports.size, max: MAX_SPORTS_PER_MEMBER })}
               </span>
-              <div className="flex gap-2">
+            </div>
+          </div>
+
+            <div className="px-6 py-4 border-t border-border bg-muted/20 shrink-0 flex items-center justify-end gap-2">
                 <Button
                   variant="outline"
                   onClick={() => setShowModal(false)}
@@ -888,7 +886,6 @@ export default function SportsMembersPage() {
                     t("common.save")
                   )}
                 </Button>
-              </div>
             </div>
           </div>
         </DialogContent>
@@ -898,29 +895,38 @@ export default function SportsMembersPage() {
         open={assignModal.open}
         onOpenChange={(open) => { if (!open) closeAssignModal(); }}
       >
-        <DialogContent className="max-w-lg" dir={isRTL ? "rtl" : "ltr"}>
-          <DialogHeader>
-            <DialogTitle>
-              {assignModal.step === 1
-                ? t("assignTeamModal.titleStepSport")
-                : t("assignTeamModal.titleStepTeam")}
-            </DialogTitle>
-            <DialogDescription>
-              {assignModal.member
-                ? t("assignTeamModal.member", { member: getMemberDisplayName(assignModal.member, language) })
-                : ""}
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className={`${adminDialogStyles.content} max-w-lg`} dir={isRTL ? "rtl" : "ltr"}>
+          <div className={`${adminDialogStyles.panel} max-h-[90vh]`}>
+            <div className="px-6 py-4 border-b border-border bg-muted/20 shrink-0">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                  <UserPlus className="w-5 h-5 text-primary" />
+                </div>
+                <DialogHeader className="space-y-1 text-start">
+                  <DialogTitle className="text-lg font-bold">
+                    {assignModal.step === 1
+                      ? t("assignTeamModal.titleStepSport")
+                      : t("assignTeamModal.titleStepTeam")}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {assignModal.member
+                      ? t("assignTeamModal.member", { member: getMemberDisplayName(assignModal.member, language) })
+                      : ""}
+                  </DialogDescription>
+                </DialogHeader>
+              </div>
+            </div>
 
-          {assignModal.step === 1 && (
-            <div className="space-y-3 py-2">
-              {allSports.length === 0 ? (
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 min-h-0">
+            {assignModal.step === 1 ? (
+              allSports.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground text-sm">{t("assignTeamModal.noSports")}</div>
               ) : (
                 <div className="grid grid-cols-2 gap-2 max-h-72 overflow-y-auto">
                   {allSports.map((sport) => (
                     <button
                       key={sport.id}
+                      type="button"
                       onClick={() => handleAssignSportSelect(sport)}
                       className="flex flex-col items-center justify-center gap-2 rounded-lg border border-border bg-muted/20 p-4 hover:border-primary hover:bg-primary/5 transition-all duration-150 text-center"
                     >
@@ -928,65 +934,72 @@ export default function SportsMembersPage() {
                     </button>
                   ))}
                 </div>
-              )}
-              <div className="flex justify-end pt-2 border-t border-border">
-                <Button variant="outline" onClick={closeAssignModal}>{t("common.cancel")}</Button>
-              </div>
-            </div>
-          )}
-
-          {assignModal.step === 2 && (
-            <div className="space-y-3 py-2">
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <button
-                  onClick={() => setAssignModal((prev) => ({ ...prev, step: 1, selectedTeam: null }))}
-                  className="hover:text-primary transition-colors"
-                >
-                  {t("assignTeamModal.sportsBreadcrumb")}
-                </button>
-                <span>/</span>
-                <span className="text-foreground font-medium">
-                  {assignModal.selectedSport ? getSportName(assignModal.selectedSport, language) : ""}
-                </span>
-              </div>
-
-              {assignTeams.loading ? (
-                <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span className="text-sm">{t("assignTeamModal.loadingTeams")}</span>
+              )
+            ) : (
+              <>
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <button
+                    type="button"
+                    onClick={() => setAssignModal((prev) => ({ ...prev, step: 1, selectedTeam: null }))}
+                    className="hover:text-primary transition-colors"
+                  >
+                    {t("assignTeamModal.sportsBreadcrumb")}
+                  </button>
+                  <span>/</span>
+                  <span className="text-foreground font-medium">
+                    {assignModal.selectedSport ? getSportName(assignModal.selectedSport, language) : ""}
+                  </span>
                 </div>
-              ) : assignTeams.list.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground text-sm">{t("assignTeamModal.noTeams")}</div>
-              ) : (
-                <div className="space-y-1.5 max-h-64 overflow-y-auto">
-                  {assignTeams.list.map((team) => {
-                    const isSelected = assignModal.selectedTeam?.id === team.id;
-                    return (
-                      <button
-                        key={team.id}
-                        onClick={() => setAssignModal((prev) => ({ ...prev, selectedTeam: { id: team.id, name_ar: team.name_ar, name_en: team.name_en } }))}
-                        className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-all duration-150 ${isRTL ? "text-right" : "text-left"} ${isSelected
-                          ? "border-primary bg-primary/8 text-primary"
-                          : "border-border bg-background hover:border-primary/50 hover:bg-muted/40"
-                          }`}
-                      >
-                        <span className="font-medium text-sm">{getTeamName(team, language)}</span>
-                        <span className="text-xs text-muted-foreground">{t("assignTeamModal.participants", { count: team.max_participants })}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
 
-              <div className="flex items-center justify-between pt-2 border-t border-border">
+                {assignTeams.loading ? (
+                  <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span className="text-sm">{t("assignTeamModal.loadingTeams")}</span>
+                  </div>
+                ) : assignTeams.list.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground text-sm">{t("assignTeamModal.noTeams")}</div>
+                ) : (
+                  <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                    {assignTeams.list.map((team) => {
+                      const isSelected = assignModal.selectedTeam?.id === team.id;
+                      return (
+                        <button
+                          key={team.id}
+                          type="button"
+                          onClick={() => setAssignModal((prev) => ({ ...prev, selectedTeam: { id: team.id, name_ar: team.name_ar, name_en: team.name_en } }))}
+                          className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-all duration-150 ${isRTL ? "text-right" : "text-left"} ${isSelected
+                            ? "border-primary bg-primary/8 text-primary"
+                            : "border-border bg-background hover:border-primary/50 hover:bg-muted/40"
+                            }`}
+                        >
+                          <span className="font-medium text-sm">{getTeamName(team, language)}</span>
+                          <span className="text-xs text-muted-foreground">{t("assignTeamModal.participants", { count: team.max_participants })}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+            <div className="px-6 py-4 border-t border-border bg-muted/20 shrink-0 flex items-center justify-between gap-2">
+              {assignModal.step === 2 ? (
                 <Button
                   variant="outline"
                   onClick={() => setAssignModal((prev) => ({ ...prev, step: 1, selectedTeam: null }))}
+                  disabled={assignSaving}
                 >
                   {t("common.back")}
                 </Button>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={closeAssignModal} disabled={assignSaving}>{t("common.cancel")}</Button>
+              ) : (
+                <span />
+              )}
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={closeAssignModal} disabled={assignSaving}>
+                  {t("common.cancel")}
+                </Button>
+                {assignModal.step === 2 && (
                   <Button
                     disabled={!assignModal.selectedTeam || assignSaving}
                     className="gap-2"
@@ -1001,10 +1014,10 @@ export default function SportsMembersPage() {
                       t("common.assign")
                     )}
                   </Button>
-                </div>
+                )}
               </div>
             </div>
-          )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

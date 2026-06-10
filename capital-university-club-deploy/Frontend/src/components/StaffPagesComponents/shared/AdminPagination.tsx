@@ -41,7 +41,7 @@ export function AdminPagination({
       <span className={adminPageStyles.paginationMeta}>
         {totalCount === 0
           ? t('pagination.showingNone')
-          : `${t('pagination.showing', { from, to, total: totalCount })} · ${t('pagination.page', { page, totalPages })}`}
+          : t('pagination.showing', { from, to, total: totalCount })}
       </span>
 
       <div className={adminPageStyles.paginationControls}>

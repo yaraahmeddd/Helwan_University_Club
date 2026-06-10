@@ -38,11 +38,14 @@
   },
   "status": {
     "active": "Active",
+    "suspended": "Suspended",
+    "banned": "Banned",
+    "expired": "Expired",
+    "cancelled": "Cancelled",
+    "pending": "Pending Review",
     "approved": "Approved",
     "inactive": "Inactive",
-    "rejected": "Rejected",
-    "suspended": "Suspended",
-    "pending": "Pending"
+    "rejected": "Rejected"
   },
   "pagination": {
     "summary": "Page {{page}} of {{totalPages}} · {{count}} results",

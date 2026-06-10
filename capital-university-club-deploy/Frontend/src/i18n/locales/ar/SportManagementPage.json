@@ -38,11 +38,14 @@
   },
   "status": {
     "active": "نشط",
+    "suspended": "موقوف",
+    "banned": "محظور",
+    "expired": "منتهي",
+    "cancelled": "ملغى",
+    "pending": "قيد المراجعة",
     "approved": "مقبول",
     "inactive": "غير نشط",
-    "rejected": "مرفوض",
-    "suspended": "موقوف",
-    "pending": "قيد الانتظار"
+    "rejected": "مرفوض"
   },
   "pagination": {
     "summary": "صفحة {{page}} من {{totalPages}} · {{count}} نتيجة",

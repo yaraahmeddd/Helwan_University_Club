@@ -29,7 +29,7 @@
     "inactive": "Inactive",
     "draft": "Draft — No schedules",
     "active": "Active",
-    "pending": "Pending approval",
+    "pending": "Pending Review",
     "rejected": "Rejected"
   },
   "actions": {

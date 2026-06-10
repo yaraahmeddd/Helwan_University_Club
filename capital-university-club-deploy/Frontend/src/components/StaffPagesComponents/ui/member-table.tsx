@@ -29,11 +29,8 @@ import {
     ChevronUp,
     ChevronDown,
     ChevronsUpDown,
-    CheckCircle,
-    XCircle,
-    Clock,
-    AlertTriangle,
 } from "lucide-react";
+import { AdminMemberStatusBadge } from "../shared/AdminMemberStatusBadge";
 import { DataTable, ColumnDef } from "./data-table";
 import { Button } from "./button";
 import {
@@ -89,18 +86,6 @@ export type SortDir = "asc" | "desc";
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
-const STATUS_CONFIG: Record<
-    string,
-    { label: string; color: string; bg: string; border: string; icon: typeof CheckCircle }
-> = {
-    active:    { label: "نشط",           color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200", icon: CheckCircle },
-    suspended: { label: "موقوف",         color: "text-amber-700",   bg: "bg-amber-50",   border: "border-amber-200",   icon: Clock },
-    banned:    { label: "محظور",         color: "text-red-700",     bg: "bg-red-50",     border: "border-red-200",     icon: XCircle },
-    expired:   { label: "منتهي",         color: "text-slate-600",   bg: "bg-slate-50",   border: "border-slate-200",   icon: AlertTriangle },
-    cancelled: { label: "ملغى",          color: "text-rose-700",    bg: "bg-rose-50",    border: "border-rose-200",    icon: XCircle },
-    pending:   { label: "قيد المراجعة", color: "text-blue-700",    bg: "bg-blue-50",    border: "border-blue-200",    icon: Clock },
-};
-
 export function StatusBadge({
     status,
     compact = false,
@@ -108,25 +93,7 @@ export function StatusBadge({
     status: string;
     compact?: boolean;
 }) {
-    const cfg = STATUS_CONFIG[status] ?? {
-        label: status,
-        color: "text-muted-foreground",
-        bg: "bg-muted",
-        border: "border-muted",
-        icon: Clock,
-    };
-    const Icon = cfg.icon;
-
-    return (
-        <span
-            className={`inline-flex items-center gap-1 rounded-full font-semibold border
-                ${cfg.color} ${cfg.bg} ${cfg.border}
-                ${compact ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-[11px]"}`}
-        >
-            <Icon className={compact ? "w-3 h-3" : "w-3.5 h-3.5"} />
-            {cfg.label}
-        </span>
-    );
+    return <AdminMemberStatusBadge status={status} compact={compact} />;
 }
 
 

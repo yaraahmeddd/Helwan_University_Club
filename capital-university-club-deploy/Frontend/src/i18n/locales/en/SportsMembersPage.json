@@ -10,7 +10,7 @@
   },
   "header": {
     "title": "Assign Sports",
-    "subtitle": "Active members only - page {{page}} of {{totalPages}} ({{count}} members)",
+    "subtitle": "Active members only ({{count}} members)",
     "refresh": "Refresh"
   },
   "tabs": {
@@ -37,9 +37,11 @@
   },
   "status": {
     "active": "Active",
-    "inactive": "Inactive",
-    "pending": "Pending",
-    "suspended": "Suspended"
+    "suspended": "Suspended",
+    "banned": "Banned",
+    "expired": "Expired",
+    "cancelled": "Cancelled",
+    "pending": "Pending Review"
   },
   "actions": {
     "editSports": "Edit Sports",

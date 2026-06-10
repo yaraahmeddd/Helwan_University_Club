@@ -7,6 +7,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from ".
 import { useLanguage } from "../hooks/useLanguage";
 import { adminTableStyles, adminHeadClass, adminCellClass, adminPageStyles, adminDialogStyles, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
+import { AdminMemberStatusBadge } from "../components/StaffPagesComponents/shared/AdminMemberStatusBadge";
 import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
 import { AdminActionButton, AdminRowActions, AdminViewButton } from "../components/StaffPagesComponents/shared/AdminRowActions";
 import { FieldInlineError } from "../components/StaffPagesComponents/shared/FieldInlineError";
@@ -350,23 +351,17 @@ const isValidTimeRange = (from: string, to: string) => {
   return from < to;
 };
 
-const getSportStatus = (sport: Sport, t: (key: string) => string) => {
+const resolveSportStatusKey = (sport: Sport): string => {
   const hasSchedules = (sport.schedules && sport.schedules.length > 0) || sport.hasTeams === true;
 
-  if (sport.is_active === false || sport.status === "inactive") {
-    return { label: t("status.inactive"), className: "bg-red-100 text-red-700 border-red-200", isDraft: false };
-  }
-  if (sport.status === "pending") {
-    return { label: t("status.pending"), className: "bg-amber-100 text-amber-800 border-amber-200", isDraft: false };
-  }
-  if (sport.status === "rejected") {
-    return { label: t("status.rejected"), className: "bg-red-100 text-red-700 border-red-200", isDraft: false };
-  }
-  if (!hasSchedules) {
-    return { label: t("status.draft"), className: "bg-gray-100 text-gray-600 border-gray-200", isDraft: true };
-  }
-  return { label: t("status.active"), className: "bg-emerald-100 text-emerald-700 border-emerald-200", isDraft: false };
+  if (sport.is_active === false || sport.status === "inactive") return "inactive";
+  if (sport.status === "pending") return "pending";
+  if (sport.status === "rejected") return "rejected";
+  if (!hasSchedules) return "draft";
+  return "active";
 };
+
+const isSportDraftStatus = (sport: Sport) => resolveSportStatusKey(sport) === "draft";
 
 const formatMaxParticipants = (value: number, t: (key: string) => string) =>
   value > 0 ? String(value) : t("table.unlimited");
@@ -903,7 +898,7 @@ export default function SportsPage() {
                 </TableRow>
               ) : (
                 pagedSports.map((sport) => {
-                  const status = getSportStatus(sport, t);
+                  const statusKey = resolveSportStatusKey(sport);
                   return (
                     <motion.tr
                       key={sport.id}
@@ -927,11 +922,8 @@ export default function SportsPage() {
                         {formatMaxParticipants(sport.maxParticipants, t)}
                       </TableCell>
                       <TableCell className={adminCellClass({ className: "whitespace-nowrap" })}>
-                        <span
-                          title={status.isDraft ? t('status.draftTooltip') : undefined}
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${status.className}`}
-                        >
-                          {status.label}
+                        <span title={isSportDraftStatus(sport) ? t('status.draftTooltip') : undefined}>
+                          <AdminMemberStatusBadge status={statusKey} compact />
                         </span>
                       </TableCell>
                       <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
@@ -1516,16 +1508,6 @@ export default function SportsPage() {
                   </TableRow>
                 ) : (
                   dialogMembers.map((m) => {
-                    const statusCls =
-                      m.status === "active" || m.status === "approved"
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                        : m.status === "pending"
-                          ? "border-amber-200 bg-amber-50 text-amber-800"
-                          : "border-rose-200 bg-rose-50 text-rose-700";
-                    const statusLabel =
-                      m.status === "active" || m.status === "approved" ? t('memberStatus.active')
-                        : m.status === "pending" ? t('memberStatus.pending')
-                          : m.status === "suspended" ? t('memberStatus.suspended') : t('memberStatus.inactive');
                     return (
                       <TableRow key={m.id} className={adminTableStyles.row}>
                         <TableCell className={adminCellClass()}>
@@ -1544,9 +1526,10 @@ export default function SportsPage() {
                         <TableCell className={adminCellClass({ size: 'nationalId' })} dir="ltr">{m.national_id}</TableCell>
                         <TableCell className={adminCellClass({ size: 'phone' })} dir="ltr">{m.phone ?? "—"}</TableCell>
                         <TableCell className={adminCellClass()}>
-                          <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusCls}`}>
-                            {statusLabel}
-                          </span>
+                          <AdminMemberStatusBadge
+                            status={m.status === "approved" ? "approved" : m.status}
+                            compact
+                          />
                         </TableCell>
                         <TableCell className={adminCellClass({ size: "muted", className: "tabular-nums" })} dir="ltr">{fmtDate(m.created_at)}</TableCell>
                       </TableRow>

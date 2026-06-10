@@ -10,7 +10,7 @@
   },
   "header": {
     "title": "تعيين الرياضات",
-    "subtitle": "الأعضاء النشطون فقط - الصفحة {{page}} من {{totalPages}} ({{count}} عضو)",
+    "subtitle": "الأعضاء النشطون فقط ({{count}} عضو)",
     "refresh": "تحديث"
   },
   "tabs": {
@@ -37,9 +37,11 @@
   },
   "status": {
     "active": "نشط",
-    "inactive": "غير نشط",
-    "pending": "قيد الانتظار",
-    "suspended": "موقوف"
+    "suspended": "موقوف",
+    "banned": "محظور",
+    "expired": "منتهي",
+    "cancelled": "ملغى",
+    "pending": "قيد المراجعة"
   },
   "actions": {
     "editSports": "تعديل الرياضات",

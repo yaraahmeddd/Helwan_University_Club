@@ -32,7 +32,7 @@
   },
   "status": {
     "active": "Active",
-    "pending": "Pending"
+    "pending": "Pending Review"
   },
   "rowActions": {
     "viewDetails": "View details"

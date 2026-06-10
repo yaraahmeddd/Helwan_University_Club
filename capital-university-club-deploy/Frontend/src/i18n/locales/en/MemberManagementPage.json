@@ -87,7 +87,7 @@
     "noSports": "No sports registered",
     "notPlayer": "Not a sports player",
     "sportStatusActive": "Active",
-    "sportStatusPending": "Pending",
+    "sportStatusPending": "Pending Review",
     "payment": {
       "subscriptionStatus": "Subscription Status",
       "subscriptionType": "Subscription Type",

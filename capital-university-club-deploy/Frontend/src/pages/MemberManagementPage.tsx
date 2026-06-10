@@ -77,6 +77,8 @@ import { BACKEND_ORIGIN } from "../config/backend";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 import { adminTableStyles, adminHeadClass, adminCellClass, adminDialogStyles, ADMIN_PAGE_SIZE, adminTableBadgeClass, adminTableStatusBadgeClass, adminPageStyles } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
+import { AdminMemberStatusBadge } from "../components/StaffPagesComponents/shared/AdminMemberStatusBadge";
+import { ADMIN_MEMBER_STATUS_CONFIG, getAdminMemberStatusConfig } from "../components/StaffPagesComponents/shared/adminMemberStatus";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
 import { formatAdminDate, formatAdminTime, getAdminLocale, useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
 import { adminFieldIcons } from "../components/StaffPagesComponents/shared/adminRecordFields";
@@ -404,21 +406,7 @@ const isTeamPlayerType = (t?: MemberType) => {
 
 
 
-const STATUS_CONFIG: Record<string, { labelKey: string; color: string; bg: string; icon: typeof CheckCircle; border: string }> = {
-
-    active: { labelKey: "status.active", color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200", icon: CheckCircle },
-
-    suspended: { labelKey: "status.suspended", color: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200", icon: Clock },
-
-    banned: { labelKey: "status.banned", color: "text-red-700", bg: "bg-red-50", border: "border-red-200", icon: XCircle },
-
-    expired: { labelKey: "status.expired", color: "text-slate-600", bg: "bg-slate-50", border: "border-slate-200", icon: AlertTriangle },
-
-    cancelled: { labelKey: "status.cancelled", color: "text-rose-700", bg: "bg-rose-50", border: "border-rose-200", icon: XCircle },
-
-    pending: { labelKey: "status.pending", color: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200", icon: Clock },
-
-};
+const STATUS_CONFIG = ADMIN_MEMBER_STATUS_CONFIG;
 
 
 
@@ -437,21 +425,7 @@ const PAGE_SIZE = ADMIN_PAGE_SIZE;
 
 
 function StatusBadge({ status, compact = false }: { status: string; compact?: boolean }) {
-    const { t } = useTranslation('MemberManagementPage');
-    const cfg = STATUS_CONFIG[status] ?? {
-        labelKey: `status.${status}`,
-        color: "text-muted-foreground",
-        bg: "bg-muted",
-        border: "border-muted",
-        icon: Clock
-    };
-    const Icon = cfg.icon;
-    return (
-        <span className={`inline-flex items-center gap-0.5 rounded-full font-semibold border ${cfg.color} ${cfg.bg} ${cfg.border} ${compact ? adminTableStatusBadgeClass : "px-3 py-1 text-[15px] gap-1"}`}>
-            <Icon className={compact ? "w-[11px] h-[11px] shrink-0" : adminTableStyles.icon} />
-            {t(cfg.labelKey, { defaultValue: status })}
-        </span>
-    );
+    return <AdminMemberStatusBadge status={status} compact={compact} />;
 }
 
 
@@ -875,6 +849,7 @@ const getFileUrl = (f?: string | null): string => {
 
 export default function MemberManagementPage() {
     const { t } = useTranslation('MemberManagementPage');
+    const { t: tStatus } = useTranslation('common');
     const { language, isRTL } = useLanguage();
     const { fmtDate } = useAdminFormatters();
     const locale = getAdminLocale(language);
@@ -2098,7 +2073,7 @@ export default function MemberManagementPage() {
             },
             {
                 headerEn: 'Status', headerAr: 'الحالة',
-                accessor: (r: MemberRow) => t(`status.${r.status}`, { defaultValue: r.status }),
+                accessor: (r: MemberRow) => tStatus(getAdminMemberStatusConfig(r.status).labelKey, { defaultValue: r.status }),
                 width: 14,
             },
             {
@@ -2107,7 +2082,7 @@ export default function MemberManagementPage() {
                 width: 20,
             },
         ],
-        [language, t, locale],
+        [language, t, tStatus, locale],
     );
 
     const exportHandle = useTableExport({
@@ -2362,7 +2337,7 @@ export default function MemberManagementPage() {
                                                     <span className={`inline-flex items-center gap-1 text-xs font-medium ${cfg.color}`}>
 
                                                         <cfg.icon className="w-3 h-3" />
-                                                        {t(cfg.labelKey)}
+                                                        {tStatus(cfg.labelKey)}
                                                     </span>
 
                                                     <span className="me-auto text-[10px] text-muted-foreground">
@@ -2768,7 +2743,7 @@ export default function MemberManagementPage() {
 
                                         {Object.entries(STATUS_CONFIG).map(([k, v]) => (
 
-                                            <SelectItem key={k} value={k} className="text-xs">{t(v.labelKey)}</SelectItem>
+                                            <SelectItem key={k} value={k} className="text-xs">{tStatus(v.labelKey)}</SelectItem>
 
                                         ))}
 

@@ -23,6 +23,7 @@ import {
     SelectValue,
 } from "../components/StaffPagesComponents/ui/select";
 import { Badge } from "../components/StaffPagesComponents/ui/badge";
+import { AdminMemberStatusBadge } from "../components/StaffPagesComponents/shared/AdminMemberStatusBadge";
 import {
     Popover,
     PopoverContent,
@@ -314,12 +315,7 @@ const hasConflict = (
 // ─── Status Badge ────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: BookingStatus }) {
-    const { t } = useTranslation("CourtBookingsPage");
-    if (status === "confirmed")
-        return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100">{t("status.confirmed")}</Badge>;
-    if (status === "blocked")
-        return <Badge className="bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-100">{t("status.blocked")}</Badge>;
-    return <Badge variant="outline" className="text-muted-foreground">{t("status.cancelled")}</Badge>;
+    return <AdminMemberStatusBadge status={status} compact />;
 }
 
 // ─── Mini TimeSlotPicker ─────────────────────────────────────────────────────

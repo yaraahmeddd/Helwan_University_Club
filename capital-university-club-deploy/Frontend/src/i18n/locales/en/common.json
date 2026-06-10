@@ -72,6 +72,27 @@
   "status": "Status",
   "active": "Active",
   "inactive": "Inactive",
+  "memberStatus": {
+    "active": "Active",
+    "suspended": "Suspended",
+    "banned": "Banned",
+    "expired": "Expired",
+    "cancelled": "Cancelled",
+    "pending": "Pending Review"
+  },
+  "entityStatus": {
+    "inactive": "Inactive",
+    "rejected": "Rejected",
+    "blocked": "Blocked",
+    "archived": "Archived",
+    "maintenance": "Maintenance",
+    "draft": "Draft — No schedules",
+    "confirmed": "Confirmed",
+    "pending_payment": "Pending Review",
+    "in_progress": "Pending Review",
+    "payment_completed": "Active",
+    "completed": "Completed"
+  },
   "table": {
     "noData": "No Data Available",
     "noDataDesc": "No data found"

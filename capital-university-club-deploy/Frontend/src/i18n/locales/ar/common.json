@@ -72,6 +72,27 @@
   "status": "الحالة",
   "active": "نشط",
   "inactive": "غير نشط",
+  "memberStatus": {
+    "active": "نشط",
+    "suspended": "موقوف",
+    "banned": "محظور",
+    "expired": "منتهي",
+    "cancelled": "ملغى",
+    "pending": "قيد المراجعة"
+  },
+  "entityStatus": {
+    "inactive": "غير نشط",
+    "rejected": "مرفوض",
+    "blocked": "محظور",
+    "archived": "مؤرشف",
+    "maintenance": "صيانة",
+    "draft": "مسودة — بدون مواعيد",
+    "confirmed": "مؤكد",
+    "pending_payment": "قيد المراجعة",
+    "in_progress": "قيد المراجعة",
+    "payment_completed": "نشط",
+    "completed": "مكتمل"
+  },
   "table": {
     "noData": "لا يوجد بيانات حالياً",
     "noDataDesc": "لم يتم العثور على بيانات"

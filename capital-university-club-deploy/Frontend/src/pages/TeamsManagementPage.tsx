@@ -27,6 +27,8 @@ import { useToast } from "../hooks/use-toast";
 import { useLanguage } from "../hooks/useLanguage";
 import { adminTableStyles, adminHeadClass, adminCellClass, adminDialogStyles, adminPageStyles } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
+import { AdminMemberStatusBadge } from "../components/StaffPagesComponents/shared/AdminMemberStatusBadge";
+import { getAdminStatusConfig } from "../components/StaffPagesComponents/shared/adminMemberStatus";
 import { AdminActionButton, AdminRowActions } from "../components/StaffPagesComponents/shared/AdminRowActions";
 import { FieldInlineError } from "../components/StaffPagesComponents/shared/FieldInlineError";
 import { useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
@@ -121,23 +123,7 @@ const emptyForm = (): TeamFormState => ({
 const isArabicOnly = (s: string) => PATTERNS.ARABIC_TEXT.test(s);
 const isEnglishOnly = (s: string) => PATTERNS.ENGLISH_TEXT.test(s);
 
-const statusLabel = (s: TeamStatus, t: any) => {
-    switch (s) {
-        case "active": return t('status.active', { defaultValue: "نشط" });
-        case "inactive": return t('status.inactive', { defaultValue: "غير نشط" });
-        case "suspended": return t('status.suspended', { defaultValue: "موقوف" });
-        case "archived": return t('status.archived', { defaultValue: "مؤرشف" });
-    }
-};
-
-const statusClass = (s: TeamStatus) => {
-    switch (s) {
-        case "active": return "bg-emerald-50 text-emerald-700 border-emerald-200";
-        case "inactive": return "bg-rose-50 text-rose-700 border-rose-200";
-        case "suspended": return "bg-amber-50 text-amber-700 border-amber-200";
-        case "archived": return "bg-gray-50 text-gray-600 border-gray-200";
-    }
-};
+const TEAM_STATUS_OPTIONS: TeamStatus[] = ["active", "inactive", "suspended", "archived"];
 
 const isValidTimeRange = (start: string, end: string) => start < end;
 
@@ -225,6 +211,7 @@ const TimeSlotPicker = ({
 
 export default function TeamsManagementPage() {
     const { t } = useTranslation('TeamsManagementPage');
+    const { t: tStatus } = useTranslation('common');
     const { language, isRTL } = useLanguage();
     const { locale } = useAdminFormatters();
     const { toast } = useToast();
@@ -531,15 +518,17 @@ export default function TeamsManagementPage() {
                     </PopoverTrigger>
                     <PopoverContent align="start" className="w-52 p-0" dir={isRTL ? 'rtl' : 'ltr'}>
                         <div className="py-1">
-                            {([{ key: "active" as TeamStatus, label: t('status.active'), color: "text-emerald-700" }, { key: "inactive" as TeamStatus, label: t('status.inactive'), color: "text-rose-700" }, { key: "suspended" as TeamStatus, label: t('status.suspended'), color: "text-amber-700" }, { key: "archived" as TeamStatus, label: t('status.archived'), color: "text-slate-600" }]).map(({ key, label, color }) => (
+                            {TEAM_STATUS_OPTIONS.map((key) => {
+                                const cfg = getAdminStatusConfig(key);
+                                return (
                                 <label key={key} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-muted/60 transition-colors">
                                     <input type="checkbox" checked={filterStatuses.includes(key)}
                                         onChange={() => setFilterStatuses(prev => prev.includes(key) ? prev.filter(s => s !== key) : [...prev, key])}
                                         className="w-3.5 h-3.5 rounded accent-primary cursor-pointer" />
-                                    <span className={`text-xs font-medium ${color}`}>{label}</span>
+                                    <span className={`text-xs font-medium ${cfg.color}`}>{tStatus(cfg.labelKey)}</span>
                                     <span className="mr-auto text-[10px] text-muted-foreground">{teams.filter(t => t.status === key).length}</span>
                                 </label>
-                            ))}
+                            );})}
                         </div>
                         {filterStatuses.length > 0 && (
                             <div className="flex justify-end px-3 py-2 border-t border-border">
@@ -656,9 +645,7 @@ export default function TeamsManagementPage() {
                                                 {formatTeamPrice(team)}
                                             </TableCell>
                                             <TableCell className={adminCellClass({ className: "whitespace-nowrap" })}>
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusClass(team.status)}`}>
-                                                    {statusLabel(team.status, t)}
-                                                </span>
+                                                <AdminMemberStatusBadge status={team.status} compact />
                                             </TableCell>
                                             <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
                                                 <AdminRowActions>
@@ -792,10 +779,10 @@ export default function TeamsManagementPage() {
                                             <Select value={form.status} onValueChange={(value) => setForm((prev) => ({ ...prev, status: value as TeamStatus }))}>
                                                 <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="active">{t('status.active')}</SelectItem>
-                                                    <SelectItem value="inactive">{t('status.inactive')}</SelectItem>
-                                                    <SelectItem value="suspended">{t('status.suspended')}</SelectItem>
-                                                    <SelectItem value="archived">{t('status.archived')}</SelectItem>
+                                                    <SelectItem value="active">{tStatus(getAdminStatusConfig('active').labelKey)}</SelectItem>
+                                                    <SelectItem value="inactive">{tStatus(getAdminStatusConfig('inactive').labelKey)}</SelectItem>
+                                                    <SelectItem value="suspended">{tStatus(getAdminStatusConfig('suspended').labelKey)}</SelectItem>
+                                                    <SelectItem value="archived">{tStatus(getAdminStatusConfig('archived').labelKey)}</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>

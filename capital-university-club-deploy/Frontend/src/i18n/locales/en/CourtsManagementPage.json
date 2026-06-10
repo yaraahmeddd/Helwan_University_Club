@@ -18,7 +18,9 @@
     "searchPlaceholder": "Search by court name or sport...",
     "allSports": "All Sports",
     "status": "Status",
-    "clear": "Clear"
+    "clear": "Clear",
+    "refresh": "Refresh",
+    "results": "{{count}} result(s)"
   },
   "table": {
     "colCourtName": "Court Name",
@@ -45,6 +47,10 @@
     "editTitle": "Edit Court",
     "addDescription": "Enter the new court details",
     "editDescription": "Edit the court details",
+    "basicInfo": "Basic Information",
+    "basicInfoHint": "Court name, sport, and capacity",
+    "settingsTitle": "Settings",
+    "settingsHint": "Booking availability and court status",
     "fields": {
       "nameAr": "Court Name (Arabic)",
       "nameEn": "Court Name (English)",

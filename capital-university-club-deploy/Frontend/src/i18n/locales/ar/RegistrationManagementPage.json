@@ -32,7 +32,7 @@
   },
   "status": {
     "active": "نشط",
-    "pending": "قيد الانتظار"
+    "pending": "قيد المراجعة"
   },
   "rowActions": {
     "viewDetails": "عرض التفاصيل"

@@ -18,7 +18,9 @@
     "searchPlaceholder": "بحث باسم الملعب أو الرياضة...",
     "allSports": "كل الرياضات",
     "status": "الحالة",
-    "clear": "مسح"
+    "clear": "مسح",
+    "refresh": "تحديث",
+    "results": "{{count}} نتيجة"
   },
   "table": {
     "colCourtName": "اسم الملعب",
@@ -45,6 +47,10 @@
     "editTitle": "تعديل ملعب",
     "addDescription": "أدخل بيانات الملعب الجديد",
     "editDescription": "قم بتعديل بيانات الملعب",
+    "basicInfo": "البيانات الأساسية",
+    "basicInfoHint": "اسم الملعب، الرياضة، والسعة",
+    "settingsTitle": "الإعدادات",
+    "settingsHint": "إتاحة الحجز وحالة الملعب",
     "fields": {
       "nameAr": "اسم الملعب (عربي)",
       "nameEn": "اسم الملعب (إنجليزي)",

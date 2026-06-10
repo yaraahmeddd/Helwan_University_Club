@@ -14,6 +14,7 @@ import api from "../services/axios";
 import { useLocalizedTranslation } from "../hooks/useLocalizedTranslation";
 import { adminTableStyles, adminHeadClass, adminCellClass, adminDialogStyles, ADMIN_PAGE_SIZE, adminTableBadgeClass, adminTableStatusBadgeClass, adminPageStyles } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
+import { AdminMemberStatusBadge } from "../components/StaffPagesComponents/shared/AdminMemberStatusBadge";
 import { AdminSortableHead, type SortDirection } from "../components/StaffPagesComponents/shared/AdminSortableHead";
 import { formatAdminDate, getAdminLocale } from "../components/StaffPagesComponents/shared/adminFormatters";
 import { adminFieldIcons } from "../components/StaffPagesComponents/shared/adminRecordFields";
@@ -574,12 +575,7 @@ export default function RegistrationManagementPage() {
 
                                         {/* Status badge */}
                                         <TableCell className={adminCellClass({ center: true })}>
-                                            <span className={`${adminTableStatusBadgeClass} ${isActive
-                                                ? 'bg-emerald-100 text-emerald-700'
-                                                : 'bg-amber-100 text-amber-800'
-                                                }`}>
-                                                {isActive ? t('status.active') : t('status.pending')}
-                                            </span>
+                                            <AdminMemberStatusBadge status={isActive ? 'active' : 'pending'} compact />
                                         </TableCell>
 
                                         {/* Actions */}
@@ -721,9 +717,7 @@ export default function RegistrationManagementPage() {
                                                 {t('memberTypes.member')}
                                             </span>
                                         )}
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${selectedRecord.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800'}`}>
-                                            {selectedRecord.status === 'active' ? t('status.active') : t('status.pending')}
-                                        </span>
+                                        <AdminMemberStatusBadge status={selectedRecord.status} />
                                     </>
                                 }
                             />

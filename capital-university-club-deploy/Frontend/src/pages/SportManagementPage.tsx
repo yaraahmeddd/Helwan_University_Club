@@ -19,14 +19,21 @@ import {
 import api from "../services/axios";
 import { useToast } from "../components/StaffPagesComponents/ui/use-toast";
 import { Input } from "../components/StaffPagesComponents/ui/input";
+import { Button } from "../components/StaffPagesComponents/ui/button";
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "../components/StaffPagesComponents/ui/select";
 import { motion } from "framer-motion";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 import { useLanguage } from "../hooks/useLanguage";
-import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE, adminPageStyles } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
+import { AdminMemberStatusBadge } from "../components/StaffPagesComponents/shared/AdminMemberStatusBadge";
+import {
+    ADMIN_MEMBER_STATUS_CONFIG,
+    getAdminStatusConfig,
+} from "../components/StaffPagesComponents/shared/adminMemberStatus";
+import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
 import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/PersonNameDisplay";
 import { getLocalizedText, type DisplayLanguage } from "../lib/localizedDisplay";
 import { useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
@@ -80,15 +87,13 @@ const PAGE_SIZE = ADMIN_PAGE_SIZE;
 
 type SortField = "name" | "national_id" | "status" | "created_at";
 type SortDir = "asc" | "desc";
-// Status config
-const STATUS_CLASSES: Record<string, string> = {
-    active: "bg-emerald-100 text-emerald-700",
-    approved: "bg-emerald-100 text-emerald-700",
-    inactive: "bg-rose-100 text-rose-700",
-    rejected: "bg-rose-100 text-rose-700",
-    suspended: "bg-orange-100 text-orange-700",
-    pending: "bg-amber-100 text-amber-800",
-};
+// Status filter options — labels/colors from shared admin status config
+const ALL_FILTER_STATUSES = [
+    ...Object.keys(ADMIN_MEMBER_STATUS_CONFIG),
+    "approved",
+    "inactive",
+    "rejected",
+];
 
 // Helpers
 const fullNameAr = (m: ApiMember) =>
@@ -152,6 +157,7 @@ function Th({
 export default function SportManagementPage() {
     const { toast } = useToast();
     const { t } = useTranslation("SportManagementPage");
+    const { t: tStatus } = useTranslation("common");
     const { language, isRTL } = useLanguage();
     const { fmtDate } = useAdminFormatters();
 
@@ -314,46 +320,43 @@ export default function SportManagementPage() {
 
 
     return (
-        <div className="h-full flex flex-col overflow-hidden" dir={isRTL ? "rtl" : "ltr"}>
-            <div className="shrink-0 px-6 py-4 border-b border-border bg-background">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-                            <Trophy className="w-6 h-6 text-primary" />
-                            {t("header.title")}
-                        </h1>
-                        <div className="flex items-center gap-4 mt-1">
-                            <p className="text-sm text-muted-foreground">
-                                {t("header.total", { count: processed.length })}
-                                {membersLoading && <Loader2 className={`h-3.5 w-3.5 animate-spin inline ${isRTL ? "mr-1" : "ml-1"}`} />}
-                            </p>
-                            {selectedSport && (
-                                <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-medium">
-                                    <Trophy className="w-3 h-3" />
-                                    {getSportName(selectedSport, language)}
-                                </span>
-                            )}
-                            {!selectedSport && (
-                                <span className="inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-medium">
-                                    <Users className="w-3 h-3" />
-                                    {t("header.allSports", { count: sports.length })}
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                    <button
+        <div className="h-[calc(100vh-4rem)] flex flex-col bg-background overflow-hidden" dir={isRTL ? "rtl" : "ltr"}>
+            <AdminPageHeader
+                icon={Trophy}
+                title={t("header.title")}
+                subtitle={
+                    <>
+                        {t("header.total", { count: processed.length })}
+                        {membersLoading && <Loader2 className={`h-3.5 w-3.5 animate-spin inline ${isRTL ? "mr-1" : "ml-1"}`} />}
+                        {selectedSport ? (
+                            <span className={`${adminPageStyles.statChip} text-amber-700 bg-amber-50 ${isRTL ? "mr-2" : "ml-2"}`}>
+                                <Trophy className="w-3 h-3 inline" />
+                                {" "}{getSportName(selectedSport, language)}
+                            </span>
+                        ) : (
+                            <span className={`${adminPageStyles.statChip} text-blue-700 bg-blue-50 ${isRTL ? "mr-2" : "ml-2"}`}>
+                                <Users className="w-3 h-3 inline" />
+                                {" "}{t("header.allSports", { count: sports.length })}
+                            </span>
+                        )}
+                    </>
+                }
+                actions={
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
                         onClick={() => { void fetchSports(); void fetchMembers(selectedSport); }}
                         disabled={membersLoading || sportsLoading}
-                        className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground hover:bg-muted transition-colors disabled:opacity-40"
                     >
                         <RefreshCw className={`h-4 w-4 ${(membersLoading || sportsLoading) ? "animate-spin" : ""}`} />
                         {t("header.refresh")}
-                    </button>
-                </div>
-            </div>
+                    </Button>
+                }
+            />
 
-            <div className="flex flex-1 flex-col overflow-hidden">
-                    <div className="shrink-0 flex items-center gap-3 px-6 py-3 border-b border-border bg-muted/20 flex-wrap">
+            <div className="flex flex-1 flex-col overflow-hidden min-h-0">
+                    <div className={`${adminPageStyles.toolbar} shrink-0`}>
                         <div className="relative w-full sm:w-72 md:w-80">
                             <Search className={`absolute ${isRTL ? "right-3" : "left-3"} top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none`} />
                             <Input
@@ -399,14 +402,16 @@ export default function SportManagementPage() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">{t("toolbar.allStatuses")}</SelectItem>
-                                    {Object.keys(STATUS_CLASSES).map((status) => (
-                                        <SelectItem key={status} value={status}>{t(`status.${status}`)}</SelectItem>
+                                    {ALL_FILTER_STATUSES.map((status) => (
+                                        <SelectItem key={status} value={status}>
+                                            {tStatus(getAdminStatusConfig(status).labelKey, { defaultValue: status })}
+                                        </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
 
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full border border-border text-xs text-muted-foreground shrink-0">
+                        <span className={adminPageStyles.toolbarResults}>
                             {t("toolbar.results", { count: processed.length })}
                         </span>
                     </div>
@@ -461,6 +466,7 @@ export default function SportManagementPage() {
                         </div>
                     )}
 
+                    <div className="flex-1 overflow-hidden border-t border-border bg-card flex flex-col min-h-0">
                     <div className={adminTableStyles.container}>
                         {membersLoading ? (
                             <div className="py-20 flex flex-col items-center gap-3 text-muted-foreground">
@@ -531,9 +537,7 @@ export default function SportManagementPage() {
                                                     <span dir="ltr">{fmtDate(m.created_at)}</span>
                                                 </TableCell>
                                                 <TableCell className={adminCellClass({ center: true })}>
-                                                    <span className={`inline-flex text-[11px] font-semibold rounded-full px-2.5 py-0.5 ${STATUS_CLASSES[m.status] ?? "bg-muted text-muted-foreground"}`}>
-                                                        {t(`status.${m.status}`, { defaultValue: m.status })}
-                                                    </span>
+                                                    <AdminMemberStatusBadge status={m.status} compact />
                                                 </TableCell>
                                             </TableRow>
                                     ))}
@@ -550,6 +554,7 @@ export default function SportManagementPage() {
                         isRTL={isRTL}
                         disabled={membersLoading}
                     />
+                    </div>
             </div>
         </div>
     );
