@@ -57,6 +57,8 @@
     "packagePrivilegesCount": "{{count}} privileges",
     "showPrivileges": "View included privileges",
     "hidePrivileges": "Hide included privileges",
+    "scrollPrev": "Scroll modules back",
+    "scrollNext": "Scroll modules forward",
     "summaryPackages": "Packages",
     "summaryIndividual": "Individual",
     "summaryTotal": "Total",

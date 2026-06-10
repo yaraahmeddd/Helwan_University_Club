@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Search, RefreshCw, Shield, Loader2,
-  Users, Check, ChevronDown, ChevronUp, Package, Save, ArrowRight,
+  Users, Check, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Package, Save, ArrowRight,
 } from "lucide-react";
 import api from "../services/axios";
 import { StaffService } from "../services/staffService";
@@ -75,6 +75,9 @@ type PackageOption = {
 };
 
 const PAGE_SIZE = ADMIN_PAGE_SIZE;
+
+const hiddenHorizontalScrollbar =
+  "overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]";
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null;
@@ -223,6 +226,17 @@ export default function AssignStaffPrivilegesPage() {
   const [expandedPackages, setExpandedPackages] = useState<Set<string>>(new Set());
   const [activePrivilegeTab, setActivePrivilegeTab] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const moduleTabsRef = useRef<HTMLDivElement>(null);
+
+  const scrollModuleTabs = useCallback((direction: "back" | "forward") => {
+    const el = moduleTabsRef.current;
+    if (!el) return;
+    const amount = Math.max(220, Math.floor(el.clientWidth * 0.55));
+    const delta = direction === "back"
+      ? (isRTL ? amount : -amount)
+      : (isRTL ? -amount : amount);
+    el.scrollBy({ left: delta, behavior: "smooth" });
+  }, [isRTL]);
 
   useEffect(() => {
     if (step !== "assign") return;
@@ -781,36 +795,58 @@ export default function AssignStaffPrivilegesPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="flex gap-2 overflow-x-auto pb-1">
-                    {filteredPrivileges.map((group) => {
-                      const moduleSelectedCount = group.items.filter((p) =>
-                        selectedExtraPrivilegeIds.includes(p.id),
-                      ).length;
-                      const isActive = group.module === activePrivilegeTab;
-                      return (
-                        <button
-                          key={group.module}
-                          type="button"
-                          onClick={() => setActivePrivilegeTab(group.module)}
-                          className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-colors ${
-                            isActive
-                              ? "bg-primary text-primary-foreground shadow-sm"
-                              : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent hover:border-border"
-                          }`}
-                        >
-                          {getPrivilegeModuleLabel(group.module, language)}
-                          {moduleSelectedCount > 0 && (
-                            <span
-                              className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none ${
-                                isActive ? "bg-white/20 text-white" : "bg-primary/15 text-primary"
-                              }`}
-                            >
-                              {moduleSelectedCount}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 shrink-0"
+                      onClick={() => scrollModuleTabs("back")}
+                      aria-label={t("assign.scrollPrev")}
+                    >
+                      {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                    </Button>
+                    <div ref={moduleTabsRef} className={`flex gap-2 flex-1 min-w-0 pb-1 ${hiddenHorizontalScrollbar}`}>
+                      {filteredPrivileges.map((group) => {
+                        const moduleSelectedCount = group.items.filter((p) =>
+                          selectedExtraPrivilegeIds.includes(p.id),
+                        ).length;
+                        const isActive = group.module === activePrivilegeTab;
+                        return (
+                          <button
+                            key={group.module}
+                            type="button"
+                            onClick={() => setActivePrivilegeTab(group.module)}
+                            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-colors ${
+                              isActive
+                                ? "bg-primary text-primary-foreground shadow-sm"
+                                : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent hover:border-border"
+                            }`}
+                          >
+                            {getPrivilegeModuleLabel(group.module, language)}
+                            {moduleSelectedCount > 0 && (
+                              <span
+                                className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none ${
+                                  isActive ? "bg-white/20 text-white" : "bg-primary/15 text-primary"
+                                }`}
+                              >
+                                {moduleSelectedCount}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 shrink-0"
+                      onClick={() => scrollModuleTabs("forward")}
+                      aria-label={t("assign.scrollNext")}
+                    >
+                      {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </Button>
                   </div>
 
                   {activePrivilegeGroup ? (

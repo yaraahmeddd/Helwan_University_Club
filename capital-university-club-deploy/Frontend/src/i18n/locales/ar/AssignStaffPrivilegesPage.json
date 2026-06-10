@@ -68,6 +68,8 @@
     "packagePrivilegesCount": "{{count}} صلاحية",
     "showPrivileges": "عرض الصلاحيات المضمنة",
     "hidePrivileges": "إخفاء الصلاحيات المضمنة",
+    "scrollPrev": "التمرير للخلف",
+    "scrollNext": "التمرير للأمام",
     "summaryPackages": "الحزم",
     "summaryIndividual": "فردية",
     "summaryTotal": "الإجمالي",
