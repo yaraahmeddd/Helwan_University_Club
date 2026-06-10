@@ -1,6 +1,6 @@
 {
   "page": {
-    "title": "Create Privilege Package",
+    "title": "Add New Package",
     "loading": "⏳ Loading privileges...",
     "stats": "{{total}} privileges in {{modules}} modules",
     "selected": "Selected",

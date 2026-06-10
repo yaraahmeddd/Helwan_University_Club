@@ -1,16 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Pencil, Trash2, ShieldCheck, X, AlertTriangle, Eye, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, ShieldCheck, X, AlertTriangle, Eye, Search, Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import api from "../services/axios";
 import { useToast } from "../hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../hooks/useLanguage";
 import { getLanguageOnlyText, localeFontFamily, type DisplayLanguage } from "../lib/localizedDisplay";
 import {
+  compareLocalizedText,
   getPrivilegeDisplayName,
   getPrivilegeModuleLabel,
   shouldShowPrivilegeCode,
 } from "../lib/privilegeModuleLabels";
+import { Button } from "../components/StaffPagesComponents/ui/button";
 
 const packageLabel = (pkg: Package, language: DisplayLanguage) =>
   getLanguageOnlyText(pkg.name_ar, pkg.name_en, language) || "—";
@@ -26,6 +28,34 @@ const theme = {
   accentBlue: "#2EA7C9",
   background: "#F4F6F9",
   border: "#E5E7EB",
+};
+
+const hiddenHorizontalScrollbar =
+  "overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]";
+
+const PICKER_GRID_CLASS =
+  "grid w-full grid-cols-1 min-[520px]:grid-cols-2 gap-2 auto-rows-fr";
+
+const PICKER_CARD_BASE =
+  "flex h-full w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-start transition-all min-h-[52px]";
+
+const PICKER_CHECKBOX_BASE =
+  "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 transition-colors";
+
+const toModuleId = (name: string) =>
+  name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+
+type EditPrivilegeItem = {
+  id: number;
+  name_ar?: string;
+  name_en?: string;
+  code?: string;
+};
+
+type EditModuleGroup = {
+  id: string;
+  moduleKey: string;
+  privileges: EditPrivilegeItem[];
 };
 
 interface Privilege {
@@ -254,7 +284,7 @@ function DeleteModal({
   );
 }
 
-// ─── Edit Modal ───────────────────────────────────────────────────────────────
+// ─── Edit Modal (name, description, privileges) ───────────────────────────────
 function EditModal({
   pkg,
   onSave,
@@ -262,70 +292,326 @@ function EditModal({
   isSaving,
 }: {
   pkg: Package;
-  onSave: (id: number, name: string, description: string, language: DisplayLanguage) => void;
+  onSave: (
+    id: number,
+    name: string,
+    description: string,
+    language: DisplayLanguage,
+    privilegeIds: number[],
+  ) => void;
   onCancel: () => void;
   isSaving: boolean;
 }) {
   const { t } = useTranslation("PackageManagementPage");
   const { language, isRTL } = useLanguage();
+  const uiLanguage = language;
 
   const initialName = getLanguageOnlyText(pkg.name_ar, pkg.name_en, language);
 
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState(packageDescription(pkg, language));
   const [error, setError] = useState("");
+  const [modules, setModules] = useState<EditModuleGroup[]>([]);
+  const [loadingPrivileges, setLoadingPrivileges] = useState(true);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(
+    () => new Set((pkg.privileges ?? []).map((p) => p.id)),
+  );
+  const [activeTab, setActiveTab] = useState<string | null>(null);
+  const [privSearch, setPrivSearch] = useState("");
+  const tabsRef = useRef<HTMLDivElement>(null);
 
-  const handleSubmit = () => {
-    if (!name.trim()) { setError(t("editModal.nameRequired")); return; }
-    onSave(pkg.id, name.trim(), description.trim(), language);
+  useEffect(() => {
+    const load = async () => {
+      setLoadingPrivileges(true);
+      try {
+        const res = await api.get<{ data?: Record<string, unknown[]> }>("/staff/privileges");
+        const grouped = res?.data?.data;
+        if (!grouped || Array.isArray(grouped) || typeof grouped !== "object") return;
+
+        const apiModules: EditModuleGroup[] = Object.entries(grouped as Record<string, unknown[]>)
+          .map(([moduleName, list]) => ({
+            id: toModuleId(moduleName),
+            moduleKey: moduleName,
+            privileges: Array.isArray(list)
+              ? list
+                  .map((item) => {
+                    const priv = item as Record<string, unknown>;
+                    const id = Number(priv?.id);
+                    if (!Number.isFinite(id) || id <= 0) return null;
+                    return {
+                      id,
+                      name_ar: String(priv?.name_ar ?? "").trim() || undefined,
+                      name_en: String(priv?.name_en ?? "").trim() || undefined,
+                      code: String(priv?.code ?? "").trim() || undefined,
+                    } as EditPrivilegeItem;
+                  })
+                  .filter((p): p is EditPrivilegeItem => p !== null)
+              : [],
+          }))
+          .filter((m) => m.privileges.length > 0)
+          .sort((a, b) =>
+            compareLocalizedText(
+              getPrivilegeModuleLabel(a.moduleKey, uiLanguage),
+              getPrivilegeModuleLabel(b.moduleKey, uiLanguage),
+              uiLanguage,
+            ),
+          );
+
+        setModules(apiModules);
+        setActiveTab(apiModules[0]?.id ?? null);
+      } catch {
+        setModules([]);
+      } finally {
+        setLoadingPrivileges(false);
+      }
+    };
+    void load();
+  }, [uiLanguage]);
+
+  const scrollTabs = useCallback((direction: "back" | "forward") => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const amount = Math.max(220, Math.floor(el.clientWidth * 0.55));
+    const delta = direction === "back"
+      ? (isRTL ? amount : -amount)
+      : (isRTL ? -amount : amount);
+    el.scrollBy({ left: delta, behavior: "smooth" });
+  }, [isRTL]);
+
+  const filteredModules = useMemo(() => {
+    const q = privSearch.trim().toLowerCase();
+    if (!q) return modules;
+    return modules
+      .map((m) => ({
+        ...m,
+        privileges: m.privileges.filter((p) => {
+          const label = getPrivilegeDisplayName(p.name_ar, p.name_en, p.code ?? "", uiLanguage).toLowerCase();
+          const mod = getPrivilegeModuleLabel(m.moduleKey, uiLanguage).toLowerCase();
+          return label.includes(q) || mod.includes(q);
+        }),
+      }))
+      .filter((m) => m.privileges.length > 0);
+  }, [modules, privSearch, uiLanguage]);
+
+  const currentTab =
+    activeTab && filteredModules.some((m) => m.id === activeTab)
+      ? activeTab
+      : filteredModules[0]?.id ?? null;
+
+  const activeModule = filteredModules.find((m) => m.id === currentTab);
+
+  const togglePrivilege = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+    setError("");
   };
 
+  const toggleModuleAll = (modulePrivs: EditPrivilegeItem[], selectAll: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      modulePrivs.forEach((p) => {
+        if (selectAll) next.add(p.id);
+        else next.delete(p.id);
+      });
+      return next;
+    });
+    setError("");
+  };
+
+  const handleSubmit = () => {
+    if (!name.trim()) {
+      setError(t("editModal.nameRequired"));
+      return;
+    }
+    if (selectedIds.size === 0) {
+      setError(t("editModal.minPrivilege"));
+      return;
+    }
+    onSave(pkg.id, name.trim(), description.trim(), language, Array.from(selectedIds));
+  };
+
+  const moduleSelectedCount = activeModule
+    ? activeModule.privileges.filter((p) => selectedIds.has(p.id)).length
+    : 0;
+  const moduleAllSelected = activeModule
+    ? activeModule.privileges.length > 0 && moduleSelectedCount === activeModule.privileges.length
+    : false;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" dir={isRTL ? "rtl" : "ltr"}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: theme.border }}>
-          <h2 className="text-lg font-bold" style={{ color: theme.primaryDark }}>{t("editModal.title")}</h2>
-          <button onClick={onCancel} className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 transition-colors">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" dir={isRTL ? "rtl" : "ltr"}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b shrink-0" style={{ borderColor: theme.border }}>
+          <div>
+            <h2 className="text-lg font-bold" style={{ color: theme.primaryDark }}>{t("editModal.title")}</h2>
+            <p className="text-xs text-gray-500 mt-0.5">{t("editModal.subtitle")}</p>
+          </div>
+          <button type="button" onClick={onCancel} className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
-        <div className="p-6 space-y-4">
-          <div>
-            <label className={`block text-sm font-semibold text-gray-700 mb-1.5 ${isRTL ? "text-right" : "text-left"}`}>{t("editModal.nameLabel")}</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => { setName(e.target.value); setError(""); }}
-              className="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-all"
-              style={{ borderColor: error ? "#EF4444" : theme.border }}
-              dir="auto"
-            />
-            {error && <p className={`text-xs text-red-500 mt-1 ${isRTL ? "text-right" : "text-left"}`}>{error}</p>}
+
+        <div className="flex-1 overflow-y-auto p-6 space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className={`block text-sm font-semibold text-gray-700 mb-1.5 ${isRTL ? "text-right" : "text-left"}`}>{t("editModal.nameLabel")}</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => { setName(e.target.value); setError(""); }}
+                className="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-all"
+                style={{ borderColor: error && !name.trim() ? "#EF4444" : theme.border }}
+                dir="auto"
+              />
+            </div>
+            <div>
+              <label className={`block text-sm font-semibold text-gray-700 mb-1.5 ${isRTL ? "text-right" : "text-left"}`}>
+                {t("editModal.descLabel")} <span className="text-gray-400 font-normal">{t("editModal.optional")}</span>
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={2}
+                placeholder={t("editModal.descPlaceholder")}
+                className="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-all resize-none"
+                style={{ borderColor: theme.border }}
+                dir="auto"
+              />
+            </div>
           </div>
-          <div>
-            <label className={`block text-sm font-semibold text-gray-700 mb-1.5 ${isRTL ? "text-right" : "text-left"}`}>
-              {t("editModal.descLabel")} <span className="text-gray-400 font-normal">{t("editModal.optional")}</span>
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              placeholder={t("editModal.descPlaceholder")}
-              className="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-all resize-none"
-              style={{ borderColor: theme.border }}
-              dir="auto"
-            />
+
+          <div className="rounded-xl border overflow-hidden" style={{ borderColor: theme.border }}>
+            <div className="px-4 py-3 border-b bg-gray-50/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2" style={{ borderColor: theme.border }}>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">{t("editModal.privilegesTitle")}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{t("editModal.privilegesSubtitle")}</p>
+              </div>
+              <span className="text-xs font-medium bg-primary/10 text-primary px-2.5 py-1 rounded-full whitespace-nowrap">
+                {t("editModal.selectedCount", { count: selectedIds.size })}
+              </span>
+            </div>
+
+            <div className="p-4 space-y-3">
+              <div className="relative">
+                <Search className={`absolute ${isRTL ? "right-3" : "left-3"} top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400`} />
+                <input
+                  type="text"
+                  value={privSearch}
+                  onChange={(e) => setPrivSearch(e.target.value)}
+                  placeholder={t("editModal.searchPlaceholder")}
+                  className={`w-full ${isRTL ? "pr-10 pl-3" : "pl-10 pr-3"} py-2 text-sm border rounded-lg focus:outline-none focus:ring-2`}
+                  style={{ borderColor: theme.border }}
+                />
+              </div>
+
+              {loadingPrivileges ? (
+                <div className="flex items-center justify-center gap-2 py-10 text-sm text-gray-500">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {t("editModal.privilegesLoading")}
+                </div>
+              ) : filteredModules.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-8">{t("editModal.noPrivileges")}</p>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 border-b pb-3" style={{ borderColor: theme.border }}>
+                    <Button type="button" variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => scrollTabs("back")} aria-label={t("editModal.scrollPrev")}>
+                      {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                    </Button>
+                    <div ref={tabsRef} className={`flex flex-1 min-w-0 gap-1.5 pb-1 ${hiddenHorizontalScrollbar}`}>
+                      {filteredModules.map((mod) => {
+                        const count = mod.privileges.filter((p) => selectedIds.has(p.id)).length;
+                        const isActive = mod.id === currentTab;
+                        return (
+                          <button
+                            key={mod.id}
+                            type="button"
+                            onClick={() => setActiveTab(mod.id)}
+                            className={`relative flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium whitespace-nowrap transition-all ${
+                              isActive ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+                            }`}
+                          >
+                            {getPrivilegeModuleLabel(mod.moduleKey, uiLanguage)}
+                            {count > 0 && (
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none ${isActive ? "bg-white/20 text-white" : "bg-primary/15 text-primary"}`}>
+                                {count}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <Button type="button" variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => scrollTabs("forward")} aria-label={t("editModal.scrollNext")}>
+                      {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </Button>
+                  </div>
+
+                  {activeModule && (
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs text-gray-500">
+                        {getPrivilegeModuleLabel(activeModule.moduleKey, uiLanguage)}
+                        <span className="mx-1.5 text-gray-300">({activeModule.privileges.length})</span>
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => toggleModuleAll(activeModule.privileges, !moduleAllSelected)}
+                        className="text-xs font-semibold text-primary hover:underline"
+                      >
+                        {moduleAllSelected ? t("editModal.deselectAll") : t("editModal.selectAll")}
+                      </button>
+                    </div>
+                  )}
+
+                  {activeModule && (
+                    <div className={PICKER_GRID_CLASS}>
+                      {activeModule.privileges.map((privilege) => {
+                        const isSelected = selectedIds.has(privilege.id);
+                        return (
+                          <button
+                            key={privilege.id}
+                            type="button"
+                            onClick={() => togglePrivilege(privilege.id)}
+                            className={`group ${PICKER_CARD_BASE} ${
+                              isSelected
+                                ? "border-primary bg-primary/10 shadow-sm"
+                                : "border-border bg-card hover:border-primary/30 hover:bg-muted/40"
+                            }`}
+                          >
+                            <span className={`${PICKER_CHECKBOX_BASE} ${isSelected ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/50 bg-background group-hover:border-primary/60"}`}>
+                              {isSelected && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className={`text-sm font-medium leading-snug line-clamp-2 ${isSelected ? "text-primary" : "text-foreground"}`}>
+                                {getPrivilegeDisplayName(privilege.name_ar, privilege.name_en, privilege.code ?? "", uiLanguage) || "—"}
+                              </p>
+                              {shouldShowPrivilegeCode(uiLanguage) && privilege.code && (
+                                <p className="text-xs font-mono text-muted-foreground truncate mt-0.5">{privilege.code}</p>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
+
+          {error && <p className={`text-xs text-red-500 ${isRTL ? "text-right" : "text-left"}`}>{error}</p>}
         </div>
-        <div className="flex items-center justify-end gap-3 px-6 py-4 bg-gray-50 border-t" style={{ borderColor: theme.border }}>
-          <button onClick={onCancel} disabled={isSaving} className="px-5 py-2 rounded-lg text-sm font-semibold text-gray-600 bg-white border hover:bg-gray-100 transition-colors disabled:opacity-40" style={{ borderColor: theme.border }}>
+
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 px-6 py-4 bg-gray-50 border-t shrink-0" style={{ borderColor: theme.border }}>
+          <button type="button" onClick={onCancel} disabled={isSaving} className="w-full sm:w-auto px-5 py-2 rounded-lg text-sm font-semibold text-gray-600 bg-white border hover:bg-gray-100 transition-colors disabled:opacity-40" style={{ borderColor: theme.border }}>
             {t("common.cancel")}
           </button>
           <button
+            type="button"
             onClick={handleSubmit}
-            disabled={isSaving}
-            className="px-6 py-2 rounded-lg text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
-            style={{ backgroundColor: theme.primaryDark }}
+            disabled={isSaving || loadingPrivileges}
+            className="w-full sm:w-auto px-6 py-2 rounded-lg text-sm font-bold text-white bg-primary hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
           >
             {isSaving ? t("common.saving") : t("editModal.save")}
           </button>
@@ -470,18 +756,26 @@ export default function PackageManagementPage() {
 
   useEffect(() => { void fetchPackages(); }, []);
 
-  const handleEdit = async (id: number, name: string, description: string, language: DisplayLanguage) => {
+  const handleEdit = async (
+    id: number,
+    name: string,
+    description: string,
+    language: DisplayLanguage,
+    privilegeIds: number[],
+  ) => {
     setIsSaving(true);
     try {
       const payload =
         language === "ar"
           ? {
               name_ar: name,
-              ...(description ? { description_ar: description } : {}),
+              ...(description ? { description_ar: description } : { description_ar: null }),
+              privilege_ids: privilegeIds,
             }
           : {
               name_en: name,
-              ...(description ? { description_en: description } : {}),
+              ...(description ? { description_en: description } : { description_en: null }),
+              privilege_ids: privilegeIds,
             };
 
       await api.put(`/staff/packages/${id}`, payload);

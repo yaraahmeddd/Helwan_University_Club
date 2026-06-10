@@ -1,17 +1,17 @@
 {
   "page": {
-    "title": "إدارة باقات الصلاحيات",
+    "title": "إدارة الصلاحيات",
     "packageCount": "{{count}} باقة",
     "loading": "جارٍ التحميل...",
     "addNew": "إضافة باقة جديدة",
     "emptyStateTitle": "لا توجد باقات بعد",
     "emptyStateDesc": "ابدأ بإنشاء أول باقة صلاحيات للموظفين",
-    "createPackage": "إنشاء باقة"
+    "createPackage": "إضافة باقة جديدة"
   },
   "card": {
     "noPrivileges": "لا توجد صلاحيات مرتبطة",
     "viewPrivileges": "عرض {{count}} صلاحية",
-    "editTooltip": "تعديل",
+    "editTooltip": "تعديل الباقة والصلاحيات",
     "deleteTooltip": "حذف"
   },
   "privModal": {
@@ -29,12 +29,24 @@
   },
   "editModal": {
     "title": "تعديل الباقة",
+    "subtitle": "حدّث تفاصيل الباقة وأدر صلاحياتها",
     "nameLabel": "اسم الباقة *",
     "nameRequired": "اسم الباقة مطلوب",
+    "minPrivilege": "يجب اختيار صلاحية واحدة على الأقل",
     "descLabel": "الوصف",
     "optional": "(اختياري)",
     "descPlaceholder": "وصف مختصر...",
-    "save": "حفظ التعديلات"
+    "save": "حفظ التعديلات",
+    "privilegesTitle": "صلاحيات الباقة",
+    "privilegesSubtitle": "اضغط لتحديد أو إلغاء تحديد الصلاحيات",
+    "selectedCount": "{{count}} محددة",
+    "searchPlaceholder": "ابحث في الصلاحيات...",
+    "privilegesLoading": "جارٍ تحميل الصلاحيات...",
+    "noPrivileges": "لا توجد صلاحيات متاحة",
+    "selectAll": "تحديد الكل في الوحدة",
+    "deselectAll": "إلغاء الكل في الوحدة",
+    "scrollPrev": "التمرير للخلف",
+    "scrollNext": "التمرير للأمام"
   },
   "common": {
     "close": "إغلاق",

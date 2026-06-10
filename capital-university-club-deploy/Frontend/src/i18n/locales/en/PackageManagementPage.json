@@ -1,17 +1,17 @@
 {
   "page": {
-    "title": "Privilege Packages Management",
+    "title": "Privilege Management",
     "packageCount": "{{count}} packages",
     "loading": "Loading...",
     "addNew": "Add New Package",
     "emptyStateTitle": "No packages yet",
     "emptyStateDesc": "Start by creating the first privilege package for staff",
-    "createPackage": "Create Package"
+    "createPackage": "Add New Package"
   },
   "card": {
     "noPrivileges": "No associated privileges",
     "viewPrivileges": "View {{count}} privileges",
-    "editTooltip": "Edit",
+    "editTooltip": "Edit package & privileges",
     "deleteTooltip": "Delete"
   },
   "privModal": {
@@ -29,12 +29,24 @@
   },
   "editModal": {
     "title": "Edit Package",
+    "subtitle": "Update package details and manage its privileges",
     "nameLabel": "Package Name *",
     "nameRequired": "Package name is required",
+    "minPrivilege": "Select at least one privilege",
     "descLabel": "Description",
     "optional": "(Optional)",
     "descPlaceholder": "Brief description...",
-    "save": "Save Changes"
+    "save": "Save Changes",
+    "privilegesTitle": "Package Privileges",
+    "privilegesSubtitle": "Click to select or deselect privileges",
+    "selectedCount": "{{count}} selected",
+    "searchPlaceholder": "Search privileges...",
+    "privilegesLoading": "Loading privileges...",
+    "noPrivileges": "No privileges available",
+    "selectAll": "Select all in module",
+    "deselectAll": "Deselect all in module",
+    "scrollPrev": "Scroll modules back",
+    "scrollNext": "Scroll modules forward"
   },
   "common": {
     "close": "Close",
