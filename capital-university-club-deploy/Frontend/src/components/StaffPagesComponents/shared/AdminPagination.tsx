@@ -2,7 +2,12 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
-import { adminPageStyles, ADMIN_PAGE_SIZE, getAdminTotalPages } from './adminTableStyles';
+import {
+  adminPageStyles,
+  ADMIN_PAGE_SIZE,
+  getAdminTotalPages,
+  getAdminVisiblePages,
+} from './adminTableStyles';
 
 export type AdminPaginationProps = {
   page: number;
@@ -25,6 +30,7 @@ export function AdminPagination({
 }: AdminPaginationProps) {
   const { t } = useTranslation('common');
   const totalPages = getAdminTotalPages(totalCount, pageSize);
+  const visiblePages = getAdminVisiblePages(page, totalPages);
   const from = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, totalCount);
   const PrevIcon = isRTL ? ChevronRight : ChevronLeft;
@@ -37,25 +43,53 @@ export function AdminPagination({
           ? t('pagination.showingNone')
           : `${t('pagination.showing', { from, to, total: totalCount })} · ${t('pagination.page', { page, totalPages })}`}
       </span>
-      <div className="flex items-center gap-2">
+
+      <div className={adminPageStyles.paginationControls}>
         <Button
           variant="outline"
           size="sm"
           disabled={disabled || page <= 1}
           onClick={() => onPageChange(Math.max(1, page - 1))}
           className={cn(adminPageStyles.paginationBtn, 'gap-1.5')}
+          aria-label={t('pagination.previous')}
         >
           <PrevIcon className={adminPageStyles.icon} />
-          {t('pagination.previous')}
+          <span className="hidden sm:inline">{t('pagination.previous')}</span>
         </Button>
+
+        {visiblePages.map((token, index) =>
+          token === 'ellipsis' ? (
+            <span key={`ellipsis-${index}`} className={adminPageStyles.paginationEllipsis} aria-hidden>
+              …
+            </span>
+          ) : (
+            <Button
+              key={token}
+              variant={page === token ? 'default' : 'outline'}
+              size="sm"
+              disabled={disabled}
+              onClick={() => onPageChange(token)}
+              className={cn(
+                adminPageStyles.paginationPageBtn,
+                page === token && adminPageStyles.paginationPageBtnActive,
+              )}
+              aria-label={t('pagination.page', { page: token, totalPages })}
+              aria-current={page === token ? 'page' : undefined}
+            >
+              {token}
+            </Button>
+          ),
+        )}
+
         <Button
           variant="outline"
           size="sm"
           disabled={disabled || page >= totalPages}
           onClick={() => onPageChange(Math.min(totalPages, page + 1))}
           className={cn(adminPageStyles.paginationBtn, 'gap-1.5')}
+          aria-label={t('pagination.next')}
         >
-          {t('pagination.next')}
+          <span className="hidden sm:inline">{t('pagination.next')}</span>
           <NextIcon className={adminPageStyles.icon} />
         </Button>
       </div>

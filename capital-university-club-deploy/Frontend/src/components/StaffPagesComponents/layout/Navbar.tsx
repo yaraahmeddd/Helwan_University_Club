@@ -20,7 +20,7 @@ import { resolveFileUrl } from "../../../utils/fileUrl";
 import { useLanguage } from "../../../hooks/useLanguage";
 import { useTranslation } from "react-i18next";
 import api from "../../../services/axios";
-import { buildPersonName, getLocalizedText, resolveDisplayLanguage } from "../../../lib/localizedDisplay";
+import { buildPersonName, getLanguageOnlyText, getLocalizedText, resolveDisplayLanguage } from "../../../lib/localizedDisplay";
 
 const hucLogo = "/assets/HUC_logo.jpeg";
 
@@ -126,8 +126,8 @@ export function Navbar() {
   );
   const displayUserName =
     personName.primary ||
-    getLocalizedText(user.name_ar, user.name_en, displayLanguage) ||
-    user.fullName;
+    getLanguageOnlyText(user.name_ar, user.name_en, displayLanguage) ||
+    (displayLanguage === "ar" ? user.fullName : user.name_en || user.fullName);
 
   const roleLabel = t(`roles.${user.role}`, {
     defaultValue: ROLE_LABELS[user.role as Role] ?? user.role,

@@ -11,7 +11,8 @@
     "sportFilter": "Sport",
     "clearFilter": "Clear",
     "clearAll": "Clear Filters ×",
-    "results": "result(s)"
+    "results": "result(s)",
+    "refresh": "Refresh"
   },
   "status": {
     "active": "Active",
@@ -25,8 +26,10 @@
     "colSport": "Sport",
     "colSchedule": "Training Schedule",
     "colMaxParticipants": "Max",
+    "colPrice": "Price",
     "colStatus": "Status",
     "colActions": "Actions",
+    "currency": "EGP",
     "loading": "Loading...",
     "noResultsFiltered": "No teams match the selected filters",
     "noResultsEmpty": "No teams registered yet"
@@ -41,6 +44,8 @@
     "editTitle": "Edit Team",
     "addDescription": "Enter the details for the new team",
     "editDescription": "Edit team data — all fields are editable",
+    "basicInfo": "Basic Information",
+    "basicInfoHint": "Sport, team name, capacity, status, and subscription price",
     "sportLabel": "Sport",
     "sportPlaceholder": "Select sport",
     "sportLockedNote": "Sport cannot be changed after team creation",
@@ -61,6 +66,7 @@
     "pricePlaceholder": "0",
     "training": {
       "sectionTitle": "Training Schedule",
+      "sectionHint": "Training days, times, field, and fee",
       "daysLabel": "Training Days",
       "fromLabel": "From",
       "toLabel": "To",
@@ -87,7 +93,10 @@
     "startTimeRequired": "Start time is required",
     "endTimeRequired": "End time is required",
     "timeRangeInvalid": "End time must be after start time",
-    "trainingFeeRequired": "Training fee is required"
+    "trainingFeeRequired": "Training fee is required",
+    "fieldRequired": "Field is required",
+    "arOnly": "Arabic name accepts Arabic characters only",
+    "enOnly": "English name accepts English characters only"
   },
   "deleteDialog": {
     "title": "Confirm Deletion",

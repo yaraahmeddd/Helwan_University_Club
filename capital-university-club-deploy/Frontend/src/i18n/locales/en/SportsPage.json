@@ -1,6 +1,9 @@
 {
   "header": {
     "title": "Sports Management",
+    "subtitle": "{{count}} sports registered",
+    "refresh": "Refresh",
+    "results": "Showing {{count}} sports",
     "addButton": "Add Sport"
   },
   "filter": {
@@ -11,9 +14,12 @@
   },
   "table": {
     "name": "Sport Name",
+    "maxParticipants": "Max Participants",
     "status": "Status",
-    "membersCount": "Members Count",
-    "price": "Price (EGP)",
+    "bookingAvailable": "Available for Booking",
+    "bookingYes": "Yes",
+    "bookingNo": "No",
+    "unlimited": "Unlimited",
     "actions": "Actions"
   },
   "loading": "Loading...",
@@ -22,11 +28,14 @@
     "draftTooltip": "This sport is not visible to members until schedules are added",
     "inactive": "Inactive",
     "draft": "Draft — No schedules",
-    "active": "Active"
+    "active": "Active",
+    "pending": "Pending approval",
+    "rejected": "Rejected"
   },
   "actions": {
     "edit": "Edit",
-    "delete": "Delete"
+    "delete": "Delete",
+    "viewMembers": "View members"
   },
   "dialog": {
     "editTitle": "Edit Sport",
@@ -35,8 +44,10 @@
     "addDesc": "Enter new sport details"
   },
   "form": {
+    "basicInfo": "Basic information",
+    "basicInfoHint": "Photo, branch, and bilingual sport name",
     "photoLabel": "Sport Photo",
-    "removePhoto": "× Remove Photo",
+    "removePhoto": "Remove photo",
     "uploadClick": "Click to select a photo",
     "uploadChange": "Change Photo",
     "status": "Status",
@@ -49,7 +60,11 @@
     "nameArPlaceholder": "Enter Arabic name only",
     "nameEnLabel": "Sport Name (EN)",
     "nameEnPlaceholder": "Enter English name only",
+    "maxParticipantsLabel": "Maximum participants",
+    "maxParticipantsPlaceholder": "Leave empty for unlimited",
     "teamsLabel": "Teams",
+    "teamsHint": "Optional — add teams with training schedules",
+    "noTeams": "No teams added yet. You can save the sport and add teams later.",
     "addTeam": "Add Team",
     "teamTitle": "Team {{n}}",
     "teamNameArLabel": "Team Name (AR)",
@@ -67,6 +82,7 @@
     "trainingFee": "Training Fee (EGP)",
     "requiresBooking": "Requires Court Booking",
     "requiresBookingHint": "Enable for sports that require advance court booking like Padel",
+    "bookingSection": "Booking settings",
     "bookingWarning": "Warning: No fields added. Please add at least one field from Fields Management",
     "cancel": "Cancel",
     "saving": "Saving...",
@@ -103,6 +119,15 @@
     "pending": "Pending",
     "suspended": "Suspended",
     "inactive": "Inactive"
+  },
+  "validation": {
+    "requiredNameAr": "Arabic sport name is required.",
+    "requiredNameEn": "English sport name is required.",
+    "requiredPhoto": "Please upload a sport photo.",
+    "requiredBranch": "Please select a branch.",
+    "arOnly": "Arabic name must contain Arabic characters only.",
+    "enOnly": "English name must contain English characters only.",
+    "invalidMaxParticipants": "Maximum participants must be a whole number of 0 or greater."
   },
   "toast": {
     "loadError": "Failed to load sports",

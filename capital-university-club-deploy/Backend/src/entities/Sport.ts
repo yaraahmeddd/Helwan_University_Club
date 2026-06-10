@@ -64,6 +64,9 @@ export class Sport {
     @Column({ type: 'boolean', default: true })
     is_active: boolean;
 
+    @Column({ type: 'boolean', default: false })
+    requires_booking: boolean;
+
     @OneToMany(() => Team, (team) => team.sport)
     teams: Team[];
 

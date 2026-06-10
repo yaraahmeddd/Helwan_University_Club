@@ -40,6 +40,8 @@ export class SportService {
             price?: number;
             sport_image?: string;
             max_participants?: number;
+            is_active?: boolean;
+            requires_booking?: boolean;
         },
         staffId: number,
         staffTypeId: number
@@ -78,11 +80,12 @@ export class SportService {
             price: sportData.price || null,
             sport_image: sportData.sport_image || null,
             max_participants: sportData.max_participants || 0,
+            is_active: sportData.is_active ?? true,
+            requires_booking: sportData.requires_booking ?? false,
             created_by_staff_id: staffId,
             status: (isSportManager || isAdmin) ? 'active' : 'pending',
             approved_by_staff_id: (isSportManager || isAdmin) ? staffId : null,
             approved_at: (isSportManager || isAdmin) ? new Date() : null,
-            is_active: true,
         });
 
         const createdSport = await this.sportRepository.save(sport);
@@ -438,6 +441,8 @@ export class SportService {
             price?: number;
             sport_image?: string;
             max_participants?: number;
+            is_active?: boolean;
+            requires_booking?: boolean;
         },
         staffId: number,
         staffTypeId: number
@@ -493,8 +498,10 @@ export class SportService {
             if (updateData.name_ar) sport.name_ar = updateData.name_ar;
             if (updateData.description_en !== undefined) sport.description_en = updateData.description_en;
             if (updateData.description_ar !== undefined) sport.description_ar = updateData.description_ar;
-            if (updateData.sport_image) sport.sport_image = updateData.sport_image;
+            if (updateData.sport_image !== undefined) sport.sport_image = updateData.sport_image;
             if (updateData.max_participants !== undefined) sport.max_participants = updateData.max_participants;
+            if (updateData.is_active !== undefined) sport.is_active = updateData.is_active;
+            if (updateData.requires_booking !== undefined) sport.requires_booking = updateData.requires_booking;
         }
 
         if ((isSportManager || isFinancialDirector || isAdmin) && updateData.price !== undefined) {

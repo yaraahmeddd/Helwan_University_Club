@@ -1,19 +1,25 @@
 {
   "header": {
     "title": "إدارة الرياضات",
+    "subtitle": "{{count}} رياضة مسجّلة",
+    "refresh": "تحديث",
+    "results": "عرض {{count}} رياضة",
     "addButton": "إضافة رياضة"
   },
   "filter": {
     "all": "الكل",
     "active": "مفعّلة",
-    "draft": "Draft",
+    "draft": "مسودة",
     "inactive": "معطّلة"
   },
   "table": {
     "name": "اسم الرياضة",
+    "maxParticipants": "الحد الأقصى للمشاركين",
     "status": "الحالة",
-    "membersCount": "عدد الأعضاء",
-    "price": "السعر (ج.م)",
+    "bookingAvailable": "متاح للحجز",
+    "bookingYes": "نعم",
+    "bookingNo": "لا",
+    "unlimited": "غير محدود",
     "actions": "الإجراءات"
   },
   "loading": "جاري التحميل...",
@@ -21,12 +27,15 @@
   "status": {
     "draftTooltip": "هذه الرياضة غير مرئية للأعضاء حتى تتم إضافة مواعيد لها",
     "inactive": "معطّلة",
-    "draft": "Draft — بدون مواعيد",
-    "active": "مفعّلة"
+    "draft": "مسودة — بدون مواعيد",
+    "active": "مفعّلة",
+    "pending": "قيد الموافقة",
+    "rejected": "مرفوضة"
   },
   "actions": {
     "edit": "تعديل",
-    "delete": "حذف"
+    "delete": "حذف",
+    "viewMembers": "عرض الأعضاء"
   },
   "dialog": {
     "editTitle": "تعديل رياضة",
@@ -35,8 +44,10 @@
     "addDesc": "أدخل بيانات الرياضة الجديدة"
   },
   "form": {
+    "basicInfo": "البيانات الأساسية",
+    "basicInfoHint": "الصورة والفرع واسم الرياضة بالعربية والإنجليزية",
     "photoLabel": "صورة الرياضة",
-    "removePhoto": "× حذف الصورة",
+    "removePhoto": "حذف الصورة",
     "uploadClick": "اضغط لاختيار صورة",
     "uploadChange": "تغيير الصورة",
     "status": "الحالة",
@@ -49,7 +60,11 @@
     "nameArPlaceholder": "أدخل الاسم العربي فقط",
     "nameEnLabel": "اسم الرياضة (EN)",
     "nameEnPlaceholder": "Enter English name only",
+    "maxParticipantsLabel": "الحد الأقصى للمشاركين",
+    "maxParticipantsPlaceholder": "اتركه فارغاً لعدد غير محدود",
     "teamsLabel": "الفرق",
+    "teamsHint": "اختياري — أضف فرقاً مع مواعيد التدريب",
+    "noTeams": "لم تُضف فرق بعد. يمكنك حفظ الرياضة وإضافة الفرق لاحقاً.",
     "addTeam": "إضافة فريق",
     "teamTitle": "فريق {{n}}",
     "teamNameArLabel": "اسم الفريق (AR)",
@@ -67,6 +82,7 @@
     "trainingFee": "رسوم التدريب (ج.م)",
     "requiresBooking": "يحتاج حجز ملاعب",
     "requiresBookingHint": "فعّل للرياضات التي تتطلب حجز ملعب مسبقاً كالبادل",
+    "bookingSection": "إعدادات الحجز",
     "bookingWarning": "تنبيه: لم يتم إضافة أي ملاعب. يرجى إضافة ملعب واحد على الأقل من إدارة الملاعب",
     "cancel": "إلغاء",
     "saving": "جارٍ الحفظ...",
@@ -74,6 +90,15 @@
     "startTimeTitle": "وقت البداية",
     "endTimeTitle": "وقت النهاية",
     "slotLockedTooltip": "هذا الوقت محجوز"
+  },
+  "validation": {
+    "requiredNameAr": "اسم الرياضة بالعربية مطلوب.",
+    "requiredNameEn": "اسم الرياضة بالإنجليزية مطلوب.",
+    "requiredPhoto": "يرجى رفع صورة للرياضة.",
+    "requiredBranch": "يرجى اختيار الفرع.",
+    "arOnly": "يجب أن يحتوي الاسم العربي على أحرف عربية فقط.",
+    "enOnly": "يجب أن يحتوي الاسم الإنجليزي على أحرف إنجليزية فقط.",
+    "invalidMaxParticipants": "الحد الأقصى للمشاركين يجب أن يكون عدداً صحيحاً أكبر من أو يساوي 0."
   },
   "deleteDialog": {
     "title": "تأكيد الحذف",

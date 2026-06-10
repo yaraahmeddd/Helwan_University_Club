@@ -47,6 +47,8 @@ export class SportController {
                 sport_image,
                 price,
                 max_participants,
+                is_active,
+                requires_booking,
                 teams,
             } = body;
 
@@ -174,7 +176,9 @@ export class SportController {
                         description_ar: description_ar as string | undefined,
                         price: price !== undefined ? parseFloat(price as string) : undefined,
                         sport_image: sport_image as string | undefined,
-                        max_participants: max_participants !== undefined ? parseInt(max_participants as string) : undefined,
+                        max_participants: max_participants !== undefined ? parseInt(max_participants as string, 10) : undefined,
+                        is_active: is_active !== undefined ? Boolean(is_active) : undefined,
+                        requires_booking: requires_booking !== undefined ? Boolean(requires_booking) : undefined,
                     },
                     user.staff_id as number,
                     user.staff_type_id as number
@@ -318,6 +322,8 @@ export class SportController {
                 price,
                 sport_image,
                 max_participants,
+                is_active,
+                requires_booking,
             } = body;
 
             const updateData: Record<string, unknown> = {};
@@ -326,8 +332,10 @@ export class SportController {
             if (description_en !== undefined) updateData.description_en = description_en;
             if (description_ar !== undefined) updateData.description_ar = description_ar;
             if (price !== undefined) updateData.price = parseFloat(price as string);
-            if (sport_image) updateData.sport_image = sport_image;
-            if (max_participants !== undefined) updateData.max_participants = parseInt(max_participants as string);
+            if (sport_image !== undefined) updateData.sport_image = sport_image;
+            if (max_participants !== undefined) updateData.max_participants = parseInt(max_participants as string, 10);
+            if (is_active !== undefined) updateData.is_active = Boolean(is_active);
+            if (requires_booking !== undefined) updateData.requires_booking = Boolean(requires_booking);
 
             const sport = await sportService.updateSport(
                 sportId,

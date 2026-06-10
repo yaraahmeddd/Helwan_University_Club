@@ -211,12 +211,55 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'Club System Backend is running' });
 });
 
+const ensureSportsRequiresBookingColumn = async () => {
+  await AppDataSource.query(`
+    ALTER TABLE sports
+    ADD COLUMN IF NOT EXISTS requires_booking BOOLEAN NOT NULL DEFAULT FALSE
+  `);
+};
+
+const seedSportImagesIfMissing = async () => {
+  const imageByName: Record<string, string> = {
+    Football: 'uploads/sports/default.svg',
+    Basketball: 'uploads/sports/default.svg',
+    Volleyball: 'uploads/sports/default.svg',
+    Tennis: 'uploads/sports/table-tennis.svg',
+    Swimming: 'uploads/sports/swimming.svg',
+    Judo: 'uploads/sports/aikido.svg',
+    Karate: 'uploads/sports/aikido.svg',
+    Squash: 'uploads/sports/table-tennis.svg',
+    Snooker: 'uploads/sports/bowling.svg',
+    Chess: 'uploads/sports/bowling.svg',
+    Athletics: 'uploads/sports/archery.svg',
+    Yoga: 'uploads/sports/aikido.svg',
+  };
+
+  for (const [nameEn, imagePath] of Object.entries(imageByName)) {
+    await AppDataSource.query(
+      `UPDATE sports SET sport_image = $1
+       WHERE name_en = $2
+         AND (
+           sport_image IS NULL
+           OR TRIM(sport_image) = ''
+           OR sport_image ILIKE '%speed-ball%'
+         )`,
+      [imagePath, nameEn],
+    );
+  }
+
+  await AppDataSource.query(
+    `UPDATE sports SET sport_image = 'uploads/sports/default.svg' WHERE sport_image IS NULL OR TRIM(sport_image) = ''`,
+  );
+};
+
 // Initialize database and start server
 AppDataSource.initialize()
   .then(async () => {
     console.log('✅ Database connected successfully');
     await ensureMediaPostsTable();
     await ensureAuditLogsTable();
+    await ensureSportsRequiresBookingColumn();
+    await seedSportImagesIfMissing();
     console.log('✅ media_posts table is ready');
 
     // Initialize upload folder structure

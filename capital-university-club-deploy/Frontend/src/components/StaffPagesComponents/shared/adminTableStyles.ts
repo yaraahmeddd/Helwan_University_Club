@@ -97,9 +97,14 @@ export const adminPageStyles = {
     `admin-filter-btn flex items-center gap-1.5 h-10 px-3 rounded-md border ${ADMIN_TEXT} cursor-pointer transition-all duration-150 hover:bg-muted hover:border-muted-foreground/30 hover:text-foreground`,
   toolbarResults: `inline-flex items-center ${ADMIN_TEXT} text-muted-foreground`,
   pagination:
-    `flex items-center justify-between px-4 py-2.5 border-t border-border bg-muted/20 shrink-0 ${ADMIN_TEXT} ${adminFontClass.ui}`,
-  paginationMeta: `${ADMIN_TEXT} text-muted-foreground`,
-  paginationBtn: `h-10 px-4 ${ADMIN_TEXT} cursor-pointer transition-colors duration-150 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50`,
+    `flex flex-col items-center justify-center gap-2 px-4 py-3 border-t border-border bg-muted/20 shrink-0 ${ADMIN_TEXT} ${adminFontClass.ui}`,
+  paginationMeta: `${ADMIN_TEXT} text-muted-foreground text-center`,
+  paginationControls: 'flex items-center justify-center gap-1 flex-wrap',
+  paginationBtn: `h-9 px-3 ${ADMIN_TEXT} cursor-pointer transition-colors duration-150 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50`,
+  paginationPageBtn:
+    `h-9 min-w-9 px-2 ${ADMIN_TEXT} cursor-pointer transition-colors duration-150`,
+  paginationPageBtnActive: 'bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:text-primary-foreground',
+  paginationEllipsis: 'px-1 text-muted-foreground select-none',
   icon: ADMIN_ICON,
   refreshBtn:
     `admin-refresh-btn flex items-center gap-2 px-3 py-2 rounded-lg border border-border cursor-pointer transition-all duration-150 hover:bg-muted hover:border-muted-foreground/30 hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed ${ADMIN_TEXT} text-muted-foreground`,
@@ -107,6 +112,29 @@ export const adminPageStyles = {
 
 export function getAdminTotalPages(totalCount: number, pageSize = ADMIN_PAGE_SIZE): number {
   return Math.max(1, Math.ceil(totalCount / pageSize));
+}
+
+export type AdminPageToken = number | 'ellipsis';
+
+/** Page numbers to render, with ellipsis when the list is long. */
+export function getAdminVisiblePages(currentPage: number, totalPages: number): AdminPageToken[] {
+  if (totalPages <= 0) return [];
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1);
+  }
+
+  const pages: AdminPageToken[] = [1];
+  const windowStart = Math.max(2, currentPage - 1);
+  const windowEnd = Math.min(totalPages - 1, currentPage + 1);
+
+  if (windowStart > 2) pages.push('ellipsis');
+  for (let pageNumber = windowStart; pageNumber <= windowEnd; pageNumber += 1) {
+    pages.push(pageNumber);
+  }
+  if (windowEnd < totalPages - 1) pages.push('ellipsis');
+  pages.push(totalPages);
+
+  return pages;
 }
 
 export function paginateAdminRows<T>(rows: T[], page: number, pageSize = ADMIN_PAGE_SIZE): T[] {

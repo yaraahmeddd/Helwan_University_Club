@@ -21,11 +21,15 @@ import {
     Popover, PopoverContent, PopoverTrigger,
 } from "../components/StaffPagesComponents/ui/popover";
 import {
-    Pencil, Trash2, Plus, Loader2, X, Clock, Users, Filter,
+    Pencil, Trash2, Plus, Loader2, X, Clock, Users, Filter, RefreshCw,
 } from "lucide-react";
 import { useToast } from "../hooks/use-toast";
 import { useLanguage } from "../hooks/useLanguage";
-import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { adminTableStyles, adminHeadClass, adminCellClass, adminDialogStyles, adminPageStyles } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
+import { AdminActionButton, AdminRowActions } from "../components/StaffPagesComponents/shared/AdminRowActions";
+import { FieldInlineError } from "../components/StaffPagesComponents/shared/FieldInlineError";
+import { useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
 import { getBilingualFieldPlaceholder, getEntityName, getLocalizedText } from "../lib/localizedDisplay";
 import api from "../services/axios";
@@ -59,6 +63,7 @@ interface ApiTeam {
     status: TeamStatus;
     visibility_type?: string;
     price?: number | null;
+    subscription_price?: number | null;
     training_schedules?: {
         id: string;
         days_ar: string;
@@ -87,6 +92,18 @@ type TeamFormState = {
     visibility: string;
     price: string;
     training: TeamTraining;
+};
+
+type TeamFormFieldErrors = {
+    sportId?: string;
+    nameAr?: string;
+    nameEn?: string;
+    maxParticipants?: string;
+    trainingDays?: string;
+    startTime?: string;
+    endTime?: string;
+    fieldId?: string;
+    trainingFee?: string;
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -123,6 +140,13 @@ const statusClass = (s: TeamStatus) => {
 };
 
 const isValidTimeRange = (start: string, end: string) => start < end;
+
+const getTeamPriceValue = (team: ApiTeam): number | null => {
+    const raw = team.price ?? team.subscription_price ?? team.training_schedules?.[0]?.training_fee;
+    if (raw == null) return null;
+    const num = Number(raw);
+    return Number.isNaN(num) ? null : num;
+};
 
 // ─── TimeSlotPicker (copied from SportsPage) ─────────────────────────────────
 
@@ -202,6 +226,7 @@ const TimeSlotPicker = ({
 export default function TeamsManagementPage() {
     const { t } = useTranslation('TeamsManagementPage');
     const { language, isRTL } = useLanguage();
+    const { locale } = useAdminFormatters();
     const { toast } = useToast();
 
     // ── Data ────────────────────────────────────────────────────────────────────
@@ -221,7 +246,7 @@ export default function TeamsManagementPage() {
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [editTeam, setEditTeam] = useState<ApiTeam | null>(null);
     const [form, setForm] = useState<TeamFormState>(emptyForm());
-    const [formError, setFormError] = useState("");
+    const [fieldErrors, setFieldErrors] = useState<TeamFormFieldErrors>({});
     const [saveLoading, setSaveLoading] = useState(false);
 
     // ── Delete ──────────────────────────────────────────────────────────────────
@@ -266,14 +291,14 @@ export default function TeamsManagementPage() {
     const openAdd = () => {
         setEditTeam(null);
         setForm(emptyForm());
-        setFormError("");
+        setFieldErrors({});
         setIsAddOpen(true);
     };
 
-    // ── Open edit — pre-fill entire form ────────────────────────────────────────
     const openEdit = (team: ApiTeam) => {
         setEditTeam(team);
         const sched = team.training_schedules?.[0];
+        const priceValue = team.price ?? team.subscription_price;
         setForm({
             nameAr: team.name_ar,
             nameEn: team.name_en,
@@ -281,7 +306,7 @@ export default function TeamsManagementPage() {
             maxParticipants: String(team.max_participants),
             status: team.status,
             visibility: team.visibility_type ?? "",
-            price: team.price != null ? String(team.price) : "",
+            price: priceValue != null ? String(priceValue) : "",
             training: sched ? {
                 selectedDays: (sched.days_ar ?? "").split(", ").filter(Boolean),
                 startTime: (sched.start_time ?? "").slice(0, 5),
@@ -290,29 +315,55 @@ export default function TeamsManagementPage() {
                 trainingFee: String(sched.training_fee ?? ""),
             } : emptyTraining(),
         });
-        setFormError("");
+        setFieldErrors({});
         setIsAddOpen(true);
     };
 
-    // ── Validation ───────────────────────────────────────────────────────────────
-    const validate = (): string => {
-        if (!form.nameAr.trim()) return t('validation.nameArRequired');
-        if (!form.nameEn.trim()) return t('validation.nameEnRequired');
-        if (!editTeam && !form.sportId) return t('validation.sportRequired');
-        if (!form.maxParticipants || Number(form.maxParticipants) <= 0) return t('validation.maxParticipantsRequired');
-        if (form.training.selectedDays.length === 0) return t('validation.daysRequired');
-        if (!form.training.startTime) return t('validation.startTimeRequired');
-        if (!form.training.endTime) return t('validation.endTimeRequired');
-        if (!isValidTimeRange(form.training.startTime, form.training.endTime)) return t('validation.timeRangeInvalid');
-        if (!form.training.trainingFee.trim()) return t('validation.trainingFeeRequired');
-        return "";
+    const handleNameArChange = (value: string) => {
+        if (value === "" || isArabicOnly(value)) {
+            setForm((prev) => ({ ...prev, nameAr: value }));
+            setFieldErrors((prev) => ({ ...prev, nameAr: undefined }));
+            return;
+        }
+        setFieldErrors((prev) => ({ ...prev, nameAr: t('validation.arOnly') }));
+    };
+
+    const handleNameEnChange = (value: string) => {
+        if (value === "" || isEnglishOnly(value)) {
+            setForm((prev) => ({ ...prev, nameEn: value }));
+            setFieldErrors((prev) => ({ ...prev, nameEn: undefined }));
+            return;
+        }
+        setFieldErrors((prev) => ({ ...prev, nameEn: t('validation.enOnly') }));
+    };
+
+    const collectFieldErrors = (): TeamFormFieldErrors => {
+        const errors: TeamFormFieldErrors = {};
+        if (!form.nameAr.trim()) errors.nameAr = t('validation.nameArRequired');
+        if (!form.nameEn.trim()) errors.nameEn = t('validation.nameEnRequired');
+        if (!editTeam && !form.sportId) errors.sportId = t('validation.sportRequired');
+        if (!form.maxParticipants || Number(form.maxParticipants) <= 0) {
+            errors.maxParticipants = t('validation.maxParticipantsRequired');
+        }
+        if (form.training.selectedDays.length === 0) errors.trainingDays = t('validation.daysRequired');
+        if (!form.training.startTime) errors.startTime = t('validation.startTimeRequired');
+        if (!form.training.endTime) errors.endTime = t('validation.endTimeRequired');
+        if (form.training.startTime && form.training.endTime && !isValidTimeRange(form.training.startTime, form.training.endTime)) {
+            errors.endTime = t('validation.timeRangeInvalid');
+        }
+        if (fields.length > 0 && !form.training.fieldId) errors.fieldId = t('validation.fieldRequired');
+        if (!form.training.trainingFee.trim()) errors.trainingFee = t('validation.trainingFeeRequired');
+        return errors;
     };
 
     // ── Save (create or update) ──────────────────────────────────────────────────
     const handleSave = async () => {
-        const err = validate();
-        if (err) { setFormError(err); return; }
-        setFormError("");
+        const errors = collectFieldErrors();
+        if (Object.keys(errors).length > 0) {
+            setFieldErrors(errors);
+            return;
+        }
+        setFieldErrors({});
         setSaveLoading(true);
         const trainingBody = {
             days_ar: form.training.selectedDays.join(", "),
@@ -351,6 +402,7 @@ export default function TeamsManagementPage() {
             setIsAddOpen(false);
             setEditTeam(null);
             setForm(emptyForm());
+            setFieldErrors({});
             await fetchTeams();
         } catch (err) {
             const e = err as { message?: string };
@@ -390,44 +442,66 @@ export default function TeamsManagementPage() {
     const timeErr = form.training.startTime && form.training.endTime
         && !isValidTimeRange(form.training.startTime, form.training.endTime);
 
+    const formatTeamPrice = (team: ApiTeam) => {
+        const value = getTeamPriceValue(team);
+        if (value == null) return t('common.notAvailable');
+        return `${value.toLocaleString(locale)} ${t('table.currency')}`;
+    };
+
+    const closeFormDialog = () => {
+        setIsAddOpen(false);
+        setEditTeam(null);
+        setForm(emptyForm());
+        setFieldErrors({});
+    };
+
     const isEdit = !!editTeam;
     const hasFilters = filterSports.length > 0 || filterStatuses.length > 0 || search.trim() !== "";
 
     // ─── Render ──────────────────────────────────────────────────────────────────
     return (
-        <div className="h-full flex flex-col overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="h-[calc(100vh-4rem)] flex flex-col bg-background overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
 
-            {/* ── Header ── */}
-            <div className="px-6 py-4 border-b border-border bg-background shrink-0">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-                            <Users className="w-6 h-6 text-primary" />
-                            {t('header.title')}
-                        </h1>
-                        <div className="flex items-center gap-4 mt-1">
-                            <p className="text-sm text-muted-foreground">
-                                {t('header.totalTeams')} <strong>{teams.length}</strong>
-                            </p>
-                            <span className="inline-flex items-center gap-1 text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-medium">
-                                {t('header.activeTeams', { count: teams.filter(t => t.status === "active").length })}
-                            </span>
-                            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full font-medium">
-                                {t('header.inactiveTeams', { count: teams.filter(t => t.status !== "active").length })}
-                            </span>
-                        </div>
-                    </div>
-                    <RoleGuard privilege="CREATE_TEAM">
-                        <Button onClick={openAdd} className="gap-2">
-                            <Plus className="h-4 w-4" />
-                            {t('actions.addTeam')}
+            <AdminPageHeader
+                icon={Users}
+                title={t('header.title')}
+                subtitle={
+                    <>
+                        {t('header.totalTeams')}{" "}
+                        <strong className="text-foreground">{teams.length}</strong>
+                        <span className="mx-2 text-border">·</span>
+                        <span className={adminPageStyles.statChip + " text-emerald-700 bg-emerald-50"}>
+                            {t('header.activeTeams', { count: teams.filter(team => team.status === "active").length })}
+                        </span>
+                        <span className={adminPageStyles.statChip + " text-muted-foreground bg-muted"}>
+                            {t('header.inactiveTeams', { count: teams.filter(team => team.status !== "active").length })}
+                        </span>
+                    </>
+                }
+                actions={
+                    <>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                            onClick={() => void fetchTeams()}
+                            disabled={loading}
+                        >
+                            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                            {t('toolbar.refresh')}
                         </Button>
-                    </RoleGuard>
-                </div>
-            </div>
+                        <RoleGuard privilege="CREATE_TEAM">
+                            <Button size="sm" className="gap-2" onClick={openAdd}>
+                                <Plus className="h-4 w-4" />
+                                {t('actions.addTeam')}
+                            </Button>
+                        </RoleGuard>
+                    </>
+                }
+            />
 
             {/* ── Toolbar ── */}
-            <div className="flex items-center gap-3 px-6 py-3 border-b border-border bg-muted/20 shrink-0 flex-wrap">
+            <div className={adminPageStyles.toolbar}>
                 {/* Search */}
                 <div className="relative flex-1 max-w-sm">
                     <Input
@@ -527,15 +601,16 @@ export default function TeamsManagementPage() {
                             <TableHead className={adminHeadClass()}>{t('table.colSport')}</TableHead>
                             <TableHead className={adminHeadClass()}>{t('table.colSchedule')}</TableHead>
                             <TableHead className={adminHeadClass()}>{t('table.colMaxParticipants')}</TableHead>
+                            <TableHead className={adminHeadClass({ center: true, className: "whitespace-nowrap" })}>{t('table.colPrice')}</TableHead>
                             <TableHead className={adminHeadClass({ className: "whitespace-nowrap" })}>{t('table.colStatus')}</TableHead>
-                            <TableHead className={adminHeadClass({ center: true, className: "w-[200px]" })}>{t('table.colActions')}</TableHead>
+                            <TableHead className={adminHeadClass({ center: true, className: "w-[148px]" })}>{t('table.colActions')}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody className={adminTableStyles.body}>
                         <AnimatePresence>
                             {loading ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="text-center py-12">
+                                    <TableCell colSpan={8} className="text-center py-12">
                                         <div className="flex items-center justify-center gap-2 text-muted-foreground">
                                             <Loader2 className="h-5 w-5 animate-spin" />
                                             <span>{t('table.loading')}</span>
@@ -544,7 +619,7 @@ export default function TeamsManagementPage() {
                                 </TableRow>
                             ) : filtered.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="text-center py-12 text-muted-foreground text-sm">
+                                    <TableCell colSpan={8} className="text-center py-12 text-muted-foreground text-sm">
                                         <div className="flex flex-col items-center gap-2">
                                             <Users className="w-8 h-8 opacity-30" />
                                             <span>{hasFilters ? t('table.noResultsFiltered') : t('table.noResultsEmpty')}</span>
@@ -577,34 +652,33 @@ export default function TeamsManagementPage() {
                                                 <span className="line-clamp-2">{schedStr}</span>
                                             </TableCell>
                                             <TableCell className={adminCellClass()}>{team.max_participants}</TableCell>
+                                            <TableCell className={adminCellClass({ center: true, className: "tabular-nums font-medium whitespace-nowrap" })}>
+                                                {formatTeamPrice(team)}
+                                            </TableCell>
                                             <TableCell className={adminCellClass({ className: "whitespace-nowrap" })}>
                                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusClass(team.status)}`}>
                                                     {statusLabel(team.status, t)}
                                                 </span>
                                             </TableCell>
                                             <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
-                                                <div className={adminTableStyles.actions}>
+                                                <AdminRowActions>
                                                     <RoleGuard privilege="UPDATE_TEAM">
-                                                        <Button
-                                                            size="icon" variant="ghost"
-                                                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors"
+                                                        <AdminActionButton
+                                                            tooltip={t('actions.edit')}
+                                                            icon={Pencil}
+                                                            variant="edit"
                                                             onClick={() => openEdit(team)}
-                                                            title={t('actions.edit')}
-                                                        >
-                                                            <Pencil className="h-4 w-4" />
-                                                        </Button>
+                                                        />
                                                     </RoleGuard>
                                                     <RoleGuard privilege="DELETE_TEAM">
-                                                        <Button
-                                                            size="icon" variant="ghost"
-                                                            className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50 transition-colors"
+                                                        <AdminActionButton
+                                                            tooltip={t('actions.delete')}
+                                                            icon={Trash2}
+                                                            variant="delete"
                                                             onClick={() => setDeleteId(team.id)}
-                                                            title={t('actions.delete')}
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
+                                                        />
                                                     </RoleGuard>
-                                                </div>
+                                                </AdminRowActions>
                                             </TableCell>
                                         </motion.tr>
                                     );
@@ -615,212 +689,266 @@ export default function TeamsManagementPage() {
                 </Table>
             </motion.div>
             </div>
-            {/* ══ Add / Edit Dialog — same structure as SportsPage dialog ══ */}
-            <Dialog open={isAddOpen} onOpenChange={val => { if (!val) { setIsAddOpen(false); setEditTeam(null); setForm(emptyForm()); } }}>
-                <DialogContent className="w-[95vw] max-w-3xl max-h-[85vh] p-0 flex flex-col overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
-                    <div className="flex min-h-0 flex-1 flex-col p-6 overflow-hidden">
-                        <DialogHeader className="shrink-0">
-                            <DialogTitle>{isEdit ? t('form.editTitle') : t('form.addTitle')}</DialogTitle>
-                            <DialogDescription>
-                                {isEdit ? t('form.editDescription') : t('form.addDescription')}
-                            </DialogDescription>
-                        </DialogHeader>
-
-                        <div className="mt-4 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-
-                            {/* Sport selector — shown on both create and edit; disabled on edit */}
-                            <div>
-                                <Label>{t('form.sportLabel')} <span className="text-destructive">*</span></Label>
-                                <Select
-                                    value={form.sportId}
-                                    onValueChange={v => { if (!isEdit) setForm(p => ({ ...p, sportId: v })); }}
-                                    disabled={isEdit}
-                                >
-                                    <SelectTrigger className={isEdit ? "opacity-60 cursor-not-allowed" : ""}>
-                                        <SelectValue placeholder={t('form.sportPlaceholder')} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {sports.map(s => <SelectItem key={s.id} value={String(s.id)}>{getEntityName(s, language)}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                                {isEdit && <p className="text-[11px] text-muted-foreground mt-1">{t('form.sportLockedNote')}</p>}
+            <Dialog open={isAddOpen} onOpenChange={(open) => { if (!open) closeFormDialog(); }}>
+                <DialogContent className={`${adminDialogStyles.content} max-w-3xl`} dir={isRTL ? 'rtl' : 'ltr'}>
+                    <div className={`${adminDialogStyles.panel} max-h-[90vh]`}>
+                        <div className="px-6 py-4 border-b border-border bg-muted/20 shrink-0">
+                            <div className="flex items-start gap-3">
+                                <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                                    {isEdit ? <Pencil className="w-5 h-5 text-primary" /> : <Plus className="w-5 h-5 text-primary" />}
+                                </div>
+                                <DialogHeader className="space-y-1 text-start">
+                                    <DialogTitle className="text-lg font-bold">
+                                        {isEdit ? t('form.editTitle') : t('form.addTitle')}
+                                    </DialogTitle>
+                                    <DialogDescription>
+                                        {isEdit ? t('form.editDescription') : t('form.addDescription')}
+                                    </DialogDescription>
+                                </DialogHeader>
                             </div>
+                        </div>
 
-                            {/* Name row */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <Label>{t('form.nameArLabel')} <span className="text-destructive">*</span></Label>
-                                    <Input
-                                        value={form.nameAr}
-                                        placeholder={getBilingualFieldPlaceholder('ar', 'TeamsManagementPage', 'form.nameArPlaceholder')}
-                                        maxLength={100}
-                                        onChange={e => {
-                                            const v = e.target.value;
-                                            if (v === "" || isArabicOnly(v)) setForm(p => ({ ...p, nameAr: v }));
-                                            else toast({ title: t('toast.nameArOnlyTitle'), description: t('toast.nameArOnly'), variant: "destructive" });
-                                        }}
-                                        dir="rtl"
-                                    />
+                        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 min-h-0">
+                            <section className="rounded-xl border border-border bg-card overflow-hidden">
+                                <div className="px-4 py-3 border-b border-border bg-muted/30">
+                                    <h3 className="text-sm font-semibold text-foreground">{t('form.basicInfo')}</h3>
+                                    <p className="text-xs text-muted-foreground mt-0.5">{t('form.basicInfoHint')}</p>
                                 </div>
-                                <div>
-                                    <Label>{t('form.nameEnLabel')} <span className="text-destructive">*</span></Label>
-                                    <Input
-                                        dir="ltr" className={`text-left ${isRTL ? '' : 'text-left'}`}
-                                        value={form.nameEn}
-                                        placeholder={getBilingualFieldPlaceholder('en', 'TeamsManagementPage', 'form.nameEnPlaceholder')}
-                                        maxLength={100}
-                                        onChange={e => {
-                                            const v = e.target.value;
-                                            if (v === "" || isEnglishOnly(v)) setForm(p => ({ ...p, nameEn: v }));
-                                            else toast({ title: t('toast.nameEnOnlyTitle'), description: t('toast.nameEnOnly'), variant: "destructive" });
-                                        }}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Max participants + Status */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <Label>{t('form.maxParticipantsLabel')} <span className="text-destructive">*</span></Label>
-                                    <Input
-                                        type="number" min={1} placeholder={t('form.maxParticipantsPlaceholder')}
-                                        value={form.maxParticipants}
-                                        onChange={e => setForm(p => ({ ...p, maxParticipants: e.target.value }))}
-                                    />
-                                </div>
-                                <div>
-                                    <Label>{t('form.statusLabel')}</Label>
-                                    <Select value={form.status} onValueChange={v => setForm(p => ({ ...p, status: v as TeamStatus }))}>
-                                        <SelectTrigger><SelectValue /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="active">{t('status.active')}</SelectItem>
-                                            <SelectItem value="inactive">{t('status.inactive')}</SelectItem>
-                                            <SelectItem value="suspended">{t('status.suspended')}</SelectItem>
-                                            <SelectItem value="archived">{t('status.archived')}</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            {/* Visibility + Price */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <Label>{t('form.visibilityLabel')}</Label>
-                                    <Select value={form.visibility || "none"} onValueChange={v => setForm(p => ({ ...p, visibility: v === "none" ? "" : v }))}>
-                                        <SelectTrigger><SelectValue placeholder={t('form.visibilityPlaceholder')} /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="none" className="text-muted-foreground">{t('form.visibilityNone')}</SelectItem>
-                                            <SelectItem value="INTERNAL">{t('form.visibilityInternal')}</SelectItem>
-                                            <SelectItem value="EXTERNAL">{t('form.visibilityExternal')}</SelectItem>
-                                            <SelectItem value="BOTH">{t('form.visibilityBoth')}</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div>
-                                    <Label>{t('form.priceLabel')}</Label>
-                                    <Input
-                                        type="number" min={0} placeholder={t('form.pricePlaceholder')}
-                                        value={form.price}
-                                        onChange={e => setForm(p => ({ ...p, price: e.target.value }))}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Training block — same card style as SportsPage */}
-                            <div className="space-y-3 rounded-lg border border-border bg-muted/20 p-3">
-                                <span className="text-sm font-semibold text-primary">{t('form.training.sectionTitle')}</span>
-
-                                {/* Day chips */}
-                                <div>
-                                    <Label className="text-xs mb-1.5 block">{t('form.training.daysLabel')} <span className="text-destructive">*</span></Label>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {DAYS.map(day => {
-                                            const on = form.training.selectedDays.includes(day.ar);
-                                            return (
-                                                <button key={day.ar} type="button" onClick={() => toggleDay(day.ar)}
-                                                    className={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-all duration-150
-                            ${on
-                                                            ? "bg-primary text-primary-foreground border-primary"
-                                                            : "bg-background text-foreground border-border hover:border-primary/60"
-                                                        }`}
-                                                >
-                                                    {isRTL ? day.ar : day.en}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-
-                                {/* Time pickers */}
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <Label className="text-xs text-muted-foreground whitespace-nowrap">{t('form.training.fromLabel')}</Label>
-                                    <TimeSlotPicker
-                                        value={form.training.startTime}
-                                        placeholder={t('form.training.fromLabel')}
-                                        title={t('form.training.timeStartTitle')}
-                                        lockedValue={form.training.endTime}
-                                        onChange={v => setForm(p => ({ ...p, training: { ...p.training, startTime: v } }))}
-                                    />
-                                    <Label className="text-xs text-muted-foreground whitespace-nowrap">{t('form.training.toLabel')}</Label>
-                                    <TimeSlotPicker
-                                        value={form.training.endTime}
-                                        placeholder={t('form.training.toLabel')}
-                                        title={t('form.training.timeEndTitle')}
-                                        lockedValue={form.training.startTime}
-                                        onChange={v => setForm(p => ({ ...p, training: { ...p.training, endTime: v } }))}
-                                    />
-                                </div>
-                                {timeErr && <p className="text-[11px] text-destructive">{t('form.training.timeRangeError')}</p>}
-
-                                {/* Field selector */}
-                                <div>
-                                    <Label className="text-xs mb-1 block">{t('form.training.fieldLabel')} <span className="text-destructive">*</span></Label>
-                                    {fields.length === 0 ? (
-                                        <p className="text-xs text-amber-600 border border-amber-200 bg-amber-50 dark:bg-amber-950/20 rounded-md px-3 py-2">
-                                            {t('form.training.fieldNoFields')}
-                                        </p>
-                                    ) : (
+                                <div className="p-4 space-y-4">
+                                    <div>
+                                        <Label className="mb-1.5 block">{t('form.sportLabel')} <span className="text-destructive">*</span></Label>
                                         <Select
-                                            value={form.training.fieldId || "none"}
-                                            onValueChange={val => setForm(p => ({ ...p, training: { ...p.training, fieldId: val === "none" ? "" : val } }))}
+                                            value={form.sportId}
+                                            onValueChange={(value) => {
+                                                if (!isEdit) {
+                                                    setForm((prev) => ({ ...prev, sportId: value }));
+                                                    setFieldErrors((prev) => ({ ...prev, sportId: undefined }));
+                                                }
+                                            }}
+                                            disabled={isEdit}
                                         >
-                                            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder={t('form.training.fieldPlaceholder')} /></SelectTrigger>
+                                            <SelectTrigger className={`h-10 ${isEdit ? "opacity-60 cursor-not-allowed" : ""} ${fieldErrors.sportId ? "border-destructive" : ""}`}>
+                                                <SelectValue placeholder={t('form.sportPlaceholder')} />
+                                            </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="none" className="text-xs text-muted-foreground">{t('form.training.fieldPlaceholder')}</SelectItem>
-                                                {fields.map(f => (
-                                                    <SelectItem key={f.id} value={f.id} className="text-xs">
-                                                        {getEntityName(f, language)}
+                                                {sports.map((sport) => (
+                                                    <SelectItem key={sport.id} value={String(sport.id)}>
+                                                        {getEntityName(sport, language)}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
-                                    )}
-                                </div>
+                                        <FieldInlineError message={fieldErrors.sportId} />
+                                        {isEdit && <p className="text-[11px] text-muted-foreground mt-1">{t('form.sportLockedNote')}</p>}
+                                    </div>
 
-                                {/* Training fee */}
-                                <div className="flex items-center gap-2">
-                                    <Label className="text-xs whitespace-nowrap shrink-0">{t('form.training.trainingFeeLabel')} <span className="text-destructive">*</span></Label>
-                                    <input
-                                        type="number" min={0} placeholder="200"
-                                        value={form.training.trainingFee}
-                                        onChange={e => setForm(p => ({ ...p, training: { ...p.training, trainingFee: e.target.value } }))}
-                                        className="w-24 h-8 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                                    />
-                                </div>
-                            </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <Label className="mb-1.5 block">{t('form.nameArLabel')} <span className="text-destructive">*</span></Label>
+                                            <Input
+                                                value={form.nameAr}
+                                                placeholder={getBilingualFieldPlaceholder('ar', 'TeamsManagementPage', 'form.nameArPlaceholder')}
+                                                maxLength={100}
+                                                onChange={(e) => handleNameArChange(e.target.value)}
+                                                dir="rtl"
+                                                className={`h-10 ${fieldErrors.nameAr ? "border-destructive" : ""}`}
+                                                aria-invalid={!!fieldErrors.nameAr}
+                                            />
+                                            <FieldInlineError message={fieldErrors.nameAr} />
+                                        </div>
+                                        <div>
+                                            <Label className="mb-1.5 block">{t('form.nameEnLabel')} <span className="text-destructive">*</span></Label>
+                                            <Input
+                                                dir="ltr"
+                                                className={`text-start h-10 ${fieldErrors.nameEn ? "border-destructive" : ""}`}
+                                                value={form.nameEn}
+                                                placeholder={getBilingualFieldPlaceholder('en', 'TeamsManagementPage', 'form.nameEnPlaceholder')}
+                                                maxLength={100}
+                                                onChange={(e) => handleNameEnChange(e.target.value)}
+                                                aria-invalid={!!fieldErrors.nameEn}
+                                            />
+                                            <FieldInlineError message={fieldErrors.nameEn} />
+                                        </div>
+                                    </div>
 
-                            {/* Inline error */}
-                            {formError && <p className="text-xs font-medium text-destructive">{formError}</p>}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <Label className="mb-1.5 block">{t('form.maxParticipantsLabel')} <span className="text-destructive">*</span></Label>
+                                            <Input
+                                                type="number"
+                                                min={1}
+                                                placeholder={t('form.maxParticipantsPlaceholder')}
+                                                value={form.maxParticipants}
+                                                onChange={(e) => {
+                                                    setForm((prev) => ({ ...prev, maxParticipants: e.target.value }));
+                                                    setFieldErrors((prev) => ({ ...prev, maxParticipants: undefined }));
+                                                }}
+                                                className={`h-10 ${fieldErrors.maxParticipants ? "border-destructive" : ""}`}
+                                            />
+                                            <FieldInlineError message={fieldErrors.maxParticipants} />
+                                        </div>
+                                        <div>
+                                            <Label className="mb-1.5 block">{t('form.statusLabel')}</Label>
+                                            <Select value={form.status} onValueChange={(value) => setForm((prev) => ({ ...prev, status: value as TeamStatus }))}>
+                                                <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="active">{t('status.active')}</SelectItem>
+                                                    <SelectItem value="inactive">{t('status.inactive')}</SelectItem>
+                                                    <SelectItem value="suspended">{t('status.suspended')}</SelectItem>
+                                                    <SelectItem value="archived">{t('status.archived')}</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <Label className="mb-1.5 block">{t('form.visibilityLabel')}</Label>
+                                            <Select value={form.visibility || "none"} onValueChange={(value) => setForm((prev) => ({ ...prev, visibility: value === "none" ? "" : value }))}>
+                                                <SelectTrigger className="h-10"><SelectValue placeholder={t('form.visibilityPlaceholder')} /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="none" className="text-muted-foreground">{t('form.visibilityNone')}</SelectItem>
+                                                    <SelectItem value="INTERNAL">{t('form.visibilityInternal')}</SelectItem>
+                                                    <SelectItem value="EXTERNAL">{t('form.visibilityExternal')}</SelectItem>
+                                                    <SelectItem value="BOTH">{t('form.visibilityBoth')}</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div>
+                                            <Label className="mb-1.5 block">{t('form.priceLabel')}</Label>
+                                            <Input
+                                                type="number"
+                                                min={0}
+                                                placeholder={t('form.pricePlaceholder')}
+                                                value={form.price}
+                                                onChange={(e) => setForm((prev) => ({ ...prev, price: e.target.value }))}
+                                                className="h-10"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section className="rounded-xl border border-border bg-card overflow-hidden">
+                                <div className="px-4 py-3 border-b border-border bg-muted/30">
+                                    <h3 className="text-sm font-semibold text-foreground">{t('form.training.sectionTitle')}</h3>
+                                    <p className="text-xs text-muted-foreground mt-0.5">{t('form.training.sectionHint')}</p>
+                                </div>
+                                <div className="p-4 space-y-4">
+                                    <div>
+                                        <Label className="mb-1.5 block">{t('form.training.daysLabel')} <span className="text-destructive">*</span></Label>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {DAYS.map((day) => {
+                                                const selected = form.training.selectedDays.includes(day.ar);
+                                                return (
+                                                    <button
+                                                        key={day.ar}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            toggleDay(day.ar);
+                                                            setFieldErrors((prev) => ({ ...prev, trainingDays: undefined }));
+                                                        }}
+                                                        className={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-all duration-150
+                                                            ${selected
+                                                                ? "bg-primary text-primary-foreground border-primary"
+                                                                : "bg-background text-foreground border-border hover:border-primary/60"
+                                                            }`}
+                                                    >
+                                                        {isRTL ? day.ar : day.en}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                        <FieldInlineError message={fieldErrors.trainingDays} />
+                                    </div>
+
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <Label className="text-xs text-muted-foreground whitespace-nowrap">{t('form.training.fromLabel')}</Label>
+                                        <TimeSlotPicker
+                                            value={form.training.startTime}
+                                            placeholder={t('form.training.fromLabel')}
+                                            title={t('form.training.timeStartTitle')}
+                                            lockedValue={form.training.endTime}
+                                            onChange={(value) => {
+                                                setForm((prev) => ({ ...prev, training: { ...prev.training, startTime: value } }));
+                                                setFieldErrors((prev) => ({ ...prev, startTime: undefined, endTime: undefined }));
+                                            }}
+                                        />
+                                        <Label className="text-xs text-muted-foreground whitespace-nowrap">{t('form.training.toLabel')}</Label>
+                                        <TimeSlotPicker
+                                            value={form.training.endTime}
+                                            placeholder={t('form.training.toLabel')}
+                                            title={t('form.training.timeEndTitle')}
+                                            lockedValue={form.training.startTime}
+                                            onChange={(value) => {
+                                                setForm((prev) => ({ ...prev, training: { ...prev.training, endTime: value } }));
+                                                setFieldErrors((prev) => ({ ...prev, endTime: undefined }));
+                                            }}
+                                        />
+                                    </div>
+                                    <FieldInlineError message={fieldErrors.startTime || fieldErrors.endTime || (timeErr ? t('form.training.timeRangeError') : undefined)} />
+
+                                    <div>
+                                        <Label className="mb-1.5 block">{t('form.training.fieldLabel')} <span className="text-destructive">*</span></Label>
+                                        {fields.length === 0 ? (
+                                            <p className="text-xs text-amber-600 border border-amber-200 bg-amber-50 dark:bg-amber-950/20 rounded-md px-3 py-2">
+                                                {t('form.training.fieldNoFields')}
+                                            </p>
+                                        ) : (
+                                            <Select
+                                                value={form.training.fieldId || "none"}
+                                                onValueChange={(value) => {
+                                                    setForm((prev) => ({
+                                                        ...prev,
+                                                        training: { ...prev.training, fieldId: value === "none" ? "" : value },
+                                                    }));
+                                                    setFieldErrors((prev) => ({ ...prev, fieldId: undefined }));
+                                                }}
+                                            >
+                                                <SelectTrigger className={`h-10 ${fieldErrors.fieldId ? "border-destructive" : ""}`}>
+                                                    <SelectValue placeholder={t('form.training.fieldPlaceholder')} />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="none" className="text-muted-foreground">{t('form.training.fieldPlaceholder')}</SelectItem>
+                                                    {fields.map((field) => (
+                                                        <SelectItem key={field.id} value={field.id}>
+                                                            {getEntityName(field, language)}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        )}
+                                        <FieldInlineError message={fieldErrors.fieldId} />
+                                    </div>
+
+                                    <div>
+                                        <Label className="mb-1.5 block">{t('form.training.trainingFeeLabel')} <span className="text-destructive">*</span></Label>
+                                        <Input
+                                            type="number"
+                                            min={0}
+                                            placeholder={t('form.pricePlaceholder')}
+                                            value={form.training.trainingFee}
+                                            onChange={(e) => {
+                                                setForm((prev) => ({ ...prev, training: { ...prev.training, trainingFee: e.target.value } }));
+                                                setFieldErrors((prev) => ({ ...prev, trainingFee: undefined }));
+                                            }}
+                                            className={`h-10 max-w-[200px] ${fieldErrors.trainingFee ? "border-destructive" : ""}`}
+                                        />
+                                        <FieldInlineError message={fieldErrors.trainingFee} />
+                                    </div>
+                                </div>
+                            </section>
                         </div>
 
-                        <DialogFooter className="mt-4 border-t pt-4">
-                            <Button variant="outline" onClick={() => { setIsAddOpen(false); setEditTeam(null); }} disabled={saveLoading}>
+                        <div className="px-6 py-4 border-t border-border bg-muted/20 shrink-0 flex items-center justify-end gap-2">
+                            <Button variant="outline" onClick={closeFormDialog} disabled={saveLoading}>
                                 {t('form.buttons.cancel')}
                             </Button>
-                            <Button onClick={() => void handleSave()} disabled={saveLoading}>
-                                {saveLoading ? <><Loader2 className="w-4 h-4 animate-spin ml-1" />{t('form.buttons.saving')}</> : t('form.buttons.save')}
+                            <Button onClick={() => void handleSave()} disabled={saveLoading} className="gap-2">
+                                {saveLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                                {saveLoading ? t('form.buttons.saving') : t('form.buttons.save')}
                             </Button>
-                        </DialogFooter>
+                        </div>
                     </div>
                 </DialogContent>
             </Dialog>

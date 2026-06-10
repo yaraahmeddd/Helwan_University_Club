@@ -11,7 +11,8 @@
     "sportFilter": "الرياضة",
     "clearFilter": "مسح",
     "clearAll": "مسح الفلاتر ×",
-    "results": "نتيجة"
+    "results": "نتيجة",
+    "refresh": "تحديث"
   },
   "status": {
     "active": "نشط",
@@ -25,8 +26,10 @@
     "colSport": "الرياضة",
     "colSchedule": "مواعيد التدريب",
     "colMaxParticipants": "الحد الأقصى",
+    "colPrice": "السعر",
     "colStatus": "الحالة",
     "colActions": "الإجراءات",
+    "currency": "ج.م",
     "loading": "جاري التحميل...",
     "noResultsFiltered": "لا توجد فرق تطابق الفلاتر المحددة",
     "noResultsEmpty": "لا توجد فرق مسجلة بعد"
@@ -41,6 +44,8 @@
     "editTitle": "تعديل فريق",
     "addDescription": "أدخل بيانات الفريق الجديد",
     "editDescription": "قم بتعديل بيانات الفريق — جميع الحقول قابلة للتعديل",
+    "basicInfo": "البيانات الأساسية",
+    "basicInfoHint": "الرياضة، اسم الفريق، السعة، الحالة، وسعر الاشتراك",
     "sportLabel": "الرياضة",
     "sportPlaceholder": "اختر الرياضة",
     "sportLockedNote": "لا يمكن تغيير الرياضة بعد إنشاء الفريق",
@@ -61,6 +66,7 @@
     "pricePlaceholder": "0",
     "training": {
       "sectionTitle": "مواعيد التدريب",
+      "sectionHint": "أيام التدريب، الأوقات، الملعب، ورسوم التدريب",
       "daysLabel": "أيام التدريب",
       "fromLabel": "من",
       "toLabel": "إلى",
@@ -87,7 +93,10 @@
     "startTimeRequired": "وقت البداية مطلوب",
     "endTimeRequired": "وقت النهاية مطلوب",
     "timeRangeInvalid": "وقت النهاية يجب أن يكون بعد وقت البداية",
-    "trainingFeeRequired": "رسوم التدريب مطلوبة"
+    "trainingFeeRequired": "رسوم التدريب مطلوبة",
+    "fieldRequired": "يجب اختيار الملعب",
+    "arOnly": "الاسم العربي يقبل الأحرف العربية فقط",
+    "enOnly": "الاسم الإنجليزي يقبل الأحرف الإنجليزية فقط"
   },
   "deleteDialog": {
     "title": "تأكيد الحذف",
