@@ -39,9 +39,18 @@
     },
     "photos": {
       "personalPhoto": "الصورة الشخصية",
-      "nationalId": "البطاقة القومية",
-      "idFront": "الوجه الأمامي",
-      "idBack": "الوجه الخلفي",
+      "nationalId": "الرقم القومي",
+      "idFront": "الرقم القومي (أمامي)",
+      "idBack": "الرقم القومي (خلفي)",
+      "academicCert": "شهادة المؤهل الدراسي",
+      "military": "الموقف من التجنيد",
+      "criminal": "الفيش الجنائي",
+      "employerApproval": "موافقة جهة العمل",
+      "employmentStatus": "بيان الحالة الوظيفية",
+      "goodConduct": "شهادة حسن سير وسلوك",
+      "personalInfo": "نموذج وثيقة التعارف",
+      "experienceCert": "شهادات الخبرة",
+      "documents": "الصور والمستندات",
       "notUploaded": "غير مرفوع"
     },
     "placeholders": {

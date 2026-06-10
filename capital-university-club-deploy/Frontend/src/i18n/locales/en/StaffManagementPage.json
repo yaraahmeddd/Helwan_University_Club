@@ -42,6 +42,15 @@
       "nationalId": "National ID",
       "idFront": "ID Front",
       "idBack": "ID Back",
+      "academicCert": "Academic Certificate",
+      "military": "Military Service Doc",
+      "criminal": "Criminal Record",
+      "employerApproval": "Employer Approval Letter",
+      "employmentStatus": "Employment Status Statement",
+      "goodConduct": "Good Conduct Certificate",
+      "personalInfo": "Personal Info Form",
+      "experienceCert": "Experience Certificates",
+      "documents": "Photos & Documents",
       "notUploaded": "Not uploaded"
     },
     "placeholders": {

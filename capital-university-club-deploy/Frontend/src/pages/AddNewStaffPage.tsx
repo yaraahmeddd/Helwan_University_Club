@@ -668,7 +668,7 @@ export default function AddNewStaffPage() {
   const onSubmit = async (data: StaffFormValues) => {
       // PART A: Validation
       const hardRequiredDocs = [
-        "academic_certificate", "national_id_front", "personal_photo",
+        "academic_certificate", "national_id_front", "national_id_back", "personal_photo",
         "personal_info_form", "employer_approval_letter"
       ];
       if (gender === "ذكر") hardRequiredDocs.push("military_service_doc");
@@ -1226,6 +1226,7 @@ export default function AddNewStaffPage() {
               const docsConfig = [
                 { id: "academic_certificate", labelAr: t("docsConfig.academicCertificate"), required: true, badgeType: "required" as const },
                 { id: "national_id_front", labelAr: t("docsConfig.nationalIdFront"), required: true, badgeType: "required" as const },
+                { id: "national_id_back", labelAr: t("docsConfig.nationalIdBack", "National ID - Back"), required: true, badgeType: "required" as const },
                 { id: "military_service_doc", labelAr: t("docsConfig.militaryService"), required: true, badgeType: "required" as const },
                 { id: "criminal_record", labelAr: t("docsConfig.criminalRecord"), required: false, badgeText: t("docsConfig.badgeNonUni"), badgeType: "conditional" as const },
                 { id: "employer_approval_letter", labelAr: t("docsConfig.employerApproval"), required: true, badgeType: "required" as const },

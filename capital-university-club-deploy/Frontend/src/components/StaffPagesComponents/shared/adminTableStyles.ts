@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils';
 
 /** Base admin text size (matches --admin-font-size in staffDashboard.css) */
 /** Fonts: heading = Cairo/Plus Jakarta Sans · body/tables = IBM Plex Sans Arabic/Inter */
-export const ADMIN_TEXT = 'text-[15px]' as const;
+export const ADMIN_TEXT = 'text-sm' as const;
 export const ADMIN_ICON = 'w-[15px] h-[15px] shrink-0' as const;
 export const ADMIN_ACTION_ICON = '!w-[17px] !h-[17px] shrink-0' as const;
 export const ADMIN_PAGE_SIZE = 10;
@@ -47,19 +47,19 @@ export const adminTableStyles = {
   iconAction:
     'admin-icon-btn inline-flex h-10 w-10 items-center justify-center rounded-md cursor-pointer transition-all duration-150 text-muted-foreground hover:bg-muted hover:text-foreground hover:scale-105 active:scale-95',
   header: 'sticky top-0 bg-muted/70 backdrop-blur border-b border-border z-10',
-  head: `px-4 py-2.5 ${adminFontClass.tableHead} text-muted-foreground whitespace-nowrap select-none align-middle`,
+  head: `px-4 py-2 ${adminFontClass.tableHead} text-muted-foreground whitespace-nowrap select-none align-middle`,
   headSortable: 'admin-head-sortable cursor-pointer hover:text-foreground hover:bg-muted/60',
   headCenter: 'text-center',
   headStart: 'text-start',
   body: 'divide-y divide-border',
   row: 'transition-colors hover:bg-muted/40 group',
-  cell: `px-4 py-2.5 ${adminFontClass.tableCell} align-middle !h-auto`,
-  cellXs: `px-4 py-2.5 ${adminFontClass.tableCell} align-middle !h-auto`,
-  cellMuted: `px-4 py-2.5 ${adminFontClass.tableCell} text-muted-foreground align-middle !h-auto`,
+  cell: `px-4 py-1.5 ${adminFontClass.tableCell} align-middle !h-auto`,
+  cellXs: `px-4 py-1.5 ${adminFontClass.tableCell} align-middle !h-auto`,
+  cellMuted: `px-4 py-1.5 ${adminFontClass.tableCell} text-muted-foreground align-middle !h-auto`,
   /** Phone & national ID — shared compact numeric styling */
-  cellPhone: 'px-4 py-2.5 admin-cell-phone align-middle !h-auto',
-  cellNationalId: 'px-4 py-2.5 admin-cell-national-id align-middle !h-auto',
-  cellCenter: 'px-4 py-2.5 text-center align-middle !h-auto',
+  cellPhone: 'px-4 py-1.5 admin-cell-phone align-middle !h-auto',
+  cellNationalId: 'px-4 py-1.5 admin-cell-national-id align-middle !h-auto',
+  cellCenter: 'px-4 py-1.5 text-center align-middle !h-auto',
   skeletonRow: 'animate-pulse',
 } as const;
 

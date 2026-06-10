@@ -240,16 +240,19 @@ export default function StaffManagementPage() {
     }
   }, []);
 
-  const handleSaveFromPanel = async (formData: EditFormData) => {
+  const handleSaveFromPanel = async (formData: Partial<EditFormData>) => {
     if (!selectedRow) return;
+    
+    // Only validate fields that are provided
+    const validateData: any = {};
+    if (formData.first_name_ar !== undefined) validateData.first_name_ar = formData.first_name_ar;
+    if (formData.last_name_ar !== undefined) validateData.last_name_ar = formData.last_name_ar;
+    if (formData.first_name_en !== undefined) validateData.first_name_en = formData.first_name_en;
+    if (formData.last_name_en !== undefined) validateData.last_name_en = formData.last_name_en;
+    if (formData.phone !== undefined) validateData.phone = formData.phone;
+
     const validationError = validateStaffEdit(
-      {
-        first_name_ar: formData.first_name_ar,
-        last_name_ar: formData.last_name_ar,
-        first_name_en: formData.first_name_en,
-        last_name_en: formData.last_name_en,
-        phone: formData.phone,
-      },
+      validateData,
       tVal,
     );
     if (validationError) {
@@ -258,15 +261,22 @@ export default function StaffManagementPage() {
     }
     setEditSaving(true);
     try {
-      await api.put(`/staff/${selectedRow.id}`, {
-        first_name_ar: formData.first_name_ar.trim() || undefined,
-        last_name_ar: formData.last_name_ar.trim() || undefined,
-        first_name_en: formData.first_name_en.trim() || undefined,
-        last_name_en: formData.last_name_en.trim() || undefined,
-        phone: formData.phone.trim() || undefined,
-        address: formData.address.trim() || undefined,
-        staff_type_id: formData.staff_type_id ? Number(formData.staff_type_id) : undefined,
-      });
+      const payload = new FormData();
+      if (formData.first_name_ar !== undefined) payload.append('first_name_ar', formData.first_name_ar.trim());
+      if (formData.last_name_ar !== undefined) payload.append('last_name_ar', formData.last_name_ar.trim());
+      if (formData.first_name_en !== undefined) payload.append('first_name_en', formData.first_name_en.trim());
+      if (formData.last_name_en !== undefined) payload.append('last_name_en', formData.last_name_en.trim());
+      if (formData.phone !== undefined) payload.append('phone', formData.phone.trim());
+      if (formData.address !== undefined) payload.append('address', formData.address.trim());
+      if (formData.staff_type_id !== undefined && formData.staff_type_id) payload.append('staff_type_id', String(formData.staff_type_id));
+
+      if (formData.documentFiles) {
+        Object.entries(formData.documentFiles).forEach(([key, file]) => {
+          payload.append(key, file);
+        });
+      }
+
+      await api.put(`/staff/${selectedRow.id}`, payload);
       toast({ title: t('toasts.updateSuccess.title'), description: t('toasts.updateSuccess.desc') });
       void fetchList();
       void openDetail(selectedRow);
@@ -462,7 +472,7 @@ export default function StaffManagementPage() {
                           lastNameEn: row.lastNameEn,
                         }}
                         language={language}
-                        avatarSize="md"
+                        showAvatar={false}
                         primaryClassName="text-sm"
                       />
                     </TableCell>

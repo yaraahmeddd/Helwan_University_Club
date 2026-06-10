@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Briefcase,
   CalendarCheck,
@@ -73,6 +73,14 @@ export type StaffDetailsData = {
   personal_photo?: string | null;
   national_id_front?: string | null;
   national_id_back?: string | null;
+  academic_certificate?: string | null;
+  military_service_doc?: string | null;
+  criminal_record?: string | null;
+  employer_approval_letter?: string | null;
+  employment_status_statement?: string | null;
+  good_conduct_certificate?: string | null;
+  personal_info_form?: string | null;
+  experience_certificates?: string | null;
 };
 
 export type EditFormData = {
@@ -83,6 +91,7 @@ export type EditFormData = {
   phone: string;
   address: string;
   staff_type_id: string;
+  documentFiles?: Record<string, File>;
 };
 
 type StaffDetailPanelProps = {
@@ -101,7 +110,8 @@ const getFileUrl = (f?: string | null): string => {
   if (!f) return '';
   if (f.startsWith('http') || f.startsWith('blob:') || f.startsWith('data:')) return f;
   const base = import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, '') || '';
-  return `${base}/${f.replace(/^\/+/, '')}`;
+  const url = `${base}/${f.replace(/^\/+/, '')}`;
+  return encodeURI(url);
 };
 
 const formatDisplayDate = (v: string | null | undefined, locale: string) => {
@@ -140,13 +150,14 @@ export function StaffDetailPanel({
 
   const [detailTab, setDetailTab] = useState<'info' | 'photos'>('info');
   const [isEditing, setIsEditing] = useState(defaultEditing);
-  const [editFirstNameAr, setEditFirstNameAr] = useState('');
-  const [editLastNameAr, setEditLastNameAr] = useState('');
-  const [editFirstNameEn, setEditFirstNameEn] = useState('');
-  const [editLastNameEn, setEditLastNameEn] = useState('');
-  const [editPhone, setEditPhone] = useState('');
-  const [editAddress, setEditAddress] = useState('');
-  const [editStaffTypeId, setEditStaffTypeId] = useState('');
+  const [editFirstNameAr, setEditFirstNameAr] = useState(details?.first_name_ar ?? row.firstNameAr ?? '');
+  const [editLastNameAr, setEditLastNameAr] = useState(details?.last_name_ar ?? row.lastNameAr ?? '');
+  const [editFirstNameEn, setEditFirstNameEn] = useState(details?.first_name_en ?? row.firstNameEn ?? '');
+  const [editLastNameEn, setEditLastNameEn] = useState(details?.last_name_en ?? row.lastNameEn ?? '');
+  const [editPhone, setEditPhone] = useState(details?.phone ?? (row.phone === '—' ? '' : row.phone));
+  const [editAddress, setEditAddress] = useState(details?.address ?? row.address ?? '');
+  const [editStaffTypeId, setEditStaffTypeId] = useState(String((details?.staff_type_id ?? row.staffTypeId) || ''));
+  const [documentFiles, setDocumentFiles] = useState<Record<string, File>>({});
 
   const nameParts = details
     ? {
@@ -164,14 +175,24 @@ export function StaffDetailPanel({
   const { primary: displayName, secondary: subtitleName } = buildPersonName(nameParts, language);
   const isActive = staffIsActive(row, details);
 
+  const hasPopulated = useRef(false);
+
+  useEffect(() => {
+    if (isEditing && !loading && !hasPopulated.current) {
+      setEditFirstNameAr(details?.first_name_ar ?? row.firstNameAr ?? '');
+      setEditLastNameAr(details?.last_name_ar ?? row.lastNameAr ?? '');
+      setEditFirstNameEn(details?.first_name_en ?? row.firstNameEn ?? '');
+      setEditLastNameEn(details?.last_name_en ?? row.lastNameEn ?? '');
+      setEditPhone(details?.phone ?? (row.phone === '—' ? '' : row.phone));
+      setEditAddress(details?.address ?? row.address ?? '');
+      setEditStaffTypeId(String((details?.staff_type_id ?? row.staffTypeId) || ''));
+      hasPopulated.current = true;
+    }
+  }, [isEditing, loading, details, row]);
+
   const startEdit = () => {
-    setEditFirstNameAr(row.firstNameAr ?? '');
-    setEditLastNameAr(row.lastNameAr ?? '');
-    setEditFirstNameEn(row.firstNameEn ?? '');
-    setEditLastNameEn(row.lastNameEn ?? '');
-    setEditPhone(row.phone === '—' ? '' : row.phone);
-    setEditAddress(row.address ?? '');
-    setEditStaffTypeId(String(row.staffTypeId || ''));
+    hasPopulated.current = false;
+    setDocumentFiles({});
     setIsEditing(true);
     setDetailTab('info');
   };
@@ -192,15 +213,19 @@ export function StaffDetailPanel({
       return;
     }
     try {
-      await onSave({
-        first_name_ar: editFirstNameAr,
-        last_name_ar: editLastNameAr,
-        first_name_en: editFirstNameEn,
-        last_name_en: editLastNameEn,
-        phone: editPhone,
-        address: editAddress,
-        staff_type_id: editStaffTypeId,
-      });
+      const payload: Partial<EditFormData> = {};
+      if (editFirstNameAr !== (details?.first_name_ar ?? row.firstNameAr ?? '')) payload.first_name_ar = editFirstNameAr;
+      if (editLastNameAr !== (details?.last_name_ar ?? row.lastNameAr ?? '')) payload.last_name_ar = editLastNameAr;
+      if (editFirstNameEn !== (details?.first_name_en ?? row.firstNameEn ?? '')) payload.first_name_en = editFirstNameEn;
+      if (editLastNameEn !== (details?.last_name_en ?? row.lastNameEn ?? '')) payload.last_name_en = editLastNameEn;
+      if (editPhone !== (details?.phone ?? (row.phone === '—' ? '' : row.phone))) payload.phone = editPhone;
+      if (editAddress !== (details?.address ?? row.address ?? '')) payload.address = editAddress;
+      if (editStaffTypeId !== String((details?.staff_type_id ?? row.staffTypeId) || '')) payload.staff_type_id = editStaffTypeId;
+      if (Object.keys(documentFiles).length > 0) payload.documentFiles = documentFiles;
+
+      if (Object.keys(payload).length > 0) {
+        await onSave(payload);
+      }
       setIsEditing(false);
     } catch {
       /* stay in edit mode */
@@ -361,7 +386,6 @@ export function StaffDetailPanel({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <RecordViewField icon={Briefcase} label={t('detailPanel.fields.job')} value={roleName} fallback={notAvailable} />
                     <RecordViewField icon={CalendarCheck} label={t('detailPanel.fields.startDate')} value={fmtDate(details?.employment_start_date ?? row.employmentStartDate)} ltr fallback={notAvailable} />
-                    <RecordViewField icon={CalendarX} label={t('detailPanel.fields.endDate')} value={fmtDate(details?.employment_end_date ?? row.employmentEndDate)} ltr fallback={notAvailable} />
                   </div>
                 </RecordViewSection>
               </>
@@ -369,37 +393,52 @@ export function StaffDetailPanel({
           </div>
         ) : (
           <div className="p-5 space-y-5">
-            <RecordViewSection icon={User} title={t('detailPanel.photos.personalPhoto')}>
-              <div className="rounded-xl border border-border bg-muted/20 p-4 flex justify-center">
-                {getFileUrl(details?.personal_photo) ? (
-                  <a href={getFileUrl(details?.personal_photo)} target="_blank" rel="noreferrer">
-                    <img
-                      src={getFileUrl(details?.personal_photo)}
-                      alt={t('detailPanel.photos.personalPhoto')}
-                      className="h-48 w-auto rounded-xl border border-border object-cover"
-                    />
-                  </a>
-                ) : (
-                  <span className="text-sm text-muted-foreground">{t('detailPanel.photos.notUploaded')}</span>
-                )}
-              </div>
-            </RecordViewSection>
-
-            <RecordViewSection icon={CreditCard} title={t('detailPanel.photos.nationalId')}>
+            <RecordViewSection icon={CreditCard} title={t('detailPanel.photos.documents', 'Documents')}>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
-                  { label: t('detailPanel.photos.idFront'), src: details?.national_id_front },
-                  { label: t('detailPanel.photos.idBack'), src: details?.national_id_back },
-                ].map((doc) => (
-                  <div key={doc.label} className="rounded-xl border border-border bg-muted/20 overflow-hidden">
+                  { key: 'personal_photo', label: t('detailPanel.photos.personalPhoto', 'Personal Photo'), src: details?.personal_photo },
+                  { key: 'national_id_front', label: t('detailPanel.photos.idFront', 'ID Front'), src: details?.national_id_front },
+                  { key: 'national_id_back', label: t('detailPanel.photos.idBack', 'ID Back'), src: details?.national_id_back },
+                  { key: 'academic_certificate', label: t('detailPanel.photos.academicCert', 'Academic Certificate'), src: details?.academic_certificate },
+                  { key: 'military_service_doc', label: t('detailPanel.photos.military', 'Military Service Doc'), src: details?.military_service_doc },
+                  { key: 'criminal_record', label: t('detailPanel.photos.criminal', 'Criminal Record'), src: details?.criminal_record },
+                  { key: 'employer_approval_letter', label: t('detailPanel.photos.employerApproval', 'Employer Approval Letter'), src: details?.employer_approval_letter },
+                  { key: 'employment_status_statement', label: t('detailPanel.photos.employmentStatus', 'Employment Status Statement'), src: details?.employment_status_statement },
+                  { key: 'good_conduct_certificate', label: t('detailPanel.photos.goodConduct', 'Good Conduct Certificate'), src: details?.good_conduct_certificate },
+                  { key: 'personal_info_form', label: t('detailPanel.photos.personalInfo', 'Personal Info Form'), src: details?.personal_info_form },
+                  { key: 'experience_certificates', label: t('detailPanel.photos.experienceCert', 'Experience Certificates'), src: details?.experience_certificates },
+                ]
+                  .map((doc) => (
+                  <div key={doc.label} className="relative rounded-xl border border-border bg-muted/20 overflow-hidden group">
                     <p className="px-3 py-2 text-xs font-medium border-b border-border bg-muted/40">{doc.label}</p>
-                    <div className="h-40 flex items-center justify-center p-2">
-                      {getFileUrl(doc.src) ? (
+                    <div className="h-40 flex items-center justify-center p-2 relative">
+                      {documentFiles[doc.key] ? (
+                        <div className="text-center">
+                          <p className="text-sm font-medium text-primary">New file selected</p>
+                          <p className="text-xs text-muted-foreground truncate max-w-[150px]">{documentFiles[doc.key].name}</p>
+                        </div>
+                      ) : getFileUrl(doc.src) ? (
                         <a href={getFileUrl(doc.src)} target="_blank" rel="noreferrer" className="w-full h-full">
                           <img src={getFileUrl(doc.src)} alt={doc.label} className="w-full h-full object-contain" />
                         </a>
                       ) : (
-                        <span className="text-xs text-muted-foreground">{t('detailPanel.photos.notUploaded')}</span>
+                        <span className="text-xs text-muted-foreground">{t('detailPanel.photos.notUploaded', 'Not uploaded')}</span>
+                      )}
+
+                      {isEditing && (
+                        <label className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                          <span className="text-sm font-medium">{t('detailPanel.actions.edit', 'Change')}</span>
+                          <input
+                            type="file"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setDocumentFiles(prev => ({ ...prev, [doc.key]: file }));
+                              }
+                            }}
+                          />
+                        </label>
                       )}
                     </div>
                   </div>

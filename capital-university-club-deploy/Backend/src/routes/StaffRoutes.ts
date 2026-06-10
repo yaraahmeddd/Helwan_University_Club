@@ -75,7 +75,24 @@ router.get('/:id/activity-logs', authenticate, StaffController.getActivityLogs);
 
 // Staff detail routes (less specific, at the end)
 router.get('/:id', authenticate, StaffController.getStaffById);
-router.put('/:id', authenticate, StaffController.updateStaff);
+router.put(
+  '/:id',
+  authenticate,
+  upload.fields([
+    { name: 'academic_certificate',        maxCount: 1 },
+    { name: 'national_id_front',           maxCount: 1 },
+    { name: 'national_id_back',            maxCount: 1 },
+    { name: 'military_service_doc',        maxCount: 1 },
+    { name: 'criminal_record',             maxCount: 1 },
+    { name: 'employer_approval_letter',    maxCount: 1 },
+    { name: 'employment_status_statement', maxCount: 1 },
+    { name: 'good_conduct_certificate',    maxCount: 1 },
+    { name: 'personal_photo',              maxCount: 1 },
+    { name: 'personal_info_form',          maxCount: 1 },
+    { name: 'experience_certificates',     maxCount: 1 },
+  ]),
+  StaffController.updateStaff
+);
 router.patch('/:id/deactivate', authenticate, StaffController.deactivateStaff);
 
 export default router;

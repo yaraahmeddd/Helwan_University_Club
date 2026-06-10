@@ -79,7 +79,8 @@
   },
   "docsConfig": {
     "academicCertificate": "شهادة المؤهل الدراسي",
-    "nationalIdFront": "صورة الرقم القومي",
+    "nationalIdFront": "صورة الرقم القومي - الوجه الأمامي",
+    "nationalIdBack": "صورة الرقم القومي - الوجه الخلفي",
     "militaryService": "الموقف من التجنيد",
     "criminalRecord": "الفيش الجنائي",
     "employerApproval": "موافقة جهة العمل",

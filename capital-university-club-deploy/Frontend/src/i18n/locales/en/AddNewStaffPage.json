@@ -79,7 +79,8 @@
   },
   "docsConfig": {
     "academicCertificate": "Academic Certificate",
-    "nationalIdFront": "National ID Copy",
+    "nationalIdFront": "National ID Copy - Front",
+    "nationalIdBack": "National ID Copy - Back",
     "militaryService": "Military Service Status",
     "criminalRecord": "Criminal Record",
     "employerApproval": "Employer Approval Letter",
