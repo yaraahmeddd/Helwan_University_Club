@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshCw, UserPlus, Users, Eye, Pencil, Trash2 } from 'lucide-react';
+import { useTableExport } from '../utils/reportExport/useTableExport';
+import { ExportReportButton } from '../components/StaffPagesComponents/shared/ExportReportButton';
 import api from '../services/axios';
 import { useToast } from '../hooks/use-toast';
 import { Button } from '../components/StaffPagesComponents/ui/button';
@@ -354,6 +356,44 @@ export default function StaffManagementPage() {
   const pagedRows = filteredRows.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE);
   const roleOf = (row: StaffRow) => staffTypeLabelById.get(row.staffTypeId) || row.staffTypeLabel;
 
+  // ── Export ────────────────────────────────────────────────────────────────
+  const exportColumns = useMemo(
+    () => [
+      { headerEn: '#', headerAr: '#', accessor: (_: StaffRow, i: number) => i + 1, width: 6 },
+      {
+        headerEn: 'Name', headerAr: 'الاسم',
+        accessor: (r: StaffRow) => language === 'ar'
+          ? `${r.firstNameAr ?? ''} ${r.lastNameAr ?? ''}`.trim() || `${r.firstNameEn ?? ''} ${r.lastNameEn ?? ''}`.trim()
+          : `${r.firstNameEn ?? ''} ${r.lastNameEn ?? ''}`.trim() || `${r.firstNameAr ?? ''} ${r.lastNameAr ?? ''}`.trim(),
+        width: 28,
+      },
+      {
+        headerEn: 'Job Role', headerAr: 'المسمى الوظيفي',
+        accessor: (r: StaffRow) => roleOf(r),
+        width: 22,
+      },
+      { headerEn: 'National ID', headerAr: 'الرقم القومي', accessor: (r: StaffRow) => r.nationalId, width: 18 },
+      { headerEn: 'Phone', headerAr: 'رقم الهاتف', accessor: (r: StaffRow) => r.phone, width: 16 },
+      { headerEn: 'Start Date', headerAr: 'تاريخ البدء', accessor: (r: StaffRow) => fmtDate(r.employmentStartDate), width: 16 },
+      {
+        headerEn: 'Status', headerAr: 'الحالة',
+        accessor: (r: StaffRow) => normalizeStaffStatus(r.status, r.isActive) === 'active'
+          ? (language === 'ar' ? 'نشط' : 'Active')
+          : (language === 'ar' ? 'غير نشط' : 'Inactive'),
+        width: 12,
+      },
+    ],
+    [language, roleOf, fmtDate],
+  );
+
+  const exportHandle = useTableExport({
+    reportId: 'staff',
+    titleEn: 'Staff Report',
+    titleAr: 'تقرير الموظفين',
+    columns: exportColumns,
+    rows: filteredRows,
+  });
+
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col gap-0" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background shrink-0">
@@ -366,12 +406,15 @@ export default function StaffManagementPage() {
             {t('page.totalStaff')}: <strong>{filteredRows.length}</strong>
           </p>
         </div>
-        <RoleGuard privilege="CREATE_STAFF">
-          <Button size="sm" className="gap-2" onClick={() => navigate('/staff/dashboard/admin/staff/new')}>
-            <UserPlus className="w-4 h-4" />
-            {t('page.newStaff')}
-          </Button>
-        </RoleGuard>
+        <div className="flex items-center gap-2">
+          <ExportReportButton {...exportHandle} rowCount={filteredRows.length} />
+          <RoleGuard privilege="CREATE_STAFF">
+            <Button size="sm" className="gap-2" onClick={() => navigate('/staff/dashboard/admin/staff/new')}>
+              <UserPlus className="w-4 h-4" />
+              {t('page.newStaff')}
+            </Button>
+          </RoleGuard>
+        </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden flex-col">

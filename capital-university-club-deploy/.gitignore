@@ -15,6 +15,7 @@ coverage/
 
 # Backend runtime uploads (keep README + .gitkeep placeholders only)
 Backend/uploads/**
+Backend/src/database/data-source.ts
 !Backend/uploads/README.md
 !Backend/uploads/**/
 !Backend/uploads/**/.gitkeep

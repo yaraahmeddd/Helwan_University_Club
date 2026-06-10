@@ -18,6 +18,8 @@ import {
     XCircle, Clock, Filter,
     Mail, Phone, MapPin, Calendar, Globe, User, Award, Hash, HeartPulse, FileBadge, CreditCard
 } from "lucide-react";
+import { useTableExport } from "../utils/reportExport/useTableExport";
+import { ExportReportButton } from "../components/StaffPagesComponents/shared/ExportReportButton";
 
 import api from "../services/axios";
 
@@ -875,6 +877,7 @@ export default function MemberManagementPage() {
     const { t } = useTranslation('MemberManagementPage');
     const { language, isRTL } = useLanguage();
     const { fmtDate } = useAdminFormatters();
+    const locale = getAdminLocale(language);
     const { toast } = useToast();
     const memberEditSchema = useMemberEditSchema();
 
@@ -2069,6 +2072,52 @@ export default function MemberManagementPage() {
 
     };
 
+    // ── Export ──────────────────────────────────────────────────────────────
+    const exportColumns = useMemo(
+        () => [
+            {
+                headerEn: 'Name', headerAr: 'الاسم',
+                accessor: (r: MemberRow) => language === 'ar'
+                    ? `${r.firstNameAr ?? ''} ${r.lastNameAr ?? ''}`.trim() || `${r.firstNameEn ?? ''} ${r.lastNameEn ?? ''}`.trim()
+                    : `${r.firstNameEn ?? ''} ${r.lastNameEn ?? ''}`.trim() || `${r.firstNameAr ?? ''} ${r.lastNameAr ?? ''}`.trim(),
+                width: 30,
+            },
+            {
+                headerEn: 'Type', headerAr: 'النوع',
+                accessor: (r: MemberRow) => r.isTeamPlayer
+                    ? (language === 'ar' ? 'عضو فريق رياضي' : 'Team Member')
+                    : r.memberTypeLabel,
+                width: 18,
+            },
+            { headerEn: 'National ID', headerAr: 'الرقم القومي', accessor: (r: MemberRow) => r.nationalId, width: 18 },
+            { headerEn: 'Phone', headerAr: 'رقم الهاتف', accessor: (r: MemberRow) => r.phone, width: 16 },
+            {
+                headerEn: 'Gender', headerAr: 'الجنس',
+                accessor: (r: MemberRow) => t(GENDER_LABELS[r.gender || ''] || r.gender || '', { defaultValue: r.gender }),
+                width: 12,
+            },
+            {
+                headerEn: 'Status', headerAr: 'الحالة',
+                accessor: (r: MemberRow) => t(`status.${r.status}`, { defaultValue: r.status }),
+                width: 14,
+            },
+            {
+                headerEn: 'Registration Date', headerAr: 'تاريخ التسجيل',
+                accessor: (r: MemberRow) => formatAdminDate(r.createdAt, locale),
+                width: 20,
+            },
+        ],
+        [language, t, locale],
+    );
+
+    const exportHandle = useTableExport({
+        reportId: 'members',
+        titleEn: 'Members Directory',
+        titleAr: 'دليل الأعضاء',
+        columns: exportColumns,
+        rows: processedRows,
+    });
+
 
 
     const Th = ({ field, children, center, className = "" }: { field?: SortField; children: React.ReactNode; center?: boolean; className?: string }) => (
@@ -2125,15 +2174,18 @@ export default function MemberManagementPage() {
                                 </span>
                             </div>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() => void fetchAll()}
-                            disabled={fetching}
-                            className={adminPageStyles.refreshBtn}
-                        >
-                            <RefreshCw className={`w-4 h-4 ${fetching ? "animate-spin" : ""}`} />
-                            {fetching ? t('header.refreshing') : t('header.refresh')}
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <ExportReportButton {...exportHandle} rowCount={totalFiltered} />
+                            <button
+                                type="button"
+                                onClick={() => void fetchAll()}
+                                disabled={fetching}
+                                className={adminPageStyles.refreshBtn}
+                            >
+                                <RefreshCw className={`w-4 h-4 ${fetching ? "animate-spin" : ""}`} />
+                                {fetching ? t('header.refreshing') : t('header.refresh')}
+                            </button>
+                        </div>
                     </div>
                 </div>
 

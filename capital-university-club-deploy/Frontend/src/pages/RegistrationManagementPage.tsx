@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTableExport } from "../utils/reportExport/useTableExport";
+import { ExportReportButton } from "../components/StaffPagesComponents/shared/ExportReportButton";
 import { Check, Search, FileText, UserX, Loader2, RefreshCw, Filter, Users, Award, Globe, Phone, CreditCard, User, MapPin, Calendar, Mail, Clock, Activity, FileBadge, Shield } from "lucide-react";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { Input } from "../components/StaffPagesComponents/ui/input";
@@ -337,6 +339,52 @@ export default function RegistrationManagementPage() {
         }
     };
 
+    // ── Export ──────────────────────────────────────────────────────────────
+    const exportColumns = useMemo(
+        () => [
+            {
+                headerEn: 'Name', headerAr: 'الاسم',
+                accessor: (r: RegistrationRecord) => getDisplayName(r),
+                width: 30,
+            },
+            {
+                headerEn: 'Type', headerAr: 'النوع',
+                accessor: (r: RegistrationRecord) => r.memberType === 'team_member'
+                    ? (language === 'ar' ? 'عضو فريق رياضي' : 'Team Member')
+                    : (language === 'ar' ? 'عضو' : 'Member'),
+                width: 18,
+            },
+            { headerEn: 'National ID', headerAr: 'الرقم القومي', accessor: (r: RegistrationRecord) => r.national_id, width: 18 },
+            { headerEn: 'Phone', headerAr: 'رقم الهاتف', accessor: (r: RegistrationRecord) => r.phone, width: 16 },
+            {
+                headerEn: 'Gender', headerAr: 'الجنس',
+                accessor: (r: RegistrationRecord) => getGenderLabel(r.gender),
+                width: 12,
+            },
+            {
+                headerEn: 'Status', headerAr: 'الحالة',
+                accessor: (r: RegistrationRecord) => r.status === 'active'
+                    ? (language === 'ar' ? 'نشط' : 'Active')
+                    : (language === 'ar' ? 'معلق' : 'Pending'),
+                width: 12,
+            },
+            {
+                headerEn: 'Registration Date', headerAr: 'تاريخ التسجيل',
+                accessor: (r: RegistrationRecord) => formatAdminDate(r.created_at, locale),
+                width: 20,
+            },
+        ],
+        [language, getDisplayName, getGenderLabel, locale],
+    );
+
+    const exportHandle = useTableExport({
+        reportId: 'registrations',
+        titleEn: 'Pending Registrations Report',
+        titleAr: 'تقرير طلبات التسجيل',
+        columns: exportColumns,
+        rows: processedRecords,
+    });
+
     return (
         <TooltipProvider>
         <div className="h-[calc(100vh-4rem)] flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -374,15 +422,16 @@ export default function RegistrationManagementPage() {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={() => void fetchRecords()}
-                                disabled={isLoading}
-                                className={adminPageStyles.refreshBtn}
-                            >
-                            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
-                            {t('registration.refresh')}
-                        </button>
+                        <ExportReportButton {...exportHandle} rowCount={processedRecords.length} />
+                        <button
+                            type="button"
+                            onClick={() => void fetchRecords()}
+                            disabled={isLoading}
+                            className={adminPageStyles.refreshBtn}
+                        >
+                        <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+                        {t('registration.refresh')}
+                    </button>
                     </div>
                 </div>
             </div>
