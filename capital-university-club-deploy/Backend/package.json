@@ -27,6 +27,7 @@
     "create:admin-account": "node -r ts-node/register src/scripts/create-admin-account.ts"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.91.1",
     "@types/multer": "^2.0.0",
     "axios": "^1.13.6",

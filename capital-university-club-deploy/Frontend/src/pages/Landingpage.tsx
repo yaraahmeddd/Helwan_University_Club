@@ -12,6 +12,7 @@ import LastNews from "../components/LandingPageComponents/LastNews";
 import MediaGallery from "../components/LandingPageComponents/MediaGallery";
 import Clubs from "../components/LandingPageComponents/Clubs";
 import SportDetailedPG from "./SportDetailedPG";
+import AIChatbot from "../components/AIChatbot";
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, EffectCoverflow } from 'swiper/modules';
 const HUCLogo = "/assets/HUC_logo.jpeg";
@@ -1311,6 +1312,7 @@ const App = () => {
           </div>
         </div>
       </footer>
+      <AIChatbot />
     </div>
   );
 };
