@@ -3,8 +3,8 @@ import { cn } from '@/lib/utils';
 /** Base admin text size (matches --admin-font-size in staffDashboard.css) */
 /** Fonts: heading = Cairo/Plus Jakarta Sans · body/tables = IBM Plex Sans Arabic/Inter */
 export const ADMIN_TEXT = 'text-sm' as const;
-export const ADMIN_ICON = 'w-[15px] h-[15px] shrink-0' as const;
-export const ADMIN_ACTION_ICON = '!w-[17px] !h-[17px] shrink-0' as const;
+export const ADMIN_ICON = 'w-[13px] h-[13px] shrink-0' as const;
+export const ADMIN_ACTION_ICON = '!w-[13px] !h-[13px] shrink-0' as const;
 export const ADMIN_PAGE_SIZE = 10;
 
 /** Semantic font roles — pair with CSS vars in staffDashboard.css */
@@ -20,7 +20,7 @@ export const adminFontClass = {
 
 /** Member type pills in admin tables */
 export const adminTableBadgeClass =
-  'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold leading-tight whitespace-nowrap';
+  'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[13px] font-semibold leading-tight whitespace-nowrap';
 
 /** Status pills — slightly smaller than type badges */
 export const adminTableStatusBadgeClass =

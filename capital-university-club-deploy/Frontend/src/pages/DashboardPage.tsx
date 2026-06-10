@@ -667,7 +667,7 @@ export default function DashboardPage() {
           </h2>
           {dashboard.access.members ? (
             memberStatusChart.length === 0 ? (
-              <p className="text-[15px] font-medium text-muted-foreground">{t("charts.noMemberData")}</p>
+              <p className="text-[13px] font-medium text-muted-foreground">{t("charts.noMemberData")}</p>
             ) : (
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
@@ -690,7 +690,7 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             )
           ) : (
-            <p className="text-[15px] font-medium text-muted-foreground">{t("charts.noMemberAccess")}</p>
+            <p className="text-[13px] font-medium text-muted-foreground">{t("charts.noMemberAccess")}</p>
           )}
         </motion.div>
 
@@ -708,7 +708,7 @@ export default function DashboardPage() {
           </h2>
           {dashboard.access.sports ? (
             dashboard.topSportsChart.length === 0 ? (
-              <p className="text-[15px] font-medium text-muted-foreground">{t("charts.noSportsData")}</p>
+              <p className="text-[13px] font-medium text-muted-foreground">{t("charts.noSportsData")}</p>
             ) : (
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={dashboard.topSportsChart}>
@@ -721,7 +721,7 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             )
           ) : (
-            <p className="text-[15px] font-medium text-muted-foreground">{t("charts.noSportsAccess")}</p>
+            <p className="text-[13px] font-medium text-muted-foreground">{t("charts.noSportsAccess")}</p>
           )}
         </motion.div>
       </div>
@@ -766,12 +766,12 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-3">
                   <span className="text-lg">{status === "overdue" ? "⚠" : "🔔"}</span>
                   <div>
-                    <p className="text-[15px] font-extrabold text-[#0e1c38]">{p.memberCode}</p>
+                    <p className="text-[13px] font-extrabold text-[#0e1c38]">{p.memberCode}</p>
                     <p className="text-[13px] font-medium text-muted-foreground mt-0.5">{p.subscriptionType}</p>
                   </div>
                 </div>
                 <div className="text-left" dir="ltr">
-                  <p className={`text-[15px] font-extrabold ${status === "overdue" ? "text-rose-600" : "text-amber-600"
+                  <p className={`text-[13px] font-extrabold ${status === "overdue" ? "text-rose-600" : "text-amber-600"
                     }`}>
                     {status === "overdue"
                       ? t("alerts.overdue", { days: Math.abs(days) })
@@ -792,7 +792,7 @@ export default function DashboardPage() {
 
         {/* Empty state */}
         {PAYMENT_ALERTS.length === 0 && (
-          <div className="text-center py-4 text-[15px] font-medium text-muted-foreground">
+          <div className="text-center py-4 text-[13px] font-medium text-muted-foreground">
             {t("alerts.allValid")}
           </div>
         )}
@@ -803,9 +803,9 @@ export default function DashboardPage() {
         <div className="rounded-2xl border bg-card p-6 shadow-[0_2px_12px_rgba(16,24,40,0.04)]">
           <h2 className="text-[19px] font-extrabold mb-5 text-[#0e1c38] tracking-tight">{t("tables.recentTasksTitle")}</h2>
           {!dashboard.access.tasks ? (
-            <p className="text-[15px] font-medium text-muted-foreground">{t("tables.noTasksAccess")}</p>
+            <p className="text-[13px] font-medium text-muted-foreground">{t("tables.noTasksAccess")}</p>
           ) : dashboard.recentTasks.length === 0 ? (
-            <p className="text-[15px] font-medium text-muted-foreground">{t("tables.noTasksFound")}</p>
+            <p className="text-[13px] font-medium text-muted-foreground">{t("tables.noTasksFound")}</p>
           ) : (
             <Table>
               <TableHeader className={adminTableStyles.header}>
@@ -835,9 +835,9 @@ export default function DashboardPage() {
         <div className="rounded-2xl border bg-card p-6 shadow-[0_2px_12px_rgba(16,24,40,0.04)]">
           <h2 className="text-[19px] font-extrabold mb-5 text-[#0e1c38] tracking-tight">{t("tables.recentSportsTitle")}</h2>
           {!dashboard.access.sports ? (
-            <p className="text-[15px] font-medium text-muted-foreground">{t("tables.noSportsAccess")}</p>
+            <p className="text-[13px] font-medium text-muted-foreground">{t("tables.noSportsAccess")}</p>
           ) : dashboard.recentSports.length === 0 ? (
-            <p className="text-[15px] font-medium text-muted-foreground">{t("tables.noSportsFound")}</p>
+            <p className="text-[13px] font-medium text-muted-foreground">{t("tables.noSportsFound")}</p>
           ) : (
             <Table>
               <TableHeader className={adminTableStyles.header}>

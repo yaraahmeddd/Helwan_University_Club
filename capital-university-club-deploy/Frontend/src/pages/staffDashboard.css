@@ -29,16 +29,24 @@
   /* Legacy alias used in a few Tailwind arbitrary values */
   --admin-font-family: var(--admin-font-body);
 
-  /* Type scale */
-  --admin-font-size: 15px;
+  /* Type scale — unified 13px admin body */
+  --admin-font-size: 13px;
   --admin-font-size-table-head: 13px;
-  --admin-font-size-label: 12px;
-  --admin-font-size-section: 14px;
+  --admin-font-size-label: 13px;
+  --admin-font-size-section: 13px;
   /* Admin table — phone & national ID columns */
-  --admin-cell-numeric-size: 14px;
+  --admin-cell-numeric-size: 13px;
   --admin-cell-numeric-line-height: 1.4;
-  --admin-icon-size: 15px;
-  --admin-action-icon-size: 17px;
+  --admin-calendar-size-day: 13px;
+  --admin-calendar-size-date: 10px;
+  --admin-calendar-size-time: 10px;
+  --admin-calendar-size-available: 13px;
+  --admin-calendar-size-booking-name: 13px;
+  --admin-calendar-size-booking-time: 13px;
+  --admin-calendar-size-status: 13px;
+  --admin-calendar-size-badge: 13px;
+  --admin-icon-size: 13px;
+  --admin-action-icon-size: 13px;
   --admin-dialog-max-width: calc(48rem + 50px);
   --admin-dialog-max-height: min(calc(88vh + 50px), 95vh);
 }
@@ -79,6 +87,7 @@ html[dir="rtl"],
 }
 
 /* ── Admin module — typography roles ── */
+body.admin-module,
 .admin-module {
   font-family: var(--admin-font-body);
   font-size: var(--admin-font-size);
@@ -137,6 +146,7 @@ body.admin-module [data-radix-portal],
 body.admin-module [role="dialog"],
 body.admin-module [data-radix-popper-content-wrapper] {
   font-family: var(--admin-font-body);
+  font-size: var(--admin-font-size);
 }
 
 body.admin-module [role="dialog"] h1,
@@ -219,29 +229,34 @@ body.admin-module [role="dialog"] .admin-font-section {
 /* Status badges in table cells */
 .admin-module .admin-table-status-badge {
   font-family: var(--admin-font-body);
-  font-size: 15px !important;
+  font-size: var(--admin-font-size) !important;
   line-height: 1.2;
   font-weight: 600;
 }
 
 .admin-module .admin-table-status-badge svg {
-  width: 16px !important;
-  height: 16px !important;
+  width: var(--admin-icon-size) !important;
+  height: var(--admin-icon-size) !important;
 }
 
-.admin-module :where(.text-xs, .text-sm) {
+:is(body.admin-module, .admin-module) :where(.text-xs, .text-sm) {
   font-size: var(--admin-font-size) !important;
   line-height: 1.45;
 }
 
-.admin-module :where(
+:is(body.admin-module, .admin-module) :where(
+  .text-\[8px\],
+  .text-\[9px\],
   .text-\[10px\],
   .text-\[11px\],
   .text-\[12px\],
   .text-\[13px\],
   .text-\[14px\],
   .text-\[15px\],
-  .text-\[18px\]
+  .text-\[16px\],
+  .text-\[17px\],
+  .text-\[18px\],
+  .text-\[20px\]
 ):not(:where(
   .rounded-full,
   [class*="rounded-full"],
@@ -252,13 +267,50 @@ body.admin-module [role="dialog"] .admin-font-section {
   .admin-font-heading,
   .admin-cell-phone,
   .admin-cell-national-id,
-  .admin-table-status-badge
+  .admin-table-status-badge,
+  .admin-calendar-text
 )) {
   font-size: var(--admin-font-size) !important;
   line-height: 1.45;
 }
 
-.admin-module :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+.admin-calendar-text {
+  line-height: 1.25;
+}
+
+.admin-calendar-text--day {
+  font-size: var(--admin-calendar-size-day) !important;
+}
+
+.admin-calendar-text--date {
+  font-size: var(--admin-calendar-size-date) !important;
+}
+
+.admin-calendar-text--time {
+  font-size: var(--admin-calendar-size-time) !important;
+}
+
+.admin-calendar-text--available {
+  font-size: var(--admin-calendar-size-available) !important;
+}
+
+.admin-calendar-text--booking-name {
+  font-size: var(--admin-calendar-size-booking-name) !important;
+}
+
+.admin-calendar-text--booking-time {
+  font-size: var(--admin-calendar-size-booking-time) !important;
+}
+
+.admin-calendar-text--status {
+  font-size: var(--admin-calendar-size-status) !important;
+}
+
+.admin-calendar-text--badge {
+  font-size: var(--admin-calendar-size-badge) !important;
+}
+
+:is(body.admin-module, .admin-module) :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
   font-size: var(--admin-font-size);
 }
 
@@ -305,6 +357,8 @@ body.admin-module [role="dialog"] .admin-font-section {
 
 .admin-module svg[class*="w-[15px]"],
 .admin-module svg[class*="h-[15px]"],
+.admin-module svg[class*="w-[13px]"],
+.admin-module svg[class*="h-[13px]"],
 .admin-module svg[class*="w-[18px]"],
 .admin-module svg[class*="h-[18px]"] {
   width: var(--admin-icon-size) !important;

@@ -416,7 +416,7 @@ export default function BranchManagementPage() {
                                 <div className="rounded-full bg-zinc-50 border border-zinc-100 p-6 mb-5">
                                     <MapPin className="h-10 w-10 text-zinc-300" />
                                 </div>
-                                <h3 className="text-[15px] font-bold text-zinc-800 mb-1.5">{t('table.empty')}</h3>
+                                <h3 className="text-[13px] font-bold text-zinc-800 mb-1.5">{t('table.empty')}</h3>
                                 <p className="text-[13px] max-w-sm">
                                     {search ? t('table.emptySearch', { search }) : t('table.emptyInstruction')}
                                 </p>

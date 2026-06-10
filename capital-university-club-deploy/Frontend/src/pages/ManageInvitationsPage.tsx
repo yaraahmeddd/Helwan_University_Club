@@ -1,16 +1,16 @@
 import { useState, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Link2,
   Search,
   RefreshCw,
   Loader2,
   CalendarCheck,
-  X,
-  User,
-  Phone,
   ShieldAlert,
   CalendarDays,
+  User,
+  Phone,
+  Users,
+  Award,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
@@ -18,11 +18,18 @@ import type { Locale } from "date-fns";
 
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../hooks/useLanguage";
-import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE, adminPageStyles } from "../components/StaffPagesComponents/shared/adminTableStyles";
+import { adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE, adminPageStyles, adminDialogStyles } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
-import { getLocalizedText, localeFontFamily } from "../lib/localizedDisplay";
+import { getLocalizedText } from "../lib/localizedDisplay";
+import {
+  RecordViewField,
+  RecordViewProfileHeader,
+  RecordViewSection,
+  RecordViewTabs,
+} from "../components/StaffPagesComponents/shared/RecordViewPrimitives";
+import { adminFieldIcons } from "../components/StaffPagesComponents/shared/adminRecordFields";
 import { RoleGuard } from "../components/StaffPagesComponents/RoleGuard";
 import { useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
 
@@ -124,11 +131,6 @@ function StatusBadge({ status }: { status: Invitation["status"] }) {
   return <AdminMemberStatusBadge status={status} compact />;
 }
 
-function truncate(str: string, length = 8) {
-  if (!str) return "";
-  return str.length > length ? str.substring(0, length) + "..." : str;
-}
-
 function getPersonDisplayName(
   ar: string | undefined | null,
   en: string | undefined | null,
@@ -181,6 +183,7 @@ export default function ManageInvitationsPage() {
   
   // Dialogs & Panels
   const [selectedInv, setSelectedInv] = useState<Invitation | null>(null);
+  const [detailTab, setDetailTab] = useState<"booking" | "participants">("booking");
   const [cancelDialog, setCancelDialog] = useState<Invitation | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -349,10 +352,10 @@ export default function ManageInvitationsPage() {
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className={`${adminPageStyles.toolbarSelect} w-[11rem]`}>
-            <SelectValue placeholder={t('filters.statusPlaceholder')} />
+            <SelectValue placeholder={t('filters.status')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{t('filters.allStatuses')}</SelectItem>
+            <SelectItem value="all">{t('filters.status')}</SelectItem>
             <SelectItem value="confirmed">{tStatus(getAdminStatusConfig("confirmed").labelKey)}</SelectItem>
             <SelectItem value="pending_payment">{tStatus(getAdminStatusConfig("pending_payment").labelKey)}</SelectItem>
             <SelectItem value="cancelled">{tStatus(getAdminStatusConfig("cancelled").labelKey)}</SelectItem>
@@ -490,186 +493,214 @@ export default function ManageInvitationsPage() {
         />
       </div>
 
-      {/* Slide-over Detail Panel */}
-      <AnimatePresence>
-        {selectedInv && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedInv(null)}
-              className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
-            />
-            {/* Panel */}
-            <motion.div
-              initial={{ x: "-100%", opacity: 0.5 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: "-100%", opacity: 0.5 }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed top-0 bottom-0 start-0 w-full max-w-md bg-white shadow-2xl z-50 flex flex-col overflow-hidden border-e"
-              dir={isRTL ? 'rtl' : 'ltr'}
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b bg-slate-50/80">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                    <Link2 className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-[#1a365d]">{t('panel.title')}</h3>
-                    <p className="text-xs text-muted-foreground font-mono mt-0.5">{truncate(selectedInv.booking_id, 12)}</p>
-                  </div>
+      {/* Detail Dialog — shared admin record view layout */}
+      <Dialog
+        open={!!selectedInv}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedInv(null);
+            setDetailTab("booking");
+          }
+        }}
+      >
+        <DialogContent className={adminDialogStyles.content} dir={isRTL ? "rtl" : "ltr"} lang={language}>
+          <DialogHeader className="sr-only">
+            <DialogTitle>{t("panel.title")}</DialogTitle>
+            <DialogDescription>{t("panel.title")}</DialogDescription>
+          </DialogHeader>
+
+          {selectedInv && (
+            <div className={adminDialogStyles.panel}>
+              <div className="px-6 pt-5 pb-0 border-b border-border shrink-0">
+                <RecordViewProfileHeader
+                  name={getPersonDisplayName(
+                    selectedInv.booker?.name_ar,
+                    selectedInv.booker?.name_en,
+                    language,
+                    selectedInv.booker?.name,
+                    t("cell.unknown"),
+                  )}
+                  badges={
+                    <div className="flex flex-col items-start gap-2">
+                      {selectedInv.booker?.type === "team_member" ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800">
+                          <Award className="w-3 h-3" />
+                          {t("bookerType.teamPlayer")}
+                        </span>
+                      ) : selectedInv.booker?.type === "member" ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-800">
+                          <Users className="w-3 h-3" />
+                          {t("bookerType.member")}
+                        </span>
+                      ) : null}
+                      <AdminMemberStatusBadge status={selectedInv.status} compact centered={false} />
+                    </div>
+                  }
+                />
+                <div className="mt-3">
+                  <RecordViewTabs
+                    tabs={[
+                      { key: "booking" as const, label: t("panel.bookingInfo") },
+                      { key: "participants" as const, label: t("panel.participants") },
+                    ]}
+                    active={detailTab}
+                    onChange={setDetailTab}
+                  />
                 </div>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setSelectedInv(null)}>
-                  <X className="h-4 w-4" />
-                </Button>
               </div>
 
-              {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
-                
-                {/* Meta Summary */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                    <div className="flex items-center gap-1.5 text-slate-500 mb-1">
-                      <CalendarDays className="h-3.5 w-3.5" />
-                      <span className="text-xs font-medium">{t('panel.date')}</span>
-                    </div>
-                    <div className="font-semibold text-sm">
-                      {fmtDate(selectedInv.booking_date)}
-                    </div>
-                  </div>
-                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                    <div className="flex items-center gap-1.5 text-slate-500 mb-1">
-                      <CalendarCheck className="h-3.5 w-3.5" />
-                      <span className="text-xs font-medium">{t('panel.time')}</span>
-                    </div>
-                    <div className="font-semibold text-sm" dir="ltr">
-                      {formatTime(selectedInv.booking_time?.start, dateLocale)} - {formatTime(selectedInv.booking_time?.end, dateLocale)}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-semibold text-sm border-b pb-1">{t('panel.bookingInfo')}</h4>
-                    <StatusBadge status={selectedInv.status} />
-                  </div>
-                  
-                  <div className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t('panel.field')}</span>
-                      <span className="font-medium text-start">
-                        {getLocalizedText(selectedInv.field?.name_ar, selectedInv.field?.name_en, language) || "—"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t('panel.sport')}</span>
-                      <span className="font-medium text-start">
-                        {getLocalizedText(selectedInv.sport?.name_ar, selectedInv.sport?.name_en, language) || "—"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">{t('panel.shareLink')}</span>
-                      <Button variant="outline" size="sm" className="h-7 text-xs px-2 gap-1.5 border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800" onClick={() => copyToClipboard(formatShareUrl(selectedInv.share_url))}>
-                        <Link2 className="h-3 w-3" />{t('cell.copyLink')}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4 mt-6">
-                  <h4 className="font-semibold text-sm border-b pb-1">{t('panel.booker')}</h4>
-                  <div className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground text-xs py-0.5">{t('panel.name')}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">
-                          {getPersonDisplayName(selectedInv.booker?.name_ar, selectedInv.booker?.name_en, language, selectedInv.booker?.name)}
-                        </span>
-                        {selectedInv.booker?.type && (
-                          <Badge variant="secondary" className="text-[10px] h-5">{selectedInv.booker.type === "member" ? t('bookerType.memberShort') : t('bookerType.teamPlayerShort')}</Badge>
-                        )}
-                      </div>
-                    </div>
-                    {selectedInv.booker?.phone && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground text-xs py-0.5">{t('panel.phone')}</span>
-                        <div className="flex gap-2">
-                          <span className="font-medium" dir="ltr">{selectedInv.booker.phone}</span>
-                          <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => copyToClipboard(selectedInv.booker?.phone || "")}>
-                            <Phone className="h-3 w-3" />
+              <div className="flex-1 overflow-y-auto">
+                {detailTab === "booking" ? (
+                  <div className="p-5 space-y-4">
+                    <RecordViewSection icon={CalendarCheck} title={t("panel.bookingInfo")}>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <RecordViewField
+                          icon={adminFieldIcons.registrationDate}
+                          label={t("panel.date")}
+                          value={fmtDate(selectedInv.booking_date)}
+                          ltr
+                          alignEnd={isRTL}
+                        />
+                        <RecordViewField
+                          icon={adminFieldIcons.registrationTime}
+                          label={t("panel.time")}
+                          value={`${formatTime(selectedInv.booking_time?.start, dateLocale)} - ${formatTime(selectedInv.booking_time?.end, dateLocale)}`}
+                          ltr
+                          alignEnd={isRTL}
+                        />
+                        <RecordViewField
+                          icon={CalendarDays}
+                          label={t("panel.field")}
+                          value={getLocalizedText(selectedInv.field?.name_ar, selectedInv.field?.name_en, language)}
+                          fallback={t("cell.noField")}
+                        />
+                        <RecordViewField
+                          icon={Award}
+                          label={t("panel.sport")}
+                          value={getLocalizedText(selectedInv.sport?.name_ar, selectedInv.sport?.name_en, language)}
+                          fallback={t("cell.noSport")}
+                        />
+                        <RecordViewField
+                          icon={Users}
+                          label={t("panel.participants")}
+                          value={`${selectedInv.stats?.registered_count ?? 0} / ${selectedInv.stats?.expected_participants ?? 0} ${t("panel.registered")}`}
+                          ltr
+                          alignEnd={isRTL}
+                        />
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground flex items-center gap-1.5 admin-font-label">
+                            <Link2 className="w-3.5 h-3.5 shrink-0" />
+                            {t("panel.shareLink")}
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9 gap-1.5 border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800"
+                            onClick={() => copyToClipboard(formatShareUrl(selectedInv.share_url))}
+                          >
+                            <Link2 className="h-3.5 w-3.5" />
+                            {t("cell.copyLink")}
                           </Button>
                         </div>
                       </div>
-                    )}
-                  </div>
-                </div>
+                    </RecordViewSection>
 
-                <div className="space-y-4 mt-6">
-                  <div className="flex justify-between items-center border-b pb-1">
-                    <h4 className="font-semibold text-sm">{t('panel.participants')}</h4>
-                    <span className="text-xs bg-slate-100 px-2 py-0.5 rounded-full font-medium">
-                      {selectedInv.stats?.registered_count} / {selectedInv.stats?.expected_participants} {t('panel.registered')}
-                    </span>
+                    <RecordViewSection icon={adminFieldIcons.personalSection} title={t("panel.booker")}>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <RecordViewField
+                          icon={adminFieldIcons.personalSection}
+                          label={t("panel.name")}
+                          value={getPersonDisplayName(
+                            selectedInv.booker?.name_ar,
+                            selectedInv.booker?.name_en,
+                            language,
+                            selectedInv.booker?.name,
+                          )}
+                        />
+                        <RecordViewField
+                          icon={adminFieldIcons.phone}
+                          label={t("panel.phone")}
+                          value={selectedInv.booker?.phone}
+                          ltr
+                          alignEnd={isRTL}
+                          fallback={t("cell.noPhone")}
+                        />
+                      </div>
+                    </RecordViewSection>
                   </div>
-                  
-                  {(!selectedInv.participants || selectedInv.participants.length === 0) ? (
-                    <div className="text-center py-6 text-sm text-muted-foreground bg-slate-50 rounded-lg border border-dashed">
-                      {t('panel.noParticipants')}
-                    </div>
-                  ) : (
-                    <div className="space-y-3 mt-3">
-                      {selectedInv.participants.map((p, i) => (
-                        <div key={p.id || i} className="flex flex-col gap-1 p-3 rounded-lg border border-slate-100 bg-white shadow-sm relative overflow-hidden">
-                          {p.is_creator && (
-                            <div className="absolute top-0 end-0 w-1 bg-primary h-full rounded-e-lg"></div>
-                          )}
-                          <div className="flex justify-between items-start">
-                            <span className="font-medium text-sm text-[#1a365d] flex items-center gap-1.5">
-                              {p.is_creator && <User className="h-3.5 w-3.5 text-primary" />}
-                              {getPersonDisplayName(p.full_name_ar, p.full_name_en, language, p.full_name)}
-                            </span>
-                            {p.is_creator && (
-                              <Badge variant="outline" className="text-[10px] h-4 leading-none py-0 px-1 border-primary/30 text-primary">{t('panel.bookingCreator')}</Badge>
-                            )}
-                          </div>
-                          
-                          {(p.phone_number || p.email) && (
-                            <div className="flex gap-3 text-xs text-muted-foreground mt-1">
-                              {p.phone_number && <span dir="ltr">{p.phone_number}</span>}
-                              {p.email && <span>{p.email}</span>}
-                            </div>
-                          )}
+                ) : (
+                  <div className="p-5 space-y-4">
+                    <RecordViewSection icon={Users} title={t("panel.participants")} variant="accent">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-xs bg-slate-100 px-2 py-0.5 rounded-full font-medium">
+                          {selectedInv.stats?.registered_count} / {selectedInv.stats?.expected_participants} {t("panel.registered")}
+                        </span>
+                      </div>
+
+                      {!selectedInv.participants || selectedInv.participants.length === 0 ? (
+                        <div className="text-center py-6 text-sm text-muted-foreground bg-slate-50 rounded-lg border border-dashed">
+                          {t("panel.noParticipants")}
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
+                      ) : (
+                        <div className="space-y-3">
+                          {selectedInv.participants.map((p, i) => (
+                            <div
+                              key={p.id || i}
+                              className="rounded-lg border border-border bg-card p-3 shadow-sm relative overflow-hidden"
+                            >
+                              {p.is_creator && (
+                                <div className="absolute top-0 end-0 w-1 bg-primary h-full rounded-e-lg" />
+                              )}
+                              <div className="flex justify-between items-start gap-2">
+                                <span className="font-medium text-[#1a365d] flex items-center gap-1.5">
+                                  {p.is_creator && <User className="h-3.5 w-3.5 text-primary" />}
+                                  {getPersonDisplayName(p.full_name_ar, p.full_name_en, language, p.full_name)}
+                                </span>
+                                {p.is_creator && (
+                                  <Badge variant="outline" className="text-[10px] h-5 border-primary/30 text-primary">
+                                    {t("panel.bookingCreator")}
+                                  </Badge>
+                                )}
+                              </div>
+                              {(p.phone_number || p.email) && (
+                                <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mt-2">
+                                  {p.phone_number && <span dir="ltr">{p.phone_number}</span>}
+                                  {p.email && <span>{p.email}</span>}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </RecordViewSection>
+                  </div>
+                )}
               </div>
-              
-              {/* Footer Actions */}
-              <div className="p-6 border-t bg-slate-50 mt-auto">
-                {selectedInv.status !== "cancelled" && (
-                  <RoleGuard privilege="SCHEDULE_MATCH">
-                    <Button 
-                      variant="destructive" 
-                      className="w-full gap-2"
+
+              <div className="border-t border-border px-5 py-3 bg-muted/20 shrink-0 flex items-center gap-2">
+                <RoleGuard privilege="SCHEDULE_MATCH">
+                  {selectedInv.status !== "cancelled" && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="gap-1.5"
                       onClick={() => setCancelDialog(selectedInv)}
                     >
                       <ShieldAlert className="h-4 w-4" />
-                      {t('panel.cancelButton')}
+                      {t("panel.cancelButton")}
                     </Button>
-                  </RoleGuard>
-                )}
+                  )}
+                </RoleGuard>
+                <div className="flex gap-2 ms-auto">
+                  <Button variant="outline" size="sm" onClick={() => setSelectedInv(null)}>
+                    {t("cancelDialog.cancel")}
+                  </Button>
+                </div>
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Cancel Confirmation Dialog */}
       <Dialog open={!!cancelDialog} onOpenChange={(open) => !open && setCancelDialog(null)}>

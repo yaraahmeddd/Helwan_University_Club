@@ -1702,15 +1702,15 @@ export default function CourtBookingsPage() {
                         return (
                             <div
                                 key={toISODate(day)}
-                                className={`py-2 px-1 text-center text-xs font-semibold border-l border-border ${isToday
+                                className={`py-2 px-1 text-center admin-calendar-text admin-calendar-text--day font-semibold border-l border-border ${isToday
                                         ? "bg-primary/15 text-primary border-b-primary/40"
                                         : isPast
                                             ? "opacity-40 bg-muted/20 text-foreground"
                                             : "text-foreground"
                                     }`}
                             >
-                                <div>{dayOfWeekLabel(day, language)}</div>
-                                <div className={`text-[10px] font-normal mt-0.5 ${isToday ? "text-primary font-medium" : "text-muted-foreground"
+                                <div className="leading-tight">{dayOfWeekLabel(day, language)}</div>
+                                <div className={`admin-calendar-text admin-calendar-text--date font-normal mt-0.5 ${isToday ? "text-primary font-medium" : "text-muted-foreground"
                                     }`}>
                                     {formatDisplayDate(day, language)}
                                 </div>
@@ -1729,7 +1729,7 @@ export default function CourtBookingsPage() {
                         {HOUR_SLOTS.map((slot) => (
                             <div
                                 key={slot}
-                                className="flex items-start justify-center pt-1 border-b border-border text-[10px] text-muted-foreground font-medium"
+                                className="flex items-start justify-center pt-1 border-b border-border admin-calendar-text admin-calendar-text--time text-muted-foreground font-medium leading-tight"
                                 style={{ height: 64 }}
                             >
                                 {formatClockTime(slot, language)}
@@ -1794,7 +1794,7 @@ export default function CourtBookingsPage() {
                                                     tabIndex={0}
                                                     aria-label={t("grid.availableCellAria", { day: dayOfWeekLabel(day, language), time: formatClockTime(slot, language) })}
                                                 >
-                                                    <span className="text-[9px] text-primary/60  transition-opacity select-none">
+                                                    <span className="admin-calendar-text admin-calendar-text--available font-medium text-primary/65 transition-opacity select-none">
                                                         {t("status.available")}
                                                     </span>
                                                 </div>
@@ -1855,12 +1855,12 @@ export default function CourtBookingsPage() {
                                                 className={`absolute rounded-lg bg-emerald-100 border border-emerald-300 transition-colors p-2 overflow-hidden ${isRTL ? "text-right" : "text-left"} w-[calc(100%-8px)] hover:bg-emerald-200 cursor-pointer`}
                                                 style={{ top: top + 2, height: height - 4, left: 4, right: 4, zIndex: 10 }}
                                             >
-                                                <p className="text-[11px] font-semibold text-emerald-800 truncate leading-tight">
+                                                <p className="admin-calendar-text admin-calendar-text--booking-name font-semibold text-emerald-800 truncate leading-tight">
                                                     {booking.member?.nameAr ?? t("status.confirmed")}
                                                 </p>
-                                                <p className="text-[10px] text-emerald-600 leading-tight">{booking.from} - {booking.to}</p>
+                                                <p className="admin-calendar-text admin-calendar-text--booking-time text-emerald-600 leading-tight">{booking.from} - {booking.to}</p>
                                                 {booking.isManual && (
-                                                    <span className="text-[8px] bg-emerald-200 text-emerald-700 rounded px-1">{t("bookingType.manualShort")}</span>
+                                                    <span className="admin-calendar-text admin-calendar-text--badge bg-emerald-200 text-emerald-700 rounded px-1">{t("bookingType.manualShort")}</span>
                                                 )}
                                             </button>
                                         );
@@ -1876,7 +1876,7 @@ export default function CourtBookingsPage() {
                                                 style={{ top: top + 2, height: height - 4, left: 4, right: 4, zIndex: 10 }}
                                             >
                                                 <Lock className="h-3 w-3 text-rose-600" />
-                                                <span className="text-[10px] font-semibold text-rose-700">{t("status.blocked")}</span>
+                                                <span className="admin-calendar-text admin-calendar-text--status font-semibold text-rose-700">{t("status.blocked")}</span>
                                             </button>
                                         );
                                     }
@@ -1890,7 +1890,7 @@ export default function CourtBookingsPage() {
                                             className="absolute rounded-lg bg-muted/40 border border-dashed border-border flex items-center justify-center opacity-50 w-[calc(100%-8px)] hover:opacity-70 cursor-pointer"
                                             style={{ top: top + 2, height: height - 4, left: 4, right: 4, zIndex: 10 }}
                                         >
-                                            <span className="text-[10px] text-muted-foreground line-through">{t("status.cancelled")}</span>
+                                            <span className="admin-calendar-text admin-calendar-text--status text-muted-foreground line-through">{t("status.cancelled")}</span>
                                         </button>
                                     );
                                 })}

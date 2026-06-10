@@ -271,7 +271,7 @@ export default function FacultyManagementPage() {
                                 <div className="rounded-full bg-zinc-50 border border-zinc-100 p-6 mb-5">
                                     <Building2 className="h-10 w-10 text-zinc-300" />
                                 </div>
-                                <h3 className="text-[15px] font-bold text-zinc-800 mb-1.5">{t("page.noFaculties")}</h3>
+                                <h3 className="text-[13px] font-bold text-zinc-800 mb-1.5">{t("page.noFaculties")}</h3>
                                 <p className="text-[13px] max-w-sm">
                                     {search ? t("page.noSearchResults", { search }) : t("page.noFacultiesDesc")}
                                 </p>

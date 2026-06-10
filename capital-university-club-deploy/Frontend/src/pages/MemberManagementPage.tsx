@@ -2519,8 +2519,8 @@ export default function MemberManagementPage() {
                                                         names={row}
                                                         language={language}
                                                         showAvatar={false}
-                                                        primaryClassName="text-[15px]"
-                                                        secondaryClassName="text-[15px] text-muted-foreground"
+                                                        primaryClassName="text-[13px]"
+                                                        secondaryClassName="text-[13px] text-muted-foreground"
                                                     />
                                                 </TableCell>
 

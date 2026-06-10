@@ -290,7 +290,7 @@ export function AppSidebar() {
         <span className="text-[13px] font-extrabold tracking-[0.15em] text-[#f8941c] whitespace-nowrap px-2 flex items-center gap-2">
           {t(group.label)}
           <ChevronLeft
-            className={`w-[15px] h-[15px] transition-transform duration-200 ${isOpen ? "-rotate-90" : ""
+            className={`w-[13px] h-[13px] transition-transform duration-200 ${isOpen ? "-rotate-90" : ""
               }`}
           />
         </span>

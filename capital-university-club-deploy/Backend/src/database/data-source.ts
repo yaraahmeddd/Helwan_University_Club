@@ -210,8 +210,8 @@ export const AppDataSource = new DataSource({
     host: process.env.DB_HOST || 'localhost',
     port: Number(process.env.DB_PORT) || 5432,
     username: process.env.DB_USERNAME || 'postgres',
-    password: process.env.DB_PASSWORD || '0000',
-    database: process.env.DB_NAME || 'Helwan-University-Club',
+    password: process.env.DB_PASSWORD || '123',
+    database: process.env.DB_NAME || 'Deploy',
 
     synchronize: process.env.TYPEORM_SYNCHRONIZE === 'true', // Auto-create tables only when explicitly enabled
     logging: process.env.TYPEORM_LOGGING === 'true',

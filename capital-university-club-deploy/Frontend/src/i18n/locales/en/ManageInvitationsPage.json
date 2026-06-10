@@ -6,8 +6,9 @@
   },
   "filters": {
     "searchPlaceholder": "Search by name or booking number...",
-    "statusPlaceholder": "Filter by status",
-    "allStatuses": "All Statuses"
+    "statusPlaceholder": "Status",
+    "allStatuses": "All Statuses",
+    "status": "Status"
   },
   "pagination": {
     "page": "Page {{page}} of {{pages}}",

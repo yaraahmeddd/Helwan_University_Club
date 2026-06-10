@@ -165,14 +165,16 @@ const InviteMemberPage: React.FC = () => {
 
     // Rate Limiting Countdown
     useEffect(() => {
-        let timer: NodeJS.Timeout;
+        let timer: ReturnType<typeof setTimeout> | undefined;
         if (isRateLimited && countdown > 0) {
             timer = setTimeout(() => setCountdown(countdown - 1), 1000);
         } else if (countdown === 0) {
             setIsRateLimited(false);
             setCountdown(30);
         }
-        return () => clearTimeout(timer);
+        return () => {
+            if (timer !== undefined) clearTimeout(timer);
+        };
     }, [isRateLimited, countdown]);
 
     const handleSubmit = async (e: React.FormEvent) => {

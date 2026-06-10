@@ -6,8 +6,9 @@
   },
   "filters": {
     "searchPlaceholder": "بحث بالاسم أو رقم الحجز...",
-    "statusPlaceholder": "تصفية حسب الحالة",
-    "allStatuses": "كل الحالات"
+    "statusPlaceholder": "الحالة",
+    "allStatuses": "كل الحالات",
+    "status": "الحالة"
   },
   "pagination": {
     "page": "صفحة {{page}} من {{pages}}",
