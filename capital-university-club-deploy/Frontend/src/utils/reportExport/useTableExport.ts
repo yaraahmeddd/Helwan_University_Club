@@ -9,18 +9,23 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../hooks/useLanguage';
 import { buildPersonName } from '../../lib/localizedDisplay';
 import { exportToPdf } from './pdfExport';
-import { exportToExcel } from './excelExport';
-import type { ReportConfig, ReportColumn, ExporterInfo } from './types';
+import { exportToExcel, exportToExcelMultiSheet } from './excelExport';
+import type { ReportConfig, ReportColumn, ExporterInfo, ReportSheet } from './types';
 
-export type { ReportColumn, ExporterInfo } from './types';
+export type { ReportColumn, ExporterInfo, ReportSheet } from './types';
 
 export interface UseTableExportOptions<T> {
   reportId: string;
   titleEn: string;
   titleAr: string;
   columns: ReportColumn<T>[];
-  /** The full filtered dataset (NOT paginated) */
+  /** The full filtered dataset (NOT paginated) — used for PDF export */
   rows: T[];
+  /**
+   * Optional custom Excel export (e.g. multi-sheet).
+   * PDF always uses `rows` (filtered table data).
+   */
+  buildExcelSheets?: () => Promise<ReportSheet<T>[]>;
 }
 
 export interface UseTableExportReturn {
@@ -73,14 +78,20 @@ export function useTableExport<T>(options: UseTableExportOptions<T>): UseTableEx
     setIsExporting(true);
     setExportFormat('excel');
     try {
-      await exportToExcel(buildConfig());
+      const config = buildConfig();
+      if (options.buildExcelSheets) {
+        const sheets = await options.buildExcelSheets();
+        await exportToExcelMultiSheet(config, sheets);
+      } else {
+        await exportToExcel(config);
+      }
     } catch (err) {
       console.error('[useTableExport] Excel export failed:', err);
     } finally {
       setIsExporting(false);
       setExportFormat(null);
     }
-  }, [isExporting, buildConfig]);
+  }, [isExporting, buildConfig, options.buildExcelSheets]);
 
   const exportPdf = useCallback(async () => {
     if (isExporting) return;

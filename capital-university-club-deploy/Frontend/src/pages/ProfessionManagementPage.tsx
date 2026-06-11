@@ -15,8 +15,10 @@ import { AdminPagination } from "../components/StaffPagesComponents/shared/Admin
 import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
 import { AdminTableCodeChip } from "../components/StaffPagesComponents/shared/AdminTableSharedCells";
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
-import { getBilingualFieldPlaceholder } from "../lib/localizedDisplay";
+import { getBilingualFieldPlaceholder, getLocalizedText } from "../lib/localizedDisplay";
 import { useLanguage } from "../hooks/useLanguage";
+import { useTableExport } from "../utils/reportExport/useTableExport";
+import { ExportReportButton } from "../components/StaffPagesComponents/shared/ExportReportButton";
 import { FieldInlineError } from "../components/StaffPagesComponents/shared/FieldInlineError";
 import { useAdminFieldValidation } from "../hooks/useAdminFieldValidation";
 import { validateAdminCodeNameForm, validateMemberAssignId } from "../lib/validation/adminForms";
@@ -88,6 +90,27 @@ export default function ProfessionManagementPage() {
 
     const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
     const pagedRows = filteredRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+    const exportHandle = useTableExport({
+        reportId: "profession-management",
+        titleEn: "Professions Report",
+        titleAr: "تقرير المهن",
+        columns: [
+            {
+                headerEn: "Name",
+                headerAr: "الاسم",
+                accessor: (p: Profession) => getLocalizedText(p.name_ar, p.name_en, language),
+                width: 40,
+            },
+            {
+                headerEn: "Code",
+                headerAr: "الكود",
+                accessor: (p: Profession) => p.code,
+                width: 20,
+            },
+        ],
+        rows: filteredRows,
+    });
 
     // ── Create / Edit modal state ────────────────────────────────────────────
     const [isAddOpen, setIsAddOpen] = useState(false);
@@ -233,12 +256,15 @@ export default function ProfessionManagementPage() {
                         </>
                     }
                     actions={
-                        <RoleGuard privilege="CREATE_PROFESSION">
-                            <Button size="sm" className="gap-2" onClick={openAdd}>
-                                <Plus className="w-4 h-4" />
-                                {t("page.addProfessionBtn")}
-                            </Button>
-                        </RoleGuard>
+                        <>
+                            <ExportReportButton {...exportHandle} rowCount={filteredRows.length} />
+                            <RoleGuard privilege="CREATE_PROFESSION">
+                                <Button size="sm" className="gap-2" onClick={openAdd}>
+                                    <Plus className="w-4 h-4" />
+                                    {t("page.addProfessionBtn")}
+                                </Button>
+                            </RoleGuard>
+                        </>
                     }
                 />
 

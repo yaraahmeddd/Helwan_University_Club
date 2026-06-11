@@ -124,5 +124,16 @@
     "page": "Page {{page}} of {{totalPages}}",
     "previous": "Previous",
     "next": "Next"
+  },
+  "export": {
+    "exportReport": "Export",
+    "generatingExcel": "Generating Excel…",
+    "generatingPdf": "Generating PDF…",
+    "excel": "Export as Excel",
+    "excelDesc": ".xlsx — Spreadsheet format",
+    "pdf": "Export as PDF",
+    "pdfDesc": ".pdf — Printable format",
+    "tooltip": "Export {{count}} records",
+    "tooltipGeneric": "Export report"
   }
 }

@@ -38,6 +38,7 @@ import { PersonNameDisplay } from "../components/StaffPagesComponents/shared/Per
 import { getLocalizedText, type DisplayLanguage } from "../lib/localizedDisplay";
 import { useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
 import { useTableExport } from "../utils/reportExport/useTableExport";
+import type { ReportSheet } from "../utils/reportExport/types";
 import { ExportReportButton } from "../components/StaffPagesComponents/shared/ExportReportButton";
 
 // Types
@@ -115,6 +116,56 @@ const getTeamName = (team: Team | { name_ar?: string; name_en?: string }, langua
 
 const sportTags = (m: ApiMember) =>
     m.team_member_teams ?? [];
+
+type ProcessMemberOptions = {
+    search: string;
+    filterStatus: string;
+    selectedTeam: { name_ar: string; name_en?: string } | null;
+    sortField: SortField;
+    sortDir: SortDir;
+    language: DisplayLanguage;
+};
+
+function processMemberList(list: ApiMember[], opts: ProcessMemberOptions): ApiMember[] {
+    let r = [...list];
+
+    if (opts.filterStatus !== "all") r = r.filter((m) => m.status === opts.filterStatus);
+
+    if (opts.selectedTeam) {
+        r = r.filter((m) =>
+            (m.team_member_teams ?? []).some((team) =>
+                team.team_name === opts.selectedTeam!.name_ar || team.team_name === opts.selectedTeam!.name_en
+            )
+        );
+    }
+
+    if (opts.search.trim()) {
+        const q = opts.search.toLowerCase();
+        r = r.filter((m) =>
+            [fullNameAr(m), fullNameEn(m), m.national_id, m.phone ?? ""]
+                .some((v) => v.toLowerCase().includes(q))
+        );
+    }
+
+    r.sort((a, b) => {
+        let cmp = 0;
+        if (opts.sortField === "name") cmp = fullName(a, opts.language).localeCompare(fullName(b, opts.language));
+        if (opts.sortField === "national_id") cmp = a.national_id.localeCompare(b.national_id);
+        if (opts.sortField === "status") cmp = a.status.localeCompare(b.status);
+        if (opts.sortField === "created_at") cmp = a.created_at.localeCompare(b.created_at);
+        return opts.sortDir === "asc" ? cmp : -cmp;
+    });
+
+    return r;
+}
+
+async function fetchMembersForSport(sport: Sport | null): Promise<ApiMember[]> {
+    const url = sport
+        ? `/sports/team-members/sport/${encodeURIComponent(sport.nameEn || sport.nameAr)}`
+        : "/sports/team-members";
+    const res = await api.get<{ data?: ApiMember[] }>(url);
+    return Array.isArray(res?.data?.data) ? res.data.data : [];
+}
 
 // Sort header helper
 
@@ -218,11 +269,8 @@ export default function SportManagementPage() {
     const fetchMembers = useCallback(async (sport: Sport | null) => {
         setMembersLoading(true);
         try {
-            const url = sport
-                ? `/sports/team-members/sport/${encodeURIComponent(sport.nameEn || sport.nameAr)}`
-                : "/sports/team-members";
-            const res = await api.get<{ data?: ApiMember[] }>(url);
-            setMembers(Array.isArray(res?.data?.data) ? res.data.data : []);
+            const data = await fetchMembersForSport(sport);
+            setMembers(data);
         } catch (err) {
             setMembers([]);
             toast({
@@ -281,40 +329,20 @@ export default function SportManagementPage() {
         else { setSortField(f); setSortDir(f === "created_at" ? "desc" : "asc"); }
     };
 
-    // Processed list
-    const processed = useMemo(() => {
-        let r = [...members];
+    // Processed list (filtered view — used for table + PDF export)
+    const processOpts = useMemo<ProcessMemberOptions>(() => ({
+        search,
+        filterStatus,
+        selectedTeam,
+        sortField,
+        sortDir,
+        language,
+    }), [search, filterStatus, selectedTeam, sortField, sortDir, language]);
 
-        if (filterStatus !== "all") r = r.filter((m) => m.status === filterStatus);
-
-        // Filter by selected team (client-side: match team_name in nested team_member_teams)
-        if (selectedTeam) {
-            r = r.filter((m) =>
-                (m.team_member_teams ?? []).some((t) =>
-                    t.team_name === selectedTeam.name_ar || t.team_name === selectedTeam.name_en
-                )
-            );
-        }
-
-        if (search.trim()) {
-            const q = search.toLowerCase();
-            r = r.filter((m) =>
-                [fullNameAr(m), fullNameEn(m), m.national_id, m.phone ?? ""]
-                    .some((v) => v.toLowerCase().includes(q))
-            );
-        }
-
-        r.sort((a, b) => {
-            let cmp = 0;
-            if (sortField === "name") cmp = fullName(a, language).localeCompare(fullName(b, language));
-            if (sortField === "national_id") cmp = a.national_id.localeCompare(b.national_id);
-            if (sortField === "status") cmp = a.status.localeCompare(b.status);
-            if (sortField === "created_at") cmp = a.created_at.localeCompare(b.created_at);
-            return sortDir === "asc" ? cmp : -cmp;
-        });
-
-        return r;
-    }, [members, search, filterStatus, sortField, sortDir, selectedTeam, language]);
+    const processed = useMemo(
+        () => processMemberList(members, processOpts),
+        [members, processOpts],
+    );
 
     useEffect(() => { setPage(1); }, [search, filterStatus, sortField, sortDir, selectedSport, selectedTeam]);
 
@@ -322,11 +350,7 @@ export default function SportManagementPage() {
 
     const thProps = { sortField, sortDir, onSort: handleSort, isRTL };
 
-    const exportHandle = useTableExport({
-        reportId: "members-by-sport",
-        titleEn: "Members by Sport Report",
-        titleAr: "تقرير الأعضاء حسب الرياضة",
-        columns: [
+    const exportColumns = useMemo(() => [
             {
                 headerEn: "Member",
                 headerAr: "العضو",
@@ -360,11 +384,58 @@ export default function SportManagementPage() {
             {
                 headerEn: "Status",
                 headerAr: "الحالة",
-                accessor: (m: ApiMember) => m.status,
+                accessor: (m: ApiMember) =>
+                    tStatus(getAdminStatusConfig(m.status).labelKey, { defaultValue: m.status }),
                 width: 12,
             },
-        ],
+        ], [language, fmtDate, tStatus]);
+
+    const buildExcelSheets = useCallback(async (): Promise<ReportSheet<ApiMember>[]> => {
+        const excelFilterOpts: ProcessMemberOptions = {
+            ...processOpts,
+            selectedTeam: null,
+        };
+
+        const allMembers = await fetchMembersForSport(null);
+        const sportMemberLists = await Promise.all(
+            sports.map((sport) => fetchMembersForSport(sport)),
+        );
+
+        const allSportsLabelEn = t("toolbar.allSports");
+        const allSportsLabelAr = t("toolbar.allSports");
+
+        const sheets: ReportSheet<ApiMember>[] = [
+            {
+                sheetNameEn: "All Sports",
+                sheetNameAr: "جميع الرياضات",
+                titleEn: `Members by Sport Report — ${allSportsLabelEn}`,
+                titleAr: `تقرير الأعضاء حسب الرياضة — ${allSportsLabelAr}`,
+                rows: processMemberList(allMembers, excelFilterOpts),
+            },
+        ];
+
+        sports.forEach((sport, index) => {
+            const sportNameEn = sport.nameEn || sport.nameAr;
+            const sportNameAr = sport.nameAr || sport.nameEn;
+            sheets.push({
+                sheetNameEn: sportNameEn,
+                sheetNameAr: sportNameAr,
+                titleEn: `Members by Sport Report — ${sportNameEn}`,
+                titleAr: `تقرير الأعضاء حسب الرياضة — ${sportNameAr}`,
+                rows: processMemberList(sportMemberLists[index] ?? [], excelFilterOpts),
+            });
+        });
+
+        return sheets;
+    }, [sports, processOpts, t]);
+
+    const exportHandle = useTableExport({
+        reportId: "members-by-sport",
+        titleEn: "Members by Sport Report",
+        titleAr: "تقرير الأعضاء حسب الرياضة",
+        columns: exportColumns,
         rows: processed,
+        buildExcelSheets,
     });
 
     return (

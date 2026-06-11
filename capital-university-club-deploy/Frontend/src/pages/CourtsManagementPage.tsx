@@ -364,7 +364,7 @@ export default function CourtsManagementPage() {
             {
                 headerEn: "Status",
                 headerAr: "الحالة",
-                accessor: (f: Field) => f.status,
+                accessor: (f: Field) => tStatus(getAdminStatusConfig(f.status).labelKey),
                 width: 12,
             },
         ],

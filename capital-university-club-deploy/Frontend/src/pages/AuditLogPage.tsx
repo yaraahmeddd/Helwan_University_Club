@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Eye,
-  Download,
   X,
   Filter,
   RotateCcw,
@@ -18,6 +17,8 @@ import type { AuditLog } from "../services/auditLogApi";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
 import { adminTableStyles, adminHeadClass, adminCellClass } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
+import { ExportReportButton } from "../components/StaffPagesComponents/shared/ExportReportButton";
+import { useTableExport } from "../utils/reportExport/useTableExport";
 import { Button } from "../components/StaffPagesComponents/ui/button";
 import { useLanguage } from "../hooks/useLanguage";
 import { useAdminFormatters } from "../components/StaffPagesComponents/shared/adminFormatters";
@@ -190,6 +191,64 @@ const AuditLogPage: React.FC = () => {
     );
   };
 
+  const exportHandle = useTableExport({
+    reportId: "audit-log",
+    titleEn: "Audit Log Report",
+    titleAr: "تقرير سجل التدقيق",
+    columns: [
+      {
+        headerEn: "Log ID",
+        headerAr: "رقم السجل",
+        accessor: (log: AuditLog) => log.id,
+        width: 12,
+      },
+      {
+        headerEn: "User Name",
+        headerAr: "اسم المستخدم",
+        accessor: (log: AuditLog) => log.userName,
+        width: 18,
+      },
+      {
+        headerEn: "Role",
+        headerAr: "الدور",
+        accessor: (log: AuditLog) => log.role,
+        width: 14,
+      },
+      {
+        headerEn: "Action",
+        headerAr: "الإجراء",
+        accessor: (log: AuditLog) => log.action,
+        width: 14,
+      },
+      {
+        headerEn: "Module",
+        headerAr: "الوحدة",
+        accessor: (log: AuditLog) => log.module,
+        width: 14,
+      },
+      {
+        headerEn: "Description",
+        headerAr: "الوصف",
+        accessor: (log: AuditLog) => log.description,
+        width: 28,
+      },
+      {
+        headerEn: "Status",
+        headerAr: "الحالة",
+        accessor: (log: AuditLog) =>
+          log.status === "نجح" ? t("table.status.success") : t("table.status.failed"),
+        width: 12,
+      },
+      {
+        headerEn: "Date & Time",
+        headerAr: "التاريخ والوقت",
+        accessor: (log: AuditLog) => fmtDateTime(log.dateTime),
+        width: 18,
+      },
+    ],
+    rows: logs,
+  });
+
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col bg-background" dir={isRTL ? "rtl" : "ltr"}>
       <AdminPageHeader
@@ -202,10 +261,7 @@ const AuditLogPage: React.FC = () => {
               <RotateCcw className="w-4 h-4" />
               {t("actions.clearFilters")}
             </Button>
-            <Button size="sm" className="gap-2">
-              <Download className="w-4 h-4" />
-              {t("actions.exportLog")}
-            </Button>
+            <ExportReportButton {...exportHandle} rowCount={logs.length} />
           </>
         }
       />

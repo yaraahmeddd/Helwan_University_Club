@@ -18,6 +18,9 @@ import { AdminPagination } from "../components/StaffPagesComponents/shared/Admin
 import { BilingualText } from "../components/StaffPagesComponents/shared/BilingualText";
 import { getLocalizedText } from "../lib/localizedDisplay";
 import api from "../services/axios";
+import { useTableExport } from "../utils/reportExport/useTableExport";
+import { ExportReportButton } from "../components/StaffPagesComponents/shared/ExportReportButton";
+import { getAdminStatusConfig } from "../components/StaffPagesComponents/shared/adminMemberStatus";
 import { FieldInlineError } from "../components/StaffPagesComponents/shared/FieldInlineError";
 import { useAdminFieldValidation } from "../hooks/useAdminFieldValidation";
 import { validateAdminMembershipPlanForm } from "../lib/validation/adminForms";
@@ -66,6 +69,7 @@ const PAGE_SIZE = ADMIN_PAGE_SIZE;
 
 export default function MembershipsPage() {
   const { t } = useTranslation("MemberShipsPage");
+  const { t: tStatus } = useTranslation("common");
   const { language, isRTL } = useLanguage();
   const { tVal, handleArabicChange, handleEnglishChange, handleCodeChange, handleMoneyChange } = useAdminFieldValidation();
   
@@ -329,18 +333,67 @@ export default function MembershipsPage() {
     return getLocalizedText(type.name_ar, type.name_en, language);
   };
 
+  const exportHandle = useTableExport({
+    reportId: "membership-plans",
+    titleEn: "Membership Plans Report",
+    titleAr: "تقرير خطط العضوية",
+    columns: [
+      {
+        headerEn: "Code",
+        headerAr: "الكود",
+        accessor: (m: MembershipApiItem) => m.plan_code,
+        width: 14,
+      },
+      {
+        headerEn: "Member Type",
+        headerAr: "نوع العضو",
+        accessor: (m: MembershipApiItem) => getMemberTypeName(m.member_type_id),
+        width: 18,
+      },
+      {
+        headerEn: "Name",
+        headerAr: "الاسم",
+        accessor: (m: MembershipApiItem) => getLocalizedText(m.name_ar, m.name_en, language),
+        width: 24,
+      },
+      {
+        headerEn: "Price",
+        headerAr: "السعر",
+        accessor: (m: MembershipApiItem) => `${m.price} ${m.currency}`,
+        width: 14,
+      },
+      {
+        headerEn: "Duration (Months)",
+        headerAr: "المدة (أشهر)",
+        accessor: (m: MembershipApiItem) => String(m.duration_months),
+        width: 14,
+      },
+      {
+        headerEn: "Status",
+        headerAr: "الحالة",
+        accessor: (m: MembershipApiItem) =>
+          tStatus(getAdminStatusConfig(m.is_active ? "active" : "inactive").labelKey),
+        width: 12,
+      },
+    ],
+    rows: filtered,
+  });
+
   return (
     <TooltipProvider>
     <RoleGuard privilege="VIEW_MEMBERSHIP_PLANS">
       <div className="h-full flex flex-col overflow-y-auto p-6 space-y-6" dir={isRTL ? "rtl" : "ltr"}>
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">{t("title")}</h1>
-          <RoleGuard privilege="CREATE_MEMBERSHIP_PLAN">
-            <Button className="gap-2" onClick={openCreate}>
-              <Plus className="h-4 w-4" />
-              {t("create.title")}
-            </Button>
-          </RoleGuard>
+          <div className="flex items-center gap-2">
+            <ExportReportButton {...exportHandle} rowCount={filtered.length} />
+            <RoleGuard privilege="CREATE_MEMBERSHIP_PLAN">
+              <Button className="gap-2" onClick={openCreate}>
+                <Plus className="h-4 w-4" />
+                {t("create.title")}
+              </Button>
+            </RoleGuard>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">

@@ -8,6 +8,7 @@ import { useLanguage } from "../hooks/useLanguage";
 import { adminTableStyles, adminHeadClass, adminCellClass, adminPageStyles, adminDialogStyles, ADMIN_PAGE_SIZE } from "../components/StaffPagesComponents/shared/adminTableStyles";
 import { AdminPagination } from "../components/StaffPagesComponents/shared/AdminPagination";
 import { AdminMemberStatusBadge } from "../components/StaffPagesComponents/shared/AdminMemberStatusBadge";
+import { getAdminStatusConfig } from "../components/StaffPagesComponents/shared/adminMemberStatus";
 import { AdminTableYesNoBadge } from "../components/StaffPagesComponents/shared/AdminTableSharedCells";
 import { AdminPageHeader } from "../components/StaffPagesComponents/shared/AdminPageHeader";
 import { AdminActionButton, AdminRowActions, AdminViewButton } from "../components/StaffPagesComponents/shared/AdminRowActions";
@@ -377,6 +378,7 @@ const PAGE_SIZE = ADMIN_PAGE_SIZE;
 
 export default function SportsPage() {
   const { t } = useTranslation('SportsPage');
+  const { t: tStatus } = useTranslation('common');
   const { language, isRTL } = useLanguage();
   const { fmtDate } = useAdminFormatters();
   const { tVal, handleArabicChange, handleEnglishChange } = useAdminFieldValidation();
@@ -778,7 +780,8 @@ export default function SportsPage() {
       },
       {
         headerEn: 'Status', headerAr: 'الحالة',
-        accessor: (s: Sport) => resolveSportStatusKey(s),
+        accessor: (s: Sport) =>
+          tStatus(getAdminStatusConfig(resolveSportStatusKey(s)).labelKey),
         width: 14,
       },
       {

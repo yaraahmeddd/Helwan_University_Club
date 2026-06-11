@@ -61,7 +61,11 @@ export function ExportReportButton({
         type="button"
         onClick={() => setOpen((v) => !v)}
         disabled={isExporting}
-        title={rowCount !== undefined ? `Export ${rowCount} records` : 'Export report'}
+        title={
+          rowCount !== undefined
+            ? t('export.tooltip', { count: rowCount })
+            : t('export.tooltipGeneric')
+        }
         className={`
           inline-flex items-center gap-1.5 rounded-lg border border-border
           bg-background hover:bg-muted transition-all duration-150
@@ -105,7 +109,7 @@ export function ExportReportButton({
           <button
             type="button"
             onClick={handleExcel}
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left hover:bg-emerald-50 hover:text-emerald-700 transition-colors group"
+            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-start hover:bg-emerald-50 hover:text-emerald-700 transition-colors group"
           >
             <div className="w-8 h-8 rounded-lg bg-emerald-100 group-hover:bg-emerald-200 flex items-center justify-center transition-colors shrink-0">
               <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
@@ -126,7 +130,7 @@ export function ExportReportButton({
           <button
             type="button"
             onClick={handlePdf}
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left hover:bg-rose-50 hover:text-rose-700 transition-colors group"
+            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-start hover:bg-rose-50 hover:text-rose-700 transition-colors group"
           >
             <div className="w-8 h-8 rounded-lg bg-rose-100 group-hover:bg-rose-200 flex items-center justify-center transition-colors shrink-0">
               <FileText className="w-4 h-4 text-rose-600" />

@@ -18,6 +18,8 @@ import { BilingualText } from "../components/StaffPagesComponents/shared/Bilingu
 import { getLocalizedText } from "../lib/localizedDisplay";
 import { useAdminFormatters, getAdminLocale } from "../components/StaffPagesComponents/shared/adminFormatters";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../components/StaffPagesComponents/ui/table";
+import { useTableExport } from "../utils/reportExport/useTableExport";
+import { ExportReportButton } from "../components/StaffPagesComponents/shared/ExportReportButton";
 
 // ─── Types from API ───────────────────────────────────────────────────────────
 
@@ -250,6 +252,63 @@ export default function SubscriptionsPage() {
             ? `${amount.toLocaleString(dateLocale)} ${t("subscriptions.currency")}`
             : "—";
 
+    const exportHandle = useTableExport({
+        reportId: "subscriptions",
+        titleEn: "Subscriptions Report",
+        titleAr: "تقرير الاشتراكات",
+        columns: [
+            {
+                headerEn: "Code",
+                headerAr: "الكود",
+                accessor: (r: SubRow) => r.memberCode,
+                width: 14,
+            },
+            {
+                headerEn: "Name",
+                headerAr: "الاسم",
+                accessor: (r: SubRow) => getLocalizedText(r.memberNameAr, r.memberNameEn, language),
+                width: 22,
+            },
+            {
+                headerEn: "Type",
+                headerAr: "النوع",
+                accessor: (r: SubRow) => t(`subscriptions.memberType.${r.memberType}`),
+                width: 14,
+            },
+            {
+                headerEn: "Team",
+                headerAr: "الفريق",
+                accessor: (r: SubRow) => getLocalizedText(r.teamNameAr, r.teamNameEn, language) || "—",
+                width: 18,
+            },
+            {
+                headerEn: "Monthly Fee",
+                headerAr: "الرسوم الشهرية",
+                accessor: (r: SubRow) => formatCurrency(r.monthlyFee),
+                width: 14,
+            },
+            {
+                headerEn: "Start Date",
+                headerAr: "تاريخ البداية",
+                accessor: (r: SubRow) => (r.startDate ? fmtDate(r.startDate) : "—"),
+                width: 14,
+            },
+            {
+                headerEn: "End Date",
+                headerAr: "تاريخ النهاية",
+                accessor: (r: SubRow) => (r.endDate ? fmtDate(r.endDate) : "—"),
+                width: 14,
+            },
+            {
+                headerEn: "Status",
+                headerAr: "الحالة",
+                accessor: (r: SubRow) => statusLabel(r.status),
+                width: 12,
+            },
+        ],
+        rows: filtered,
+    });
+
     const renewalHint = (alertStatus: "active" | "expiring" | "overdue", days: number) => {
         const count = Math.abs(days);
         if (alertStatus === "overdue") {
@@ -271,10 +330,13 @@ export default function SubscriptionsPage() {
                         {t("subscriptions.subtitle")}
                     </p>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => void fetchAll()} disabled={loading} className="gap-1 shrink-0">
-                    <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-                    {t("subscriptions.refresh")}
-                </Button>
+                <div className="flex items-center gap-2 shrink-0">
+                    <ExportReportButton {...exportHandle} rowCount={filtered.length} />
+                    <Button variant="outline" size="sm" onClick={() => void fetchAll()} disabled={loading} className="gap-1">
+                        <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                        {t("subscriptions.refresh")}
+                    </Button>
+                </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 px-6 py-4 shrink-0">
