@@ -21,7 +21,10 @@ import { BilingualText } from '@/components/StaffPagesComponents/shared/Bilingua
 import { getBilingualFieldPlaceholder, getLocalizedText } from '@/lib/localizedDisplay';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useTableExport } from '@/utils/reportExport/useTableExport';
-import { ExportReportButton } from '@/components/StaffPagesComponents/shared/ExportReportButton';
+import { useTableImport } from '@/utils/reportExport/useTableImport';
+import { BRANCH_IMPORT_FIELDS } from '@/utils/reportExport/importFieldSchemas';
+import { getApiErrorMessage } from '@/utils/reportExport/importApiHelper';
+import { AdminReportToolbar } from '@/components/StaffPagesComponents/shared/AdminReportToolbar';
 import { getAdminStatusConfig } from '@/components/StaffPagesComponents/shared/adminMemberStatus';
 import { useAdminFieldValidation } from '@/hooks/useAdminFieldValidation';
 import { validateAdminBranchForm, validateMemberAssignId, toErrorArrayMap } from '@/lib/validation/adminForms';
@@ -405,6 +408,29 @@ export default function BranchManagementPage() {
         rows: filteredRows,
     });
 
+    const importHandle = useTableImport({
+        templateId: "branch-import",
+        titleEn: "Branches Import Template",
+        titleAr: "قالب استيراد الفروع",
+        fields: BRANCH_IMPORT_FIELDS,
+        importRow: async (row) => {
+            try {
+                await api.post("/branches", {
+                    code: row.code.trim(),
+                    name_ar: row.name_ar.trim(),
+                    name_en: row.name_en.trim(),
+                    location_ar: row.location_ar?.trim() || undefined,
+                    location_en: row.location_en?.trim() || undefined,
+                    phone: row.phone?.trim() || undefined,
+                    status: row.status?.trim() || "active",
+                });
+            } catch (err) {
+                throw new Error(getApiErrorMessage(err));
+            }
+        },
+        onComplete: fetchBranches,
+    });
+
     return (
         <div className="h-[calc(100vh-4rem)] flex flex-col bg-background" dir={isRTL ? "rtl" : "ltr"}>
 
@@ -419,7 +445,12 @@ export default function BranchManagementPage() {
                 }
                 actions={
                     <>
-                        <ExportReportButton {...exportHandle} rowCount={filteredRows.length} />
+                        <AdminReportToolbar
+                            export={exportHandle}
+                            import={importHandle}
+                            importPrivilege="CREATE_BRANCH"
+                            rowCount={filteredRows.length}
+                        />
                         <RoleGuard privilege="CREATE_BRANCH">
                             <Button size="sm" className="gap-2" onClick={openAdd}>
                                 <Plus className="w-4 h-4" />

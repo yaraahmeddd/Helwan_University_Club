@@ -161,5 +161,25 @@
       "memberId": "Member ID",
       "endDate": "Expiry Date"
     }
+  },
+  "import": {
+    "importLabel": "Import",
+    "tooltip": "Download template or import records from Excel",
+    "processing": "Importing…",
+    "downloadTemplate": "Download template",
+    "downloadTemplateDesc": ".xlsx — Fill and upload",
+    "uploadFile": "Import from Excel",
+    "uploadFileDesc": "Upload filled template",
+    "templateDownloadedTitle": "Template downloaded",
+    "templateDownloadedDesc": "Fill the template starting from row 2 (below the header keys), then import the file.",
+    "templateDownloadFailed": "Could not generate the import template.",
+    "successTitle": "Import completed",
+    "successDesc": "{{count}} record(s) imported successfully.",
+    "partialTitle": "Import partially completed",
+    "partialDesc": "{{success}} imported, {{failed}} failed.",
+    "failedTitle": "Import failed",
+    "rowError": "Row {{row}}: {{message}}",
+    "noDataTitle": "No data found",
+    "noDataDesc": "The file has no data rows. Use the Import Data sheet and fill rows starting from row 2."
   }
 }

@@ -4,7 +4,7 @@
 
 | File | Size | Description |
 |------|------|-------------|
-| [`database/full-dump.sql`](../database/full-dump.sql) | ~230 KB | نسخة PostgreSQL كاملة مع بيانات تجريبية |
+| [`database/Capital-Univrsity-Club.sql`](../database/Capital-Univrsity-Club.sql) | ~230 KB | نسخة PostgreSQL كاملة مع بيانات تجريبية |
 
 **يحتوي على:** جداول، بيانات، حسابات تجريبية، رياضات، فرق، حجوزات، …
 
@@ -14,7 +14,7 @@
 psql -U postgres -d "Helwan-University-Club" -f database\full-dump.sql
 ```
 
-**pgAdmin:** PSQL Tool → `\i 'full/path/to/full-dump.sql'`
+**pgAdmin:** PSQL Tool → `\i 'full/path/to/Capital-Univrsity-Club.sql'`
 
 > احذف التعليقات في أول الملف إذا طلب pgAdmin ذلك (سطر `-- DELETE THIS BEFORE RUNNING`).
 

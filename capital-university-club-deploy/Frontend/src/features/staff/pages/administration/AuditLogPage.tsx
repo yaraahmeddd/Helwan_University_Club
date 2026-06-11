@@ -17,7 +17,7 @@ import type { AuditLog } from '@/services/auditLogApi';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/StaffPagesComponents/ui/table';
 import { adminTableStyles, adminHeadClass, adminCellClass } from '@/components/StaffPagesComponents/shared/adminTableStyles';
 import { AdminPageHeader } from '@/components/StaffPagesComponents/shared/AdminPageHeader';
-import { ExportReportButton } from '@/components/StaffPagesComponents/shared/ExportReportButton';
+import { AdminReportToolbar } from '@/components/StaffPagesComponents/shared/AdminReportToolbar';
 import { useTableExport } from '@/utils/reportExport/useTableExport';
 import { Button } from '@/components/StaffPagesComponents/ui/button';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -261,7 +261,7 @@ const AuditLogPage: React.FC = () => {
               <RotateCcw className="w-4 h-4" />
               {t("actions.clearFilters")}
             </Button>
-            <ExportReportButton {...exportHandle} rowCount={logs.length} />
+            <AdminReportToolbar export={exportHandle} rowCount={logs.length} />
           </>
         }
       />

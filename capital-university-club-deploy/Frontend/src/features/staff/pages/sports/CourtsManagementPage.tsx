@@ -56,7 +56,10 @@ import { FieldInlineError } from '@/components/StaffPagesComponents/shared/Field
 import { BilingualText } from '@/components/StaffPagesComponents/shared/BilingualText';
 import { getBilingualFieldPlaceholder, getLocalizedText } from '@/lib/localizedDisplay';
 import { useTableExport } from '@/utils/reportExport/useTableExport';
-import { ExportReportButton } from '@/components/StaffPagesComponents/shared/ExportReportButton';
+import { useTableImport } from '@/utils/reportExport/useTableImport';
+import { FIELD_IMPORT_FIELDS, parseBoolish } from '@/utils/reportExport/importFieldSchemas';
+import { getApiErrorMessage } from '@/utils/reportExport/importApiHelper';
+import { AdminReportToolbar } from '@/components/StaffPagesComponents/shared/AdminReportToolbar';
 import { useAdminFieldValidation } from '@/hooks/useAdminFieldValidation';
 import { validateAdminCourtForm } from '@/lib/validation/adminForms';
 
@@ -371,6 +374,28 @@ export default function CourtsManagementPage() {
         rows: filtered,
     });
 
+    const importHandle = useTableImport({
+        templateId: "courts-import",
+        titleEn: "Courts Import Template",
+        titleAr: "قالب استيراد الملاعب",
+        fields: FIELD_IMPORT_FIELDS,
+        importRow: async (row) => {
+            try {
+                await createField({
+                    name_ar: row.name_ar.trim(),
+                    name_en: row.name_en.trim(),
+                    sport_id: Number(row.sport_id),
+                    capacity: row.capacity?.trim() ? Number(row.capacity) : undefined,
+                    status: (row.status?.trim() || "active") as FieldStatus,
+                    is_available_for_booking: parseBoolish(row.is_available_for_booking, true),
+                });
+            } catch (err) {
+                throw new Error(getApiErrorMessage(err));
+            }
+        },
+        onComplete: reloadData,
+    });
+
     return (
         <div className="h-[calc(100vh-4rem)] flex flex-col bg-background overflow-hidden" dir={isRTL ? "rtl" : "ltr"}>
             <AdminPageHeader
@@ -391,7 +416,12 @@ export default function CourtsManagementPage() {
                 }
                 actions={
                     <>
-                        <ExportReportButton {...exportHandle} rowCount={filtered.length} />
+                        <AdminReportToolbar
+                            export={exportHandle}
+                            import={importHandle}
+                            importPrivilege="CREATE_FIELD"
+                            rowCount={filtered.length}
+                        />
                         <Button variant="outline" size="sm" className="gap-2" onClick={() => void reloadData()} disabled={loading}>
                             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
                             {t("filters.refresh")}

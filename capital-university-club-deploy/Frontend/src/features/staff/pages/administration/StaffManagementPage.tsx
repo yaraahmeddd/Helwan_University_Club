@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshCw, UserPlus, Users, Pencil, Trash2 } from 'lucide-react';
 import { useTableExport } from '@/utils/reportExport/useTableExport';
-import { ExportReportButton } from '@/components/StaffPagesComponents/shared/ExportReportButton';
+import { useTableImport } from '@/utils/reportExport/useTableImport';
+import { STAFF_IMPORT_FIELDS } from '@/utils/reportExport/importFieldSchemas';
+import { importStaffRow } from '@/utils/reportExport/importRegistrationHelpers';
+import { AdminReportToolbar } from '@/components/StaffPagesComponents/shared/AdminReportToolbar';
 import api from '@/services/axios';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/StaffPagesComponents/ui/button';
@@ -383,6 +386,17 @@ export default function StaffManagementPage() {
     rows: filteredRows,
   });
 
+  const importHandle = useTableImport({
+    templateId: 'staff-import',
+    titleEn: 'Staff Import Template',
+    titleAr: 'قالب استيراد الموظفين',
+    fields: STAFF_IMPORT_FIELDS,
+    importRow: async (row) => {
+      await importStaffRow(row);
+    },
+    onComplete: fetchList,
+  });
+
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col gap-0" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background shrink-0">
@@ -396,7 +410,12 @@ export default function StaffManagementPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <ExportReportButton {...exportHandle} rowCount={filteredRows.length} />
+          <AdminReportToolbar
+            export={exportHandle}
+            import={importHandle}
+            importPrivilege="CREATE_STAFF"
+            rowCount={filteredRows.length}
+          />
           <RoleGuard privilege="CREATE_STAFF">
             <Button size="sm" className="gap-2" onClick={() => navigate('/staff/dashboard/admin/staff/new')}>
               <UserPlus className="w-4 h-4" />

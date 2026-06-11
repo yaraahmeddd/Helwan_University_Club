@@ -19,7 +19,10 @@ import {
     Mail, Phone, MapPin, Calendar, Globe, User, Award, Hash, HeartPulse, FileBadge, CreditCard
 } from "lucide-react";
 import { useTableExport } from '@/utils/reportExport/useTableExport';
-import { ExportReportButton } from '@/components/StaffPagesComponents/shared/ExportReportButton';
+import { useTableImport } from '@/utils/reportExport/useTableImport';
+import { MEMBER_IMPORT_FIELDS } from '@/utils/reportExport/importFieldSchemas';
+import { importSocialMemberRow } from '@/utils/reportExport/importRegistrationHelpers';
+import { AdminReportToolbar } from '@/components/StaffPagesComponents/shared/AdminReportToolbar';
 
 import api from '@/services/axios';
 
@@ -2081,7 +2084,16 @@ export default function MemberManagementPage() {
         rows: processedRows,
     });
 
-
+    const importHandle = useTableImport({
+        templateId: 'member-import',
+        titleEn: 'Members Import Template',
+        titleAr: 'قالب استيراد الأعضاء',
+        fields: MEMBER_IMPORT_FIELDS,
+        importRow: async (row) => {
+            await importSocialMemberRow(row);
+        },
+        onComplete: fetchAll,
+    });
 
     const Th = ({ field, children, center, className = "" }: { field?: SortField; children: React.ReactNode; center?: boolean; className?: string }) => (
         <TableHead
@@ -2138,7 +2150,12 @@ export default function MemberManagementPage() {
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <ExportReportButton {...exportHandle} rowCount={totalFiltered} />
+                            <AdminReportToolbar
+                                export={exportHandle}
+                                import={importHandle}
+                                importPrivilege="CREATE_MEMBER"
+                                rowCount={totalFiltered}
+                            />
                             <button
                                 type="button"
                                 onClick={() => void fetchAll()}

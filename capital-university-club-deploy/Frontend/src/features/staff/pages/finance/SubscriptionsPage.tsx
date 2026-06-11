@@ -19,7 +19,7 @@ import { getLocalizedText } from '@/lib/localizedDisplay';
 import { useAdminFormatters, getAdminLocale } from '@/components/StaffPagesComponents/shared/adminFormatters';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/StaffPagesComponents/ui/table';
 import { useTableExport } from '@/utils/reportExport/useTableExport';
-import { ExportReportButton } from '@/components/StaffPagesComponents/shared/ExportReportButton';
+import { AdminReportToolbar } from '@/components/StaffPagesComponents/shared/AdminReportToolbar';
 
 // ─── Types from API ───────────────────────────────────────────────────────────
 
@@ -331,7 +331,7 @@ export default function SubscriptionsPage() {
                     </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                    <ExportReportButton {...exportHandle} rowCount={filtered.length} />
+                    <AdminReportToolbar export={exportHandle} rowCount={filtered.length} />
                     <Button variant="outline" size="sm" onClick={() => void fetchAll()} disabled={loading} className="gap-1">
                         <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
                         {t("subscriptions.refresh")}

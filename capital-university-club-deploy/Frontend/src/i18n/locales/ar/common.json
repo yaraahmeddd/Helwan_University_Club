@@ -161,5 +161,25 @@
       "memberId": "رقم العضو",
       "endDate": "تاريخ الانتهاء"
     }
+  },
+  "import": {
+    "importLabel": "استيراد",
+    "tooltip": "تنزيل القالب أو استيراد السجلات من Excel",
+    "processing": "جاري الاستيراد…",
+    "downloadTemplate": "تنزيل القالب",
+    "downloadTemplateDesc": ".xlsx — املأ ثم ارفع",
+    "uploadFile": "استيراد من Excel",
+    "uploadFileDesc": "رفع القالب بعد تعبئته",
+    "templateDownloadedTitle": "تم تنزيل القالب",
+    "templateDownloadedDesc": "املأ القالب بدءاً من الصف 2 (أسفل صف المفاتيح) ثم ارفع الملف.",
+    "templateDownloadFailed": "تعذّر إنشاء قالب الاستيراد.",
+    "successTitle": "اكتمل الاستيراد",
+    "successDesc": "تم استيراد {{count}} سجل بنجاح.",
+    "partialTitle": "اكتمل الاستيراد جزئياً",
+    "partialDesc": "تم استيراد {{success}}، وفشل {{failed}}.",
+    "failedTitle": "فشل الاستيراد",
+    "rowError": "الصف {{row}}: {{message}}",
+    "noDataTitle": "لا توجد بيانات",
+    "noDataDesc": "الملف لا يحتوي على صفوف بيانات. استخدم ورقة Import Data واملأ الصفوف بدءاً من الصف 2."
   }
 }

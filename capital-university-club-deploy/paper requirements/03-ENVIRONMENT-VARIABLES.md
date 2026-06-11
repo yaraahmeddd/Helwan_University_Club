@@ -86,7 +86,7 @@
 DB_HOST=localhost
 DB_PORT=5432
 DB_USERNAME=postgres
-DB_PASSWORD=123
+DB_PASSWORD=0000
 DB_NAME=Deploy
 
 PORT=3000
@@ -103,7 +103,7 @@ TYPEORM_LOGGING=false
 LOG_LEVEL=info
 
 # Optional — leave empty if not using
-GEMINI_API_KEY=
+GEMINI_API_KEY=your_gemini_api_key_here
 PAYMOB_API_KEY=
 PAYMOB_INTEGRATION_ID=
 PAYMOB_IFRAME_ID=

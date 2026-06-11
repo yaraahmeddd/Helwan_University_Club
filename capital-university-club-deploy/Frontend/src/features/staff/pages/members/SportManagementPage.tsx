@@ -38,8 +38,11 @@ import { PersonNameDisplay } from '@/components/StaffPagesComponents/shared/Pers
 import { getLocalizedText, type DisplayLanguage } from '@/lib/localizedDisplay';
 import { useAdminFormatters } from '@/components/StaffPagesComponents/shared/adminFormatters';
 import { useTableExport } from '@/utils/reportExport/useTableExport';
+import { useTableImport } from '@/utils/reportExport/useTableImport';
+import { TEAM_MEMBER_IMPORT_FIELDS } from '@/utils/reportExport/importFieldSchemas';
+import { importTeamMemberRow } from '@/utils/reportExport/importRegistrationHelpers';
 import type { ReportSheet } from '@/utils/reportExport/types';
-import { ExportReportButton } from '@/components/StaffPagesComponents/shared/ExportReportButton';
+import { AdminReportToolbar } from '@/components/StaffPagesComponents/shared/AdminReportToolbar';
 import { AdminPrintCardButton, AdminRowActions } from '@/components/StaffPagesComponents/shared/AdminRowActions';
 import { useMemberCardPrint } from '@/hooks/useMemberCardPrint';
 
@@ -513,6 +516,22 @@ export default function SportManagementPage() {
         buildExcelSheets,
     });
 
+    const refreshMembers = useCallback(async () => {
+        await fetchSports();
+        await fetchMembers(selectedSport);
+    }, [fetchSports, fetchMembers, selectedSport]);
+
+    const importHandle = useTableImport({
+        templateId: 'team-member-import',
+        titleEn: 'Team Members Import Template',
+        titleAr: 'قالب استيراد أعضاء الفرق',
+        fields: TEAM_MEMBER_IMPORT_FIELDS,
+        importRow: async (row) => {
+            await importTeamMemberRow(row);
+        },
+        onComplete: refreshMembers,
+    });
+
     return (
         <div className="h-[calc(100vh-4rem)] flex flex-col bg-background overflow-hidden" dir={isRTL ? "rtl" : "ltr"}>
             <AdminPageHeader
@@ -532,7 +551,12 @@ export default function SportManagementPage() {
                 }
                 actions={
                     <>
-                        <ExportReportButton {...exportHandle} rowCount={processed.length} />
+                        <AdminReportToolbar
+                            export={exportHandle}
+                            import={importHandle}
+                            importPrivilege="ADD_TEAM_MEMBER"
+                            rowCount={processed.length}
+                        />
                         <Button
                             variant="outline"
                             size="sm"

@@ -33,7 +33,10 @@ import api from '@/services/axios';
 import { useTranslation } from "react-i18next";
 import { useAdminFormatters } from '@/components/StaffPagesComponents/shared/adminFormatters';
 import { useTableExport } from '@/utils/reportExport/useTableExport';
-import { ExportReportButton } from '@/components/StaffPagesComponents/shared/ExportReportButton';
+import { useTableImport } from '@/utils/reportExport/useTableImport';
+import { SPORT_IMPORT_FIELDS, parseBoolish } from '@/utils/reportExport/importFieldSchemas';
+import { getApiErrorMessage } from '@/utils/reportExport/importApiHelper';
+import { AdminReportToolbar } from '@/components/StaffPagesComponents/shared/AdminReportToolbar';
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -793,6 +796,29 @@ export default function SportsPage() {
     rows: filteredSports,
   });
 
+  const importHandle = useTableImport({
+    templateId: "sports-import",
+    titleEn: "Sports Import Template",
+    titleAr: "قالب استيراد الرياضات",
+    fields: SPORT_IMPORT_FIELDS,
+    importRow: async (row) => {
+      try {
+        const body: Record<string, unknown> = {
+          name_ar: row.name_ar.trim(),
+          name_en: row.name_en.trim(),
+          is_active: parseBoolish(row.is_active, true),
+          requires_booking: parseBoolish(row.requires_booking, false),
+          max_participants: row.max_participants?.trim() ? Number(row.max_participants) : 0,
+        };
+        if (row.branch_id?.trim()) body.branch_id = Number(row.branch_id);
+        await api.post("/sports", body);
+      } catch (err) {
+        throw new Error(getApiErrorMessage(err));
+      }
+    },
+    onComplete: fetchSports,
+  });
+
   const filterTabs = (["all", "active", "draft", "inactive"] as const).map((tab) => ({
     id: tab,
     label:
@@ -820,7 +846,12 @@ export default function SportsPage() {
         subtitle={t('header.subtitle', { count: sports.length })}
         actions={
           <>
-            <ExportReportButton {...exportHandle} rowCount={filteredSports.length} />
+            <AdminReportToolbar
+              export={exportHandle}
+              import={importHandle}
+              importPrivilege="CREATE_SPORT"
+              rowCount={filteredSports.length}
+            />
             <Button
               variant="outline"
               size="sm"

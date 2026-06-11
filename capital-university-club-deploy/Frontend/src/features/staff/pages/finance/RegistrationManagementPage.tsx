@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTableExport } from '@/utils/reportExport/useTableExport';
-import { ExportReportButton } from '@/components/StaffPagesComponents/shared/ExportReportButton';
+import { AdminReportToolbar } from '@/components/StaffPagesComponents/shared/AdminReportToolbar';
 import { Check, Search, FileText, UserX, Loader2, RefreshCw, Filter, Users, Award, Globe, Phone, CreditCard, User, MapPin, Calendar, Mail, Clock, Activity, FileBadge, Shield } from "lucide-react";
 import { Button } from '@/components/StaffPagesComponents/ui/button';
 import { Input } from '@/components/StaffPagesComponents/ui/input';
@@ -437,7 +437,7 @@ export default function RegistrationManagementPage() {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <ExportReportButton {...exportHandle} rowCount={processedRecords.length} />
+                        <AdminReportToolbar export={exportHandle} rowCount={processedRecords.length} />
                         <button
                             type="button"
                             onClick={() => void fetchRecords()}

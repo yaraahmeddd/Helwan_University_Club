@@ -19,7 +19,10 @@ import { BilingualText } from '@/components/StaffPagesComponents/shared/Bilingua
 import { getLocalizedText } from '@/lib/localizedDisplay';
 import api from '@/services/axios';
 import { useTableExport } from '@/utils/reportExport/useTableExport';
-import { ExportReportButton } from '@/components/StaffPagesComponents/shared/ExportReportButton';
+import { useTableImport } from '@/utils/reportExport/useTableImport';
+import { MEMBERSHIP_PLAN_IMPORT_FIELDS, parseBoolish } from '@/utils/reportExport/importFieldSchemas';
+import { getApiErrorMessage } from '@/utils/reportExport/importApiHelper';
+import { AdminReportToolbar } from '@/components/StaffPagesComponents/shared/AdminReportToolbar';
 import { getAdminStatusConfig } from '@/components/StaffPagesComponents/shared/adminMemberStatus';
 import { FieldInlineError } from '@/components/StaffPagesComponents/shared/FieldInlineError';
 import { useAdminFieldValidation } from '@/hooks/useAdminFieldValidation';
@@ -379,6 +382,31 @@ export default function MembershipsPage() {
     rows: filtered,
   });
 
+  const importHandle = useTableImport({
+    templateId: "membership-plan-import",
+    titleEn: "Membership Plans Import Template",
+    titleAr: "قالب استيراد خطط العضوية",
+    fields: MEMBERSHIP_PLAN_IMPORT_FIELDS,
+    importRow: async (row) => {
+      try {
+        await api.post("/membership-plans", {
+          member_type_id: Number(row.member_type_id),
+          plan_code: row.plan_code.trim(),
+          name_ar: row.name_ar.trim(),
+          name_en: row.name_en.trim(),
+          price: row.price.trim(),
+          currency: row.currency?.trim() || "EGP",
+          duration_months: row.duration_months.trim(),
+          renewal_price: row.renewal_price?.trim() || undefined,
+          is_active: parseBoolish(row.is_active, true),
+        });
+      } catch (err) {
+        throw new Error(getApiErrorMessage(err));
+      }
+    },
+    onComplete: refreshPlans,
+  });
+
   return (
     <TooltipProvider>
     <RoleGuard privilege="VIEW_MEMBERSHIP_PLANS">
@@ -386,7 +414,12 @@ export default function MembershipsPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">{t("title")}</h1>
           <div className="flex items-center gap-2">
-            <ExportReportButton {...exportHandle} rowCount={filtered.length} />
+            <AdminReportToolbar
+              export={exportHandle}
+              import={importHandle}
+              importPrivilege="CREATE_MEMBERSHIP_PLAN"
+              rowCount={filtered.length}
+            />
             <RoleGuard privilege="CREATE_MEMBERSHIP_PLAN">
               <Button className="gap-2" onClick={openCreate}>
                 <Plus className="h-4 w-4" />

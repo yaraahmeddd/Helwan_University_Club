@@ -43,7 +43,7 @@ import { AdminMemberStatusBadge } from '@/components/StaffPagesComponents/shared
 import { getAdminStatusConfig } from '@/components/StaffPagesComponents/shared/adminMemberStatus';
 import { AdminActionButton, AdminRowActions, AdminViewButton } from '@/components/StaffPagesComponents/shared/AdminRowActions';
 import { useTableExport } from '@/utils/reportExport/useTableExport';
-import { ExportReportButton } from '@/components/StaffPagesComponents/shared/ExportReportButton';
+import { AdminReportToolbar } from '@/components/StaffPagesComponents/shared/AdminReportToolbar';
 import {
   Table,
   TableBody,
@@ -350,7 +350,7 @@ export default function ManageInvitationsPage() {
         subtitle={t('header.subtitle')}
         actions={
           <>
-            <ExportReportButton {...exportHandle} rowCount={pagination.total} />
+            <AdminReportToolbar export={exportHandle} rowCount={pagination.total} />
             <Button variant="outline" size="sm" onClick={() => fetchData(pagination.page)} disabled={loading} className="gap-2">
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               {t('header.refresh')}

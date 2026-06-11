@@ -28,7 +28,10 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { adminTableStyles, adminHeadClass, adminCellClass, adminDialogStyles, adminPageStyles, ADMIN_PAGE_SIZE } from '@/components/StaffPagesComponents/shared/adminTableStyles';
 import { AdminPagination } from '@/components/StaffPagesComponents/shared/AdminPagination';
 import { useTableExport } from '@/utils/reportExport/useTableExport';
-import { ExportReportButton } from '@/components/StaffPagesComponents/shared/ExportReportButton';
+import { useTableImport } from '@/utils/reportExport/useTableImport';
+import { TEAM_IMPORT_FIELDS, normalizeTime } from '@/utils/reportExport/importFieldSchemas';
+import { getApiErrorMessage } from '@/utils/reportExport/importApiHelper';
+import { AdminReportToolbar } from '@/components/StaffPagesComponents/shared/AdminReportToolbar';
 import { AdminPageHeader } from '@/components/StaffPagesComponents/shared/AdminPageHeader';
 import { AdminMemberStatusBadge } from '@/components/StaffPagesComponents/shared/AdminMemberStatusBadge';
 import { getAdminStatusConfig } from '@/components/StaffPagesComponents/shared/adminMemberStatus';
@@ -498,6 +501,37 @@ export default function TeamsManagementPage() {
         rows: filtered,
     });
 
+    const importHandle = useTableImport({
+        templateId: "teams-import",
+        titleEn: "Teams Import Template",
+        titleAr: "قالب استيراد الفرق",
+        fields: TEAM_IMPORT_FIELDS,
+        importRow: async (row) => {
+            try {
+                await api.post("/teams", {
+                    sport_id: Number(row.sport_id),
+                    name_ar: row.name_ar.trim(),
+                    name_en: row.name_en.trim(),
+                    max_participants: Number(row.max_participants),
+                    status: row.status?.trim() || "active",
+                    visibility_type: row.visibility_type?.trim() || undefined,
+                    price: row.price?.trim() ? Number(row.price) : undefined,
+                    training: {
+                        days_ar: row.days_ar.trim(),
+                        days_en: row.days_en?.trim() || row.days_ar.trim(),
+                        start_time: normalizeTime(row.start_time),
+                        end_time: normalizeTime(row.end_time),
+                        field_id: row.field_id.trim(),
+                        training_fee: Number(row.training_fee),
+                    },
+                });
+            } catch (err) {
+                throw new Error(getApiErrorMessage(err));
+            }
+        },
+        onComplete: fetchTeams,
+    });
+
     // ─── Render ──────────────────────────────────────────────────────────────────
     return (
         <div className="h-[calc(100vh-4rem)] flex flex-col bg-background overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -520,7 +554,12 @@ export default function TeamsManagementPage() {
                 }
                 actions={
                     <>
-                        <ExportReportButton {...exportHandle} rowCount={filtered.length} />
+                        <AdminReportToolbar
+                            export={exportHandle}
+                            import={importHandle}
+                            importPrivilege="CREATE_TEAM"
+                            rowCount={filtered.length}
+                        />
                         <Button
                             variant="outline"
                             size="sm"
