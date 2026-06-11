@@ -60,6 +60,7 @@ interface SportScheduleApi {
     days_en?: string;
     training_fee?: number | string;
     price?: number | string;
+    status?: string;
     field?: {
         name_ar?: string;
         name_en?: string;
@@ -81,6 +82,7 @@ interface AvailableTeamApi {
         name_ar?: string;
         name_en?: string;
         sport_image?: string | null;
+        price?: number | string;
     };
     training_schedules?: SportScheduleApi[];
     schedules?: SportScheduleApi[];
@@ -90,6 +92,8 @@ interface AvailableTeamApi {
     internal_price?: number | string;
     external_price?: number | string;
     subscription_price?: number | string;
+    sport_price?: number | string;
+    monthly_fee?: number | string;
     training_fee?: number | string;
     price?: number | string;
 }
@@ -202,6 +206,7 @@ export default function MemberSubscribePage() {
         try {
             setLoading(true);
             const sportImageMap: Record<number, string | null> = {};
+            const sportPriceMap: Record<number, number> = {};
 
             try {
                 const sportsRes = await api.get("/sports");
@@ -217,6 +222,7 @@ export default function MemberSubscribePage() {
                     if (!sid) return;
                     const img = s?.sport_image || s?.image_url || s?.image || null;
                     sportImageMap[sid] = img ? String(img) : null;
+                    sportPriceMap[sid] = pickPositiveAmount(s?.price, s?.subscription_price, s?.training_fee);
                 });
             } catch (error) {
                 console.warn("Failed to load sports images from /sports", error);
@@ -292,16 +298,25 @@ export default function MemberSubscribePage() {
                 const sportImage = sportImageMap[sportId] || team.sport?.sport_image || null;
                 const teamId = String(team.id || team.team_id || "");
                 const audienceType = normalizeAudienceType(team.for_type || team.team_type || team.audience);
-                const teamBasePrice = pickPositiveAmount(
-                    audienceType === "internal" ? team.internal_price : null,
-                    audienceType === "external" ? team.external_price : null,
-                    team.subscription_price,
-                    team.training_fee,
-                    team.price
-                );
-
                 const schedules = (Array.isArray(team.training_schedules) ? team.training_schedules : [])
                     .concat(Array.isArray(team.schedules) ? team.schedules : []);
+                const minActiveScheduleFee = schedules
+                    .filter((schedule) => String(schedule.status || "active").toLowerCase() === "active")
+                    .map((schedule) => Number(schedule.training_fee))
+                    .filter((fee) => Number.isFinite(fee) && fee > 0)
+                    .reduce<number | null>((min, fee) => (min === null || fee < min ? fee : min), null);
+                const teamBasePrice = pickPositiveAmount(
+                    team.subscription_price,
+                    minActiveScheduleFee,
+                    team.sport_price,
+                    team.sport?.price,
+                    sportPriceMap[sportId],
+                    audienceType === "internal" ? team.internal_price : null,
+                    audienceType === "external" ? team.external_price : null,
+                    team.training_fee,
+                    team.monthly_fee,
+                    team.price
+                );
 
                 const slotsFromTeam: TimeSlotOption[] = schedules.length > 0
                     ? schedules.map((schedule, idx) => ({
@@ -310,7 +325,7 @@ export default function MemberSubscribePage() {
                         time: `${(schedule.start_time || "").slice(0, 5)} - ${(schedule.end_time || "").slice(0, 5)}`,
                         days: schedule.days_ar || schedule.days_en || "-",
                         court: `${(i18n.language === 'ar' ? (schedule.field?.name_ar || schedule.field?.name_en) : (schedule.field?.name_en || schedule.field?.name_ar)) || (team.name_ar || (i18n.language === 'ar' ? (team.team_name_ar || team.name_en) : (team.name_en || team.team_name_ar)) || team.team_name_en || (isEnglish ? "Team" : "فريق"))} • ${audienceLabel(audienceType, isEnglish)}`,
-                        price: pickPositiveAmount(schedule.training_fee, schedule.price, teamBasePrice),
+                        price: teamBasePrice,
                         spots: 10,
                     }))
                     : [{
