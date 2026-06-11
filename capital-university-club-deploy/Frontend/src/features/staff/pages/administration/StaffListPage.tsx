@@ -5,7 +5,7 @@ import { Button } from '@/components/StaffPagesComponents/ui/button';
 import { Input } from '@/components/StaffPagesComponents/ui/input';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useLocalizedTranslation } from '@/hooks/useLocalizedTranslation';
-import { adminTableStyles, adminHeadClass, adminCellClass } from '@/components/StaffPagesComponents/shared/adminTableStyles';
+import { adminTableStyles, adminHeadClass, adminCellClass, adminPageStyles } from '@/components/StaffPagesComponents/shared/adminTableStyles';
 import { AdminMemberStatusBadge } from '@/components/StaffPagesComponents/shared/AdminMemberStatusBadge';
 import { PersonNameDisplay } from '@/components/StaffPagesComponents/shared/PersonNameDisplay';
 import { buildPersonName, getLocalizedText } from '@/lib/localizedDisplay';
@@ -351,12 +351,12 @@ export default function StaffListPage() {
             {/* ── Search bar ── */}
             <div className="px-6 py-3 border-b border-border shrink-0">
                 <div className="relative max-w-sm">
-                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Search className={adminPageStyles.toolbarSearchIcon} />
                     <Input
                         placeholder="بحث بالاسم، الهاتف، الوظيفة..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="pr-10 text-right"
+                        className={adminPageStyles.toolbarSearch}
                         dir={isRTL ? "rtl" : "ltr"}
                     />
                 </div>

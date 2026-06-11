@@ -21,6 +21,7 @@ import type { DateRange } from '@/components/StaffPagesComponents/shared/DateRan
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/StaffPagesComponents/ui/table';
 import { useLocalizedTranslation } from '@/hooks/useLocalizedTranslation';
 import { useAdminFormatters } from '@/components/StaffPagesComponents/shared/adminFormatters';
+import { adminPageStyles } from '@/components/StaffPagesComponents/shared/adminTableStyles';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -321,12 +322,12 @@ export default function SportsRequestsPage() {
             {/* ── Toolbar ── */}
             <div className="flex items-center gap-3 px-6 py-3 border-b border-border bg-muted/20 shrink-0 flex-wrap">
                 <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                    <Search className={adminPageStyles.toolbarSearchIcon} />
                     <Input
                         placeholder="بحث بالاسم، رقم العضو، أو الرياضة..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="pr-9 h-9"
+                        className={adminPageStyles.toolbarSearch}
                     />
                 </div>
 

@@ -309,20 +309,12 @@ export default function CardPrintPage() {
                             <p className="text-muted-foreground mt-0.5">{t("sidebar.hint")}</p>
                         </div>
                         <div className="relative w-full">
-                            <Search
-                                className={cn(
-                                    "absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none",
-                                    isRTL ? "right-3" : "left-3",
-                                )}
-                            />
+                            <Search className={adminPageStyles.toolbarSearchIcon} />
                             <Input
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder={t("sidebar.searchPlaceholder")}
-                                className={cn(
-                                    adminPageStyles.toolbarSearch,
-                                    isRTL ? "pe-10 ps-3" : "ps-10",
-                                )}
+                                className={adminPageStyles.toolbarSearch}
                             />
                         </div>
                     </div>

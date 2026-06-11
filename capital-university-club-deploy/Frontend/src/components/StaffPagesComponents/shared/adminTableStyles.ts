@@ -88,7 +88,9 @@ export const adminPageStyles = {
     `inline-flex items-center gap-1.5 ${ADMIN_TEXT} px-2.5 py-1 rounded-full font-medium`,
   toolbar:
     `flex items-center gap-3 px-6 py-3 border-b border-border bg-muted/20 shrink-0 flex-wrap ${ADMIN_TEXT} ${adminFontClass.ui}`,
-  toolbarSearch: `h-10 ${ADMIN_TEXT} ps-10`,
+  /** Search icon — use with toolbarSearch; `start-3` keeps icon on the correct side in RTL/LTR */
+  toolbarSearchIcon: `absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none shrink-0`,
+  toolbarSearch: `h-10 ${ADMIN_TEXT} ps-10 pe-3`,
   toolbarTabGroup:
     'inline-flex items-stretch gap-1.5 p-1 rounded-xl border border-border bg-muted/40 shrink-0',
   toolbarTab:
