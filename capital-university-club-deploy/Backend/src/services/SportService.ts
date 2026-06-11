@@ -698,9 +698,9 @@ export class SportService {
      * Get all Team Members
      */
     async getTeamMembers() {
-        // Get all team members with their teams
+        // Get all team members with their teams (including team name)
         return await this.teamMemberRepository.find({
-            relations: ['account', 'team_member_teams']
+            relations: ['account', 'team_member_teams', 'team_member_teams.team']
         });
     }
 
@@ -708,17 +708,30 @@ export class SportService {
      * Get Team Members by Sport Name
      */
     async getTeamMembersBySport(sportName: string) {
-        // Join with teams table and filter by sport name (case insensitive)
-        return await this.teamMemberRepository.createQueryBuilder('teamMember')
+        // First find team members who have at least one team in this sport
+        const members = await this.teamMemberRepository.createQueryBuilder('teamMember')
             .innerJoin('teamMember.team_member_teams', 'tmt')
             .innerJoin('tmt.team', 'team')
             .innerJoin('team.sport', 'sport')
-            .leftJoinAndSelect('teamMember.team_member_teams', 'teams')
-            .leftJoinAndSelect('teams.team', 'teamDetails')
-            .leftJoinAndSelect('teamDetails.sport', 'sportDetails')
             .leftJoinAndSelect('teamMember.account', 'account')
             .where('LOWER(sport.name_en) = LOWER(:sportName) OR LOWER(sport.name_ar) = LOWER(:sportName)', { sportName })
             .getMany();
+
+        if (members.length === 0) return [];
+
+        // Reload each member's team_member_teams filtered to only this sport's teams
+        const memberIds = members.map(m => m.id);
+
+        const membersWithFilteredTeams = await this.teamMemberRepository.createQueryBuilder('teamMember')
+            .leftJoinAndSelect('teamMember.account', 'account')
+            .leftJoinAndSelect('teamMember.team_member_teams', 'tmt')
+            .leftJoinAndSelect('tmt.team', 'teamDetails')
+            .leftJoinAndSelect('teamDetails.sport', 'sportDetails')
+            .where('teamMember.id IN (:...memberIds)', { memberIds })
+            .andWhere('(sportDetails.name_en IS NULL OR LOWER(sportDetails.name_en) = LOWER(:sportName) OR LOWER(sportDetails.name_ar) = LOWER(:sportName))', { sportName })
+            .getMany();
+
+        return membersWithFilteredTeams;
     }
 
     /**

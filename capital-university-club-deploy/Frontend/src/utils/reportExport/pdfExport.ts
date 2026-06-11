@@ -57,14 +57,16 @@ function getRoleLabel(roleKey: string, language: 'en' | 'ar'): string {
 function makeTable<T>(rows: T[], startIdx: number, config: ReportConfig<T>, ta: string, font: string): string {
   const isAr = config.language === 'ar';
 
-  const thCells = config.columns.map((col) =>
+  const renderColumns = isAr ? [...config.columns].reverse() : config.columns;
+
+  const thCells = renderColumns.map((col) =>
     `<td style="background:${CLR_TH_BG};color:${CLR_NAV_TXT};padding:9px 10px;font-size:9px;font-weight:700;text-align:${ta};border-right:1px solid rgba(255,255,255,0.1);font-family:${font};">${isAr ? col.headerAr : col.headerEn}</td>`
   ).join('');
 
   const dataRows = rows.map((row, i) => {
     const idx = startIdx + i;
     const bg  = idx % 2 === 0 ? CLR_ROW_ODD : CLR_ROW_EVEN;
-    const cells = config.columns.map((col) => {
+    const cells = renderColumns.map((col) => {
       const val = col.accessor(row, idx);
       const txt = val !== null && val !== undefined ? String(val) : '—';
       return `<td style="padding:6px 10px;border-bottom:1px solid ${CLR_BORDER};font-size:9px;color:${CLR_BODY_TXT};text-align:${ta};vertical-align:middle;font-family:${font};">${txt}</td>`;

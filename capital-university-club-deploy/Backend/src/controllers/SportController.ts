@@ -698,7 +698,24 @@ export class SportController {
     static async getTeamMembers(req: Request, res: Response): Promise<void> {
         try {
             const members = await sportService.getTeamMembers();
-            res.status(200).json({ success: true, data: members });
+            const mapped = members.map((m) => ({
+                id: m.id,
+                first_name_ar: m.first_name_ar,
+                last_name_ar: m.last_name_ar,
+                first_name_en: m.first_name_en,
+                last_name_en: m.last_name_en,
+                phone: m.phone ?? null,
+                national_id: m.national_id,
+                status: m.status,
+                created_at: m.created_at,
+                team_member_teams: (m.team_member_teams ?? []).map((tmt) => ({
+                    id: tmt.id,
+                    team_name: (tmt as any).team?.name_ar || (tmt as any).team?.name_en || '',
+                    team_name_en: (tmt as any).team?.name_en || '',
+                    status: tmt.status,
+                })),
+            }));
+            res.status(200).json({ success: true, data: mapped });
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             console.error('Error fetching team members:', error);
@@ -715,7 +732,24 @@ export class SportController {
             const params = req.params as Record<string, string>;
             const { sportName } = params;
             const members = await sportService.getTeamMembersBySport(sportName);
-            res.status(200).json({ success: true, data: members });
+            const mapped = members.map((m) => ({
+                id: m.id,
+                first_name_ar: m.first_name_ar,
+                last_name_ar: m.last_name_ar,
+                first_name_en: m.first_name_en,
+                last_name_en: m.last_name_en,
+                phone: m.phone ?? null,
+                national_id: m.national_id,
+                status: m.status,
+                created_at: m.created_at,
+                team_member_teams: (m.team_member_teams ?? []).map((tmt) => ({
+                    id: tmt.id,
+                    team_name: (tmt as any).team?.name_ar || (tmt as any).team?.name_en || '',
+                    team_name_en: (tmt as any).team?.name_en || '',
+                    status: tmt.status,
+                })),
+            }));
+            res.status(200).json({ success: true, data: mapped });
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             console.error('Error fetching team members by sport:', error);
