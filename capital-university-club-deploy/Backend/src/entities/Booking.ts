@@ -87,6 +87,12 @@ export class Booking {
   @Column({ type: "integer", default: 1, name: "expected_participants" })
   expected_participants: number;
 
+  @Column({ type: "boolean", default: false, name: "uses_parking" })
+  uses_parking: boolean;
+
+  @Column({ type: "integer", default: 0, name: "parking_cars_count" })
+  parking_cars_count: number;
+
   // ─── Additional Information ─────────────────────────────────────────────
   @Column({ type: "text", nullable: true, name: "notes" })
   notes: string | null;

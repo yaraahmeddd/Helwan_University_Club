@@ -94,6 +94,8 @@ export class ParticipantRegistrationController {
           duration_minutes: booking.duration_minutes,
           location: field?.location || "Helwan Sports Club",
           expected_participants: booking.expected_participants,
+          uses_parking: !!booking.uses_parking,
+          parking_cars_count: booking.uses_parking ? booking.parking_cars_count || 1 : 0,
           registered_participants: participantCount,
           is_full: participantCount >= booking.expected_participants,
           available_slots: Math.max(0, booking.expected_participants - participantCount),
@@ -386,7 +388,9 @@ export class ParticipantRegistrationController {
             price: booking.price,
             payment_reference: booking.payment_reference,
             payment_completed_at: booking.payment_completed_at,
-            share_token: booking.share_token
+            share_token: booking.share_token,
+            uses_parking: !!booking.uses_parking,
+            parking_cars_count: booking.uses_parking ? booking.parking_cars_count || 1 : 0
           },
           participants: booking.participants.map(p => ({
             id: p.id,
@@ -540,6 +544,10 @@ export class ParticipantRegistrationController {
             remaining_slots: Math.max(0, booking.expected_participants - booking.participants.length),
             is_full: booking.participants.length >= booking.expected_participants
           },
+          parking: {
+            uses_parking: !!booking.uses_parking,
+            cars_count: booking.uses_parking ? booking.parking_cars_count || 1 : 0
+          },
           status: booking.status,
           payment_status: booking.payment_completed_at ? 'completed' : 'pending',
           created_at: booking.created_at
@@ -650,7 +658,9 @@ export class ParticipantRegistrationController {
             status: booking.status,
             price: booking.price,
             payment_reference: booking.payment_reference,
-            payment_completed_at: booking.payment_completed_at
+            payment_completed_at: booking.payment_completed_at,
+            uses_parking: !!booking.uses_parking,
+            parking_cars_count: booking.uses_parking ? booking.parking_cars_count || 1 : 0
           },
           participants: booking.participants.map(p => ({
             id: p.id,
@@ -668,6 +678,10 @@ export class ParticipantRegistrationController {
             registered_count: booking.participants.length,
             remaining_slots: Math.max(0, booking.expected_participants - booking.participants.length),
             is_full: booking.participants.length >= booking.expected_participants
+          },
+          parking: {
+            uses_parking: !!booking.uses_parking,
+            cars_count: booking.uses_parking ? booking.parking_cars_count || 1 : 0
           },
           created_at: booking.created_at,
           updated_at: booking.updated_at

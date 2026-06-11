@@ -13,6 +13,8 @@ export interface CreateBookingRequest {
   start_time: string; // ISO datetime
   end_time: string;   // ISO datetime
   expected_participants?: number;
+  uses_parking?: boolean;
+  parking_cars_count?: number;
   notes?: string;
   language?: "ar" | "en";
 }
@@ -38,6 +40,8 @@ export interface BookingDetails {
   share_token: string;
   share_url: string;
   expected_participants: number;
+  uses_parking?: boolean;
+  parking_cars_count?: number;
   participants: BookingParticipant[];
   created_at: string;
   notes?: string;

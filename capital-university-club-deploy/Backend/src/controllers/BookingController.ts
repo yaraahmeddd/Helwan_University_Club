@@ -48,6 +48,8 @@ export class BookingController {
         field_id,
         start_time,
         end_time,
+        uses_parking,
+        parking_cars_count,
         notes,
         language,
       } = req.body;
@@ -59,6 +61,8 @@ export class BookingController {
         field_id,
         start_time,
         end_time,
+        uses_parking,
+        parking_cars_count,
         notes,
         language,
       });
@@ -109,6 +113,8 @@ export class BookingController {
         field_id,
         start_time: startDateTime,
         end_time: endDateTime,
+        uses_parking: !!uses_parking,
+        parking_cars_count: Number(parking_cars_count) || 0,
         notes: notes || undefined,
         language: language || "ar",
         skipBookableCheck: true, // Staff can book any active field
@@ -129,6 +135,8 @@ export class BookingController {
           status: booking.status,
           share_token: booking.share_token,
           expected_participants: booking.expected_participants,
+          uses_parking: booking.uses_parking,
+          parking_cars_count: booking.parking_cars_count,
           created_at: booking.created_at,
         },
         message: "Booking created successfully.",

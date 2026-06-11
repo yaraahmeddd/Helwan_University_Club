@@ -18,6 +18,8 @@ export interface CreateBookingRequest {
   start_time: Date; // ISO datetime
   end_time: Date; // ISO datetime
   expected_participants?: number;
+  uses_parking?: boolean;
+  parking_cars_count?: number;
   notes?: string;
   language?: "ar" | "en";
   skipBookableCheck?: boolean; // Staff bypass: skip is_available_for_booking check
@@ -61,6 +63,8 @@ export interface BookingDetailsResponse {
   share_token: string;
   share_url: string;
   expected_participants: number;
+  uses_parking: boolean;
+  parking_cars_count: number;
   participants: Array<{
     id: string;
     full_name: string;
@@ -225,6 +229,10 @@ export class BookingService {
     booking.share_token = shareToken;
     // ALWAYS use field capacity as expected_participants
     booking.expected_participants = field.capacity || 1;
+    booking.uses_parking = !!request.uses_parking;
+    booking.parking_cars_count = request.uses_parking
+      ? Math.max(1, Math.floor(Number(request.parking_cars_count) || 1))
+      : 0;
     booking.notes = request.notes || null;
     booking.language = request.language || "ar";
 
@@ -286,6 +294,8 @@ export class BookingService {
       share_token: booking.share_token,
       share_url: `${baseUrl}/bookings/share/${booking.share_token}`,
       expected_participants: booking.expected_participants,
+      uses_parking: !!booking.uses_parking,
+      parking_cars_count: booking.uses_parking ? booking.parking_cars_count || 1 : 0,
       participants: (booking.participants || []).map((p) => ({
         id: p.id,
         full_name: p.full_name,
@@ -959,6 +969,10 @@ export class BookingService {
           registered_count: registeredCount,
           remaining_slots: remainingSlots,
           is_full: remainingSlots === 0,
+        },
+        parking: {
+          uses_parking: !!booking.uses_parking,
+          cars_count: booking.uses_parking ? booking.parking_cars_count || 1 : 0,
         },
         status: booking.status,
         payment_status: booking.status === 'confirmed' || booking.status === 'completed' ? 'completed' : 'pending',
