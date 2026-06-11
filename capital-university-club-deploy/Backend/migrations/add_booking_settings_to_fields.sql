@@ -10,7 +10,7 @@ BEGIN;
 
 -- Add booking settings columns to fields table
 ALTER TABLE fields 
-ADD COLUMN IF NOT EXISTS is_available_for_booking BOOLEAN DEFAULT false,
+ADD COLUMN IF NOT EXISTS is_available_for_booking BOOLEAN DEFAULT true,
 ADD COLUMN IF NOT EXISTS booking_slot_duration INTEGER DEFAULT 60;
 
 -- Add comments for documentation
@@ -20,9 +20,11 @@ COMMENT ON COLUMN fields.booking_slot_duration IS 'Booking time slot duration in
 -- Create index for faster queries on bookable fields
 CREATE INDEX IF NOT EXISTS idx_fields_bookable ON fields(is_available_for_booking) WHERE is_available_for_booking = true;
 
--- Optional: Set existing fields as not bookable by default (safe approach)
--- If you want some fields to be immediately bookable, update them manually after running this script
-UPDATE fields SET is_available_for_booking = false WHERE is_available_for_booking IS NULL;
+-- Existing active fields are visible in the member portal court booking flow.
+UPDATE fields
+SET is_available_for_booking = true
+WHERE status = 'active'
+  AND is_available_for_booking IS NULL;
 
 COMMIT;
 
