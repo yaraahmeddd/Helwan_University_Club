@@ -16,6 +16,7 @@
     "searchPlaceholder": "بحث بالاسم أو الهاتف أو الرقم القومي...",
     "sportFilter": "الرياضة",
     "allSports": "كل الرياضات",
+    "selectSport": "اختر رياضة لعرض الأعضاء",
     "status": "الحالة",
     "results": "{{count}} نتيجة"
   },
@@ -29,10 +30,11 @@
     "emptyFiltered": "لا توجد نتائج تطابق البحث",
     "emptySport": "لا يوجد أعضاء في رياضة {{sport}}",
     "empty": "لا يوجد أعضاء",
+    "type": "النوع",
     "member": "العضو",
     "phone": "رقم الهاتف",
     "nationalId": "الرقم القومي",
-    "sports": "الرياضات",
+    "sports": "الفرق",
     "subscriptionDate": "تاريخ الاشتراك",
     "status": "الحالة"
   },

@@ -745,6 +745,57 @@ export class SportService {
     }
 
     /**
+     * Get Regular Members by Sport Name
+     * Queries members who have a MemberTeam subscription to a team belonging to the given sport.
+     */
+    async getMembersBySport(sportName: string) {
+        // Find member_ids that have at least one team in this sport
+        const memberTeamRepo = AppDataSource.getRepository('MemberTeam') as import('typeorm').Repository<any>;
+        const subs = await memberTeamRepo
+            .createQueryBuilder('mt')
+            .innerJoin('mt.team', 'team')
+            .innerJoin('team.sport', 'sport')
+            .leftJoinAndSelect('mt.team', 'teamData')
+            .leftJoinAndSelect('teamData.sport', 'sportData')
+            .where('LOWER(sport.name_en) = LOWER(:sportName) OR LOWER(sport.name_ar) = LOWER(:sportName)', { sportName })
+            .getMany();
+
+        if (subs.length === 0) return [];
+
+        // Group by member_id and collect their teams for this sport
+        const memberRepo = AppDataSource.getRepository('Member') as import('typeorm').Repository<any>;
+        const memberIds: number[] = [...new Set<number>(subs.map((s: any) => s.member_id))];
+
+        const members = await memberRepo
+            .createQueryBuilder('member')
+            .where('member.id IN (:...memberIds)', { memberIds })
+            .getMany();
+
+        // Map to the same shape as ApiMember (used by the frontend)
+        return members.map((m: any) => {
+            const memberSubs = subs.filter((s: any) => s.member_id === m.id);
+            return {
+                id: m.id,
+                first_name_ar: m.first_name_ar,
+                last_name_ar: m.last_name_ar,
+                first_name_en: m.first_name_en,
+                last_name_en: m.last_name_en,
+                phone: m.phone ?? null,
+                national_id: m.national_id,
+                status: m.status,
+                created_at: m.created_at,
+                member_type: 'member' as const,
+                team_member_teams: memberSubs.map((s: any) => ({
+                    id: s.id,
+                    team_name: s.team?.name_ar || s.team?.name_en || '',
+                    team_name_en: s.team?.name_en || '',
+                    status: s.status,
+                })),
+            };
+        });
+    }
+
+    /**
      * Update sport with all related fields (teams and trainings)
      * This method handles atomic updates to sport, teams, and training schedules
      */

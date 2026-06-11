@@ -17,6 +17,9 @@ router.get('/team-members', authenticate, SportController.getTeamMembers);
 router.get('/team-members/sport/:sportName', authenticate, SportController.getTeamMembersBySport);
 router.get('/team-members/user/:memberId', authenticate, SportController.getTeamMemberById);
 
+// Regular members by sport
+router.get('/members/sport/:sportName', authenticate, SportController.getMembersBySport);
+
 // Create new sport
 router.post('/', authenticate, SportController.createSport);
 

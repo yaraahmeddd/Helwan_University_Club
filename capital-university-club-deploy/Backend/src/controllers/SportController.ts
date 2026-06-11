@@ -780,6 +780,19 @@ export class SportController {
         }
     }
 
+    static async getMembersBySport(req: Request, res: Response): Promise<void> {
+        try {
+            const params = req.params as Record<string, string>;
+            const { sportName } = params;
+            const members = await sportService.getMembersBySport(sportName);
+            res.status(200).json({ success: true, data: members });
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            console.error('Error fetching members by sport:', error);
+            res.status(500).json({ error: errorMessage });
+        }
+    }
+
     /**
      * @route   GET /api/public/sports
      * @desc    Get all active and approved sports (public endpoint - no authentication required)

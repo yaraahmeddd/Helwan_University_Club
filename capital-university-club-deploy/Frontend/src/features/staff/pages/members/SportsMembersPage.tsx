@@ -545,9 +545,9 @@ export default function SportsMembersPage() {
     setAssignSaving(true);
     try {
       if (selectedMember.isTeamPlayer) {
+        // Backend expects { sportIds: number[] }
         await api.post(`/team-members/${selectedMember.id}/sports`, {
-          sport_id: assignModal.selectedSport.id,
-          team_id: assignModal.selectedTeam.id,
+          sportIds: [assignModal.selectedSport.id],
         });
       } else {
         await api.post(`/member-teams/member/${selectedMember.id}/choose-sport`, {

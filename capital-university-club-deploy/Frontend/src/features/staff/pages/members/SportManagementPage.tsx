@@ -115,6 +115,7 @@ type ApiMember = {
     national_id: string;
     status: string;
     created_at: string;
+    member_type?: 'member' | 'team_member';
     team_member_teams?: TeamMemberTeamItem[];
 };
 
@@ -197,11 +198,28 @@ function processMemberList(list: ApiMember[], opts: ProcessMemberOptions): ApiMe
 }
 
 async function fetchMembersForSport(sport: Sport | null): Promise<ApiMember[]> {
-    const url = sport
-        ? `/sports/team-members/sport/${encodeURIComponent(sport.nameEn || sport.nameAr)}`
-        : "/sports/team-members";
-    const res = await api.get<{ data?: ApiMember[] }>(url);
-    return Array.isArray(res?.data?.data) ? res.data.data : [];
+    if (!sport) return [];
+    const [teamMembersRes, membersRes] = await Promise.allSettled([
+        api.get<{ data?: ApiMember[] }>(`/sports/team-members/sport/${encodeURIComponent(sport.nameEn || sport.nameAr)}`),
+        api.get<{ data?: ApiMember[] }>(`/sports/members/sport/${encodeURIComponent(sport.nameEn || sport.nameAr)}`),
+    ]);
+
+    const teamMembers: ApiMember[] = teamMembersRes.status === 'fulfilled' && Array.isArray(teamMembersRes.value?.data?.data)
+        ? teamMembersRes.value.data.data.map(m => ({ ...m, member_type: 'team_member' as const }))
+        : [];
+
+    const members: ApiMember[] = membersRes.status === 'fulfilled' && Array.isArray(membersRes.value?.data?.data)
+        ? membersRes.value.data.data.map(m => ({ ...m, member_type: 'member' as const }))
+        : [];
+
+    // Merge: use a composite key to avoid duplicates (same person registered as both)
+    const seen = new Set<string>();
+    const combined: ApiMember[] = [];
+    for (const m of [...teamMembers, ...members]) {
+        const key = `${m.member_type}:${m.id}`;
+        if (!seen.has(key)) { seen.add(key); combined.push(m); }
+    }
+    return combined;
 }
 
 // Sort header helper
@@ -320,7 +338,14 @@ export default function SportManagementPage() {
         }
     }, [t, toast]);
 
-    useEffect(() => { void fetchMembers(selectedSport); }, [selectedSport, fetchMembers]);
+    // Only fetch members when a specific sport is selected
+    useEffect(() => {
+        if (selectedSport) {
+            void fetchMembers(selectedSport);
+        } else {
+            setMembers([]);
+        }
+    }, [selectedSport, fetchMembers]);
 
     // Fetch teams for selected sport
     const fetchTeamsForSport = useCallback(async (sport: Sport) => {
@@ -390,9 +415,18 @@ export default function SportManagementPage() {
     const exportColumns = useMemo(() => [
             {
                 headerEn: "Member",
-                headerAr: "العضو",
+                headerAr: "الاسم",
                 accessor: (m: ApiMember) => fullName(m, language),
                 width: 24,
+            },
+            {
+                headerEn: "Type",
+                headerAr: "النوع",
+                accessor: (m: ApiMember) =>
+                    m.member_type === 'member'
+                        ? (language === 'ar' ? 'عضو' : 'Member')
+                        : (language === 'ar' ? 'لاعب' : 'Team Member'),
+                width: 14,
             },
             {
                 headerEn: "Phone",
@@ -485,15 +519,10 @@ export default function SportManagementPage() {
                     <>
                         {t("header.total", { count: processed.length })}
                         {membersLoading && <Loader2 className={`h-3.5 w-3.5 animate-spin inline ${isRTL ? "mr-1" : "ml-1"}`} />}
-                        {selectedSport ? (
+                        {selectedSport && (
                             <span className={`${adminPageStyles.statChip} text-amber-700 bg-amber-50 ${isRTL ? "mr-2" : "ml-2"}`}>
                                 <Trophy className="w-3 h-3 inline" />
                                 {" "}{getSportName(selectedSport, language)}
-                            </span>
-                        ) : (
-                            <span className={`${adminPageStyles.statChip} text-blue-700 bg-blue-50 ${isRTL ? "mr-2" : "ml-2"}`}>
-                                <Users className="w-3 h-3 inline" />
-                                {" "}{t("header.allSports", { count: sports.length })}
                             </span>
                         )}
                     </>
@@ -530,21 +559,17 @@ export default function SportManagementPage() {
                         <div className="flex items-center gap-2 shrink-0">
                             <Trophy className="h-4 w-4 text-muted-foreground" />
                             <Select
-                                value={selectedSport ? String(selectedSport.id) : "all"}
+                                value={selectedSport ? String(selectedSport.id) : ""}
                                 onValueChange={(val) => {
-                                    if (val === "all") handleSelectSport(null);
-                                    else {
-                                        const sport = sports.find((s) => String(s.id) === val);
-                                        if (sport) handleSelectSport(sport);
-                                    }
+                                    const sport = sports.find((s) => String(s.id) === val);
+                                    if (sport) handleSelectSport(sport);
                                 }}
                                 disabled={sportsLoading}
                             >
                                 <SelectTrigger className="w-44 sm:w-52 h-9">
-                                    <SelectValue placeholder={t("toolbar.allSports")} />
+                                    <SelectValue placeholder={sportsLoading ? t("table.loading") : t("toolbar.selectSport")} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">{t("toolbar.allSports")}</SelectItem>
                                     {sports.map((sport) => (
                                         <SelectItem key={sport.id} value={String(sport.id)}>
                                             {getSportName(sport, language)}
@@ -634,11 +659,11 @@ export default function SportManagementPage() {
                             <div className="py-20 text-center text-muted-foreground">
                                 <UserCheck className="h-12 w-12 opacity-20 mx-auto mb-3" />
                                 <p className="text-sm">
-                                    {search || filterStatus !== "all"
-                                        ? t("table.emptyFiltered")
-                                        : selectedSport
-                                            ? t("table.emptySport", { sport: getSportName(selectedSport, language) })
-                                            : t("table.empty")}
+                                    {!selectedSport
+                                        ? t("toolbar.selectSport")
+                                        : search || filterStatus !== "all"
+                                            ? t("table.emptyFiltered")
+                                            : t("table.emptySport", { sport: getSportName(selectedSport, language) })}
                                 </p>
                             </div>
                         ) : (
@@ -646,6 +671,7 @@ export default function SportManagementPage() {
                                 <TableHeader className={adminTableStyles.header}>
                                     <TableRow>
                                         <Th field="name" {...thProps}>{t("table.member")}</Th>
+                                        <Th {...thProps}>{t("table.type")}</Th>
                                         <Th {...thProps}>{t("table.phone")}</Th>
                                         <Th field="national_id" {...thProps}>{t("table.nationalId")}</Th>
                                         <Th {...thProps}>{t("table.sports")}</Th>
@@ -655,7 +681,7 @@ export default function SportManagementPage() {
                                 </TableHeader>
                                 <TableBody className={adminTableStyles.body}>
                                     {pageRows.map((m) => (
-                                            <TableRow key={m.id} className={adminTableStyles.row}>
+                                            <TableRow key={`${m.member_type ?? 'tm'}-${m.id}`} className={adminTableStyles.row}>
                                                 <TableCell className={adminCellClass()}>
                                                     <PersonNameDisplay
                                                         id={m.id}
@@ -668,6 +694,17 @@ export default function SportManagementPage() {
                                                         language={language}
                                                         showAvatar={false}
                                                     />
+                                                </TableCell>
+                                                <TableCell className={adminCellClass()}>
+                                                    <span className={`inline-flex items-center gap-1 text-xs font-semibold rounded-full px-2 py-0.5 ${
+                                                        m.member_type === 'member'
+                                                            ? 'bg-blue-100 text-blue-700'
+                                                            : 'bg-amber-100 text-amber-700'
+                                                    }`}>
+                                                        {m.member_type === 'member'
+                                                            ? (language === 'ar' ? 'عضو' : 'Member')
+                                                            : (language === 'ar' ? 'لاعب' : 'Team Member')}
+                                                    </span>
                                                 </TableCell>
                                                 <TableCell className={adminCellClass({ size: 'phone' })}>
                                                     <span dir="ltr">{m.phone ?? "-"}</span>

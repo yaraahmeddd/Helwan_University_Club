@@ -16,6 +16,7 @@
     "searchPlaceholder": "Search by name, phone, or national ID...",
     "sportFilter": "Sport",
     "allSports": "All sports",
+    "selectSport": "Select a sport to view members",
     "status": "Status",
     "results": "{{count}} results"
   },
@@ -29,10 +30,11 @@
     "emptyFiltered": "No results match the search",
     "emptySport": "There are no members in {{sport}}",
     "empty": "No members found",
+    "type": "Type",
     "member": "Member",
     "phone": "Phone number",
     "nationalId": "National ID",
-    "sports": "Sports",
+    "sports": "Teams",
     "subscriptionDate": "Subscription date",
     "status": "Status"
   },
