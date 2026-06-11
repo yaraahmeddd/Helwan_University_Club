@@ -46,3 +46,16 @@ export interface ReportConfig<T> {
   /** Who is doing the export */
   exporter: ExporterInfo;
 }
+
+/** One worksheet inside a multi-sheet Excel workbook */
+export interface ReportSheet<T> {
+  /** Tab name in English (max 31 chars after sanitization) */
+  sheetNameEn: string;
+  /** Tab name in Arabic */
+  sheetNameAr: string;
+  /** Optional per-sheet title override (English) */
+  titleEn?: string;
+  /** Optional per-sheet title override (Arabic) */
+  titleAr?: string;
+  rows: T[];
+}
