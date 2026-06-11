@@ -11,6 +11,7 @@ import {
   Phone,
   Users,
   Award,
+  Car,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
@@ -112,6 +113,10 @@ type Invitation = {
     registered_count: number;
     remaining_slots: number;
     is_full: boolean;
+  };
+  parking?: {
+    uses_parking: boolean;
+    cars_count: number;
   };
   status: "pending_payment" | "payment_completed" | "in_progress" | "completed" | "cancelled" | "confirmed";
   payment_status: "pending" | "completed";
@@ -599,6 +604,18 @@ export default function ManageInvitationsPage() {
                           label={t("panel.participants")}
                           value={`${selectedInv.stats?.registered_count ?? 0} / ${selectedInv.stats?.expected_participants ?? 0} ${t("panel.registered")}`}
                           ltr
+                          alignEnd={isRTL}
+                        />
+                        <RecordViewField
+                          icon={Car}
+                          label={t("panel.parking")}
+                          value={
+                            <span className="block w-full text-center">
+                              {selectedInv.parking?.uses_parking
+                                ? t("panel.parkingRequested", { count: selectedInv.parking.cars_count || 1 })
+                                : t("panel.parkingNotRequested")}
+                            </span>
+                          }
                           alignEnd={isRTL}
                         />
                         <div className="space-y-1">

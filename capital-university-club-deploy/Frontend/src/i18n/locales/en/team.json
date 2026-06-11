@@ -219,6 +219,9 @@
       "to_time": "To",
       "placeholder_start": "Start Time",
       "placeholder_end": "End Time",
+      "parking_label": "Use car parking area",
+      "parking_hint": "Tell the admin team if parking access is needed for this booking.",
+      "cars_count": "Cars number",
       "total_cost": "Total Estimated Cost:",
       "confirm_button": "Book Court",
       "cancel_button": "Cancel"

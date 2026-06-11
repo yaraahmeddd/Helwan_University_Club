@@ -219,6 +219,9 @@
       "to_time": "إلى الساعة",
       "placeholder_start": "وقت البداية",
       "placeholder_end": "وقت النهاية",
+      "parking_label": "استخدام منطقة انتظار السيارات",
+      "parking_hint": "أبلغ الإدارة إذا كان الحجز يحتاج دخول منطقة انتظار السيارات.",
+      "cars_count": "عدد السيارات",
       "total_cost": "إجمالي التكلفة المتوقعة:",
       "confirm_button": "حجز الملعب",
       "cancel_button": "إلغاء"

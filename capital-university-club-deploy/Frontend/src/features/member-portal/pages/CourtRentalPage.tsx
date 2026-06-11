@@ -10,10 +10,11 @@ import type { ToastType } from '@/types';
 
 import { Button } from '@/components/StaffPagesComponents/ui/button';
 import { Label } from '@/components/StaffPagesComponents/ui/label';
+import { Checkbox } from '@/components/StaffPagesComponents/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/StaffPagesComponents/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/StaffPagesComponents/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/StaffPagesComponents/ui/popover';
-import { Loader2, CalendarCheck, Clock, Lock } from "lucide-react";
+import { Loader2, CalendarCheck, Clock, Lock, Car, Minus, Plus } from "lucide-react";
 import i18n from '@/i18n';
 
 // --- Types ---
@@ -256,6 +257,8 @@ const CourtRentalPage: React.FC<{ showToast: (msg: string, t: ToastType) => void
 
     const [dialogOpen, setDialogOpen] = useState(false);
     const [bookingForm, setBookingForm] = useState({ date: "", from: "", to: "" });
+    const [usesParking, setUsesParking] = useState(false);
+    const [parkingCarsCount, setParkingCarsCount] = useState(1);
     const [isSaving, setIsSaving] = useState(false);
 
     // Fetch Sports
@@ -425,6 +428,8 @@ const CourtRentalPage: React.FC<{ showToast: (msg: string, t: ToastType) => void
                 field_id: selectedFieldId,
                 start_time,
                 end_time,
+                uses_parking: usesParking,
+                parking_cars_count: usesParking ? parkingCarsCount : 0,
                 language: isRtl ? "ar" : "en",
             });
 
@@ -484,6 +489,8 @@ const CourtRentalPage: React.FC<{ showToast: (msg: string, t: ToastType) => void
             // default to 1 hour reserve
             to: addMinutesStr(finalSlotTime, 60)
         });
+        setUsesParking(false);
+        setParkingCarsCount(1);
         setDialogOpen(true);
     };
 
@@ -638,15 +645,15 @@ const CourtRentalPage: React.FC<{ showToast: (msg: string, t: ToastType) => void
 
             {/* Booking Dialog Modal */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogContent className="max-w-md w-[95vw] rounded-[28px] p-0 overflow-hidden border-0 shadow-2xl" dir={isRtl ? 'rtl' : 'ltr'}>
-                    <DialogHeader className="p-6 pb-4 bg-ds-border/10 border-b border-ds-border/50">
+                <DialogContent className="max-w-md w-[95vw] max-h-[calc(100vh-2rem)] rounded-[28px] p-0 overflow-hidden border-0 shadow-2xl flex flex-col" dir={isRtl ? 'rtl' : 'ltr'}>
+                    <DialogHeader className="p-5 sm:p-6 sm:pb-4 bg-ds-border/10 border-b border-ds-border/50 shrink-0">
                         <DialogTitle className={`text-[20px] font-black text-ds-text-primary ${isRtl ? 'text-right' : 'text-left'}`}>{t("court_rental.dialog.title")}</DialogTitle>
                         <DialogDescription className={`text-[13px] font-bold text-ds-text-muted mt-1.5 ${isRtl ? 'text-right' : 'text-left'}`}>
                             {t("court_rental.dialog.description")}
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="p-6 space-y-6">
+                    <div className="p-5 sm:p-6 space-y-5 overflow-y-auto min-h-0 custom-scrollbar">
                         {/* Display Information */}
                         <div className="bg-white border text-[14px] font-bold border-ds-border/50 shadow-sm rounded-[16px] p-3 flex flex-col gap-1">
                             <div className="flex items-center justify-between px-3 py-2 gap-4">
@@ -695,6 +702,74 @@ const CourtRentalPage: React.FC<{ showToast: (msg: string, t: ToastType) => void
                                 </div>
                             </div>
 
+                            <div className="rounded-[16px] border border-ds-border/60 bg-white p-4 shadow-sm">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="flex items-start gap-3">
+                                        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] bg-ds-teal/10 text-ds-teal">
+                                            <Car className="h-5 w-5" />
+                                        </span>
+                                        <div className={isRtl ? "text-right" : "text-left"}>
+                                            <Label htmlFor="booking-parking" className="text-[13px] font-black text-ds-text-primary cursor-pointer">
+                                                {t("court_rental.dialog.parking_label")}
+                                            </Label>
+                                            <p className="mt-1 text-[11px] font-semibold text-ds-text-muted">
+                                                {t("court_rental.dialog.parking_hint")}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <Checkbox
+                                        id="booking-parking"
+                                        checked={usesParking}
+                                        onCheckedChange={(checked) => {
+                                            const next = checked === true;
+                                            setUsesParking(next);
+                                            if (next && parkingCarsCount < 1) setParkingCarsCount(1);
+                                        }}
+                                        className="mt-1"
+                                    />
+                                </div>
+
+                                {usesParking && (
+                                    <div className={`mt-4 flex items-center justify-between gap-3 rounded-[14px] bg-ds-border/10 px-3 py-2 ${isRtl ? "flex-row" : "flex-row-reverse"}`}>
+                                        <span className="text-[12px] font-black text-ds-text-secondary">
+                                            {t("court_rental.dialog.cars_count")}
+                                        </span>
+                                        <div className="flex items-center gap-2" dir="ltr">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="icon"
+                                                className="h-9 w-9 rounded-[12px]"
+                                                onClick={() => setParkingCarsCount((count) => Math.max(1, count - 1))}
+                                                disabled={parkingCarsCount <= 1}
+                                            >
+                                                <Minus className="h-4 w-4" />
+                                            </Button>
+                                            <input
+                                                type="number"
+                                                min={1}
+                                                max={20}
+                                                value={parkingCarsCount}
+                                                onChange={(event) => {
+                                                    const nextValue = Math.max(1, Math.min(20, Number(event.target.value) || 1));
+                                                    setParkingCarsCount(nextValue);
+                                                }}
+                                                className="h-9 w-14 rounded-[12px] border border-ds-border bg-white text-center text-sm font-black text-ds-text-primary outline-none focus:border-ds-primary"
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="icon"
+                                                className="h-9 w-9 rounded-[12px]"
+                                                onClick={() => setParkingCarsCount((count) => Math.min(20, count + 1))}
+                                            >
+                                                <Plus className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
                             {hourlyRate > 0 && computedPrice > 0 && (
                                 <div className={`flex items-center justify-between pt-4 border-t border-ds-border/50 mt-4 ${isRtl ? 'flex-row' : 'flex-row-reverse'}`}>
                                     <span className="text-[13px] font-medium text-ds-text-muted">{t("court_rental.dialog.total_cost")}</span>
@@ -704,7 +779,7 @@ const CourtRentalPage: React.FC<{ showToast: (msg: string, t: ToastType) => void
                         </div>
                     </div>
 
-                    <DialogFooter className={`p-6 pt-0 border-none gap-2.5 flex-row-reverse sm:justify-start ${isRtl ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <DialogFooter className={`p-5 sm:p-6 sm:pt-4 border-t border-ds-border/40 bg-white gap-2.5 flex-row-reverse sm:justify-start shrink-0 ${isRtl ? 'flex-row-reverse' : 'flex-row'}`}>
                         <Button
                             className="bg-ds-primary hover:bg-ds-primary-dark text-white w-full h-[52px] rounded-[16px] font-black text-[16px] shadow-sm transition-all"
                             onClick={handleSaveReservation}
