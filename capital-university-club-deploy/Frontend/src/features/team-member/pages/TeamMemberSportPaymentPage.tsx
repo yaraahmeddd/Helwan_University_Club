@@ -1,10 +1,18 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import api from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import bookingService from '@/services/bookingService';
 import { CheckCircle, Copy } from "lucide-react";
+import { PaymobCheckoutFrame } from '@/components/shared/PaymobCheckoutFrame';
+import {
+  isPaymobReturnFailed,
+  isPaymobReturnSuccess,
+  startPaymobPayment,
+  getPaymobPaymentStatus,
+  waitForPaymobCompletion,
+} from '@/services/paymobService';
 
 interface TeamMemberSubscriptionApi {
     id?: number | string;
@@ -35,6 +43,7 @@ const TeamMemberSportPaymentPage: React.FC = () => {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [shareUrl, setShareUrl] = useState<string>("");
+    const [paymobIframeUrl, setPaymobIframeUrl] = useState<string | null>(null);
 
     const isRtl = i18n.resolvedLanguage?.startsWith('ar') || i18n.language.startsWith('ar');
 
@@ -250,6 +259,109 @@ const TeamMemberSportPaymentPage: React.FC = () => {
         sessionStorage.setItem("tm_last_paid_sport", JSON.stringify(payload));
     };
 
+    const completeBookingPayment = useCallback(async () => {
+        if (!paymentData.bookingId) throw new Error(t("payment.alerts.missing_booking_id"));
+        const booking = await bookingService.confirmPayment(paymentData.bookingId, paymentData.paymentReference);
+        try {
+            const userId = user?.member_id || user?.team_member_id;
+            if (userId) {
+                const storageKey = `confirmed_bookings_${userId}`;
+                const existing = JSON.parse(localStorage.getItem(storageKey) || "[]");
+                existing.push({
+                    id: paymentData.bookingId,
+                    date: paymentData.slotDays,
+                    time: paymentData.slotTime,
+                    court: paymentData.court,
+                    confirmedAt: Date.now(),
+                });
+                localStorage.setItem(storageKey, JSON.stringify(existing));
+            }
+        } catch { /* silent */ }
+
+        const origin = window.location.origin;
+        let token = booking?.share_token;
+        if (!token && paymentData.bookingId) {
+            try {
+                const details = await bookingService.getBookingDetails(paymentData.bookingId);
+                token = details?.share_token;
+            } catch { /* ignore */ }
+        }
+        setShareUrl(token ? `${origin}/bookings/share/${token}` : "");
+        setSuccessMessage(t("payment.alerts.success_booking"));
+        setShowSuccessModal(true);
+    }, [paymentData, t, user?.member_id, user?.team_member_id]);
+
+    const completeSubscriptionPayment = useCallback(async () => {
+        const resolved = await resolvePaymentData();
+        if (!resolved.subscriptionId) {
+            throw new Error(t("payment.alerts.missing_subscription"));
+        }
+
+        const paymentReference = resolved.paymentReference || paymentData.paymentReference;
+        const status = await getPaymobPaymentStatus(paymentReference);
+        if (status.status !== "completed") {
+            await confirmPaymentRequest(resolved.subscriptionId, {
+                ...(paymentReference ? { payment_reference: paymentReference } : {}),
+                transaction_id: `TXN-${resolved.subscriptionId}-${Date.now()}`,
+                payment_method: "credit_card",
+                gateway_response: "paymob",
+            });
+        }
+        persistLastPaidSport({
+            sportName: paymentData.sportName,
+            amount: resolved.amount,
+            teamId: paymentData.teamId || undefined,
+        });
+        setSuccessMessage(t("payment.alerts.success_subscription"));
+        setTimeout(() => {
+            navigate("/team-member/dashboard", { replace: true });
+        }, 1500);
+    }, [navigate, paymentData.sportName, paymentData.teamId, t]);
+
+    const handleGatewaySuccess = useCallback(async () => {
+        if (paymentData.isBooking) {
+            await completeBookingPayment();
+            return;
+        }
+        await completeSubscriptionPayment();
+    }, [completeBookingPayment, completeSubscriptionPayment, paymentData.isBooking]);
+
+    useEffect(() => {
+        const paymentReference = searchParams.get("paymentReference") || paymentData.paymentReference;
+        if (!paymentReference) return;
+        if (isPaymobReturnFailed(searchParams)) {
+            setErrorMessage(t("payment.alerts.fail"));
+            return;
+        }
+        if (!isPaymobReturnSuccess(searchParams)) return;
+
+        void (async () => {
+            setProcessing(true);
+            setErrorMessage(null);
+            try {
+                await waitForPaymobCompletion(paymentReference, { attempts: 20, intervalMs: 1500 });
+                await handleGatewaySuccess();
+            } catch (error: unknown) {
+                setErrorMessage(error instanceof Error ? error.message : t("payment.alerts.fail"));
+            } finally {
+                setProcessing(false);
+            }
+        })();
+    }, [handleGatewaySuccess, paymentData.paymentReference, searchParams, t]);
+
+    const pollPaymobCompletion = useCallback(async (paymentReference: string) => {
+        try {
+            await waitForPaymobCompletion(paymentReference, { attempts: 45, intervalMs: 2000 });
+            setPaymobIframeUrl(null);
+            await handleGatewaySuccess();
+        } catch (error: unknown) {
+            setPaymobIframeUrl(null);
+            setErrorMessage(error instanceof Error ? error.message : t("payment.alerts.fail"));
+        } finally {
+            setProcessing(false);
+        }
+    }, [handleGatewaySuccess, t]);
+
     const handlePayNow = async () => {
         if (!paymentData.isValid) {
             setErrorMessage(t("payment.alerts.incomplete_data"));
@@ -260,82 +372,40 @@ const TeamMemberSportPaymentPage: React.FC = () => {
         setErrorMessage(null);
 
         try {
-            if (paymentData.isBooking) {
-                if (!paymentData.bookingId) throw new Error(t("payment.alerts.missing_booking_id"));
-                const booking = await bookingService.confirmPayment(paymentData.bookingId, paymentData.paymentReference);
-                // Save confirmed booking to localStorage so calendar shows it
-                try {
-                    const userId = user?.member_id || user?.team_member_id;
-                    if (userId) {
-                        const storageKey = `confirmed_bookings_${userId}`;
-                        const existing = JSON.parse(localStorage.getItem(storageKey) || "[]");
-                        existing.push({
-                            id: paymentData.bookingId,
-                            date: paymentData.slotDays,  // YYYY-MM-DD
-                            time: paymentData.slotTime,
-                            court: paymentData.court,
-                            confirmedAt: Date.now(),
-                        });
-                        localStorage.setItem(storageKey, JSON.stringify(existing));
-                    }
-                } catch { /* silent */ }
+            const resolved = paymentData.isBooking
+                ? paymentData
+                : await resolvePaymentData();
 
-                const origin = window.location.origin;
-
-                let token = booking?.share_token;
-
-                if (!token && paymentData.bookingId) {
-                    try {
-                        const details = await bookingService.getBookingDetails(paymentData.bookingId);
-                        token = details?.share_token;
-                    } catch {
-                        // ignore, we'll just show modal without link
-                    }
-                }
-
-                if (token) {
-                    setShareUrl(`${origin}/bookings/share/${token}`);
-                } else {
-                    setShareUrl("");
-                }
-
-                setSuccessMessage(t("payment.alerts.success_booking"));
-                setShowSuccessModal(true);
-            } else {
-                const resolved = await resolvePaymentData();
-                if (!resolved.subscriptionId) {
-                    setErrorMessage(t("payment.alerts.missing_subscription"));
-                    return;
-                }
-
-                const confirmPayload = {
-                    ...(resolved.paymentReference ? { payment_reference: resolved.paymentReference } : {}),
-                    transaction_id: `TXN-${resolved.subscriptionId}-${Date.now()}`,
-                    payment_method: "credit_card",
-                    gateway_response: "team_member_payment_page",
-                };
-
-                await confirmPaymentRequest(resolved.subscriptionId, confirmPayload);
-
-                persistLastPaidSport({
+            const paymob = await startPaymobPayment({
+                paymentReference: resolved.paymentReference || paymentData.paymentReference,
+                returnPath: "/team-member/payment",
+                billingData: {
+                    first_name: user?.first_name_en || user?.first_name_ar || "Player",
+                    last_name: user?.last_name_en || user?.last_name_ar || "User",
+                    email: user?.email || "player@club.local",
+                    phone_number: user?.phone || "+201000000000",
+                },
+                context: {
+                    subscription_id: resolved.subscriptionId || paymentData.subscriptionId || undefined,
+                    booking_id: paymentData.bookingId || undefined,
+                    payment_kind: paymentData.isBooking ? "booking" : "subscription",
                     sportName: paymentData.sportName,
-                    amount: resolved.amount,
-                    teamId: paymentData.teamId || undefined,
-                });
-                setSuccessMessage(t("payment.alerts.success_subscription"));
-                setTimeout(() => {
-                    navigate("/team-member/dashboard", { replace: true });
-                }, 1500);
-            }
-        } catch (error: any) {
+                    amount: resolved.amount || paymentData.amount,
+                    currency: resolved.currency || paymentData.currency,
+                },
+            });
+
+            setPaymobIframeUrl(paymob.iframeUrl);
+            void pollPaymobCompletion(resolved.paymentReference || paymentData.paymentReference);
+        } catch (error: unknown) {
             console.error("Payment error:", error);
+            const err = error as { response?: { data?: { message?: string; error?: string } }; message?: string };
             setErrorMessage(
-                error?.response?.data?.message ||
-                error?.response?.data?.error ||
-                error?.message ||
+                err?.response?.data?.message ||
+                err?.response?.data?.error ||
+                err?.message ||
                 t("payment.alerts.fail")
             );
-        } finally {
             setProcessing(false);
         }
     };
@@ -474,6 +544,17 @@ const TeamMemberSportPaymentPage: React.FC = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {paymobIframeUrl && (
+                <PaymobCheckoutFrame
+                    iframeUrl={paymobIframeUrl}
+                    onClose={() => {
+                        setPaymobIframeUrl(null);
+                        setProcessing(false);
+                    }}
+                    title={t("payment.actions.processing")}
+                />
             )}
         </div>
     );

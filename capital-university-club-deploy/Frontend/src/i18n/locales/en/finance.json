@@ -68,6 +68,8 @@
     "table": {
       "member": "Member",
       "sport": "Sport",
+      "reference": "Reference",
+      "type": "Type",
       "amount": "Amount (EGP)",
       "status": "Status"
     },

@@ -129,8 +129,9 @@ export class PaymobService {
     orderId: number;
     billingData: PaymobBillingData;
     currency?: string;
+    redirectionUrl?: string;
   }): Promise<string> {
-    const res = await postJson<PaymobPaymentKeyResponse>(`${this.apiBase}/acceptance/payment_keys`, {
+    const body: Json = {
       auth_token: params.authToken,
       amount_cents: String(params.amountCents),
       expiration: 3600,
@@ -139,7 +140,13 @@ export class PaymobService {
       currency: params.currency || 'EGP',
       integration_id: this.getIntegrationId(),
       lock_order_when_paid: false,
-    });
+    };
+
+    if (params.redirectionUrl) {
+      body.redirection_url = params.redirectionUrl;
+    }
+
+    const res = await postJson<PaymobPaymentKeyResponse>(`${this.apiBase}/acceptance/payment_keys`, body);
 
     return res.token;
   }

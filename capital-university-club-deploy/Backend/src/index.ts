@@ -38,6 +38,7 @@ import { memberTeamRouter } from './routes/MemberTeamRoutes';
 import participantRegistrationRoutes from './routes/participantRegistration';
 import AttendanceRoutes from './routes/AttendanceRoutes';
 import PaymobRoutes from './routes/PaymobRoutes';
+import PaymentRoutes from './routes/PaymentRoutes';
 import { initializeFolderStructure } from './utils/localFileStorage';
 
 // Load environment variables
@@ -205,6 +206,7 @@ app.use('/api/professions', ProfessionRoutes);
 app.use('/api/ai', AiRoutes);
 app.use('/api/seed', SeedRoutes);
 app.use('/api/paymob', PaymobRoutes);
+app.use('/api/payments', PaymentRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

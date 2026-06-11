@@ -70,11 +70,6 @@ import {
 } from '@/components/StaffPagesComponents/ui/tooltip';
 
 import { RoleGuard } from '@/components/StaffPagesComponents/RoleGuard';
-import {
-    PAYMENTS_MAP,
-    computePaymentStatus,
-    getDaysUntilRenewal,
-} from '@/data/paymentsData';
 import { BACKEND_ORIGIN } from '@/config/backend';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/StaffPagesComponents/ui/table';
 import { adminTableStyles, adminHeadClass, adminCellClass, adminDialogStyles, ADMIN_PAGE_SIZE, adminTableBadgeClass, adminTableStatusBadgeClass, adminPageStyles } from '@/components/StaffPagesComponents/shared/adminTableStyles';
@@ -578,79 +573,7 @@ function DetailPanel({ row, details, loading, sports, onEdit, onChangeStatus, on
                             </div>
                         </RecordViewSection>
 
-                        {/* ─── Payment Info Card ─── */}
-                        {(() => {
-                            const mType = (row.isTeamPlayer ? "team_member" : "member") as "member" | "team_member";
-                            const payment = PAYMENTS_MAP.get(`${mType}-${Number(row.id)}`);
-                            if (!payment) return null;
-
-                            const status = computePaymentStatus(payment.nextRenewalDate);
-                            const days = getDaysUntilRenewal(payment.nextRenewalDate);
-
-                            const statusConfig = {
-                                active: { label: t('detail.payment.statusActive'), cls: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-                                expiring: { label: t('detail.payment.statusExpiring'), cls: "bg-amber-100  text-amber-700  border-amber-200" },
-                                overdue: { label: t('detail.payment.statusOverdue'), cls: "bg-rose-100   text-rose-700   border-rose-200" },
-                            }[status];
-
-                            return (
-                                <div className="md:col-span-2 bg-primary/5 border border-primary/20 rounded-xl shadow-sm overflow-hidden">
-                                    <div className="bg-primary/10 px-4 py-3 border-b border-primary/10 flex items-center gap-2">
-                                        <CreditCard className="w-4 h-4 text-primary" />
-                                        <h4 className="font-semibold text-sm text-primary">{t('detail.sectionPayment', 'Financial & Subscription')}</h4>
-                                    </div>
-                                    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        <div className="space-y-1">
-                                            <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Shield className="w-3.5 h-3.5" />{t('detail.payment.subscriptionStatus')}</p>
-                                            <p className="text-sm">
-                                                <span className={`text-[11px] font-bold rounded-full border px-2.5 py-0.5 ${statusConfig.cls}`}>
-                                                    {statusConfig.label}
-                                                </span>
-                                            </p>
-                                        </div>
-                                        <RecordViewField icon={adminFieldIcons.membershipPlan} label={t('detail.payment.subscriptionType')} value={payment.subscriptionType} fallback={notAvailable} />
-                                        
-                                        <div className="space-y-1">
-                                            <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" />{t('detail.payment.lastPayment')}</p>
-                                            <div className="text-sm font-semibold" dir="ltr">
-                                                <p>{fmtDate(payment.lastPaymentDate)}</p>
-                                                <p className="text-[10px] text-muted-foreground font-medium">EGP {payment.lastPaymentAmount.toLocaleString("ar-EG")}</p>
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="space-y-1">
-                                            <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" />{t('detail.payment.nextRenewal')}</p>
-                                            <div className="text-sm font-semibold" dir="ltr">
-                                                <p className={`${status === "overdue" ? "text-rose-600" : status === "expiring" ? "text-amber-600" : ""}`}>
-                                                    {fmtDate(payment.nextRenewalDate)}
-                                                </p>
-                                                {status !== "active" && (
-                                                    <p className={`text-[10px] font-bold ${status === "overdue" ? "text-rose-500" : "text-amber-500"}`}>
-                                                        {status === "overdue"
-                                                            ? t('detail.payment.overdueDays', { count: Math.abs(days) })
-                                                            : t('detail.payment.expiringDays', { count: days })}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    {status !== "active" && (
-                                        <div className="px-4 pb-4">
-                                            <div className={`rounded-lg border px-3 py-2 text-xs font-medium flex items-center gap-2 ${status === "overdue"
-                                                ? "bg-rose-50 border-rose-200 text-rose-700"
-                                                : "bg-amber-50 border-amber-200 text-amber-700"
-                                                }`}>
-                                                {status === "overdue" ? <AlertTriangle className="w-4 h-4" /> : "🔔"}
-                                                {status === "overdue"
-                                                    ? t('detail.payment.alertOverdue', { count: Math.abs(days) })
-                                                    : t('detail.payment.alertExpiring', { count: days })}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })()}
+                        {/* Payment info is shown on Subscriptions & Payments pages from live API data */}
 
                     </div>
 

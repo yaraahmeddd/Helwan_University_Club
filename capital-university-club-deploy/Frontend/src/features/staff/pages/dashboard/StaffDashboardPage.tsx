@@ -15,10 +15,10 @@ import {
   Users,
 } from "lucide-react";
 import {
-  PAYMENT_ALERTS,
   computePaymentStatus,
   getDaysUntilRenewal,
 } from '@/data/paymentsData';
+import { usePaymentAlerts } from '@/hooks/usePaymentAlerts';
 import {
   Bar,
   BarChart,
@@ -204,6 +204,7 @@ export default function DashboardPage() {
   const { t } = useTranslation(["DashboardPage", "nav"]);
   const { language } = useLanguage();
   const { fmtDate } = useAdminFormatters();
+  const { alerts: paymentAlerts } = usePaymentAlerts(hasPrivilege("VIEW_FINANCE"));
   const [dashboard, setDashboard] = useState<DashboardState>(INITIAL_STATE);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -738,7 +739,7 @@ export default function DashboardPage() {
             <div>
               <p className="font-extrabold text-[17px] text-[#0e1c38]">{t("alerts.title")}</p>
               <p className="text-[14px] font-medium text-muted-foreground mt-0.5">
-                {t("alerts.needsAttention", { count: PAYMENT_ALERTS.length })}
+                {t("alerts.needsAttention", { count: paymentAlerts.length })}
               </p>
             </div>
           </div>
@@ -752,7 +753,7 @@ export default function DashboardPage() {
 
         {/* Alert List — show max 5 */}
         <div className="space-y-2.5">
-          {PAYMENT_ALERTS.slice(0, 5).map(p => {
+          {paymentAlerts.slice(0, 5).map(p => {
             const status = computePaymentStatus(p.nextRenewalDate);
             const days = getDaysUntilRenewal(p.nextRenewalDate);
             return (
@@ -784,14 +785,14 @@ export default function DashboardPage() {
         </div>
 
         {/* If more than 5 alerts */}
-        {PAYMENT_ALERTS.length > 5 && (
+        {paymentAlerts.length > 5 && (
           <p className="text-[14px] font-semibold text-center text-muted-foreground">
-            {t("alerts.moreAlerts", { count: PAYMENT_ALERTS.length - 5 })}
+            {t("alerts.moreAlerts", { count: paymentAlerts.length - 5 })}
           </p>
         )}
 
         {/* Empty state */}
-        {PAYMENT_ALERTS.length === 0 && (
+        {paymentAlerts.length === 0 && (
           <div className="text-center py-4 text-[13px] font-medium text-muted-foreground">
             {t("alerts.allValid")}
           </div>

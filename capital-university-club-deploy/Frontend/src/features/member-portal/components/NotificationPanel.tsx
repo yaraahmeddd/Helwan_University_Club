@@ -1,18 +1,13 @@
 import React, { useRef, useEffect } from "react";
 import type { Notification } from "./types";
 
-const NOTIFS_MOCK: Notification[] = [
-    { id: 1, icon: "⚽", title: "تدريب كرة القدم غداً", msg: "الثلاثاء 5:00 م — ملعب 1", time: "منذ 10 دقائق", read: false },
-    { id: 2, icon: "✅", title: "تأكيد الانضمام", msg: "انضممت إلى رياضة كرة السلة بنجاح", time: "منذ ساعة", read: false },
-];
-
 export const NotificationPanel: React.FC<{
     onClose: () => void;
     notifications?: Notification[];
     onMarkAllRead?: () => void;
     onMarkRead?: (id: number) => void;
 }> = ({ onClose, notifications, onMarkAllRead, onMarkRead }) => {
-    const list = notifications || NOTIFS_MOCK;
+    const list = notifications ?? [];
     const ref = useRef<HTMLDivElement>(null);
 
     useEffect(() => {

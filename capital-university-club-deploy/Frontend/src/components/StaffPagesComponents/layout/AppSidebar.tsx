@@ -24,7 +24,7 @@ import {
   Link2,
   Building,
 } from "lucide-react";
-import { PAYMENT_ALERTS } from "../../../data/paymentsData";
+import { usePaymentAlerts } from '@/hooks/usePaymentAlerts';
 import { useTranslation } from "react-i18next";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -153,6 +153,7 @@ export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
   const { hasPrivilege, user } = useAuth();
+  const { alerts: paymentAlerts } = usePaymentAlerts(hasPrivilege("VIEW_FINANCE"));
   const location = useLocation();
   const currentPath = location.pathname;
   const isMember = user?.role === "MEMBER";
@@ -215,10 +216,10 @@ export function AppSidebar() {
 
   // ── Payment alert helpers ──────────────────────────────────────────────────
   const hasPaymentAlert = (path: string) =>
-    path.includes("finance/subscriptions") && PAYMENT_ALERTS.length > 0;
+    path.includes("finance/subscriptions") && paymentAlerts.length > 0;
 
   const paymentCountLabel =
-    PAYMENT_ALERTS.length > 9 ? "9+" : String(PAYMENT_ALERTS.length);
+    paymentAlerts.length > 9 ? "9+" : String(paymentAlerts.length);
 
   // ── Render single nav item ─────────────────────────────────────────────────
   const renderItem = (item: SidebarItem) => {
