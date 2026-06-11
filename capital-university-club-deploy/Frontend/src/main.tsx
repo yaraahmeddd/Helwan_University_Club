@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import './i18n'
 import { registerGlobalErrorHandlers } from './lib/appErrors'
-import Router from './router.tsx'
+import Router from './app/router.tsx'
 
 registerGlobalErrorHandlers()
 

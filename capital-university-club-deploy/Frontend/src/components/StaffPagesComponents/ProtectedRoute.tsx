@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import { useAuth } from "../../context/AuthContext";
-import ForbiddenPage from "../../pages/ForbiddenPage";
+import ForbiddenPage from "@/features/auth/pages/ForbiddenPage";
 
 interface ProtectedRouteProps {
   children: ReactNode;

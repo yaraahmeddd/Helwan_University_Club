@@ -16,7 +16,7 @@
     "searchPlaceholder": "Search by name, phone, or national ID...",
     "sportFilter": "Sport",
     "allSports": "All sports",
-    "allStatuses": "All statuses",
+    "status": "Status",
     "results": "{{count}} results"
   },
   "teams": {

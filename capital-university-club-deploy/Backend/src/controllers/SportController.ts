@@ -1,7 +1,41 @@
 import { Request, Response } from 'express';
 import { SportService } from '../services/SportService';
+import { TeamMember } from '../entities/TeamMember';
+import { TeamMemberTeam } from '../entities/TeamMemberTeam';
 
 const sportService = new SportService();
+
+function mapTeamMemberTeamEntry(tmt: TeamMemberTeam) {
+    return {
+        id: tmt.id,
+        team_id: tmt.team_id ?? tmt.team?.id ?? null,
+        team_name: tmt.team?.name_ar || tmt.team?.name_en || '',
+        team_name_en: tmt.team?.name_en || '',
+        status: tmt.status,
+        team: tmt.team
+            ? {
+                id: tmt.team.id,
+                name_ar: tmt.team.name_ar,
+                name_en: tmt.team.name_en,
+            }
+            : null,
+    };
+}
+
+function mapTeamMemberForResponse(m: TeamMember) {
+    return {
+        id: m.id,
+        first_name_ar: m.first_name_ar,
+        last_name_ar: m.last_name_ar,
+        first_name_en: m.first_name_en,
+        last_name_en: m.last_name_en,
+        phone: m.phone ?? null,
+        national_id: m.national_id,
+        status: m.status,
+        created_at: m.created_at,
+        team_member_teams: (m.team_member_teams ?? []).map(mapTeamMemberTeamEntry),
+    };
+}
 
 export class SportController {
     /**
@@ -698,23 +732,7 @@ export class SportController {
     static async getTeamMembers(req: Request, res: Response): Promise<void> {
         try {
             const members = await sportService.getTeamMembers();
-            const mapped = members.map((m) => ({
-                id: m.id,
-                first_name_ar: m.first_name_ar,
-                last_name_ar: m.last_name_ar,
-                first_name_en: m.first_name_en,
-                last_name_en: m.last_name_en,
-                phone: m.phone ?? null,
-                national_id: m.national_id,
-                status: m.status,
-                created_at: m.created_at,
-                team_member_teams: (m.team_member_teams ?? []).map((tmt) => ({
-                    id: tmt.id,
-                    team_name: (tmt as any).team?.name_ar || (tmt as any).team?.name_en || '',
-                    team_name_en: (tmt as any).team?.name_en || '',
-                    status: tmt.status,
-                })),
-            }));
+            const mapped = members.map(mapTeamMemberForResponse);
             res.status(200).json({ success: true, data: mapped });
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -732,23 +750,7 @@ export class SportController {
             const params = req.params as Record<string, string>;
             const { sportName } = params;
             const members = await sportService.getTeamMembersBySport(sportName);
-            const mapped = members.map((m) => ({
-                id: m.id,
-                first_name_ar: m.first_name_ar,
-                last_name_ar: m.last_name_ar,
-                first_name_en: m.first_name_en,
-                last_name_en: m.last_name_en,
-                phone: m.phone ?? null,
-                national_id: m.national_id,
-                status: m.status,
-                created_at: m.created_at,
-                team_member_teams: (m.team_member_teams ?? []).map((tmt) => ({
-                    id: tmt.id,
-                    team_name: (tmt as any).team?.name_ar || (tmt as any).team?.name_en || '',
-                    team_name_en: (tmt as any).team?.name_en || '',
-                    status: tmt.status,
-                })),
-            }));
+            const mapped = members.map(mapTeamMemberForResponse);
             res.status(200).json({ success: true, data: mapped });
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';

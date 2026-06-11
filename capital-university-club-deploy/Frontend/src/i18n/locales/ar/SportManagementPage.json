@@ -16,7 +16,7 @@
     "searchPlaceholder": "بحث بالاسم أو الهاتف أو الرقم القومي...",
     "sportFilter": "الرياضة",
     "allSports": "كل الرياضات",
-    "allStatuses": "كل الحالات",
+    "status": "الحالة",
     "results": "{{count}} نتيجة"
   },
   "teams": {
