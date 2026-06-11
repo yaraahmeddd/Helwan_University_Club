@@ -1,6 +1,6 @@
 import React from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { Eye, Loader2 } from 'lucide-react';
+import { Eye, Loader2, Printer } from 'lucide-react';
 import { Button } from '../ui/button';
 import {
   Tooltip,
@@ -49,6 +49,30 @@ export function AdminViewButton({
       onClick={onClick}
       icon={Eye}
       variant="view"
+    />
+  );
+}
+
+/** Print member card — opens shared card print preview dialog. */
+export function AdminPrintCardButton({
+  tooltip,
+  onClick,
+  loading,
+  disabled,
+}: {
+  tooltip: string;
+  onClick: () => void;
+  loading?: boolean;
+  disabled?: boolean;
+}) {
+  return (
+    <AdminActionButton
+      tooltip={tooltip}
+      onClick={onClick}
+      icon={Printer}
+      variant="print"
+      loading={loading}
+      disabled={disabled}
     />
   );
 }

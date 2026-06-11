@@ -10,7 +10,8 @@ import {
 } from '@/components/StaffPagesComponents/ui/dialog';
 import { adminDialogStyles, adminTableStyles, adminHeadClass, adminCellClass, ADMIN_PAGE_SIZE, adminPageStyles } from '@/components/StaffPagesComponents/shared/adminTableStyles';
 import { AdminPageHeader } from '@/components/StaffPagesComponents/shared/AdminPageHeader';
-import { AdminActionButton, AdminRowActions } from '@/components/StaffPagesComponents/shared/AdminRowActions';
+import { AdminActionButton, AdminPrintCardButton, AdminRowActions } from '@/components/StaffPagesComponents/shared/AdminRowActions';
+import { useMemberCardPrint } from '@/hooks/useMemberCardPrint';
 import { AdminPagination } from '@/components/StaffPagesComponents/shared/AdminPagination';
 import { AdminMemberStatusBadge } from '@/components/StaffPagesComponents/shared/AdminMemberStatusBadge';
 import { PersonNameDisplay } from '@/components/StaffPagesComponents/shared/PersonNameDisplay';
@@ -111,7 +112,9 @@ const getTeamName = (team: { name_ar?: string; name_en?: string }, language: Lan
 export default function SportsMembersPage() {
   const { toast } = useToast();
   const { t } = useTranslation("SportsMembersPage");
+  const { t: tCommon } = useTranslation("common");
   const { language, isRTL } = useLanguage();
+  const { openMemberCardPrint, memberCardPrintDialog } = useMemberCardPrint();
 
   const [memberTab, setMemberTab] = useState<"members" | "team-members">("members");
 
@@ -688,6 +691,19 @@ export default function SportsMembersPage() {
                     </TableCell>
                     <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
                       <AdminRowActions>
+                        <AdminPrintCardButton
+                          tooltip={tCommon("memberCardPrint.rowTooltip")}
+                          onClick={() => openMemberCardPrint({
+                            id: member.id,
+                            isTeamPlayer: member.isTeamPlayer,
+                            firstNameAr: member.firstNameAr,
+                            lastNameAr: member.lastNameAr,
+                            firstNameEn: member.firstNameEn,
+                            lastNameEn: member.lastNameEn,
+                            sportAr: member.sports[0]?.nameAr ?? member.sports[0]?.name,
+                            sportEn: member.sports[0]?.nameEn ?? member.sports[0]?.name,
+                          })}
+                        />
                         <AdminActionButton
                           tooltip={t("actions.editSports")}
                           icon={Pencil}
@@ -1014,6 +1030,7 @@ export default function SportsMembersPage() {
           </div>
         </DialogContent>
       </Dialog>
+      {memberCardPrintDialog}
     </div>
   );
 }

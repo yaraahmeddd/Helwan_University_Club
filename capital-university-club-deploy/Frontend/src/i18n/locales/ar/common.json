@@ -135,5 +135,31 @@
     "pdfDesc": ".pdf — ملف قابل للطباعة",
     "tooltip": "تصدير {{count}} سجل",
     "tooltipGeneric": "تصدير التقرير"
+  },
+  "memberCardPrint": {
+    "dialogTitle": "طباعة بطاقة العضو",
+    "printButton": "طباعة البطاقة",
+    "printing": "جارٍ الإعداد…",
+    "rowTooltip": "طباعة البطاقة",
+    "documentTitle": "HUC — بطاقة العضوية",
+    "validUntil": "ساري حتى",
+    "execDirector": "المدير التنفيذي",
+    "execDirectorName": "ا.د / احمد فاروق",
+    "printHint": "تأكد من اختيار: الطابعة MagicCard Rio Pro 360 · حجم الورق CR80 · الهوامش: بدون",
+    "loading": "جاري تحميل بطاقة العضو…",
+    "noCardPresent": "لا توجد بطاقة لهذا العضو",
+    "detailsOnlyHint": "سيتم طباعة بيانات العضو فقط.",
+    "preview": {
+      "templateTitle": "نموذج البطاقة",
+      "front": "الوجه الأمامي",
+      "back": "الوجه الخلفي",
+      "memberTitle": "بيانات العضو"
+    },
+    "fields": {
+      "name": "الاسم",
+      "sport": "الرياضة",
+      "memberId": "رقم العضو",
+      "endDate": "تاريخ الانتهاء"
+    }
   }
 }

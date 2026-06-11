@@ -135,5 +135,31 @@
     "pdfDesc": ".pdf — Printable format",
     "tooltip": "Export {{count}} records",
     "tooltipGeneric": "Export report"
+  },
+  "memberCardPrint": {
+    "dialogTitle": "Member Card Printing",
+    "printButton": "Print Card",
+    "printing": "Preparing…",
+    "rowTooltip": "Print card",
+    "documentTitle": "HUC — Membership Card",
+    "validUntil": "Valid until",
+    "execDirector": "Executive Director",
+    "execDirectorName": "Prof. / Ahmed Farouk",
+    "printHint": "Make sure to select: MagicCard Rio Pro 360 printer · CR80 paper size · Margins: None",
+    "loading": "Loading member card…",
+    "noCardPresent": "No card is present for this member",
+    "detailsOnlyHint": "Member details will still be included when printing.",
+    "preview": {
+      "templateTitle": "Card Template",
+      "front": "Front",
+      "back": "Back",
+      "memberTitle": "Member Details"
+    },
+    "fields": {
+      "name": "Name",
+      "sport": "Sport",
+      "memberId": "Member ID",
+      "endDate": "Expiry Date"
+    }
   }
 }

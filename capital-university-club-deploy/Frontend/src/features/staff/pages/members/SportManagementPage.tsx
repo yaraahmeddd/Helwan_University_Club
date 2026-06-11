@@ -40,6 +40,8 @@ import { useAdminFormatters } from '@/components/StaffPagesComponents/shared/adm
 import { useTableExport } from '@/utils/reportExport/useTableExport';
 import type { ReportSheet } from '@/utils/reportExport/types';
 import { ExportReportButton } from '@/components/StaffPagesComponents/shared/ExportReportButton';
+import { AdminPrintCardButton, AdminRowActions } from '@/components/StaffPagesComponents/shared/AdminRowActions';
+import { useMemberCardPrint } from '@/hooks/useMemberCardPrint';
 
 // Types
 
@@ -271,6 +273,7 @@ export default function SportManagementPage() {
     const { t: tStatus } = useTranslation("common");
     const { language, isRTL } = useLanguage();
     const { fmtDate } = useAdminFormatters();
+    const { openMemberCardPrint, memberCardPrintDialog } = useMemberCardPrint();
 
     // Sports
     const [sports, setSports] = useState<Sport[]>([]);
@@ -677,6 +680,7 @@ export default function SportManagementPage() {
                                         <Th {...thProps}>{t("table.sports")}</Th>
                                         <Th field="created_at" {...thProps}>{t("table.subscriptionDate")}</Th>
                                         <Th field="status" {...thProps} center>{t("table.status")}</Th>
+                                        <Th {...thProps} center>{tStatus("actions")}</Th>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody className={adminTableStyles.body}>
@@ -733,6 +737,26 @@ export default function SportManagementPage() {
                                                 <TableCell className={adminCellClass({ center: true })}>
                                                     <AdminMemberStatusBadge status={m.status} compact />
                                                 </TableCell>
+                                                <TableCell className={adminCellClass({ center: true, className: "whitespace-nowrap" })}>
+                                                    <AdminRowActions>
+                                                        <AdminPrintCardButton
+                                                            tooltip={tStatus("memberCardPrint.rowTooltip")}
+                                                            onClick={() => {
+                                                                const tag = sportTags(m)[0];
+                                                                openMemberCardPrint({
+                                                                    id: m.id,
+                                                                    isTeamPlayer: m.member_type !== 'member',
+                                                                    firstNameAr: m.first_name_ar,
+                                                                    lastNameAr: m.last_name_ar,
+                                                                    firstNameEn: m.first_name_en,
+                                                                    lastNameEn: m.last_name_en,
+                                                                    sportAr: selectedSport?.nameAr ?? tag?.team?.name_ar ?? tag?.team_name,
+                                                                    sportEn: selectedSport?.nameEn ?? tag?.team?.name_en ?? tag?.team_name_en ?? tag?.team_name,
+                                                                });
+                                                            }}
+                                                        />
+                                                    </AdminRowActions>
+                                                </TableCell>
                                             </TableRow>
                                     ))}
                                 </TableBody>
@@ -750,6 +774,7 @@ export default function SportManagementPage() {
                     />
                     </div>
             </div>
+            {memberCardPrintDialog}
         </div>
     );
 }

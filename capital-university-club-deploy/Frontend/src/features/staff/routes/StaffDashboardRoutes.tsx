@@ -39,7 +39,6 @@ const CourtBookingsPage = lazy(() => import('@/features/staff/pages/sports/Court
 // const AttendancePage = lazy(() => import('@/features/staff/pages/sports/AttendancePage'));
 const TeamsManagementPage = lazy(() => import('@/features/staff/pages/sports/TeamsManagementPage'));
 const SubscriptionsPage = lazy(() => import('@/features/staff/pages/finance/SubscriptionsPage'));
-const CardPrintPage = lazy(() => import('@/features/staff/pages/members/CardPrintPage'));
 const ManageInvitationsPage = lazy(() => import('@/features/staff/pages/sports/ManageInvitationsPage'));
 const FacultyManagementPage = lazy(() => import('@/features/staff/pages/organization/FacultyManagementPage'));
 const BranchManagementPage = lazy(() => import('@/features/staff/pages/organization/BranchManagementPage'));
@@ -117,7 +116,6 @@ const StaffDashboard = () => {
             <Route path="members/sports-view" element={<ProtectedRoute requiredPrivilege="VIEW_TEAM_MEMBERS"><SportManagementPage /></ProtectedRoute>} />
             <Route path="members/new" element={<ProtectedRoute requiredPrivilege="CREATE_MEMBER"><StaffAddMemberPage /></ProtectedRoute>} />
             <Route path="members/new-team-member" element={<ProtectedRoute requiredPrivilege="ADD_TEAM_MEMBER"><StaffAddTeamMemberPage /></ProtectedRoute>} />
-            <Route path="members/card-print" element={<ProtectedRoute requiredPrivilege="VIEW_MEMBERS"><CardPrintPage /></ProtectedRoute>} />
             <Route path="media-gallery" element={<ProtectedRoute requiredPrivilege="MEDIA_CENTER_CREATE"><MediaManagerPage /></ProtectedRoute>} />
             <Route path="faculties" element={<ProtectedRoute requiredPrivilege="VIEW_FACULTIES"><FacultyManagementPage /></ProtectedRoute>} />
             <Route path="branches" element={<ProtectedRoute requiredPrivilege="VIEW_BRANCHES"><BranchManagementPage /></ProtectedRoute>} />
