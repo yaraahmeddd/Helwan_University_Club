@@ -556,20 +556,16 @@ const ProfileTab = memo(({ member, setMember, dir = 'rtl' }: ProfileTabProps) =>
     const [errors, setErrors] = useState<Partial<Record<keyof Member, string>>>({});
     const [fileErrors, setFileErrors] = useState<Record<string, string>>({});
 
+    const immutableFields = useMemo(() => new Set<keyof Member>(["email", "birthDate", "nationalId"]), []);
+
     const validateField = (key: keyof Member, value: string) => {
         switch (key) {
             case "firstName":
                 return formatValidationError(validateArabicName(value), tVal) ?? "";
             case "lastName":
                 return formatValidationError(validateArabicName(value), tVal) ?? "";
-            case "email":
-                return formatValidationError(validateEmail(value), tVal) ?? "";
             case "phone":
                 return formatValidationError(validateEgyptianPhone(value), tVal) ?? "";
-            case "nationalId":
-                return formatValidationError(validateMemberNationalId(value), tVal) ?? "";
-            case "birthDate":
-                return formatValidationError(validateBirthdate(value), tVal) ?? "";
             default:
                 return "";
         }
@@ -577,7 +573,7 @@ const ProfileTab = memo(({ member, setMember, dir = 'rtl' }: ProfileTabProps) =>
 
     const validateProfileForm = () => {
         const nextErrors: Partial<Record<keyof Member, string>> = {};
-        (["firstName", "lastName", "email", "phone", "birthDate", "nationalId"] as (keyof Member)[]).forEach((key) => {
+        (["firstName", "lastName", "phone"] as (keyof Member)[]).forEach((key) => {
             const message = validateField(key, String(form[key] || ""));
             if (message) nextErrors[key] = message;
         });
@@ -623,13 +619,13 @@ const ProfileTab = memo(({ member, setMember, dir = 'rtl' }: ProfileTabProps) =>
         setFileErrors({});
     };
 
-    const fields: { key: keyof Member; label: string; type: string }[] = [
+    const fields: { key: keyof Member; label: string; type: string; immutable?: boolean }[] = [
         { key: "firstName", label: t("profile.first_name"), type: "text" },
         { key: "lastName", label: t("profile.last_name"), type: "text" },
-        { key: "email", label: t("profile.email"), type: "email" },
+        { key: "email", label: t("profile.email"), type: "email", immutable: true },
         { key: "phone", label: t("profile.phone"), type: "tel" },
-        { key: "birthDate", label: t("profile.birth_date"), type: "date" },
-        { key: "nationalId", label: t("profile.national_id"), type: "text" },
+        { key: "birthDate", label: t("profile.birth_date"), type: "date", immutable: true },
+        { key: "nationalId", label: t("profile.national_id"), type: "text", immutable: true },
     ];
 
     const documents = [
@@ -684,7 +680,9 @@ const ProfileTab = memo(({ member, setMember, dir = 'rtl' }: ProfileTabProps) =>
             <div className="bg-white rounded-2xl shadow-sm p-6" dir={dir}>
                 <h3 className="font-bold mb-5 text-base" style={{ color: "#1F2937" }}>{t("profile.personal_info")}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {fields.map(({ key, label, type }) => (
+                    {fields.map(({ key, label, type, immutable }) => {
+                        const readOnly = !!immutable || !editing;
+                        return (
                         <div key={key}>
                             <label className="block text-xs font-medium mb-1.5" style={{ color: "#6B7280" }}>
                                 {label}
@@ -693,6 +691,7 @@ const ProfileTab = memo(({ member, setMember, dir = 'rtl' }: ProfileTabProps) =>
                                 type={type}
                                 value={(form[key] as string) || ""}
                                 onChange={(e) => {
+                                    if (immutableFields.has(key)) return;
                                     const value = e.target.value;
                                     setForm({ ...form, [key]: value });
                                     if (editing) {
@@ -700,12 +699,12 @@ const ProfileTab = memo(({ member, setMember, dir = 'rtl' }: ProfileTabProps) =>
                                         setErrors((prev) => ({ ...prev, [key]: message }));
                                     }
                                 }}
-                                disabled={!editing}
+                                disabled={readOnly}
                                 className="w-full px-4 py-2.5 rounded-lg text-sm border transition-all"
                                 style={{
-                                    borderColor: errors[key] ? "#DC2626" : editing ? "#2EA7C9" : "#E5E7EB",
-                                    backgroundColor: editing ? "#fff" : "#F9FAFB",
-                                    color: "#1F2937",
+                                    borderColor: errors[key] ? "#DC2626" : editing && !immutable ? "#2EA7C9" : "#E5E7EB",
+                                    backgroundColor: readOnly ? "#F3F4F6" : "#fff",
+                                    color: immutable ? "#4B5563" : "#1F2937",
                                     outline: "none",
                                     textAlign: dir === 'rtl' ? 'right' : 'left',
                                 }}
@@ -716,7 +715,8 @@ const ProfileTab = memo(({ member, setMember, dir = 'rtl' }: ProfileTabProps) =>
                                 </p>
                             )}
                         </div>
-                    ))}
+                        );
+                    })}
 
                     {/* Read-only join date */}
                     <div>
@@ -1611,10 +1611,7 @@ export default function TeamMemberDashboard() {
         const validationError = firstError([
             validateArabicName(updated.firstName),
             validateArabicName(updated.lastName),
-            validateEmail(updated.email),
             validateEgyptianPhone(updated.phone),
-            validateMemberNationalId(updated.nationalId),
-            validateBirthdate(updated.birthDate),
         ], tVal);
         if (validationError) {
             alert(validationError);
@@ -1627,8 +1624,6 @@ export default function TeamMemberDashboard() {
             formData.append("last_name_ar", updated.lastName);
             formData.append("phone", updated.phone);
             formData.append("address", updated.address);
-            formData.append("birthdate", updated.birthDate);
-            formData.append("national_id", updated.nationalId);
 
             if (files) {
                 Object.entries(files).forEach(([key, file]) => {

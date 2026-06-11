@@ -260,6 +260,9 @@ export class TeamMemberController {
             }
 
             const data = { ...req.body };
+            delete data.email;
+            delete data.national_id;
+            delete data.birthdate;
             const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
             if (files) {
