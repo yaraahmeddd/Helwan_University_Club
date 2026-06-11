@@ -103,7 +103,7 @@ TYPEORM_LOGGING=false
 LOG_LEVEL=info
 
 # Optional — leave empty if not using
-GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_API_KEY=your_gemni_api_key_here
 PAYMOB_API_KEY=
 PAYMOB_INTEGRATION_ID=
 PAYMOB_IFRAME_ID=
