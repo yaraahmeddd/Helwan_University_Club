@@ -1,5 +1,6 @@
 import { Response, Request } from 'express';
 import { AppDataSource } from '../database/data-source';
+import { Not, In } from 'typeorm';
 import { MemberTeam } from '../entities/MemberTeam';
 import { Member } from '../entities/Member';
 import { Team } from '../entities/Team';
@@ -526,7 +527,9 @@ export class MemberSubscriptionController {
         where: {
           team_id: team_id,
           member_id: member_id,
+          status: Not(In(['cancelled', 'declined'])),
         },
+        order: { created_at: 'DESC' },
       });
 
       if (existingSubscription) {

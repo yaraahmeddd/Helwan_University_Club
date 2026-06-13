@@ -152,10 +152,10 @@
 // src/database/data_source.ts
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
-import dotenv from 'dotenv';
+import { loadBackendEnv } from '../config/env';
 
 // Load environment variables
-dotenv.config();
+loadBackendEnv();
 
 // Import all your entities
 import { Account } from '../entities/Account';
@@ -211,7 +211,7 @@ export const AppDataSource = new DataSource({
     port: Number(process.env.DB_PORT) || 5432,
     username: process.env.DB_USERNAME || 'postgres',
     password: process.env.DB_PASSWORD || '0000',
-    database: process.env.DB_NAME || 'Deploy',
+    database: process.env.DB_NAME || 'Helwan-University-Club',
 
     synchronize: process.env.TYPEORM_SYNCHRONIZE === 'true', // Auto-create tables only when explicitly enabled
     logging: process.env.TYPEORM_LOGGING === 'true',

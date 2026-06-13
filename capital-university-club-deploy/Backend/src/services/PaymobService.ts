@@ -75,23 +75,28 @@ function postJson<TResponse>(url: string, body: Json): Promise<TResponse> {
 export class PaymobService {
   private apiBase = 'https://accept.paymob.com/api';
 
+  private readEnv(name: 'PAYMOB_API_KEY' | 'PAYMOB_INTEGRATION_ID' | 'PAYMOB_IFRAME_ID'): string {
+    const value = process.env[name]?.trim();
+    if (!value) {
+      throw new Error(`Missing ${name}. Add it to Backend/.env, then restart the backend server.`);
+    }
+
+    return value;
+  }
+
   private getApiKey(): string {
-    const key = process.env.PAYMOB_API_KEY;
-    if (!key) throw new Error('Missing PAYMOB_API_KEY');
-    return key;
+    return this.readEnv('PAYMOB_API_KEY');
   }
 
   private getIntegrationId(): number {
-    const v = process.env.PAYMOB_INTEGRATION_ID;
-    if (!v) throw new Error('Missing PAYMOB_INTEGRATION_ID');
+    const v = this.readEnv('PAYMOB_INTEGRATION_ID');
     const n = Number(v);
     if (!Number.isFinite(n)) throw new Error('Invalid PAYMOB_INTEGRATION_ID');
     return n;
   }
 
   private getIframeId(): number {
-    const v = process.env.PAYMOB_IFRAME_ID;
-    if (!v) throw new Error('Missing PAYMOB_IFRAME_ID');
+    const v = this.readEnv('PAYMOB_IFRAME_ID');
     const n = Number(v);
     if (!Number.isFinite(n)) throw new Error('Invalid PAYMOB_IFRAME_ID');
     return n;

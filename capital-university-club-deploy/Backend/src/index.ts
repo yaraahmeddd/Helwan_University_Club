@@ -2,9 +2,9 @@ import 'reflect-metadata';
 // Backend Server 
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import path from 'path';
 import { createServer } from 'http';
+import { loadBackendEnv } from './config/env';
 import { AppDataSource } from './database/data-source';
 import { socketManager } from './websocket/SocketManager';
 import registrationRoutes from './routes/RegistrationRoutes';
@@ -42,7 +42,7 @@ import PaymentRoutes from './routes/PaymentRoutes';
 import { initializeFolderStructure } from './utils/localFileStorage';
 
 // Load environment variables
-dotenv.config();
+loadBackendEnv();
 
 const app = express();
 const PORT: number = parseInt(process.env.PORT || '3000', 10);
