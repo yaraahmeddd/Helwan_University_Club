@@ -9,6 +9,8 @@ import { UniversityStudentDetail } from '../entities/UniversityStudentDetail';
 import { EmployeeDetail } from '../entities/EmployeeDetail';
 import { RetiredEmployeeDetail } from '../entities/RetiredEmployeeDetail';
 import { OutsiderDetail } from '../entities/OutsiderDetail';
+import { MemberMembership } from '../entities/MemberMembership';
+import { MembershipPlan } from '../entities/MembershipPlan';
 import { AuthenticatedRequest } from '../middleware/authorizePrivilege';
 import * as bcrypt from 'bcrypt';
 import { AuditLogService } from '../services/AuditLogService';
@@ -830,6 +832,42 @@ export class MemberController {
             member.account.is_active = true;
           }
           await transactionalEntityManager.save(Account, member.account);
+        }
+
+        // If approving, calculate membership validity based on the plan's duration_months
+        if (action === 'approve') {
+          const membershipRepo = transactionalEntityManager.getRepository(MemberMembership);
+          const planRepo = transactionalEntityManager.getRepository(MembershipPlan);
+
+          // Find the member's most recent pending membership
+          const pendingMembership = await membershipRepo.findOne({
+            where: { member_id: member.id, status: 'pending' },
+            order: { created_at: 'DESC' },
+          });
+
+          if (pendingMembership) {
+            // Look up the plan's duration_months
+            const plan = await planRepo.findOne({
+              where: { id: pendingMembership.membership_plan_id },
+            });
+
+            const durationMonths = plan?.duration_months ?? 12; // Default to 12 months if plan not found
+            const startDate = new Date();
+            const endDate = new Date(startDate);
+            endDate.setMonth(endDate.getMonth() + durationMonths);
+
+            pendingMembership.status = 'active';
+            pendingMembership.start_date = startDate;
+            pendingMembership.end_date = endDate;
+            await membershipRepo.save(pendingMembership);
+
+            console.log(
+              `✅ Membership for member ${member.id} activated: ${startDate.toISOString().split('T')[0]} → ${endDate.toISOString().split('T')[0]} (${durationMonths} months)`
+            );
+          } else {
+            // No pending membership found — log warning but still approve the account
+            console.warn(`⚠️ No pending membership found for member ${member.id} during approval.`);
+          }
         }
 
         await MemberController.logAction(
