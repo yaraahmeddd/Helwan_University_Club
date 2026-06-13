@@ -56,8 +56,8 @@
     "renewal": {
       "overdue_one": "متأخر {{count}} يوم",
       "overdue_other": "متأخر {{count}} يوم",
-      "remaining_one": "فاضل {{count}} يوم",
-      "remaining_other": "فاضل {{count}} يوم"
+      "remaining_one": "متبقي {{count}} يوم",
+      "remaining_other": "متبقي {{count}} يوم"
     },
     "currency": "ج.م"
   },

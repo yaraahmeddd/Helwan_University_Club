@@ -117,7 +117,7 @@ const Router: React.FC = () => {
                 <Route
                   path="/member/payment"
                   element={
-                    <ProtectedRoute allowedRoles={['MEMBER']}>
+                    <ProtectedRoute allowedRoles={['MEMBER', 'ADMIN', 'STAFF', 'SPORTS_DIRECTOR', 'SPORTS_OFFICER', 'FINANCIAL_DIRECTOR', 'REGISTRATION_STAFF', 'TEAM_MANAGER', 'SUPPORT', 'AUDITOR']}>
                       <MemberSportPaymentPage />
                     </ProtectedRoute>
                   }
@@ -142,7 +142,7 @@ const Router: React.FC = () => {
                 <Route
                   path="/team-member/payment"
                   element={
-                    <ProtectedRoute allowedRoles={['TEAM_MEMBER']}>
+                    <ProtectedRoute allowedRoles={['TEAM_MEMBER', 'ADMIN', 'STAFF', 'SPORTS_DIRECTOR', 'SPORTS_OFFICER', 'FINANCIAL_DIRECTOR', 'REGISTRATION_STAFF', 'TEAM_MANAGER', 'SUPPORT', 'AUDITOR']}>
                       <TeamMemberSportPaymentPage />
                     </ProtectedRoute>
                   }

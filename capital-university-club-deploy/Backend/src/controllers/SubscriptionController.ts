@@ -1,4 +1,7 @@
 import { Request, Response } from 'express';
+import { AppDataSource } from '../database/data-source';
+import { MemberTeam } from '../entities/MemberTeam';
+import { TeamMemberTeam } from '../entities/TeamMemberTeam';
 
 interface AuthenticatedRequest extends Request {
   user?: Record<string, unknown>;
@@ -141,9 +144,17 @@ export class SubscriptionController {
    */
   async getPendingMemberSubscriptions(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      res.status(501).json({
-        success: false,
-        message: 'Not implemented',
+      const subscriptions = await AppDataSource.getRepository(MemberTeam)
+        .createQueryBuilder('mt')
+        .leftJoinAndSelect('mt.member', 'member')
+        .leftJoinAndSelect('mt.team', 'team')
+        .leftJoinAndSelect('team.sport', 'sport')
+        .orderBy('mt.created_at', 'DESC')
+        .getMany();
+
+      res.status(200).json({
+        success: true,
+        data: subscriptions,
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -288,9 +299,17 @@ export class SubscriptionController {
    */
   async getPendingTeamMemberSubscriptions(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      res.status(501).json({
-        success: false,
-        message: 'Not implemented',
+      const subscriptions = await AppDataSource.getRepository(TeamMemberTeam)
+        .createQueryBuilder('tmt')
+        .leftJoinAndSelect('tmt.team_member', 'team_member')
+        .leftJoinAndSelect('tmt.team', 'team')
+        .leftJoinAndSelect('team.sport', 'sport')
+        .orderBy('tmt.created_at', 'DESC')
+        .getMany();
+
+      res.status(200).json({
+        success: true,
+        data: subscriptions,
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -309,9 +328,37 @@ export class SubscriptionController {
    */
   async getSubscriptionStats(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      res.status(501).json({
-        success: false,
-        message: 'Not implemented',
+      const memberRepo = AppDataSource.getRepository(MemberTeam);
+      const teamMemberRepo = AppDataSource.getRepository(TeamMemberTeam);
+
+      const mCounts = await memberRepo.createQueryBuilder('mt')
+        .select('mt.status', 'status')
+        .addSelect('COUNT(*)', 'count')
+        .groupBy('mt.status')
+        .getRawMany();
+
+      const tmCounts = await teamMemberRepo.createQueryBuilder('tmt')
+        .select('tmt.status', 'status')
+        .addSelect('COUNT(*)', 'count')
+        .groupBy('tmt.status')
+        .getRawMany();
+
+      const parseCounts = (counts: any[]) => {
+        const result: any = { pending: 0, approved: 0, active: 0, declined: 0, cancelled: 0 };
+        counts.forEach(row => {
+          if (result[row.status] !== undefined) {
+            result[row.status] = parseInt(row.count, 10);
+          }
+        });
+        return result;
+      };
+
+      res.status(200).json({
+        success: true,
+        data: {
+          members: parseCounts(mCounts),
+          teamMembers: parseCounts(tmCounts)
+        }
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

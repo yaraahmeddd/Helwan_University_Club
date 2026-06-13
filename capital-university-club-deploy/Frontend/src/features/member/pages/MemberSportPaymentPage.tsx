@@ -259,7 +259,7 @@ const MemberSportPaymentPage: React.FC = () => {
     };
 
     const currencyLabel = paymentData.currency === "EGP"
-        ? t("sports.currency")
+        ? t("sports.currency", { defaultValue: "ج.م" })
         : paymentData.currency;
 
     if (isPaymobReturnFailed(searchParams) || !!errorMessage) {
@@ -332,18 +332,22 @@ const MemberSportPaymentPage: React.FC = () => {
                         <span className="text-ds-text-secondary">{t("payment.labels.sport")}</span>
                         <span className="font-bold text-ds-text-primary">{displaySportName}</span>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="text-ds-text-secondary">{t("payment.labels.time")}</span>
-                        <span className="font-bold text-ds-text-primary">{paymentData.slotTime}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="text-ds-text-secondary">{t("payment.labels.days")}</span>
-                        <span className="font-bold text-ds-text-primary">{paymentData.slotDays}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="text-ds-text-secondary">{t("payment.labels.court")}</span>
-                        <span className="font-bold text-ds-text-primary">{paymentData.court}</span>
-                    </div>
+                    {paymentData.isBooking && (
+                        <>
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-ds-text-secondary">{t("payment.labels.time")}</span>
+                                <span className="font-bold text-ds-text-primary">{paymentData.slotTime}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-ds-text-secondary">{t("payment.labels.days")}</span>
+                                <span className="font-bold text-ds-text-primary">{paymentData.slotDays}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-ds-text-secondary">{t("payment.labels.court")}</span>
+                                <span className="font-bold text-ds-text-primary">{paymentData.court}</span>
+                            </div>
+                        </>
+                    )}
                     <div className="flex items-center justify-between text-sm">
                         <span className="text-ds-text-secondary">{t("payment.labels.reference")}</span>
                         <span dir="ltr" className="font-mono text-xs text-ds-text-primary">{paymentData.paymentReference || "-"}</span>

@@ -495,18 +495,22 @@ const TeamMemberSportPaymentPage: React.FC = () => {
                         <span className="text-ds-text-secondary">{t("payment.labels.sport")}</span>
                         <span className="font-bold text-ds-text-primary">{paymentData.sportName}</span>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="text-ds-text-secondary">{t("payment.labels.time")}</span>
-                        <span className="font-bold text-ds-text-primary">{paymentData.slotTime}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="text-ds-text-secondary">{t("payment.labels.days")}</span>
-                        <span className="font-bold text-ds-text-primary">{paymentData.slotDays}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="text-ds-text-secondary">{t("payment.labels.court")}</span>
-                        <span className="font-bold text-ds-text-primary">{paymentData.court}</span>
-                    </div>
+                    {paymentData.isBooking && (
+                        <>
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-ds-text-secondary">{t("payment.labels.time")}</span>
+                                <span className="font-bold text-ds-text-primary">{paymentData.slotTime}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-ds-text-secondary">{t("payment.labels.days")}</span>
+                                <span className="font-bold text-ds-text-primary">{paymentData.slotDays}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-ds-text-secondary">{t("payment.labels.court")}</span>
+                                <span className="font-bold text-ds-text-primary">{paymentData.court}</span>
+                            </div>
+                        </>
+                    )}
                     <div className="flex items-center justify-between text-sm">
                         <span className="text-ds-text-secondary">{t("payment.labels.reference")}</span>
                         <span dir="ltr" className="font-mono text-xs text-ds-text-primary">{paymentData.paymentReference || "-"}</span>
@@ -515,7 +519,7 @@ const TeamMemberSportPaymentPage: React.FC = () => {
                         <span className="text-ds-text-secondary">{t("payment.labels.amount")}</span>
                         <span className="font-black text-xl text-ds-orange">
                             {paymentData.amount > 0
-                                ? `${paymentData.amount.toLocaleString(isRtl ? "ar-EG" : "en-US")} ${paymentData.currency === "EGP" ? t("sports.currency") : paymentData.currency}`
+                                ? `${paymentData.amount.toLocaleString(isRtl ? "ar-EG" : "en-US")} ${paymentData.currency === "EGP" ? t("sports.currency", { defaultValue: "ج.م" }) : paymentData.currency}`
                                 : t("payment.labels.waiting_cost")}
                         </span>
                     </div>
