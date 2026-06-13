@@ -39,29 +39,22 @@ export const CARD_PRINT_LABELS_AR = {
     name: 'الاسم',
     membership: 'العضوية',
     validFrom: 'ساري من',
-    validUntil: 'حتى نهاية',
+    validUntil: 'ساري حتى',
     teamPlayer: 'عضو فريق',
-    sports: 'الرياضات',
+    sports: 'النشاط',
     jobTitle: 'الوظيفة',
     execDirector: 'المدير التنفيذي',
     execDirectorName: 'ا.د / احمد فاروق',
     noCardPresent: 'لا توجد صورة',
 } as const;
 
+/** @deprecated kept for legacy imports */
 export const CARD_FRONT_ASSET = '/assets/card-front.png';
-
-/** @deprecated Back is rendered in HTML; kept for legacy imports. */
+/** @deprecated kept for legacy imports */
 export const MEMBER_CARD_BACK = '/assets/card-back.png';
 
 /** Default when no saved preference exists. */
 export const DEFAULT_INCLUDE_FOOTER = true;
-
-/**
- * To permanently hide the executive-director footer on every printed card:
- * 1. Set DEFAULT_INCLUDE_FOOTER to false above.
- * 2. Remove the footer toggle UI from MemberCardPrintDialog (footer section + save button).
- * 3. Pass includeFooter: false (or omit and rely on the default) in printMemberCard().
- */
 export const MEMBER_CARD_FOOTER_PREF_KEY = 'huc.memberCardPrint.includeFooter';
 
 export function getMemberCardFooterPreference(): boolean {
@@ -113,7 +106,10 @@ function documentTitleFor(data: MemberCardPrintData): string {
     return CARD_PRINT_LABELS_AR.documentTitleMember;
 }
 
-const CARD_PRINT_STYLES = `
+// ─────────────────────────────────────────────
+//  Shared CSS (taken verbatim from card/CardPrint.jsx.txt + PrintStuff.jsx.txt)
+// ─────────────────────────────────────────────
+const SHARED_CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;600;800&display=swap');
 
 @page {
@@ -121,12 +117,9 @@ const CARD_PRINT_STYLES = `
     margin: 0;
 }
 
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
-html,
-body {
+html, body {
     height: 100%;
     color: black;
 }
@@ -143,6 +136,7 @@ body {
     padding: 24px;
 }
 
+/* Card size: CR80  85.6mm × 54mm */
 .card {
     width: 8.56cm;
     height: 5.4cm;
@@ -150,11 +144,12 @@ body {
     border: 1px solid #d9dee3;
     box-shadow: 0 6px 24px rgba(2, 8, 20, 0.08);
     overflow: hidden;
-    direction: ltr;
+    direction: ltr;          /* lock LTR so columns don't flip in RTL pages */
     display: grid;
     grid-template-columns: 3.2cm 1fr;
 }
 
+/* ── LEFT column ── */
 .left {
     color: #fff;
     display: grid;
@@ -180,35 +175,27 @@ body {
     display: block;
 }
 
-.executive-director-signature {
-    text-align: center;
-    color: black;
-    font-weight: 800;
-    font-size: 8pt;
-    line-height: 1.3;
-    padding: 4px 8px;
-    position: absolute;
-    bottom: 8px;
-    right: 12px;
-    width: auto;
-}
-
-.executive-director-title {
-    font-weight: 900;
+.photo-empty {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
     font-size: 7pt;
-    margin-bottom: 2px;
+    font-weight: 700;
+    text-align: center;
+    padding: 4px;
 }
 
-.executive-director-name {
-    font-weight: 900;
-    font-size: 9.5pt;
-}
-
-.right {  
+/* ── RIGHT column ── */
+.right {
     padding: 10px 12px;
     background: #ffffff;
     position: relative;
 }
+
+.right.topPadding { padding-top: 25px; }
 
 .info {
     display: grid;
@@ -223,126 +210,189 @@ body {
     line-height: 1.2;
 }
 
+/* ── Member card row positions (CardPrint.jsx.txt) ── */
+.member-name       { position: relative; top: 41px; }
+.id-section        { position: relative; top: 31px; font-weight: bold; }
+.profession-section { position: relative; top: 19px; font-weight: bold; }
+.membership-section { position: relative; top: 8px;  font-weight: bold; }
+
+/* ── Staff card row positions (PrintStuff.jsx.txt) ── */
+.staff .member-name        { top: 50px; }
+.staff .profession-section { top: 40px; }
+
+/* ── Team-member card uses same offsets as member with topPadding ── */
+
+/* Season year — positioned below the photo in the left column */
 .year {
     position: relative;
     left: -125px;
     bottom: -37px;
+    font-weight: 800;
+    font-size: 8pt;
+    color: black;
 }
 
-.member-name {
-    position: relative;
-    top: 41px;
+/* ── Executive-director signature (bottom-right of .right) ── */
+.executive-director-signature {
+    position: absolute;
+    bottom: 6px;
+    right: 10px;
+    text-align: right;
+    color: black;
+    font-weight: 800;
+    font-size: 8pt;
+    line-height: 1.25;
+    padding: 0;
 }
 
-.id-section {
-    position: relative;
-    top: 31px;
-    font-weight: bold;
+.executive-director-title {
+    text-align: center;
+    font-weight: 900;
+    font-size: 7pt;
+    margin-bottom: 2px;
 }
 
-.profession-section {
-    position: relative;
-    top: 19px;
-    font-weight: bold;
+.executive-director-name {
+    font-weight: 900;
+    font-size: 9.5pt;
 }
-
-.membership-section {
-    position: relative;
-    top: 8px;
-    font-weight: bold;
-}
-
-.card-staff .member-name { top: 50px; }
-.card-staff .profession-section { top: 40px; }
 
 @media print {
-    .page {
-        background: transparent;
-        padding: 0;
-    }
-
-    .card {
-        box-shadow: none;
-        margin: 0 auto;
-    }
+    .page { background: transparent; padding: 0; }
+    .card { box-shadow: none; margin: 0 auto; }
 }
 `;
 
-function buildFrontFaceHtml(
+// ─────────────────────────────────────────────
+//  Front-face builders — one per card type
+// ─────────────────────────────────────────────
+
+function buildPhotoHtml(photoDataUrl: string | null): string {
+    if (photoDataUrl) {
+        return `<img src="${photoDataUrl}" alt="Member Photo" />`;
+    }
+    return `<div class="photo-empty">${escapeHtml(CARD_PRINT_LABELS_AR.noCardPresent)}</div>`;
+}
+
+function buildSignatureHtml(includeFooter: boolean): string {
+    if (!includeFooter) return '';
+    const L = CARD_PRINT_LABELS_AR;
+    return `
+        <div class="executive-director-signature" dir="rtl">
+          <div class="executive-director-title">${escapeHtml(L.execDirector)}</div>
+          <div class="executive-director-name">${escapeHtml(L.execDirectorName)}</div>
+        </div>`;
+}
+
+/** Member card — mirrors CardPrint.jsx.txt */
+function buildMemberFrontHtml(
+    data: MemberClubCardPrintData,
+    photoDataUrl: string | null,
+    includeFooter: boolean,
+): string {
+    const L = CARD_PRINT_LABELS_AR;
+    return `
+    <div class="card">
+      <aside class="left">
+        <figure class="photo" aria-label="صورة العضو">
+          ${buildPhotoHtml(photoDataUrl)}
+        </figure>
+      </aside>
+      <section class="right">
+        <div class="info" dir="rtl">
+          <div class="member-name">
+            <div class="field-value">${L.name} : ${escapeHtml(data.nameAr)}</div>
+          </div>
+          <div class="id-section field-value">
+            <div>رقم العضوية : ${escapeHtml(String(data.memberId ?? '—'))}</div>
+          </div>
+          <div class="profession-section field-value">
+            <div>${L.membership} : ${escapeHtml(data.membershipAr)}</div>
+          </div>
+          <div class="membership-section field-value">
+            <div>${L.validUntil} ${escapeHtml(data.validUntil)}</div>
+          </div>
+          <div class="field-value year">${escapeHtml(data.seasonYear)}</div>
+        </div>
+        ${buildSignatureHtml(includeFooter)}
+      </section>
+    </div>`;
+}
+
+/** Team-member card — mirrors printMemberTeamCard.jsx.txt */
+function buildTeamMemberFrontHtml(
+    data: TeamMemberCardPrintData,
+    photoDataUrl: string | null,
+    includeFooter: boolean,
+): string {
+    const L = CARD_PRINT_LABELS_AR;
+    const sport = data.sportsAr.length > 0 ? data.sportsAr.join(' - ') : L.teamPlayer;
+    return `
+    <div class="card">
+      <aside class="left">
+        <figure class="photo" aria-label="صورة العضو">
+          ${buildPhotoHtml(photoDataUrl)}
+        </figure>
+      </aside>
+      <section class="right topPadding">
+        <div class="info" dir="rtl">
+          <div class="member-name">
+            <div class="field-value">${L.name} : ${escapeHtml(data.nameAr)}</div>
+          </div>
+          <div class="id-section field-value">
+            <div>${L.sports} : ${escapeHtml(sport)}</div>
+          </div>
+          <div class="profession-section field-value">
+            <div>${L.validUntil} ${escapeHtml(data.seasonYear)}</div>
+          </div>
+          <div class="field-value year">${escapeHtml(data.seasonYear)}</div>
+        </div>
+        ${buildSignatureHtml(includeFooter)}
+      </section>
+    </div>`;
+}
+
+/** Staff card — mirrors PrintStuff.jsx.txt */
+function buildStaffFrontHtml(
+    data: StaffCardPrintData,
+    photoDataUrl: string | null,
+    includeFooter: boolean,
+): string {
+    const L = CARD_PRINT_LABELS_AR;
+    return `
+    <div class="card staff">
+      <aside class="left">
+        <figure class="photo" aria-label="صورة العضو">
+          ${buildPhotoHtml(photoDataUrl)}
+        </figure>
+      </aside>
+      <section class="right">
+        <div class="info" dir="rtl">
+          <div class="member-name">
+            <div class="field-value">${L.name} : ${escapeHtml(data.nameAr)}</div>
+          </div>
+          <div class="profession-section field-value">
+            <div>${L.jobTitle} : ${escapeHtml(data.jobTitleAr ?? '—')}</div>
+          </div>
+        </div>
+        ${buildSignatureHtml(includeFooter)}
+      </section>
+    </div>`;
+}
+
+function buildFrontHtml(
     data: MemberCardPrintData,
     photoDataUrl: string | null,
     includeFooter: boolean,
 ): string {
-    const isStaff = data.cardType === 'staff';
-    const cardClass = isStaff ? 'card card-staff' : 'card';
-    const L = CARD_PRINT_LABELS_AR;
-    
-    const photoHtml = photoDataUrl 
-        ? `<img src="${photoDataUrl}" alt="Member Photo" />`
-        : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:8pt;font-weight:700;">${escapeHtml(L.noCardPresent)}</div>`;
-
-    let infoHtml = `
-          <div class="member-name">
-            <div class="field-value">${L.name} : ${escapeHtml(data.nameAr)}</div>
-          </div>
-    `;
-
-    if (!isStaff) {
-        infoHtml += `
-          <div class="id-section field-value">
-            <div>رقم العضوية : ${escapeHtml(String(data.memberId ?? '—'))}</div>
-          </div>  
-        `;
-    }
-
-    if (isStaff) {
-        infoHtml += `
-          <div class="profession-section field-value">
-            <div>${L.jobTitle} : ${escapeHtml(data.jobTitleAr ?? '—')}</div>
-          </div>  
-        `;
-    }
-
-    if (!isStaff) {
-        let memberType = '—';
-        if (data.cardType === 'member') memberType = data.membershipAr;
-        else if (data.cardType === 'team_member') {
-            memberType = data.sportsAr.length > 0 ? data.sportsAr.join(' - ') : L.teamPlayer;
-        }
-        infoHtml += `
-          <div class="membership-section field-value">
-            <div>${L.membership} : ${escapeHtml(memberType)}</div>
-          </div>
-        `;
-    }
-
-    const yearHtml = !isStaff ? `<div class="field-value year">${escapeHtml(data.seasonYear)}</div>` : '';
-
-    const footerHtml = includeFooter ? `
-        <div class="executive-director-signature" dir="rtl">
-          <div class="executive-director-title">${escapeHtml(L.execDirector)}</div>
-          <div class="executive-director-name">${escapeHtml(L.execDirectorName)}</div>
-        </div>
-    ` : '';
-
-    return `
-    <div class="${cardClass}">   
-       <aside class="left">
-        <figure class="photo" aria-label="صورة العضو">
-          ${photoHtml}
-        </figure>
-      </aside>
-
-      <section class="right">
-        <div class="info" dir="rtl">
-          ${infoHtml}
-        </div>
-        ${yearHtml}
-        ${footerHtml}
-      </section>
-    </div>
-    `;
+    if (data.cardType === 'staff') return buildStaffFrontHtml(data, photoDataUrl, includeFooter);
+    if (data.cardType === 'team_member') return buildTeamMemberFrontHtml(data, photoDataUrl, includeFooter);
+    return buildMemberFrontHtml(data, photoDataUrl, includeFooter);
 }
+
+// ─────────────────────────────────────────────
+//  Complete HTML document for the iframe
+// ─────────────────────────────────────────────
 
 function getCardHTML(
     data: MemberCardPrintData,
@@ -355,13 +405,17 @@ function getCardHTML(
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${escapeHtml(documentTitleFor(data))}</title>
-    <style>${CARD_PRINT_STYLES}</style>
+    <style>${SHARED_CSS}</style>
   </head>
   <body class="page">
-    ${buildFrontFaceHtml(data, photoDataUrl, includeFooter)}
+    ${buildFrontHtml(data, photoDataUrl, includeFooter)}
   </body>
 </html>`;
 }
+
+// ─────────────────────────────────────────────
+//  Image loader & print helpers
+// ─────────────────────────────────────────────
 
 async function loadImageDataUrl(url: string): Promise<string> {
     const resp = await fetch(url);
@@ -388,9 +442,7 @@ async function waitForPrintReady(win: Window): Promise<void> {
     await Promise.all(
         images.map((img) => {
             if (img.complete && img.naturalWidth !== 0) {
-                if (img.decode) {
-                    return img.decode().catch(() => undefined);
-                }
+                if (img.decode) return img.decode().catch(() => undefined);
                 return Promise.resolve();
             }
             return new Promise<void>((resolve) => {
@@ -408,15 +460,15 @@ async function waitForPrintReady(win: Window): Promise<void> {
     );
 
     if (doc.fonts?.ready?.then) {
-        try {
-            await doc.fonts.ready;
-        } catch {
-            /* ignore */
-        }
+        try { await doc.fonts.ready; } catch { /* ignore */ }
     }
 
     await new Promise((r) => setTimeout(r, 50));
 }
+
+// ─────────────────────────────────────────────
+//  Public API
+// ─────────────────────────────────────────────
 
 export async function printMemberCard(
     data: MemberCardPrintData,
