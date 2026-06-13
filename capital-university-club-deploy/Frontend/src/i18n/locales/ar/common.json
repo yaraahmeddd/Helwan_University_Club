@@ -138,28 +138,39 @@
   },
   "memberCardPrint": {
     "dialogTitle": "طباعة بطاقة العضو",
+    "dialogTitleTeam": "طباعة بطاقة عضو الفريق",
+    "dialogTitleStaff": "طباعة بطاقة الموظف",
     "printButton": "طباعة البطاقة",
     "printing": "جارٍ الإعداد…",
     "rowTooltip": "طباعة البطاقة",
     "documentTitle": "HUC — بطاقة العضوية",
     "validUntil": "ساري حتى",
     "execDirector": "المدير التنفيذي",
-    "execDirectorName": "ا.د / احمد فاروق",
-    "printHint": "تأكد من اختيار: الطابعة MagicCard Rio Pro 360 · حجم الورق CR80 · الهوامش: بدون",
-    "loading": "جاري تحميل بطاقة العضو…",
-    "noCardPresent": "لا توجد بطاقة لهذا العضو",
-    "detailsOnlyHint": "سيتم طباعة بيانات العضو فقط.",
+    "execDirectorName": "أ.د أحمد فاروق",
+    "printHint": "تأكد من اختيار: الطابعة MagicCard Rio Pro 360 · حجم الورق CR80 · الاتجاه: أفقي · الهوامش: بدون",
+    "loading": "جاري تحميل بيانات البطاقة…",
+    "noCardPresent": "لا توجد صورة لهذا العضو",
+    "detailsOnlyHint": "سيتم طباعة البطاقة CR80 مع البيانات حتى بدون صورة.",
     "preview": {
-      "templateTitle": "نموذج البطاقة",
+      "templateTitle": "معاينة الصورة",
       "front": "الوجه الأمامي",
       "back": "الوجه الخلفي",
-      "memberTitle": "بيانات العضو"
+      "memberTitle": "بيانات العضو",
+      "cardDetailsTitle": "بيانات البطاقة المطبوعة",
+      "arabicOnlyHint": "محتوى البطاقة المطبوعة يظهر بالعربية دائماً."
+    },
+    "footerSettings": {
+      "title": "تذييل البطاقة",
+      "includeFooter": "إظهار توقيع المدير التنفيذي",
+      "save": "حفظ الإعداد",
+      "saved": "تم الحفظ"
     },
     "fields": {
       "name": "الاسم",
       "sport": "الرياضة",
       "memberId": "رقم العضو",
-      "endDate": "تاريخ الانتهاء"
+      "endDate": "تاريخ الانتهاء",
+      "seasonYear": "الموسم"
     }
   },
   "import": {

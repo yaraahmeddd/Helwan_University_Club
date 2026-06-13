@@ -138,28 +138,39 @@
   },
   "memberCardPrint": {
     "dialogTitle": "Member Card Printing",
+    "dialogTitleTeam": "Team Member Card Printing",
+    "dialogTitleStaff": "Staff Card Printing",
     "printButton": "Print Card",
     "printing": "Preparing…",
     "rowTooltip": "Print card",
     "documentTitle": "HUC — Membership Card",
     "validUntil": "Valid until",
     "execDirector": "Executive Director",
-    "execDirectorName": "Prof. / Ahmed Farouk",
-    "printHint": "Make sure to select: MagicCard Rio Pro 360 printer · CR80 paper size · Margins: None",
-    "loading": "Loading member card…",
-    "noCardPresent": "No card is present for this member",
-    "detailsOnlyHint": "Member details will still be included when printing.",
+    "execDirectorName": "Prof. Dr. Ahmed Farouk",
+    "printHint": "Make sure to select: MagicCard Rio Pro 360 printer · CR80 paper size · Landscape · Margins: None",
+    "loading": "Loading card data…",
+    "noCardPresent": "No photo available for this person",
+    "detailsOnlyHint": "The CR80 card will still print with details even without a photo.",
     "preview": {
-      "templateTitle": "Card Template",
+      "templateTitle": "Photo Preview",
       "front": "Front",
       "back": "Back",
-      "memberTitle": "Member Details"
+      "memberTitle": "Member Details",
+      "cardDetailsTitle": "Printed Card Details",
+      "arabicOnlyHint": "Printed card content is always in Arabic."
+    },
+    "footerSettings": {
+      "title": "Card Footer",
+      "includeFooter": "Include executive director signature",
+      "save": "Save setting",
+      "saved": "Saved"
     },
     "fields": {
       "name": "Name",
       "sport": "Sport",
       "memberId": "Member ID",
-      "endDate": "Expiry Date"
+      "endDate": "Expiry Date",
+      "seasonYear": "Season"
     }
   },
   "import": {

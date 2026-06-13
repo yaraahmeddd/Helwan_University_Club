@@ -1,203 +1,438 @@
-export type MemberCardPrintData = {
+export type CardPrintKind = 'member' | 'team_member' | 'staff';
+
+type BaseCardPrintData = {
+    cardType: CardPrintKind;
     nameAr: string;
-    nameEn: string;
-    memberId: string;
-    sportAr: string;
-    sportEn: string;
-    endDate: string;
+    seasonYear: string;
     hasCard: boolean;
     cardFrontUrl?: string | null;
 };
 
-export type MemberCardPrintLabels = {
-    documentTitle: string;
-    name: string;
-    memberId: string;
-    sport: string;
+export type MemberClubCardPrintData = BaseCardPrintData & {
+    cardType: 'member';
+    membershipAr: string;
+    validFrom: string;
     validUntil: string;
-    execDirector: string;
-    execDirectorName: string;
-    noCardPresent: string;
 };
 
-type MemberCardPrintContent = {
-    name: string;
-    sport: string;
-    memberId: string;
-    endDate: string;
+export type TeamMemberCardPrintData = BaseCardPrintData & {
+    cardType: 'team_member';
+    sportsAr: string[];
 };
+
+export type StaffCardPrintData = BaseCardPrintData & {
+    cardType: 'staff';
+    jobTitleAr: string;
+};
+
+export type MemberCardPrintData =
+    | MemberClubCardPrintData
+    | TeamMemberCardPrintData
+    | StaffCardPrintData;
+
+/** Printed card labels — always Arabic regardless of UI language. */
+export const CARD_PRINT_LABELS_AR = {
+    documentTitleMember: 'نادي جامعة العاصمة — بطاقة عضو',
+    documentTitleTeamMember: 'نادي جامعة العاصمة — بطاقة عضو فريق',
+    documentTitleStaff: 'نادي جامعة العاصمة — بطاقة موظف',
+    name: 'الاسم',
+    membership: 'العضوية',
+    validFrom: 'ساري من',
+    validUntil: 'حتى نهاية',
+    teamPlayer: 'عضو فريق',
+    sports: 'الرياضات',
+    jobTitle: 'الوظيفة',
+    execDirector: 'المدير التنفيذي',
+    execDirectorName: 'أ.د أحمد فاروق',
+    noCardPresent: 'لا توجد بطاقة',
+} as const;
+
+/** Default when no saved preference exists. */
+export const DEFAULT_INCLUDE_FOOTER = true;
+
+/**
+ * To permanently hide the executive-director footer on every printed card:
+ * 1. Set DEFAULT_INCLUDE_FOOTER to false above.
+ * 2. Remove the footer toggle UI from MemberCardPrintDialog (footer section + save button).
+ * 3. Pass includeFooter: false (or omit and rely on the default) in printMemberCard().
+ */
+export const MEMBER_CARD_FOOTER_PREF_KEY = 'huc.memberCardPrint.includeFooter';
+
+export function getMemberCardFooterPreference(): boolean {
+    try {
+        const stored = localStorage.getItem(MEMBER_CARD_FOOTER_PREF_KEY);
+        if (stored === null) return DEFAULT_INCLUDE_FOOTER;
+        return stored === 'true';
+    } catch {
+        return DEFAULT_INCLUDE_FOOTER;
+    }
+}
+
+export function setMemberCardFooterPreference(include: boolean): void {
+    try {
+        localStorage.setItem(MEMBER_CARD_FOOTER_PREF_KEY, String(include));
+    } catch {
+        /* ignore quota / private mode */
+    }
+}
+
+export function getSeasonYearRange(date = new Date()): string {
+    const year = date.getFullYear();
+    return `${year}/${year + 1}`;
+}
 
 const escapeHtml = (s: string) =>
     String(s)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 
-export function formatMemberCardId(id: string | number): string {
-    const raw = String(id).trim();
-    if (!raw) return "—";
-    if (/^(MEM-|CARD-)/i.test(raw)) return raw.toUpperCase();
-    const numeric = raw.replace(/\D/g, "");
-    if (numeric) return `MEM-${numeric.padStart(3, "0")}`;
-    return raw;
+function formatDateAr(value?: string | Date | null): string {
+    if (!value) return '—';
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
 }
 
-export function buildMemberCardPrintData(input: {
-    firstNameAr?: string;
-    lastNameAr?: string;
-    firstNameEn?: string;
-    lastNameEn?: string;
-    id: string | number;
-    sportAr?: string;
-    sportEn?: string;
-    endDate?: string | null;
-    hasCard?: boolean;
-    cardFrontUrl?: string | null;
-}): MemberCardPrintData {
-    const nameAr = `${input.firstNameAr ?? ""} ${input.lastNameAr ?? ""}`.trim() || "—";
-    const nameEn = `${input.firstNameEn ?? ""} ${input.lastNameEn ?? ""}`.trim() || nameAr;
-    return {
-        nameAr,
-        nameEn,
-        memberId: formatMemberCardId(input.id),
-        sportAr: input.sportAr?.trim() || "—",
-        sportEn: input.sportEn?.trim() || input.sportAr?.trim() || "—",
-        endDate: input.endDate?.trim() || "—",
-        hasCard: input.hasCard ?? false,
-        cardFrontUrl: input.cardFrontUrl ?? null,
-    };
+export { formatDateAr as formatMemberCardDate };
+
+/** CR80 landscape card styles — adapted from capital-university-club-deploy/card/ templates. */
+const CR80_CARD_STYLES = `
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;600;800&display=swap');
+
+@page {
+  size: landscape;
+  margin: 0;
 }
 
-function getCardHTML(
-    content: MemberCardPrintContent,
-    frontImgDataUrl: string | null,
-    labels: MemberCardPrintLabels,
-    language: "ar" | "en",
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  color: black;
+}
+
+body {
+  margin: 0;
+  font-family: "Cairo", system-ui, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+.page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.card {
+  width: 8.56cm;
+  height: 5.4cm;
+  background: #fff;
+  border: 1px solid #d9dee3;
+  box-shadow: 0 6px 24px rgba(2, 8, 20, 0.08);
+  overflow: hidden;
+  position: relative;
+  direction: ltr;
+  display: grid;
+  grid-template-columns: 3.2cm 1fr;
+}
+
+.left {
+  color: #fff;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.photo {
+  width: 26mm;
+  height: 32mm;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid rgba(0, 0, 0, 0.12);
+  background: #f1f5f9;
+  position: relative;
+  left: -30px;
+  top: 26px;
+}
+
+.photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 7pt;
+  font-weight: 700;
+  text-align: center;
+  padding: 4px;
+}
+
+.right {
+  padding: 10px 12px;
+  background: #ffffff;
+  position: relative;
+}
+
+.info {
+  display: grid;
+  align-content: center;
+  row-gap: 10px;
+}
+
+.field-value {
+  font-weight: 700;
+  font-size: 8pt;
+  color: black;
+  line-height: 1.25;
+}
+
+.field-value.compact {
+  font-size: 7pt;
+  line-height: 1.2;
+}
+
+.member-name {
+  position: relative;
+  top: 38px;
+}
+
+.row-section-a {
+  position: relative;
+  top: 28px;
+  font-weight: bold;
+}
+
+.row-section-b {
+  position: relative;
+  top: 18px;
+  font-weight: bold;
+}
+
+.row-section-c {
+  position: relative;
+  top: 8px;
+  font-weight: bold;
+}
+
+.row-section-d {
+  position: relative;
+  top: -2px;
+  font-weight: bold;
+}
+
+.year {
+  position: relative;
+  left: -125px;
+  bottom: -28px;
+  font-weight: 800;
+  font-size: 9pt;
+}
+
+.staff-right .member-name { top: 50px; }
+.staff-right .row-section-a { top: 40px; }
+
+.team-right { padding-top: 25px; }
+.team-right .member-name { top: 28px; }
+.team-right .row-section-a { top: 18px; }
+.team-right .row-section-b { top: 8px; }
+
+.executive-director-signature {
+  position: absolute;
+  bottom: 6px;
+  right: 10px;
+  text-align: right;
+  color: black;
+  font-weight: 800;
+  font-size: 8pt;
+  line-height: 1.25;
+}
+
+.executive-director-title {
+  text-align: center;
+  font-weight: 900;
+  font-size: 7pt;
+  margin-bottom: 2px;
+}
+
+.executive-director-name {
+  font-weight: 900;
+  font-size: 9.5pt;
+}
+
+@media print {
+  .page {
+    background: transparent;
+    padding: 0;
+  }
+  .card {
+    box-shadow: none;
+    margin: 0 auto;
+  }
+}
+`;
+
+function buildFooterHtml(includeFooter: boolean): string {
+    if (!includeFooter) return '';
+    const L = CARD_PRINT_LABELS_AR;
+    return `<div class="executive-director-signature" dir="rtl">
+          <div class="executive-director-title">${escapeHtml(L.execDirector)}</div>
+          <div class="executive-director-name">${escapeHtml(L.execDirectorName)}</div>
+        </div>`;
+}
+
+function buildPhotoHtml(photoDataUrl: string | null): string {
+    if (photoDataUrl) {
+        return `<figure class="photo" aria-label="صورة العضو">
+          <img src="${photoDataUrl}" alt="Member Photo" />
+        </figure>`;
+    }
+    return `<figure class="photo photo-empty" aria-label="صورة العضو">${escapeHtml(CARD_PRINT_LABELS_AR.noCardPresent)}</figure>`;
+}
+
+function buildMemberCardHtml(
+    data: MemberClubCardPrintData,
+    photoDataUrl: string | null,
+    includeFooter: boolean,
 ): string {
-    const textDir = language === "ar" ? "rtl" : "ltr";
-    const fontFamily = language === "ar"
-        ? '"Cairo", "IBM Plex Sans Arabic", Arial, sans-serif'
-        : '"Inter", "Plus Jakarta Sans", Arial, sans-serif';
-
-    const cardVisualHtml = frontImgDataUrl
-        ? `<img src="${frontImgDataUrl}" alt="card front" />`
-        : `<p class="no-card">${escapeHtml(labels.noCardPresent)}</p>`;
-
+    const L = CARD_PRINT_LABELS_AR;
     return `<!DOCTYPE html>
-<html lang="${language}" dir="${textDir}">
+<html lang="ar">
 <head>
   <meta charset="UTF-8" />
-  <title>${escapeHtml(labels.documentTitle)}</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&family=Inter:wght@400;700;800&display=swap');
-    @page { size: portrait; margin: 0; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      width: 100%;
-      height: 100%;
-      font-family: ${fontFamily};
-      color: #111;
-      background: #fff;
-      overflow: hidden;
-    }
-    .page {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-    }
-    .card-visual {
-      width: 100%;
-      max-width: 420px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .card-visual img {
-      width: 100%;
-      max-width: 320px;
-      height: auto;
-      object-fit: contain;
-      display: block;
-      border-radius: 12px;
-    }
-    .no-card {
-      width: 100%;
-      max-width: 420px;
-      padding: 24px 16px;
-      border: 2px dashed #cbd5e1;
-      border-radius: 12px;
-      text-align: center;
-      font-size: 12pt;
-      font-weight: 700;
-      color: #64748b;
-    }
-    .details {
-      width: 100%;
-      max-width: 420px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      text-align: center;
-    }
-    .field-value {
-      font-size: 11pt;
-      font-weight: 700;
-      line-height: 1.45;
-      width: 100%;
-    }
-    .signature {
-      width: 100%;
-      max-width: 420px;
-      margin-top: 4px;
-      text-align: center;
-      font-size: 10pt;
-      font-weight: 800;
-      line-height: 1.4;
-      color: #333;
-    }
-    @media print {
-      html, body {
-        width: 100% !important;
-        height: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-      }
-      .page {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-      }
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${escapeHtml(CARD_PRINT_LABELS_AR.documentTitleMember)}</title>
+  <style>${CR80_CARD_STYLES}</style>
 </head>
-<body>
-  <div class="page">
-    <div class="card-visual">
-      ${cardVisualHtml}
-    </div>
-    <div class="details" dir="${textDir}">
-      <div class="field-value">${escapeHtml(labels.name)} : ${escapeHtml(content.name)}</div>
-      <div class="field-value">${escapeHtml(labels.memberId)} : ${escapeHtml(content.memberId)}</div>
-      <div class="field-value">${escapeHtml(labels.sport)} : ${escapeHtml(content.sport)}</div>
-      <div class="field-value">${escapeHtml(labels.validUntil)} : ${escapeHtml(content.endDate)}</div>
-    </div>
-    <div class="signature" dir="${textDir}">
-      <div>${escapeHtml(labels.execDirector)}</div>
-      <div>${escapeHtml(labels.execDirectorName)}</div>
-    </div>
+<body class="page">
+  <div class="card">
+    <aside class="left">
+      ${buildPhotoHtml(photoDataUrl)}
+    </aside>
+    <section class="right">
+      <div class="info" dir="rtl">
+        <div class="member-name">
+          <div class="field-value">${escapeHtml(L.name)} : ${escapeHtml(data.nameAr)}</div>
+        </div>
+        <div class="row-section-a field-value">
+          <div>${escapeHtml(L.membership)} : ${escapeHtml(data.membershipAr)}</div>
+        </div>
+        <div class="row-section-b field-value">
+          <div>${escapeHtml(L.validFrom)} : ${escapeHtml(data.validFrom)}</div>
+        </div>
+        <div class="row-section-c field-value">
+          <div>${escapeHtml(L.validUntil)} : ${escapeHtml(data.validUntil)}</div>
+        </div>
+        <div class="field-value year">${escapeHtml(data.seasonYear)}</div>
+      </div>
+      ${buildFooterHtml(includeFooter)}
+    </section>
   </div>
 </body>
 </html>`;
+}
+
+function buildTeamMemberCardHtml(
+    data: TeamMemberCardPrintData,
+    photoDataUrl: string | null,
+    includeFooter: boolean,
+): string {
+    const L = CARD_PRINT_LABELS_AR;
+    const sportsText = data.sportsAr.length > 0
+        ? data.sportsAr.slice(0, 4).join(' — ')
+        : '—';
+
+    return `<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${escapeHtml(CARD_PRINT_LABELS_AR.documentTitleTeamMember)}</title>
+  <style>${CR80_CARD_STYLES}</style>
+</head>
+<body class="page">
+  <div class="card">
+    <aside class="left">
+      ${buildPhotoHtml(photoDataUrl)}
+    </aside>
+    <section class="right team-right">
+      <div class="info" dir="rtl">
+        <div class="member-name">
+          <div class="field-value">${escapeHtml(L.name)} : ${escapeHtml(data.nameAr)}</div>
+        </div>
+        <div class="row-section-a field-value">
+          <div>${escapeHtml(L.teamPlayer)}</div>
+        </div>
+        <div class="row-section-b field-value compact">
+          <div>${escapeHtml(L.sports)} : ${escapeHtml(sportsText)}</div>
+        </div>
+        <div class="field-value year">${escapeHtml(data.seasonYear)}</div>
+      </div>
+      ${buildFooterHtml(includeFooter)}
+    </section>
+  </div>
+</body>
+</html>`;
+}
+
+function buildStaffCardHtml(
+    data: StaffCardPrintData,
+    photoDataUrl: string | null,
+    includeFooter: boolean,
+): string {
+    const L = CARD_PRINT_LABELS_AR;
+    return `<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${escapeHtml(CARD_PRINT_LABELS_AR.documentTitleStaff)}</title>
+  <style>${CR80_CARD_STYLES}</style>
+</head>
+<body class="page">
+  <div class="card">
+    <aside class="left">
+      ${buildPhotoHtml(photoDataUrl)}
+    </aside>
+    <section class="right staff-right">
+      <div class="info" dir="rtl">
+        <div class="member-name">
+          <div class="field-value">${escapeHtml(L.name)} : ${escapeHtml(data.nameAr)}</div>
+        </div>
+        <div class="row-section-a field-value">
+          <div>${escapeHtml(L.jobTitle)} : ${escapeHtml(data.jobTitleAr)}</div>
+        </div>
+        <div class="field-value year">${escapeHtml(data.seasonYear)}</div>
+      </div>
+      ${buildFooterHtml(includeFooter)}
+    </section>
+  </div>
+</body>
+</html>`;
+}
+
+function getCardHTML(
+    data: MemberCardPrintData,
+    photoDataUrl: string | null,
+    includeFooter: boolean,
+): string {
+    if (data.cardType === 'staff') {
+        return buildStaffCardHtml(data, photoDataUrl, includeFooter);
+    }
+    if (data.cardType === 'team_member') {
+        return buildTeamMemberCardHtml(data, photoDataUrl, includeFooter);
+    }
+    return buildMemberCardHtml(data, photoDataUrl, includeFooter);
 }
 
 async function loadImageDataUrl(url: string): Promise<string> {
@@ -212,55 +447,87 @@ async function loadImageDataUrl(url: string): Promise<string> {
     });
 }
 
-export async function printMemberCard(
-    member: MemberCardPrintData,
-    labels: MemberCardPrintLabels,
-    language: "ar" | "en",
-): Promise<void> {
-    let frontImgDataUrl: string | null = null;
-    if (member.hasCard && member.cardFrontUrl) {
+async function waitForPrintReady(win: Window): Promise<void> {
+    const doc = win.document;
+
+    if (doc.readyState === 'loading') {
+        await new Promise<void>((res) => {
+            doc.addEventListener('DOMContentLoaded', () => res(), { once: true });
+        });
+    }
+
+    const images = Array.from(doc.images || []);
+    await Promise.all(
+        images.map((img) => {
+            if (img.complete && img.naturalWidth !== 0) {
+                if (img.decode) {
+                    return img.decode().catch(() => undefined);
+                }
+                return Promise.resolve();
+            }
+            return new Promise<void>((resolve) => {
+                const done = () => {
+                    if (img.decode) {
+                        img.decode().then(resolve).catch(resolve);
+                    } else {
+                        resolve();
+                    }
+                };
+                img.addEventListener('load', done, { once: true });
+                img.addEventListener('error', done, { once: true });
+            });
+        }),
+    );
+
+    if (doc.fonts?.ready?.then) {
         try {
-            frontImgDataUrl = await loadImageDataUrl(member.cardFrontUrl);
+            await doc.fonts.ready;
         } catch {
-            frontImgDataUrl = null;
+            /* ignore */
         }
     }
 
-    const content: MemberCardPrintContent = {
-        name: language === "ar" ? member.nameAr : member.nameEn,
-        sport: language === "ar" ? member.sportAr : member.sportEn,
-        memberId: member.memberId,
-        endDate: member.endDate,
-    };
+    await new Promise((r) => setTimeout(r, 50));
+}
 
-    const iframe = document.createElement("iframe");
+export async function printMemberCard(
+    data: MemberCardPrintData,
+    options?: { includeFooter?: boolean },
+): Promise<void> {
+    const includeFooter = options?.includeFooter ?? getMemberCardFooterPreference();
+
+    let photoDataUrl: string | null = null;
+    if (data.hasCard && data.cardFrontUrl) {
+        try {
+            photoDataUrl = await loadImageDataUrl(data.cardFrontUrl);
+        } catch {
+            photoDataUrl = null;
+        }
+    }
+
+    const iframe = document.createElement('iframe');
     Object.assign(iframe.style, {
-        position: "fixed",
-        right: "0",
-        bottom: "0",
-        width: "0",
-        height: "0",
-        border: "0",
+        position: 'fixed',
+        right: '0',
+        bottom: '0',
+        width: '0',
+        height: '0',
+        border: '0',
     });
     document.body.appendChild(iframe);
 
-    const doc = iframe.contentWindow!.document;
+    const win = iframe.contentWindow!;
+    const doc = win.document;
     doc.open();
-    doc.write(getCardHTML(content, frontImgDataUrl, labels, language));
+    doc.write(getCardHTML(data, photoDataUrl, includeFooter));
     doc.close();
 
-    await new Promise<void>((resolve) => {
-        if (doc.readyState === "complete") {
-            resolve();
-            return;
-        }
-        iframe.contentWindow!.addEventListener("load", () => resolve(), { once: true });
-    });
+    await waitForPrintReady(win);
 
-    iframe.contentWindow!.focus();
-    iframe.contentWindow!.print();
+    win.focus();
+    win.print();
 
-    iframe.contentWindow!.onafterprint = () => {
+    win.onafterprint = () => {
         setTimeout(() => {
             if (document.body.contains(iframe)) document.body.removeChild(iframe);
         }, 50);
@@ -270,4 +537,4 @@ export async function printMemberCard(
     }, 5000);
 }
 
-export const MEMBER_CARD_BACK = "/assets/card-back.png";
+export const MEMBER_CARD_BACK = '/assets/card-back.png';

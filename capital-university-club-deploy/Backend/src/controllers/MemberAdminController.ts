@@ -1074,7 +1074,7 @@ export class MemberController {
 
       const member = await MemberController.memberRepo.findOne({
         where: { id: parseInt(id) },
-        relations: ['account', 'member_type'],
+        relations: ['account', 'member_type', 'memberships', 'memberships.membership_plan'],
       });
 
       if (!member) {
@@ -1086,6 +1086,32 @@ export class MemberController {
 
       await MemberController.logAction(req, 'Print Card', `Printed ID card for member: ${member.first_name_en} ${member.last_name_en}`, null, { card_generated: true });
 
+      let membershipNameAr: string | null = null;
+      let validFrom: Date | null = null;
+      let validUntil: Date | null = null;
+
+      if (member.memberships && member.memberships.length > 0) {
+        const sortedMemberships = member.memberships.sort(
+          (a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime(),
+        );
+        const activeMembership =
+          sortedMemberships.find((m) => m.status === 'active') || sortedMemberships[0];
+
+        if (activeMembership) {
+          validFrom = activeMembership.start_date;
+          validUntil = activeMembership.end_date;
+          membershipNameAr =
+            activeMembership.membership_plan?.name_ar ||
+            activeMembership.membership_plan?.name_en ||
+            member.member_type?.name_ar ||
+            null;
+        }
+      }
+
+      if (!membershipNameAr) {
+        membershipNameAr = member.member_type?.name_ar || member.member_type?.name_en || null;
+      }
+
       // Return member card data
       return res.json({
         success: true,
@@ -1096,8 +1122,10 @@ export class MemberController {
           member_name_ar: `${member.first_name_ar} ${member.last_name_ar}`,
           national_id: member.national_id,
           member_type: member.member_type?.name_en || 'Regular',
-          issued_date: new Date(),
-          valid_until: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+          membership_name_ar: membershipNameAr,
+          valid_from: validFrom,
+          valid_until: validUntil,
+          issued_date: validFrom ?? new Date(),
           photo: member.photo || null,
           status: member.status,
         },

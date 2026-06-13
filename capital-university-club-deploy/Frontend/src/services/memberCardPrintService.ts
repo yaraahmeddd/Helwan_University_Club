@@ -1,10 +1,21 @@
 import api from '@/services/axios';
 import { BACKEND_ORIGIN } from '@/config/backend';
-import type { MemberCardPrintData } from '@/utils/memberCardPrint';
-import { buildMemberCardPrintData } from '@/utils/memberCardPrint';
+import type {
+    CardPrintKind,
+    MemberCardPrintData,
+    MemberClubCardPrintData,
+    StaffCardPrintData,
+    TeamMemberCardPrintData,
+} from '@/utils/memberCardPrint';
+import {
+    formatMemberCardDate,
+    getSeasonYearRange,
+} from '@/utils/memberCardPrint';
 
 export type MemberCardPrintInput = {
     id: string | number;
+    cardType?: CardPrintKind;
+    /** @deprecated use cardType: 'team_member' */
     isTeamPlayer?: boolean;
     firstNameAr?: string;
     lastNameAr?: string;
@@ -13,13 +24,16 @@ export type MemberCardPrintInput = {
     sportAr?: string;
     sportEn?: string;
     endDate?: string | null;
+    jobTitleAr?: string;
 };
 
 type MemberCardApiData = {
     card_number?: string;
     member_name_en?: string;
     member_name_ar?: string;
+    valid_from?: string | Date;
     valid_until?: string | Date;
+    membership_name_ar?: string;
     photo?: string | null;
     member_type?: string;
 };
@@ -31,13 +45,23 @@ type TeamMemberApiData = {
     first_name_en?: string;
     last_name_en?: string;
     photo?: string | null;
+    sports?: Array<{ name?: string }>;
     team_member_teams?: Array<{
         team?: {
             name_ar?: string;
-            name_en?: string;
             sport?: { name_ar?: string; name_en?: string; name?: string };
         };
     }>;
+};
+
+type StaffApiData = {
+    id?: number;
+    first_name_ar?: string;
+    last_name_ar?: string;
+    personal_photo?: string | null;
+    staff_type?: {
+        name_ar?: string;
+    };
 };
 
 export function resolveMemberPhotoUrl(photo?: string | null): string | null {
@@ -55,66 +79,118 @@ export function resolveMemberPhotoUrl(photo?: string | null): string | null {
     return encodeURI(`${BACKEND_ORIGIN}/${f.replace(/^\/+/, '')}`);
 }
 
-function formatValidUntil(value?: string | Date | null): string {
-    if (!value) return '—';
-    const date = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(date.getTime())) return '—';
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+function resolveCardType(input: MemberCardPrintInput): CardPrintKind {
+    if (input.cardType) return input.cardType;
+    if (input.isTeamPlayer) return 'team_member';
+    return 'member';
 }
 
-function splitName(full?: string): { first: string; last: string } {
-    const parts = (full ?? '').trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return { first: '', last: '' };
-    if (parts.length === 1) return { first: parts[0], last: '' };
-    return { first: parts[0], last: parts.slice(1).join(' ') };
+function buildNameAr(input: MemberCardPrintInput): string {
+    return `${input.firstNameAr ?? ''} ${input.lastNameAr ?? ''}`.trim() || '—';
 }
 
-function firstSportFromTeamMember(data: TeamMemberApiData): { sportAr: string; sportEn: string } {
-    const team = data.team_member_teams?.[0]?.team;
-    const sport = team?.sport;
-    const sportAr = sport?.name_ar ?? team?.name_ar ?? sport?.name ?? '—';
-    const sportEn = sport?.name_en ?? team?.name_en ?? sport?.name ?? sportAr;
-    return { sportAr, sportEn };
+function sportsFromTeamMember(data: TeamMemberApiData): string[] {
+    if (Array.isArray(data.sports) && data.sports.length > 0) {
+        return data.sports
+            .map((s) => s.name?.trim())
+            .filter((n): n is string => Boolean(n))
+            .slice(0, 4);
+    }
+
+    const fromTeams = (data.team_member_teams ?? [])
+        .map((t) => {
+            const sport = t.team?.sport;
+            return sport?.name_ar ?? t.team?.name_ar ?? sport?.name ?? '';
+        })
+        .map((n) => n.trim())
+        .filter(Boolean);
+
+    return [...new Set(fromTeams)].slice(0, 4);
+}
+
+function baseFallback(input: MemberCardPrintInput): MemberCardPrintData {
+    const nameAr = buildNameAr(input);
+    const seasonYear = getSeasonYearRange();
+    const cardType = resolveCardType(input);
+
+    if (cardType === 'staff') {
+        return {
+            cardType: 'staff',
+            nameAr,
+            seasonYear,
+            jobTitleAr: input.jobTitleAr?.trim() || '—',
+            hasCard: false,
+            cardFrontUrl: null,
+        } satisfies StaffCardPrintData;
+    }
+
+    if (cardType === 'team_member') {
+        const sport = input.sportAr?.trim();
+        return {
+            cardType: 'team_member',
+            nameAr,
+            seasonYear,
+            sportsAr: sport ? [sport] : [],
+            hasCard: false,
+            cardFrontUrl: null,
+        } satisfies TeamMemberCardPrintData;
+    }
+
+    return {
+        cardType: 'member',
+        nameAr,
+        seasonYear,
+        membershipAr: '—',
+        validFrom: '—',
+        validUntil: input.endDate?.trim() || '—',
+        hasCard: false,
+        cardFrontUrl: null,
+    } satisfies MemberClubCardPrintData;
 }
 
 export async function fetchMemberCardPrintData(
     input: MemberCardPrintInput,
 ): Promise<MemberCardPrintData> {
-    const fallback = buildMemberCardPrintData({
-        firstNameAr: input.firstNameAr,
-        lastNameAr: input.lastNameAr,
-        firstNameEn: input.firstNameEn,
-        lastNameEn: input.lastNameEn,
-        id: input.id,
-        sportAr: input.sportAr,
-        sportEn: input.sportEn,
-        endDate: input.endDate,
-    });
+    const fallback = baseFallback(input);
+    const cardType = resolveCardType(input);
 
     try {
-        if (input.isTeamPlayer) {
+        if (cardType === 'staff') {
+            const res = await api.get<{ success?: boolean; data?: StaffApiData }>(
+                `/staff/${input.id}`,
+            );
+            const data = res.data?.data;
+            if (!data) return fallback;
+
+            const nameAr = `${data.first_name_ar ?? ''} ${data.last_name_ar ?? ''}`.trim() || fallback.nameAr;
+            const photoUrl = resolveMemberPhotoUrl(data.personal_photo);
+
+            return {
+                cardType: 'staff',
+                nameAr,
+                seasonYear: getSeasonYearRange(),
+                jobTitleAr: data.staff_type?.name_ar?.trim() || input.jobTitleAr?.trim() || '—',
+                hasCard: Boolean(photoUrl),
+                cardFrontUrl: photoUrl,
+            };
+        }
+
+        if (cardType === 'team_member') {
             const res = await api.get<{ success?: boolean; data?: TeamMemberApiData }>(
                 `/team-members/${input.id}`,
             );
             const data = res.data?.data;
-            if (!data) return { ...fallback, hasCard: false, cardFrontUrl: null };
+            if (!data) return fallback;
 
-            const sports = firstSportFromTeamMember(data);
+            const nameAr = `${data.first_name_ar ?? ''} ${data.last_name_ar ?? ''}`.trim() || fallback.nameAr;
             const photoUrl = resolveMemberPhotoUrl(data.photo);
+            const sportsAr = sportsFromTeamMember(data);
+
             return {
-                ...buildMemberCardPrintData({
-                    firstNameAr: data.first_name_ar ?? input.firstNameAr,
-                    lastNameAr: data.last_name_ar ?? input.lastNameAr,
-                    firstNameEn: data.first_name_en ?? input.firstNameEn,
-                    lastNameEn: data.last_name_en ?? input.lastNameEn,
-                    id: data.id ?? input.id,
-                    sportAr: sports.sportAr !== '—' ? sports.sportAr : input.sportAr,
-                    sportEn: sports.sportEn !== '—' ? sports.sportEn : input.sportEn,
-                    endDate: input.endDate,
-                }),
+                cardType: 'team_member',
+                nameAr,
+                seasonYear: getSeasonYearRange(),
+                sportsAr,
                 hasCard: Boolean(photoUrl),
                 cardFrontUrl: photoUrl,
             };
@@ -124,28 +200,22 @@ export async function fetchMemberCardPrintData(
             `/members/${input.id}/card`,
         );
         const data = res.data?.data;
-        if (!data) return { ...fallback, hasCard: false, cardFrontUrl: null };
+        if (!data) return fallback;
 
-        const nameArParts = splitName(data.member_name_ar);
-        const nameEnParts = splitName(data.member_name_en);
+        const nameAr = data.member_name_ar?.trim() || fallback.nameAr;
         const photoUrl = resolveMemberPhotoUrl(data.photo);
 
         return {
-            ...buildMemberCardPrintData({
-                firstNameAr: nameArParts.first,
-                lastNameAr: nameArParts.last,
-                firstNameEn: nameEnParts.first,
-                lastNameEn: nameEnParts.last,
-                id: data.card_number ?? input.id,
-                sportAr: input.sportAr,
-                sportEn: input.sportEn,
-                endDate: formatValidUntil(data.valid_until),
-            }),
-            memberId: data.card_number ?? fallback.memberId,
+            cardType: 'member',
+            nameAr,
+            seasonYear: getSeasonYearRange(),
+            membershipAr: data.membership_name_ar?.trim() || '—',
+            validFrom: formatMemberCardDate(data.valid_from),
+            validUntil: formatMemberCardDate(data.valid_until),
             hasCard: Boolean(photoUrl),
             cardFrontUrl: photoUrl,
         };
     } catch {
-        return { ...fallback, hasCard: false, cardFrontUrl: null };
+        return fallback;
     }
 }

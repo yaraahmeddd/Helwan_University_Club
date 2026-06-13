@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Printer, User, Trophy, Hash, Calendar, IdCard, Loader2 } from "lucide-react";
+import {
+    Printer,
+    User,
+    Trophy,
+    Calendar,
+    IdCard,
+    Loader2,
+    Briefcase,
+    Save,
+} from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -9,6 +18,8 @@ import {
     DialogTitle,
 } from '@/components/StaffPagesComponents/ui/dialog';
 import { Button } from '@/components/StaffPagesComponents/ui/button';
+import { Switch } from '@/components/StaffPagesComponents/ui/switch';
+import { Label } from '@/components/StaffPagesComponents/ui/label';
 import { adminDialogStyles } from './adminTableStyles';
 import {
     RecordViewSection,
@@ -16,10 +27,12 @@ import {
 } from './RecordViewPrimitives';
 import { useLanguage } from '@/hooks/useLanguage';
 import {
+    CARD_PRINT_LABELS_AR,
     MEMBER_CARD_BACK,
+    getMemberCardFooterPreference,
     printMemberCard,
+    setMemberCardFooterPreference,
     type MemberCardPrintData,
-    type MemberCardPrintLabels,
 } from '@/utils/memberCardPrint';
 import {
     fetchMemberCardPrintData,
@@ -32,6 +45,12 @@ type MemberCardPrintDialogProps = {
     input: MemberCardPrintInput | null;
 };
 
+function cardTypeTitleKey(cardType: MemberCardPrintData['cardType'] | undefined): string {
+    if (cardType === 'staff') return 'memberCardPrint.dialogTitleStaff';
+    if (cardType === 'team_member') return 'memberCardPrint.dialogTitleTeam';
+    return 'memberCardPrint.dialogTitle';
+}
+
 export function MemberCardPrintDialog({
     open,
     onOpenChange,
@@ -42,6 +61,15 @@ export function MemberCardPrintDialog({
     const [printing, setPrinting] = useState(false);
     const [loading, setLoading] = useState(false);
     const [member, setMember] = useState<MemberCardPrintData | null>(null);
+    const [includeFooter, setIncludeFooter] = useState(getMemberCardFooterPreference);
+    const [footerSaved, setFooterSaved] = useState(false);
+
+    useEffect(() => {
+        if (open) {
+            setIncludeFooter(getMemberCardFooterPreference());
+            setFooterSaved(false);
+        }
+    }, [open]);
 
     useEffect(() => {
         if (!open || !input) {
@@ -66,32 +94,18 @@ export function MemberCardPrintDialog({
 
     if (!input) return null;
 
-    const displayName = member
-        ? (language === "ar" ? member.nameAr : member.nameEn)
-        : (language === "ar"
-            ? `${input.firstNameAr ?? ""} ${input.lastNameAr ?? ""}`.trim()
-            : `${input.firstNameEn ?? ""} ${input.lastNameEn ?? ""}`.trim());
-    const displaySport = member
-        ? (language === "ar" ? member.sportAr : member.sportEn)
-        : (language === "ar" ? input.sportAr : input.sportEn);
-    const printLanguage = language === "ar" ? "ar" : "en";
+    const cardType = member?.cardType ?? input.cardType ?? (input.isTeamPlayer ? 'team_member' : 'member');
 
-    const labels: MemberCardPrintLabels = {
-        documentTitle: t("memberCardPrint.documentTitle"),
-        name: t("memberCardPrint.fields.name"),
-        memberId: t("memberCardPrint.fields.memberId"),
-        sport: t("memberCardPrint.fields.sport"),
-        validUntil: t("memberCardPrint.validUntil"),
-        execDirector: t("memberCardPrint.execDirector"),
-        execDirectorName: t("memberCardPrint.execDirectorName"),
-        noCardPresent: t("memberCardPrint.noCardPresent"),
+    const handleSaveFooterPref = () => {
+        setMemberCardFooterPreference(includeFooter);
+        setFooterSaved(true);
     };
 
     const handlePrint = async () => {
         if (!member) return;
         setPrinting(true);
         try {
-            await printMemberCard(member, labels, printLanguage);
+            await printMemberCard(member, { includeFooter });
         } finally {
             setPrinting(false);
         }
@@ -106,7 +120,7 @@ export function MemberCardPrintDialog({
             >
                 <div className={adminDialogStyles.panel}>
                     <DialogHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">
-                        <DialogTitle>{t("memberCardPrint.dialogTitle")}</DialogTitle>
+                        <DialogTitle>{t(cardTypeTitleKey(member?.cardType))}</DialogTitle>
                     </DialogHeader>
 
                     <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
@@ -146,25 +160,111 @@ export function MemberCardPrintDialog({
                                     )}
                                 </RecordViewSection>
 
-                                <RecordViewSection icon={User} title={t("memberCardPrint.preview.memberTitle")}>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <RecordViewField icon={User} label={t("memberCardPrint.fields.name")} value={displayName} />
-                                        <RecordViewField icon={Trophy} label={t("memberCardPrint.fields.sport")} value={displaySport} />
+                                <RecordViewSection
+                                    icon={User}
+                                    title={t("memberCardPrint.preview.cardDetailsTitle")}
+                                >
+                                    <p className="text-xs text-muted-foreground mb-3">
+                                        {t("memberCardPrint.preview.arabicOnlyHint")}
+                                    </p>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" dir="rtl">
                                         <RecordViewField
-                                            icon={Hash}
-                                            label={t("memberCardPrint.fields.memberId")}
-                                            value={member?.memberId}
-                                            ltr
-                                            alignEnd={isRTL}
+                                            icon={User}
+                                            label={CARD_PRINT_LABELS_AR.name}
+                                            value={member?.nameAr}
                                         />
                                         <RecordViewField
                                             icon={Calendar}
-                                            label={t("memberCardPrint.fields.endDate")}
-                                            value={member?.endDate}
+                                            label={t("memberCardPrint.fields.seasonYear")}
+                                            value={member?.seasonYear}
                                             ltr
-                                            alignEnd={isRTL}
                                         />
+
+                                        {cardType === 'member' && member?.cardType === 'member' && (
+                                            <>
+                                                <RecordViewField
+                                                    icon={IdCard}
+                                                    label={CARD_PRINT_LABELS_AR.membership}
+                                                    value={member.membershipAr}
+                                                />
+                                                <RecordViewField
+                                                    icon={Calendar}
+                                                    label={CARD_PRINT_LABELS_AR.validFrom}
+                                                    value={member.validFrom}
+                                                    ltr
+                                                />
+                                                <RecordViewField
+                                                    icon={Calendar}
+                                                    label={CARD_PRINT_LABELS_AR.validUntil}
+                                                    value={member.validUntil}
+                                                    ltr
+                                                />
+                                            </>
+                                        )}
+
+                                        {cardType === 'team_member' && member?.cardType === 'team_member' && (
+                                            <>
+                                                <RecordViewField
+                                                    icon={Trophy}
+                                                    label={CARD_PRINT_LABELS_AR.teamPlayer}
+                                                    value={CARD_PRINT_LABELS_AR.teamPlayer}
+                                                />
+                                                <RecordViewField
+                                                    icon={Trophy}
+                                                    label={CARD_PRINT_LABELS_AR.sports}
+                                                    value={
+                                                        member.sportsAr.length > 0
+                                                            ? member.sportsAr.slice(0, 4).join(' — ')
+                                                            : '—'
+                                                    }
+                                                />
+                                            </>
+                                        )}
+
+                                        {cardType === 'staff' && member?.cardType === 'staff' && (
+                                            <RecordViewField
+                                                icon={Briefcase}
+                                                label={CARD_PRINT_LABELS_AR.jobTitle}
+                                                value={member.jobTitleAr}
+                                            />
+                                        )}
                                     </div>
+                                </RecordViewSection>
+
+                                <RecordViewSection icon={User} title={t("memberCardPrint.footerSettings.title")}>
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                                        <div className="flex items-center gap-3">
+                                            <Switch
+                                                id="include-footer"
+                                                checked={includeFooter}
+                                                onCheckedChange={(checked) => {
+                                                    setIncludeFooter(checked);
+                                                    setFooterSaved(false);
+                                                }}
+                                            />
+                                            <Label htmlFor="include-footer" className="cursor-pointer">
+                                                {t("memberCardPrint.footerSettings.includeFooter")}
+                                            </Label>
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            className="gap-2 shrink-0"
+                                            onClick={handleSaveFooterPref}
+                                        >
+                                            <Save className="h-4 w-4" />
+                                            {footerSaved
+                                                ? t("memberCardPrint.footerSettings.saved")
+                                                : t("memberCardPrint.footerSettings.save")}
+                                        </Button>
+                                    </div>
+                                    {includeFooter && (
+                                        <div className="mt-4 rounded-lg border border-border bg-muted/20 px-4 py-3 text-center" dir="rtl">
+                                            <p className="font-semibold">{CARD_PRINT_LABELS_AR.execDirector}</p>
+                                            <p className="text-muted-foreground">{CARD_PRINT_LABELS_AR.execDirectorName}</p>
+                                        </div>
+                                    )}
                                 </RecordViewSection>
 
                                 <p className="text-muted-foreground">{t("memberCardPrint.printHint")}</p>
