@@ -64,11 +64,9 @@ import {
 
 import {
     AdminActionButton,
-    AdminPrintCardButton,
     AdminRowActions,
     AdminViewButton,
 } from '@/components/StaffPagesComponents/shared/AdminRowActions';
-import { useMemberCardPrint } from '@/hooks/useMemberCardPrint';
 
 import {
     TooltipProvider,
@@ -784,7 +782,7 @@ export default function MemberManagementPage() {
     const { fmtDate } = useAdminFormatters();
     const locale = getAdminLocale(language);
     const { toast } = useToast();
-    const { openMemberCardPrint, memberCardPrintDialog } = useMemberCardPrint();
+
     const memberEditSchema = useMemberEditSchema();
     const {
         tVal,
@@ -2503,19 +2501,7 @@ export default function MemberManagementPage() {
                                                             tooltip={t('rowActions.viewDetails')}
                                                             onClick={() => void openDetail(row)}
                                                         />
-                                                        <AdminPrintCardButton
-                                                            tooltip={tStatus('memberCardPrint.rowTooltip')}
-                                                            onClick={() => openMemberCardPrint({
-                                                                id: row.id,
-                                                                isTeamPlayer: row.isTeamPlayer,
-                                                                firstNameAr: row.firstNameAr,
-                                                                lastNameAr: row.lastNameAr,
-                                                                firstNameEn: row.firstNameEn,
-                                                                lastNameEn: row.lastNameEn,
-                                                                sportAr: row.sports[0]?.name,
-                                                                sportEn: row.sports[0]?.name,
-                                                            })}
-                                                        />
+
 
                                                         <RoleGuard privilege="UPDATE_MEMBER">
                                                             <AdminActionButton
@@ -2849,7 +2835,7 @@ export default function MemberManagementPage() {
 
                 </Dialog>
 
-                {memberCardPrintDialog}
+
 
 
             </div>

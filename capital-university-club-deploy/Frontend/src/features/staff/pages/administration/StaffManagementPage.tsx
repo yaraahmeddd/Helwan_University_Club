@@ -34,8 +34,7 @@ import {
   adminDialogStyles,
   ADMIN_PAGE_SIZE,
 } from '@/components/StaffPagesComponents/shared/adminTableStyles';
-import { AdminActionButton, AdminPrintCardButton, AdminRowActions, AdminViewButton } from '@/components/StaffPagesComponents/shared/AdminRowActions';
-import { useMemberCardPrint } from '@/hooks/useMemberCardPrint';
+import { AdminActionButton, AdminRowActions, AdminViewButton } from '@/components/StaffPagesComponents/shared/AdminRowActions';
 import { useTranslation as useCommonTranslation } from 'react-i18next';
 import { AdminMemberStatusBadge } from '@/components/StaffPagesComponents/shared/AdminMemberStatusBadge';
 import { AdminPagination } from '@/components/StaffPagesComponents/shared/AdminPagination';
@@ -349,7 +348,7 @@ export default function StaffManagementPage() {
 
   const pagedRows = filteredRows.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE);
   const { t: tCommon } = useCommonTranslation('common');
-  const { openMemberCardPrint, memberCardPrintDialog } = useMemberCardPrint();
+
 
   const roleOf = (row: StaffRow) => staffTypeLabelById.get(row.staffTypeId) || row.staffTypeLabel;
 
@@ -544,17 +543,7 @@ export default function StaffManagementPage() {
                           tooltip={t('table.actions.view')}
                           onClick={() => void openDetail(row)}
                         />
-                        <AdminPrintCardButton
-                          tooltip={tCommon('memberCardPrint.rowTooltip')}
-                          onClick={() => openMemberCardPrint({
-                            id: row.id,
-                            cardType: 'staff',
-                            firstNameAr: row.firstNameAr,
-                            lastNameAr: row.lastNameAr,
-                            firstNameEn: row.firstNameEn,
-                            lastNameEn: row.lastNameEn,
-                          })}
-                        />
+
                         <RoleGuard privilege="UPDATE_STAFF">
                           <AdminActionButton
                             tooltip={t('table.actions.edit')}
@@ -631,7 +620,7 @@ export default function StaffManagementPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {memberCardPrintDialog}
+
     </div>
   );
 }
