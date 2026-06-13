@@ -121,6 +121,7 @@ function baseFallback(input: MemberCardPrintInput): MemberCardPrintData {
             jobTitleAr: input.jobTitleAr?.trim() || '—',
             hasCard: false,
             cardFrontUrl: null,
+            memberId: input.id,
         } satisfies StaffCardPrintData;
     }
 
@@ -133,6 +134,7 @@ function baseFallback(input: MemberCardPrintInput): MemberCardPrintData {
             sportsAr: sport ? [sport] : [],
             hasCard: false,
             cardFrontUrl: null,
+            memberId: input.id,
         } satisfies TeamMemberCardPrintData;
     }
 
@@ -145,6 +147,7 @@ function baseFallback(input: MemberCardPrintInput): MemberCardPrintData {
         validUntil: input.endDate?.trim() || '—',
         hasCard: false,
         cardFrontUrl: null,
+        memberId: input.id,
     } satisfies MemberClubCardPrintData;
 }
 
@@ -172,6 +175,7 @@ export async function fetchMemberCardPrintData(
                 jobTitleAr: data.staff_type?.name_ar?.trim() || input.jobTitleAr?.trim() || '—',
                 hasCard: Boolean(photoUrl),
                 cardFrontUrl: photoUrl,
+                memberId: input.id,
             };
         }
 
@@ -193,6 +197,7 @@ export async function fetchMemberCardPrintData(
                 sportsAr,
                 hasCard: Boolean(photoUrl),
                 cardFrontUrl: photoUrl,
+                memberId: input.id,
             };
         }
 
@@ -214,6 +219,7 @@ export async function fetchMemberCardPrintData(
             validUntil: formatMemberCardDate(data.valid_until),
             hasCard: Boolean(photoUrl),
             cardFrontUrl: photoUrl,
+            memberId: data.card_number || input.id,
         };
     } catch {
         return fallback;
