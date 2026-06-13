@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import api from '@/services/axios';
 import { useAuth } from '@/context/AuthContext';
 import bookingService from '@/services/bookingService';
-import { CheckCircle, Copy } from "lucide-react";
+import { Copy } from "lucide-react";
 import { useLocalizedTranslation } from '@/hooks/useLocalizedTranslation';
 import { PaymobCheckoutFrame } from '@/components/shared/PaymobCheckoutFrame';
 import {
@@ -74,6 +74,15 @@ const MemberSportPaymentPage: React.FC = () => {
 
     const handleBack = async () => {
         if (paymentData.isBooking) {
+            if (paymentData.bookingId) {
+                try {
+                    await api.delete(`/members/bookings/${paymentData.bookingId}`, {
+                        data: { reason: "Cancelled by user during payment" }
+                    });
+                } catch {
+                    // ignore
+                }
+            }
             navigate("/member/dashboard?tab=courts", { replace: true });
             return;
         }
@@ -222,7 +231,7 @@ const MemberSportPaymentPage: React.FC = () => {
                     first_name: user?.first_name_en || user?.first_name_ar || "Member",
                     last_name: user?.last_name_en || user?.last_name_ar || "User",
                     email: user?.email || "member@club.local",
-                    phone_number: user?.phone || "+201000000000",
+                    phone_number: (user as any)?.phone || (user as any)?.phone_number || "+201000000000",
                 },
                 context: {
                     subscription_id: paymentData.subscriptionId || undefined,

@@ -6,6 +6,7 @@ import { Sport } from "../entities/Sport";
 import { TeamTrainingSchedule } from "../entities/TeamTrainingSchedule";
 import { Field } from "../entities/Field";
 import crypto from "crypto";
+import { PaymentService } from "./PaymentService";
 
 // Re-export UserType for use in controllers
 export type { UserType };
@@ -60,6 +61,7 @@ export interface BookingDetailsResponse {
   duration_minutes: number;
   price: number;
   status: BookingStatus;
+  payment_reference?: string | null;
   share_token: string;
   share_url: string;
   expected_participants: number;
@@ -83,6 +85,7 @@ export class BookingService {
   private sportRepository: Repository<Sport>;
   private trainingScheduleRepository: Repository<TeamTrainingSchedule>;
   private fieldRepository: Repository<Field>;
+  private paymentService: PaymentService;
 
   constructor(private dataSource: DataSource) {
     this.bookingRepository = dataSource.getRepository(Booking);
@@ -91,6 +94,7 @@ export class BookingService {
     this.sportRepository = dataSource.getRepository(Sport);
     this.trainingScheduleRepository = dataSource.getRepository(TeamTrainingSchedule);
     this.fieldRepository = dataSource.getRepository(Field);
+    this.paymentService = new PaymentService();
   }
 
   /**
@@ -223,9 +227,14 @@ export class BookingService {
     booking.field_id = request.field_id;
     booking.start_time = request.start_time;
     booking.end_time = request.end_time;
-    // duration_minutes is GENERATED in database
-    booking.price = 0; // Should be set from pricing rules or request
-    booking.status = "pending_payment";
+    
+    // Calculate price
+    const durationMinutes = (request.end_time.getTime() - request.start_time.getTime()) / 60000;
+    const hourlyRate = field.hourly_rate ? Number(field.hourly_rate) : 0;
+    const price = (durationMinutes / 60) * hourlyRate;
+    
+    booking.price = price;
+    booking.status = price > 0 ? "pending_payment" : "confirmed";
     booking.share_token = shareToken;
     // ALWAYS use field capacity as expected_participants
     booking.expected_participants = field.capacity || 1;
@@ -237,6 +246,31 @@ export class BookingService {
     booking.language = request.language || "ar";
 
     const savedBooking = await this.bookingRepository.save(booking);
+
+    // Create payment if price > 0
+    if (price > 0 && request.userId) {
+      try {
+        const payment = await this.paymentService.createPayment({
+          entityType: request.userType,
+          entityId: request.userId,
+          paymentType: 'field_booking',
+          relatedEntityType: 'field_booking',
+          relatedEntityId: savedBooking.id,
+          amount: price,
+          description: `Court booking for ${field.name_en || field.name_ar}`,
+          metadata: {
+            booking_id: savedBooking.id,
+            field_id: field.id,
+          }
+        });
+        
+        savedBooking.payment_reference = payment.payment_reference;
+        await this.bookingRepository.save(savedBooking);
+      } catch (paymentError) {
+        console.error('[BookingService] Failed to create payment:', paymentError);
+        // Continue, the booking is already saved
+      }
+    }
 
     // Add creator as first participant (optional - don't fail if this errors)
     try {
@@ -291,6 +325,7 @@ export class BookingService {
       duration_minutes: booking.duration_minutes,
       price: booking.price,
       status: booking.status,
+      payment_reference: booking.payment_reference,
       share_token: booking.share_token,
       share_url: `${baseUrl}/bookings/share/${booking.share_token}`,
       expected_participants: booking.expected_participants,
@@ -416,6 +451,14 @@ export class BookingService {
 
     if (["completed", "cancelled"].includes(booking.status)) {
       throw new Error(`Cannot cancel booking with status: ${booking.status}`);
+    }
+
+    if (booking.status === "pending_payment") {
+      // Hard delete if it was just an abandoned checkout
+      await this.bookingRepository.remove(booking);
+      booking.status = "cancelled";
+      booking.id = bookingId; // Restore ID in case typeorm nullifies it
+      return booking;
     }
 
     booking.status = "cancelled";
@@ -565,9 +608,9 @@ export class BookingService {
     const targetDate = new Date(date);
     const dayOfWeek = targetDate.getDay();
 
-    // Use default operating hours (8:00 AM - 10:00 PM)
-    const openingTime = '08:00:00';
-    const closingTime = '22:00:00';
+    // Use default operating hours (6:00 AM - 11:00 PM) to match frontend calendar
+    const openingTime = '06:00:00';
+    const closingTime = '23:00:00';
 
     // Generate time slots based on field's slot duration (default to 60 minutes if not set)
     const slots: Array<{
@@ -615,10 +658,14 @@ export class BookingService {
     console.log(`[BookingService] getAvailableSlots for field ${fieldId} on ${date}`);
     console.log(`[BookingService] Total bookings for this field: ${bookings.length}`);
 
-    // Filter bookings by date (compare date strings to avoid timezone issues)
+    // Filter bookings by date (compare local date strings to avoid timezone issues)
     const dayBookings = bookings.filter(b => {
-      // Extract date portion from booking timestamp (YYYY-MM-DD)
-      const bookingDateStr = b.start_time.toISOString().split('T')[0];
+      // Extract local date portion from booking timestamp (YYYY-MM-DD)
+      const bookingDateStr = [
+        b.start_time.getFullYear(),
+        (b.start_time.getMonth() + 1).toString().padStart(2, '0'),
+        b.start_time.getDate().toString().padStart(2, '0')
+      ].join('-');
       console.log(`[BookingService] Comparing booking date ${bookingDateStr} with ${date}`);
       return bookingDateStr === date;
     });
@@ -777,8 +824,8 @@ export class BookingService {
       }>;
     }> = [];
 
-    // Use default operating hours (8:00 AM - 10:00 PM)
-    const defaultOperatingHours = { opening_time: '08:00:00', closing_time: '22:00:00' };
+    // Use default operating hours (6:00 AM - 11:00 PM) to match frontend calendar
+    const defaultOperatingHours = { opening_time: '06:00:00', closing_time: '23:00:00' };
 
     // Iterate through each day in the range
     const currentDate = new Date(start);

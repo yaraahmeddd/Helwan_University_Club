@@ -1,12 +1,11 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { generateId } from '@/utils/id';
-import { motion } from "framer-motion";
+export type ToastType = "success" | "error" | "info" | "warning";
 import { useAuth } from '@/context/AuthContext';
 import api from '@/services/api';
 import bookingService from '@/services/bookingService';
 import { useNavigate } from "react-router-dom";
-import type { ToastType } from '@/types';
 
 import { Button } from '@/components/StaffPagesComponents/ui/button';
 import { Label } from '@/components/StaffPagesComponents/ui/label';
@@ -69,14 +68,14 @@ const getLocalizedFieldName = (
 };
 
 // --- Helpers ---
-function formatHour(slot: string, isRtl: boolean, t: any): string {
+function formatHour(slot: string, t: any): string {
     const h = parseInt(slot.split(":")[0], 10);
     const suffix = h < 12 ? t("notifications.time.am") : t("notifications.time.pm");
     const h12 = h % 12 === 0 ? 12 : h % 12;
     return `${h12}${suffix}`;
 }
 
-const toTranslatedTime = (time: string, isRtl: boolean, t: any) => {
+const toTranslatedTime = (time: string, t: any) => {
     if (!time) return "";
     const [hh, mm] = time.split(":");
     const h = Number(hh);
@@ -103,12 +102,12 @@ function timeToMinutes(timeStr: string): number {
     return h * 60 + m;
 }
 
-function formatDisplayDate(date: Date, isRtl: boolean, t: any): string {
+function formatDisplayDate(date: Date, t: any): string {
     const months = t("calendar_utils.months", { returnObjects: true });
     return `${date.getDate()} ${months[date.getMonth()]}`;
 }
 
-function dayOfWeekLabel(date: Date, isRtl: boolean, t: any): string {
+function dayOfWeekLabel(date: Date, t: any): string {
     const days = t("calendar_utils.days.long", { returnObjects: true });
     return days[date.getDay()];
 }
@@ -118,7 +117,7 @@ const HOUR_SLOTS: string[] = Array.from({ length: 17 }, (_, i) => {
     return `${String(h).padStart(2, "0")}:00`;
 });
 
-const getTIME_OPTIONS = (isRtl: boolean, t: any) => Array.from({ length: 36 }, (_, i) => {
+const getTIME_OPTIONS = (t: any) => Array.from({ length: 36 }, (_, i) => {
     const totalMins = 360 + i * 30; // Starts at 06:00
     const h24 = Math.floor(totalMins / 60);
     const min = totalMins % 60;
@@ -186,7 +185,7 @@ const TimeSlotPicker = React.memo(({
     t: any;
 }) => {
     const [open, setOpen] = useState(false);
-    const TIME_OPTIONS = getTIME_OPTIONS(isRtl, t);
+    const TIME_OPTIONS = getTIME_OPTIONS(t);
     const validOptions = TIME_OPTIONS.filter((t) => timeToMinutes(t.value) >= minMinutes);
     const selected = validOptions.find((t) => t.value === value);
 
@@ -433,16 +432,24 @@ const CourtRentalPage: React.FC<{ showToast: (msg: string, t: ToastType) => void
                 language: isRtl ? "ar" : "en",
             });
 
-            showToast(t("court_rental.alerts.success"), "success");
+            if (booking.status === "confirmed") {
+                showToast(t("court_rental.alerts.success"), "success");
+                setDialogOpen(false);
+                fetchCalendar();
+                return;
+            }
+
+            showToast(t("court_rental.alerts.success_redirecting", { defaultValue: "Redirecting to payment..." }), "success");
 
             // Redirect to payment
             const params = new URLSearchParams({
                 bookingId: booking.id,
+                paymentReference: booking.payment_reference || "",
                 amount: String(booking.price || computedPrice),
                 sportName: (isRtl ? activeSport?.name_ar : activeSport?.name_en) || t("sports.court_booking"),
                 courtName: getLocalizedFieldName(activeField, isRtl, t("sports.court")),
                 date: dateStr,
-                time: `${toTranslatedTime(bookingForm.from, isRtl, t)} - ${toTranslatedTime(bookingForm.to, isRtl, t)}`,
+                time: `${toTranslatedTime(bookingForm.from, t)} - ${toTranslatedTime(bookingForm.to, t)}`,
             });
 
             if (userType === "member") {
@@ -466,7 +473,6 @@ const CourtRentalPage: React.FC<{ showToast: (msg: string, t: ToastType) => void
         const todayStr = toISODate(new Date());
 
         if (dateStr === todayStr) {
-            const now = new Date();
             const slotMins = timeToMinutes(slotTime);
 
             if (slotMins < currentMins) {
@@ -561,9 +567,9 @@ const CourtRentalPage: React.FC<{ showToast: (msg: string, t: ToastType) => void
                                 const isToday = toISODate(day) === toISODate(today);
                                 return (
                                     <div key={toISODate(day)} className={`py-3.5 px-1 text-center border-l border-ds-border/50 ${isToday ? "bg-ds-teal/5" : ""}`}>
-                                        <div className={`text-[14px] font-black ${isToday ? "text-ds-teal" : "text-ds-text-primary"}`}>{dayOfWeekLabel(day, isRtl, t)}</div>
+                                        <div className={`text-[14px] font-black ${isToday ? "text-ds-teal" : "text-ds-text-primary"}`}>{dayOfWeekLabel(day, t)}</div>
                                         <div className={`text-[11px] font-bold mt-1 ${isToday ? "text-ds-teal/70" : "text-ds-text-muted"}`}>
-                                            {formatDisplayDate(day, isRtl, t)}
+                                            {formatDisplayDate(day, t)}
                                         </div>
                                     </div>
                                 );
@@ -576,7 +582,7 @@ const CourtRentalPage: React.FC<{ showToast: (msg: string, t: ToastType) => void
                             <div className={`border-l border-ds-border/50 bg-white sticky ${isRtl ? 'right-0' : 'left-0'} z-10 shadow-[1px_0_5px_rgba(0,0,0,0.02)]`}>
                                 {HOUR_SLOTS.map((slot) => (
                                     <div key={slot} className="flex items-start justify-center pt-2.5 border-b border-ds-border/60 text-[10px] font-black text-ds-text-muted" style={{ height: 60 }}>
-                                        {formatHour(slot, isRtl, t)}
+                                        {formatHour(slot, t)}
                                     </div>
                                 ))}
                             </div>

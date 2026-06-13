@@ -216,6 +216,24 @@ const TeamMemberSportPaymentPage: React.FC = () => {
     };
 
     const handleBack = async () => {
+        // Cancel booking if this is a booking payment flow
+        if (paymentData.isBooking) {
+            if (paymentData.bookingId) {
+                setCancelling(true);
+                try {
+                    await api.delete(`/team-members/bookings/${paymentData.bookingId}`, {
+                        data: { reason: "Cancelled by user during payment" }
+                    });
+                } catch {
+                    // ignore
+                } finally {
+                    setCancelling(false);
+                }
+            }
+            navigate("/team-member/dashboard?tab=courts", { replace: true });
+            return;
+        }
+
         // If there is a pending subscription created by the join flow, cancel it
         // so the sport is not left as "added" when the member clicks Cancel.
         const subscriptionId = paymentData.subscriptionId;
