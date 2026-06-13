@@ -65,12 +65,10 @@ import {
 import {
     AdminActionButton,
     AdminPrintCardButton,
-    AdminPrintFormButton,
     AdminRowActions,
     AdminViewButton,
 } from '@/components/StaffPagesComponents/shared/AdminRowActions';
 import { useMemberCardPrint } from '@/hooks/useMemberCardPrint';
-import { useMembershipFormPrint } from '@/hooks/useMembershipFormPrint';
 
 import {
     TooltipProvider,
@@ -787,7 +785,6 @@ export default function MemberManagementPage() {
     const locale = getAdminLocale(language);
     const { toast } = useToast();
     const { openMemberCardPrint, memberCardPrintDialog } = useMemberCardPrint();
-    const { openMembershipFormPrint, membershipFormPrintDialog } = useMembershipFormPrint();
     const memberEditSchema = useMemberEditSchema();
     const {
         tVal,
@@ -2519,22 +2516,7 @@ export default function MemberManagementPage() {
                                                                 sportEn: row.sports[0]?.name,
                                                             })}
                                                         />
-                                                        <AdminPrintFormButton
-                                                            tooltip={tStatus('membershipFormPrint.rowTooltip')}
-                                                            onClick={() => openMembershipFormPrint({
-                                                                mode: 'fetch',
-                                                                id: row.id,
-                                                                kind: row.isTeamPlayer ? 'team_member' : 'member',
-                                                                firstNameAr: row.firstNameAr,
-                                                                lastNameAr: row.lastNameAr,
-                                                                birthdate: row.birthdate,
-                                                                address: row.address,
-                                                                phone: row.phone,
-                                                                nationalId: row.nationalId,
-                                                                membershipTypeAr: row.memberTypeLabel,
-                                                                teams: row.sports.map((s) => s.name),
-                                                            })}
-                                                        />
+
                                                         <RoleGuard privilege="UPDATE_MEMBER">
                                                             <AdminActionButton
                                                                 tooltip={t('rowActions.edit')}
@@ -2868,7 +2850,7 @@ export default function MemberManagementPage() {
                 </Dialog>
 
                 {memberCardPrintDialog}
-                {membershipFormPrintDialog}
+
 
             </div>
 
