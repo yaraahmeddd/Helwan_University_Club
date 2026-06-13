@@ -897,7 +897,7 @@ export class BookingService {
       // Get booker from member or team_member relationship
       const booker = booking.member || booking.team_member;
       const bookerName = booker 
-        ? `${booker.first_name_en || ''} ${booker.last_name_en || ''}`.trim() || `${booker.first_name_ar || ''} ${booker.last_name_ar || ''}`.trim()
+        ? `${booker.first_name_ar || ''} ${booker.last_name_ar || ''}`.trim() || `${booker.first_name_en || ''} ${booker.last_name_en || ''}`.trim()
         : 'N/A';
       const bookerPhone = booker?.phone || null;
       
@@ -907,11 +907,11 @@ export class BookingService {
       // Get creator participant (is_creator = true)
       const creator = booking.participants?.find(p => p.is_creator) || booking.participants?.[0];
 
-      // Normalize image URLs
-      const normalizeImageUrl = (path: string | null): string | null => {
+      // Normalize image URLs to use absolute paths for the frontend proxy
+      const normalizeImageUrl = (path: string | null | undefined): string | null => {
         if (!path) return null;
         if (path.startsWith('http')) return path;
-        return `${baseUrl}/${path}`;
+        return path.startsWith('/') ? path : `/${path}`;
       };
 
       // Format times in Arabic numerals
@@ -938,6 +938,8 @@ export class BookingService {
           type: booking.member_id ? 'member' : 'team_member',
           phone: bookerPhone,
           email: bookerEmail,
+          national_id_front: normalizeImageUrl(booker?.national_id_front),
+          national_id_back: normalizeImageUrl(booker?.national_id_back),
         },
         booking_date: booking.start_time,
         booking_time: {

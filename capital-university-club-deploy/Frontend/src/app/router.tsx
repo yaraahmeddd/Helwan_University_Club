@@ -75,7 +75,14 @@ const Router: React.FC = () => {
                 <Route path="/news/:id" element={<PublicPostDetailsPage />} />
                 <Route path="/lastNews" element={<Navigate to="/?tab=lastNews" replace />} />
                 <Route path="/bookings/share/:shareToken" element={<JoinBookingPage />} />
-                <Route path="/security/bookings" element={<SecurityDashboardPage />} />
+                <Route
+                  path="/security/bookings"
+                  element={
+                    <ProtectedRoute allowedRoles={['SECURITY', 'ADMIN', 'STAFF']}>
+                      <SecurityDashboardPage />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route path="/media-testing" element={<MediaTestingPage />} />
                 <Route path="/media-manager" element={<MediaManagerPage />} />
                 <Route path="/media-viewer" element={<MediaViewerPage />} />

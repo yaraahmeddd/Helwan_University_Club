@@ -18,6 +18,9 @@ export interface Guest {
   name: string;
   phone: string;
   relation: string;
+  nationalId: string | null;
+  frontIdUrl: string | null;
+  backIdUrl: string | null;
 }
 
 // Display format - what the component uses
@@ -39,6 +42,8 @@ export interface DisplayBooking {
   participantsCount: number;
   nationalId: string | null;
   email: string | null;
+  bookingDate?: string;
+  parkingCarsCount: number;
 }
 
 export interface SecurityBooking {
@@ -50,6 +55,8 @@ export interface SecurityBooking {
     type: 'member' | 'team_member';
     phone: string | null;
     email: string | null;
+    national_id_front?: string | null;
+    national_id_back?: string | null;
   };
   booking_date: string;
   booking_time: {
@@ -72,6 +79,10 @@ export interface SecurityBooking {
     remaining_slots: number;
     is_full: boolean;
   };
+  parking?: {
+    uses_parking: boolean;
+    cars_count: number;
+  };
   status: string;
   payment_status: 'completed' | 'pending';
   created_at: string;
@@ -89,6 +100,13 @@ interface UseSecurityDashboardBookingsOptions {
 function transformBookingForDisplay(booking: SecurityBooking): DisplayBooking {
   const creator = booking.participants?.find(p => p.is_creator) || booking.participants?.[0];
   
+  const getFullUrl = (path: string | null | undefined) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return encodeURI(path);
+    const backendUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || BACKEND_URL;
+    return encodeURI(`${backendUrl}${path.startsWith('/') ? '' : '/'}${path}`);
+  };
+
   // Convert Arabic numerals to English for time parsing
   const convertArabicToEnglish = (text: string): string => {
     if (!text) return text;
@@ -119,15 +137,20 @@ function transformBookingForDisplay(booking: SecurityBooking): DisplayBooking {
         name: p.full_name,
         phone: p.phone_number || 'N/A',
         relation: p.email || 'ضيف',
+        nationalId: p.national_id || null,
+        frontIdUrl: getFullUrl(p.national_id_front),
+        backIdUrl: getFullUrl(p.national_id_back),
       })) || [],
     sport: booking.sport?.name_ar || booking.sport?.name_en || 'N/A',
-    frontIdUrl: creator?.national_id_front,
-    backIdUrl: creator?.national_id_back,
+    frontIdUrl: getFullUrl(booking.booker?.national_id_front || creator?.national_id_front),
+    backIdUrl: getFullUrl(booking.booker?.national_id_back || creator?.national_id_back),
     status: booking.status,
     bookingCreatedAt: booking.created_at,
     participantsCount: booking.stats.registered_count,
     nationalId: creator?.national_id,
     email: creator?.email,
+    bookingDate: booking.booking_date,
+    parkingCarsCount: booking.parking?.uses_parking ? (booking.parking?.cars_count || 1) : 0,
   };
 }
 
@@ -154,21 +177,14 @@ export function useSecurityDashboardBookings(
       setLoading(true);
       setError(null);
 
-      // Get today's date in local timezone (not UTC)
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
-      const todayString = `${year}-${month}-${day}`;
-
-      // Build query parameters - always filter by today
+      // Build query parameters
       const params = new URLSearchParams();
-      params.append('start_date', todayString);
-      params.append('end_date', todayString);
       
       if (options?.fieldId) params.append('field_id', options.fieldId);
       if (options?.sportId) params.append('sport_id', options.sportId.toString());
       if (options?.status) params.append('status', options.status);
+      if (options?.startDate) params.append('start_date', options.startDate);
+      if (options?.endDate) params.append('end_date', options.endDate);
 
       const queryString = params.toString();
       const url = `${BACKEND_URL}/api/bookings/security/bookings${queryString ? `?${queryString}` : ''}`;

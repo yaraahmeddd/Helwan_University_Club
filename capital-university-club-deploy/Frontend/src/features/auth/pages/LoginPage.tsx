@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, ArrowLeft, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -119,6 +119,11 @@ const Login: React.FC = () => {
   const redirectBasedOnRole = (user: UserInfo) => {
     const role = String(user.role || '').toUpperCase();
     const memberType = String(user.member_type || '').toUpperCase();
+
+    if (role === 'SECURITY') {
+      window.location.href = '/security/bookings';
+      return;
+    }
 
     if (user.staff_id || role === 'ADMIN' || role === 'STAFF' || role === 'STAFF_MEMBER' || role === 'MEDIA' || role === 'SUPPORT') {
       if (role === 'MEDIA') window.location.href = '/media-gallery-dashboard';

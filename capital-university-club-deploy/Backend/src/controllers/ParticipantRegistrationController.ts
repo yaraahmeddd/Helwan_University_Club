@@ -534,6 +534,9 @@ export class ParticipantRegistrationController {
               full_name_en: useBookerName ? bookerNames.name_en : p.full_name,
               phone_number: p.phone_number,
               email: p.email,
+              national_id: p.national_id,
+              national_id_front: p.national_id_front,
+              national_id_back: p.national_id_back,
               is_creator: p.is_creator,
               registered_at: p.created_at
             };

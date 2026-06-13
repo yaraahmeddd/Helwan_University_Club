@@ -494,7 +494,7 @@ export function validateBookingMemberId(
   t: ValidationTranslator,
 ): Record<string, string> {
   const errors: Record<string, string> = {};
-  const idErr = validationMessage(validateMemberNationalId(memberId.replace(/\D/g, ''), true), t);
+  const idErr = validationMessage(validatePositiveInteger(memberId.replace(/\D/g, ''), true), t);
   if (idErr) errors.memberId = idErr;
   return errors;
 }

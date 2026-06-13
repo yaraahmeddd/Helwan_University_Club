@@ -77,6 +77,9 @@ type Participant = {
   full_name?: string;
   phone_number: string | null;
   email: string | null;
+  national_id?: string | null;
+  national_id_front?: string | null;
+  national_id_back?: string | null;
   is_creator: boolean;
   registered_at: string;
 };
@@ -191,6 +194,7 @@ export default function ManageInvitationsPage() {
   const [detailTab, setDetailTab] = useState<"booking" | "participants">("booking");
   const [cancelDialog, setCancelDialog] = useState<Invitation | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [expandedParticipantId, setExpandedParticipantId] = useState<string | null>(null);
 
   // Fetch Data
   const fetchData = useCallback(async (page = 1) => {
@@ -519,6 +523,7 @@ export default function ManageInvitationsPage() {
           if (!open) {
             setSelectedInv(null);
             setDetailTab("booking");
+            setExpandedParticipantId(null);
           }
         }}
       >
@@ -610,11 +615,9 @@ export default function ManageInvitationsPage() {
                           icon={Car}
                           label={t("panel.parking")}
                           value={
-                            <span className="block w-full text-center">
-                              {selectedInv.parking?.uses_parking
-                                ? t("panel.parkingRequested", { count: selectedInv.parking.cars_count || 1 })
-                                : t("panel.parkingNotRequested")}
-                            </span>
+                            selectedInv.parking?.uses_parking
+                              ? t("panel.parkingRequested", { count: selectedInv.parking.cars_count || 1 })
+                              : t("panel.parkingNotRequested")
                           }
                           alignEnd={isRTL}
                         />
@@ -674,10 +677,13 @@ export default function ManageInvitationsPage() {
                         </div>
                       ) : (
                         <div className="space-y-3">
-                          {selectedInv.participants.map((p, i) => (
+                          {selectedInv.participants.map((p, i) => {
+                            const isExpanded = expandedParticipantId === (p.id || i.toString());
+                            return (
                             <div
                               key={p.id || i}
-                              className="rounded-lg border border-border bg-card p-3 shadow-sm relative overflow-hidden"
+                              className={`rounded-lg border border-border bg-card p-3 shadow-sm relative overflow-hidden cursor-pointer transition-colors hover:bg-slate-50 ${isExpanded ? 'border-primary/50' : ''}`}
+                              onClick={() => setExpandedParticipantId(isExpanded ? null : (p.id || i.toString()))}
                             >
                               {p.is_creator && (
                                 <div className="absolute top-0 end-0 w-1 bg-primary h-full rounded-e-lg" />
@@ -699,8 +705,50 @@ export default function ManageInvitationsPage() {
                                   {p.email && <span>{p.email}</span>}
                                 </div>
                               )}
+                              {isExpanded && (
+                                <div className="mt-3 pt-3 border-t border-slate-100 flex flex-col gap-2">
+                                  {p.national_id && (
+                                    <div className="text-xs text-slate-600 font-mono flex gap-1">
+                                      <span className="font-semibold text-slate-800">{isRTL ? "الرقم القومي:" : "National ID:"}</span>
+                                      {p.national_id}
+                                    </div>
+                                  )}
+                                  {(p.national_id_front || p.national_id_back) && (
+                                    <div className="flex gap-2 mt-1">
+                                      {p.national_id_front && (
+                                        <div className="flex-1">
+                                          <p className="text-[10px] font-medium text-slate-500 mb-1">{isRTL ? "الوجه الأمامي" : "Front"}</p>
+                                          <img
+                                              src={p.national_id_front.startsWith("http") ? p.national_id_front : `http://localhost:3000/${p.national_id_front}`}
+                                              alt="ID Front"
+                                              className="w-full h-16 object-cover rounded border border-slate-200 cursor-zoom-in hover:opacity-90"
+                                              onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  window.open(p.national_id_front?.startsWith("http") ? p.national_id_front : `http://localhost:3000/${p.national_id_front}`, '_blank');
+                                              }}
+                                          />
+                                        </div>
+                                      )}
+                                      {p.national_id_back && (
+                                        <div className="flex-1">
+                                          <p className="text-[10px] font-medium text-slate-500 mb-1">{isRTL ? "الوجه الخلفي" : "Back"}</p>
+                                          <img
+                                              src={p.national_id_back.startsWith("http") ? p.national_id_back : `http://localhost:3000/${p.national_id_back}`}
+                                              alt="ID Back"
+                                              className="w-full h-16 object-cover rounded border border-slate-200 cursor-zoom-in hover:opacity-90"
+                                              onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  window.open(p.national_id_back?.startsWith("http") ? p.national_id_back : `http://localhost:3000/${p.national_id_back}`, '_blank');
+                                              }}
+                                          />
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
-                          ))}
+                          )})}
                         </div>
                       )}
                     </RecordViewSection>

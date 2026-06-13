@@ -11,7 +11,8 @@ export type Role =
   | "TEAM_MEMBER"   // Member type: sports player (member_type_id = Team Member)
   | "MEMBER"        // Other members (visitor, working, etc.)
   | "STAFF"         // General staff
-  | "STAFF_MEMBER"; // Staff member
+  | "STAFF_MEMBER"  // Staff member
+  | "SECURITY";     // Security guard
 
 export interface UserToken {
   fullName: string;
@@ -50,6 +51,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   MEMBER: "عضو",
   STAFF: "موظف",
   STAFF_MEMBER: "عضو هيئة موظفين",
+  SECURITY: "أمن",
 };
 
 export const ROLE_PRIVILEGES: Record<Role, string[]> = {
@@ -96,6 +98,7 @@ export const ROLE_PRIVILEGES: Record<Role, string[]> = {
   MEMBER: [],
   STAFF: ["dashboard.view"],
   STAFF_MEMBER: ["dashboard.view"],
+  SECURITY: [],
 };
 
 export interface SidebarItem {

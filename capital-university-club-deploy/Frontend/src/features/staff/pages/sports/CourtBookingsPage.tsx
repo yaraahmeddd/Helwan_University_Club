@@ -580,6 +580,8 @@ type BookingForm = {
     phone: string;
     nationalId: string;
     memberType: "member" | "team_member";
+    uses_parking: boolean;
+    parking_cars_count: number;
 };
 
 const emptyBookingForm = (courtId = "", date = "", from = ""): BookingForm => ({
@@ -592,6 +594,8 @@ const emptyBookingForm = (courtId = "", date = "", from = ""): BookingForm => ({
     phone: "",
     nationalId: "",
     memberType: "member",
+    uses_parking: false,
+    parking_cars_count: 0,
 });
 
 function BookingFormDialog({
@@ -636,6 +640,8 @@ function BookingFormDialog({
                 phone: editBooking.member?.phone ?? "",
                 nationalId: editBooking.member?.nationalId ?? "",
                 memberType: editBooking.member?.memberType ?? "member",
+                uses_parking: false,
+                parking_cars_count: 0,
             }
             : emptyBookingForm(defaultCourtId, defaultDate, defaultFrom)
     );
@@ -944,6 +950,30 @@ function BookingFormDialog({
                                     </SelectContent>
                                 </Select>
                             </div>
+                            <div className="space-y-1.5 sm:col-span-2">
+                                <Label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={form.uses_parking}
+                                        onChange={(e) => setForm({ ...form, uses_parking: e.target.checked, parking_cars_count: e.target.checked ? 1 : 0 })}
+                                        className="rounded border-border w-4 h-4"
+                                    />
+                                    {isRTL ? "استخدام جراج للسيارات" : "Uses Parking"}
+                                </Label>
+                            </div>
+
+                            {form.uses_parking && (
+                                <div className="space-y-1.5 sm:col-span-2">
+                                    <Label htmlFor="parking-cars">{isRTL ? "عدد السيارات" : "Number of Cars"}</Label>
+                                    <Input
+                                        id="parking-cars"
+                                        type="number"
+                                        min={1}
+                                        value={form.parking_cars_count || ""}
+                                        onChange={(e) => setForm({ ...form, parking_cars_count: parseInt(e.target.value) || 1 })}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -1409,6 +1439,8 @@ export default function CourtBookingsPage() {
             start_time: `${form.date}T${form.from}:00`,
             end_time: `${form.date}T${form.to}:00`,
             notes: t("apiReasons.manualBookingByStaff"),
+            uses_parking: form.uses_parking,
+            parking_cars_count: form.parking_cars_count,
         };
 
         try {
@@ -1486,6 +1518,8 @@ export default function CourtBookingsPage() {
                 start_time: `${form.date}T${form.from}:00`,
                 end_time: `${form.date}T${form.to}:00`,
                 notes: t("apiReasons.manualEditByStaff"),
+                uses_parking: form.uses_parking,
+                parking_cars_count: form.parking_cars_count,
             });
             const newBookingId = res?.data?.data?.id;
             const shareToken = res?.data?.data?.share_token;
