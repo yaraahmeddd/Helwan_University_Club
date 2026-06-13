@@ -28,12 +28,12 @@ import {
 import { useLanguage } from '@/hooks/useLanguage';
 import {
     CARD_PRINT_LABELS_AR,
-    MEMBER_CARD_BACK,
     getMemberCardFooterPreference,
     printMemberCard,
     setMemberCardFooterPreference,
     type MemberCardPrintData,
 } from '@/utils/memberCardPrint';
+import { MemberCardPrintPreview } from './MemberCardPrintPreview';
 import {
     fetchMemberCardPrintData,
     type MemberCardPrintInput,
@@ -132,32 +132,13 @@ export function MemberCardPrintDialog({
                         ) : (
                             <>
                                 <RecordViewSection icon={IdCard} title={t("memberCardPrint.preview.templateTitle")}>
-                                    {member?.hasCard && member.cardFrontUrl ? (
-                                        <div className="flex flex-wrap gap-6 justify-center">
-                                            <div className="space-y-2 text-center">
-                                                <p className="text-muted-foreground">{t("memberCardPrint.preview.front")}</p>
-                                                <img
-                                                    src={member.cardFrontUrl}
-                                                    alt={t("memberCardPrint.preview.front")}
-                                                    className="max-w-[320px] w-full rounded-xl shadow-md border border-border object-cover"
-                                                />
-                                            </div>
-                                            <div className="space-y-2 text-center">
-                                                <p className="text-muted-foreground">{t("memberCardPrint.preview.back")}</p>
-                                                <img
-                                                    src={MEMBER_CARD_BACK}
-                                                    alt={t("memberCardPrint.preview.back")}
-                                                    className="max-w-[320px] w-full rounded-xl shadow-md border border-border"
-                                                />
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="rounded-xl border-2 border-dashed border-muted-foreground/30 bg-muted/10 px-6 py-10 text-center text-muted-foreground">
-                                            <IdCard className="h-10 w-10 mx-auto mb-3 opacity-40" />
-                                            <p className="font-semibold">{t("memberCardPrint.noCardPresent")}</p>
-                                            <p className="text-sm mt-2">{t("memberCardPrint.detailsOnlyHint")}</p>
-                                        </div>
-                                    )}
+                                    {member ? (
+                                        <MemberCardPrintPreview
+                                            data={member}
+                                            photoUrl={member.hasCard ? member.cardFrontUrl : null}
+                                            includeFooter={includeFooter}
+                                        />
+                                    ) : null}
                                 </RecordViewSection>
 
                                 <RecordViewSection
