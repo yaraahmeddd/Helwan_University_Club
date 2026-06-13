@@ -20,6 +20,10 @@ import { useAdminFormatters, getAdminLocale } from '@/components/StaffPagesCompo
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/StaffPagesComponents/ui/table';
 import { useTableExport } from '@/utils/reportExport/useTableExport';
 import { AdminReportToolbar } from '@/components/StaffPagesComponents/shared/AdminReportToolbar';
+import { useToast } from '@/hooks/use-toast';
+import { MoreHorizontal, Link as LinkIcon, CreditCard as CreditCardIcon } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/StaffPagesComponents/ui/dropdown-menu';
+import { AdminPaymobModal } from '@/components/StaffPagesComponents/shared/AdminPaymobModal';
 
 // ─── Types from API ───────────────────────────────────────────────────────────
 
@@ -33,11 +37,13 @@ interface ApiMemberSub {
         national_id?: string;
     };
     team_id: number;
-    team?: { id: number; name_ar?: string; name_en?: string };
+    team?: { id: number; name_ar?: string; name_en?: string; price?: number | string | null; subscription_price?: number | string | null };
     status: string;
-    monthly_fee: number | string;
+    price: number | string;       // actual column on member_teams
+    monthly_fee?: number | string; // alias if backend remaps it
     registration_fee?: number | string | null;
     payment_status?: string;
+    payment_reference?: string;
     start_date?: string | null;
     end_date?: string | null;
     created_at: string;
@@ -54,11 +60,13 @@ interface ApiTeamMemberSub {
         national_id?: string;
     };
     team_id: number;
-    team?: { id: number; name_ar?: string; name_en?: string };
+    team?: { id: number; name_ar?: string; name_en?: string; price?: number | string | null; subscription_price?: number | string | null };
     status: string;
-    monthly_fee: number | string;
+    price: number | string;       // actual column on team_member_teams
+    monthly_fee?: number | string; // alias if backend remaps it
     registration_fee?: number | string | null;
     payment_status?: string;
+    payment_reference?: string;
     start_date?: string | null;
     end_date?: string | null;
     created_at: string;
@@ -81,6 +89,7 @@ interface SubRow {
     teamNameEn: string;
     status: string;
     paymentStatus: string;
+    paymentReference?: string;
     monthlyFee: number;
     startDate: string;
     endDate: string;
@@ -108,6 +117,7 @@ export default function SubscriptionsPage() {
 
     const { fmtDate } = useAdminFormatters();
     const dateLocale = getAdminLocale(language);
+    const { toast } = useToast();
 
     const statusLabel = useCallback(
         (status: string) => t(`subscriptions.status.${status}`, { defaultValue: status }),
@@ -122,6 +132,9 @@ export default function SubscriptionsPage() {
     const [typeFilter, setTypeFilter] = useState<"all" | "member" | "team_member">("all");
     const [searchQuery, setSearchQuery] = useState("");
     const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
+
+    const [paymobModalOpen, setPaymobModalOpen] = useState(false);
+    const [selectedRowForPaymob, setSelectedRowForPaymob] = useState<SubRow | null>(null);
 
     const fetchAll = useCallback(async () => {
         setLoading(true);
@@ -159,7 +172,8 @@ export default function SubscriptionsPage() {
                 teamNameEn: s.team?.name_en ?? "",
                 status: s.status,
                 paymentStatus: s.payment_status ?? "unpaid",
-                monthlyFee: Number(s.monthly_fee) || 0,
+                paymentReference: s.payment_reference,
+                monthlyFee: Number(s.price) || Number(s.monthly_fee) || Number(s.team?.price) || Number(s.team?.subscription_price) || 0,
                 startDate: s.start_date ?? "",
                 endDate: s.end_date ?? "",
                 createdAt: s.created_at,
@@ -179,7 +193,8 @@ export default function SubscriptionsPage() {
                 teamNameEn: s.team?.name_en ?? "",
                 status: s.status,
                 paymentStatus: s.payment_status ?? "unpaid",
-                monthlyFee: Number(s.monthly_fee) || 0,
+                paymentReference: s.payment_reference,
+                monthlyFee: Number(s.price) || Number(s.monthly_fee) || Number(s.team?.price) || Number(s.team?.subscription_price) || 0,
                 startDate: s.start_date ?? "",
                 endDate: s.end_date ?? "",
                 createdAt: s.created_at,
@@ -193,6 +208,39 @@ export default function SubscriptionsPage() {
             setLoading(false);
         }
     }, []);
+
+    const handleCopyLink = useCallback((row: SubRow) => {
+        if (!row.paymentReference) {
+            toast({ title: t("subscriptions.errors.error"), description: t("subscriptions.errors.noPaymentReference", { defaultValue: "No payment reference found for this subscription." }), variant: "destructive" });
+            return;
+        }
+        const subscriptionId = row.id.split("-").pop();
+        const baseUrl = window.location.origin;
+        const url = row.memberType === "member" 
+            ? `${baseUrl}/member/payment?subscriptionId=${subscriptionId}&paymentReference=${row.paymentReference}&amount=${row.monthlyFee}&sportName=${encodeURIComponent(row.teamNameEn || row.teamNameAr)}`
+            : `${baseUrl}/team-member/payment?subscriptionId=${subscriptionId}&paymentReference=${row.paymentReference}&amount=${row.monthlyFee}&sportName=${encodeURIComponent(row.teamNameEn || row.teamNameAr)}`;
+            
+        navigator.clipboard.writeText(url).then(() => {
+            toast({ title: t("subscriptions.success.success"), description: t("subscriptions.success.linkCopied", { defaultValue: "Payment link copied to clipboard." }) });
+        }).catch(() => {
+            toast({ title: t("subscriptions.errors.error"), description: t("subscriptions.errors.copyFailed", { defaultValue: "Failed to copy link." }), variant: "destructive" });
+        });
+    }, [t, toast]);
+
+    const handleOpenPaymob = useCallback((row: SubRow) => {
+        if (!row.paymentReference) {
+            toast({ title: t("subscriptions.errors.error"), description: t("subscriptions.errors.noPaymentReference", { defaultValue: "No payment reference found for this subscription." }), variant: "destructive" });
+            return;
+        }
+        setSelectedRowForPaymob(row);
+        setPaymobModalOpen(true);
+    }, [t, toast]);
+
+    const handlePaymobSuccess = useCallback(() => {
+        setPaymobModalOpen(false);
+        toast({ title: t("subscriptions.success.success"), description: t("subscriptions.success.paymentCompleted", { defaultValue: "Payment completed successfully." }) });
+        void fetchAll();
+    }, [fetchAll, t, toast]);
 
     useEffect(() => { void fetchAll(); }, [fetchAll]);
 
@@ -235,8 +283,22 @@ export default function SubscriptionsPage() {
             if (dateRange.to && r.endDate && r.endDate > dateRange.to) return false;
             return true;
         }).sort((a, b) => {
-            const order: Record<string, number> = { pending: 0, approved: 1, active: 2, declined: 3, cancelled: 4 };
-            return (order[a.status] ?? 5) - (order[b.status] ?? 5);
+            const getScore = (r: SubRow) => {
+                const alert = toAlertStatus(r.endDate, r.status);
+                if (alert === "overdue") return 0;
+                if (alert === "expiring") return 1;
+                
+                const statusOrder: Record<string, number> = { pending: 2, approved: 3, active: 4, declined: 5, cancelled: 6 };
+                return statusOrder[r.status] ?? 7;
+            };
+
+            const scoreA = getScore(a);
+            const scoreB = getScore(b);
+            
+            if (scoreA !== scoreB) return scoreA - scoreB;
+            
+            // Tie-breaker: newest first
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         });
     }, [rows, statusFilter, typeFilter, searchQuery, dateRange, language]);
 
@@ -312,9 +374,9 @@ export default function SubscriptionsPage() {
     const renewalHint = (alertStatus: "active" | "expiring" | "overdue", days: number) => {
         const count = Math.abs(days);
         if (alertStatus === "overdue") {
-            return t("subscriptions.renewal.overdue", { count });
+            return t("subscriptions.renewal.overdue_other", { count, defaultValue: `متأخر ${count} يوم` });
         }
-        return t("subscriptions.renewal.remaining", { count });
+        return t("subscriptions.renewal.remaining_other", { count, defaultValue: `متبقي ${count} يوم` });
     };
 
     return (
@@ -438,12 +500,13 @@ export default function SubscriptionsPage() {
                                 <TableHead className={adminHeadClass()}>{t("subscriptions.table.startDate")}</TableHead>
                                 <TableHead className={adminHeadClass()}>{t("subscriptions.table.endDate")}</TableHead>
                                 <TableHead className={adminHeadClass({ center: true })}>{t("subscriptions.table.status")}</TableHead>
+                                <TableHead className={adminHeadClass({ center: true })}>{t("subscriptions.table.actions", { defaultValue: "Actions" })}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody className={adminTableStyles.body}>
                             {loading ? (
                                 <TableRow>
-                                    <TableCell colSpan={9} className="text-center py-16">
+                                    <TableCell colSpan={10} className="text-center py-16">
                                         <div className="flex items-center justify-center gap-2 text-muted-foreground">
                                             <Loader2 className="h-5 w-5 animate-spin" />
                                             <span className="text-sm">{tCommon("loading")}</span>
@@ -452,7 +515,7 @@ export default function SubscriptionsPage() {
                                 </TableRow>
                             ) : filtered.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={9} className="text-center py-16 text-sm text-muted-foreground">
+                                    <TableCell colSpan={10} className="text-center py-16 text-sm text-muted-foreground">
                                         {rows.length === 0
                                             ? t("subscriptions.empty.none")
                                             : t("subscriptions.empty.noMatch")}
@@ -543,6 +606,31 @@ export default function SubscriptionsPage() {
                                                     {statusLabel(r.status)}
                                                 </span>
                                             </TableCell>
+
+                                            <TableCell className={adminCellClass({ center: true })}>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                                            <span className="sr-only">Open menu</span>
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        {(r.status === "pending" || r.paymentStatus === "unpaid") && (
+                                                            <>
+                                                                <DropdownMenuItem onClick={() => handleOpenPaymob(r)} className="cursor-pointer gap-2">
+                                                                    <CreditCardIcon className="h-4 w-4" />
+                                                                    {t("subscriptions.actions.payViaPaymob", { defaultValue: "Pay via Paymob" })}
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem onClick={() => handleCopyLink(r)} className="cursor-pointer gap-2">
+                                                                    <LinkIcon className="h-4 w-4" />
+                                                                    {t("subscriptions.actions.copyPaymentLink", { defaultValue: "Copy Payment Link" })}
+                                                                </DropdownMenuItem>
+                                                            </>
+                                                        )}
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
                                         </TableRow>
                                     );
                                 })
@@ -551,6 +639,17 @@ export default function SubscriptionsPage() {
                     </Table>
                 </div>
             </div>
+
+            {selectedRowForPaymob && (
+                <AdminPaymobModal
+                    isOpen={paymobModalOpen}
+                    onClose={() => setPaymobModalOpen(false)}
+                    onSuccess={handlePaymobSuccess}
+                    paymentReference={selectedRowForPaymob.paymentReference!}
+                    amount={selectedRowForPaymob.monthlyFee}
+                    description={getLocalizedText(selectedRowForPaymob.teamNameAr, selectedRowForPaymob.teamNameEn, language)}
+                />
+            )}
         </div>
     );
 }

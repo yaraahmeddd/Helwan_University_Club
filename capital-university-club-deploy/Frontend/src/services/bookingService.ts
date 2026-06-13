@@ -37,7 +37,6 @@ export interface BookingDetails {
   duration_minutes: number;
   price: number;
   status: BookingStatus;
-  payment_reference?: string;
   share_token: string;
   share_url: string;
   expected_participants: number;

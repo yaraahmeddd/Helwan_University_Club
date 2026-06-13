@@ -133,7 +133,6 @@ export class BookingController {
           duration_minutes: booking.duration_minutes,
           price: booking.price,
           status: booking.status,
-          payment_reference: booking.payment_reference,
           share_token: booking.share_token,
           expected_participants: booking.expected_participants,
           uses_parking: booking.uses_parking,

@@ -105,11 +105,12 @@ export class PaymobController {
         state: billingData?.state || 'C',
       };
 
+      const merchantOrderId = `${payment.payment_reference}_r${Date.now()}`;
       const authToken = await this.paymobService.authenticate();
       const orderId = await this.paymobService.createOrder({
         authToken,
         amountCents,
-        merchantOrderId: payment.payment_reference,
+        merchantOrderId,
         currency: payment.currency,
       });
 
@@ -148,7 +149,7 @@ export class PaymobController {
       const payload = req.body as Record<string, unknown>;
       const obj = (payload?.obj || payload) as Record<string, unknown>;
 
-      const paymentReference: string | undefined =
+      let paymentReference: string | undefined =
         (obj?.order as Record<string, unknown>)?.merchant_order_id as string ||
         obj?.merchant_order_id as string ||
         payload?.merchant_order_id as string;
@@ -156,6 +157,10 @@ export class PaymobController {
       if (!paymentReference) {
         res.status(400).json({ success: false, error: 'Missing merchant_order_id (payment reference)' });
         return;
+      }
+
+      if (paymentReference.includes('_r')) {
+        paymentReference = paymentReference.split('_r')[0];
       }
 
       const success: boolean =
@@ -198,7 +203,7 @@ export class PaymobController {
       console.log('Original req.originalUrl:', req.originalUrl);
       console.log('Parsed req.query:', req.query);
       console.log('=====================================');
-      const paymentReference =
+      let paymentReference =
         query.merchant_order_id ||
         query.payment_reference ||
         query.paymentReference ||
@@ -207,6 +212,10 @@ export class PaymobController {
       if (!paymentReference) {
         res.redirect(`${this.getFrontendBaseUrl()}/member/payment?paymob=failed&reason=missing_reference`);
         return;
+      }
+
+      if (paymentReference.includes('_r')) {
+        paymentReference = paymentReference.split('_r')[0];
       }
 
       const payment = await this.paymentRepo.findOne({ where: { payment_reference: paymentReference } });
