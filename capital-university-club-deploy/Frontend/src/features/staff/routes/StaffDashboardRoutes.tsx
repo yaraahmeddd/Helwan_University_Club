@@ -13,7 +13,7 @@ const StaffDashboardPage = lazy(() => import('@/features/staff/pages/dashboard/S
 const SportsPage = lazy(() => import('@/features/staff/pages/sports/SportsPage'));
 const MembershipsPage = lazy(() => import('@/features/staff/pages/finance/MembershipsPage'));
 const RegistrationManagementPage = lazy(() => import('@/features/staff/pages/finance/RegistrationManagementPage'));
-// const MembershipFormPage = lazy(() => import('@/features/staff/pages/finance/MembershipFormPage'));
+const MembershipFormPage = lazy(() => import('@/features/staff/pages/finance/MembershipFormPage'));
 // const FinancePage = lazy(() => import('@/features/staff/pages/finance/FinancePage'));
 // const TaskApprovalPage = lazy(() => import('@/features/staff/pages/administration/TaskApprovalPage'));
 const AdminPrivilegesPage = lazy(() => import('@/features/staff/pages/administration/AdminPrivilegesPage'));
@@ -100,7 +100,7 @@ const StaffDashboard = () => {
             <Route path="profile" element={<StaffProfilePage />} />
             <Route path="memberships" element={<ProtectedRoute requiredPrivilege="VIEW_MEMBERSHIP_PLANS"><MembershipsPage /></ProtectedRoute>} />
             <Route path="registrations" element={<ProtectedRoute requiredPrivilege="MANAGE_MEMBERSHIP_REQUEST"><RegistrationManagementPage /></ProtectedRoute>} />
-            {/* <Route path="membership-form" element={<ProtectedRoute requiredPrivilege="VIEW_MEMBERS"><MembershipFormPage /></ProtectedRoute>} /> */}
+            <Route path="membership-form" element={<ProtectedRoute requiredPrivilege="VIEW_MEMBERS"><MembershipFormPage /></ProtectedRoute>} />
             <Route path="finance/subscriptions" element={<ProtectedRoute requiredPrivilege="VIEW_FINANCE"><SubscriptionsPage /></ProtectedRoute>} />
             <Route path="admin/privileges" element={<ProtectedRoute requiredPrivilege="VIEW_PRIVILEGES"><AdminPrivilegesPage /></ProtectedRoute>} />
             <Route path="admin/privilege-packages" element={<ProtectedRoute requiredPrivilege="VIEW_PRIVILEGES"><PrivilegePackageAdminPage /></ProtectedRoute>} />

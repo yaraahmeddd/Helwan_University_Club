@@ -173,6 +173,14 @@
       "seasonYear": "Season"
     }
   },
+  "membershipFormPrint": {
+    "dialogTitle": "Print Membership Form",
+    "printButton": "Print Form",
+    "printing": "Preparing…",
+    "rowTooltip": "Print membership form",
+    "loading": "Loading form…",
+    "printHint": "Select printer · A4 · Portrait · Margins: Default"
+  },
   "import": {
     "importLabel": "Import",
     "tooltip": "Download template or import records from Excel",

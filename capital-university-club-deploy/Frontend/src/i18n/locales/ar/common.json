@@ -173,6 +173,14 @@
       "seasonYear": "الموسم"
     }
   },
+  "membershipFormPrint": {
+    "dialogTitle": "طباعة استمارة العضوية",
+    "printButton": "طباعة الاستمارة",
+    "printing": "جارٍ الإعداد…",
+    "rowTooltip": "طباعة استمارة العضوية",
+    "loading": "جاري تحميل الاستمارة…",
+    "printHint": "اختر الطابعة · A4 · Portrait · الهوامش: Default"
+  },
   "import": {
     "importLabel": "استيراد",
     "tooltip": "تنزيل القالب أو استيراد السجلات من Excel",

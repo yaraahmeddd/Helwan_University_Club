@@ -36,9 +36,13 @@ import {
 } from '@/components/StaffPagesComponents/ui/tooltip';
 import {
     AdminActionButton,
+    AdminPrintFormButton,
     AdminRowActions,
     AdminViewButton,
 } from '@/components/StaffPagesComponents/shared/AdminRowActions';
+import { useMembershipFormPrint } from '@/hooks/useMembershipFormPrint';
+import { membershipFormFromRegistration } from '@/services/membershipFormPrintService';
+import { useTranslation as useCommonTranslation } from 'react-i18next';
 
 // ─── Unified record type ────────────────────────────────────────────────────
 interface RegistrationRecord {
@@ -82,6 +86,8 @@ const toArabicDigits = (str: string | undefined | null) => {
 
 export default function RegistrationManagementPage() {
     const { t, language, isRTL } = useLocalizedTranslation(["RegistrationManagementPage", "common"]);
+    const { t: tCommon } = useCommonTranslation('common');
+    const { openMembershipFormPrint, membershipFormPrintDialog } = useMembershipFormPrint();
     const { toast } = useToast();
     const { tVal, handleArabicChange, handleEnglishChange, handleDigitsChange } = useAdminFieldValidation();
     const [records, setRecords] = useState<RegistrationRecord[]>([]);
@@ -231,6 +237,26 @@ export default function RegistrationManagementPage() {
 
     const memberCount = records.filter(r => r.memberType === 'member').length;
     const teamMemberCount = records.filter(r => r.memberType === 'team_member').length;
+
+    const openPrintForm = (record: RegistrationRecord) => {
+        openMembershipFormPrint({
+            mode: 'inline',
+            data: membershipFormFromRegistration({
+                firstNameAr: record.first_name_ar,
+                lastNameAr: record.last_name_ar,
+                birthdate: record.birthdate ?? record.birth_date,
+                address: record.address,
+                phone: record.phone,
+                nationalId: record.national_id,
+                socialStatus: record.social_status,
+                job: record.job,
+                photo: record.photo,
+                memberType: record.memberType,
+                membershipPlanAr: record.membership_plan_ar,
+                teams: record.teams,
+            }),
+        });
+    };
 
     // ── Approve ──────────────────────────────────────────────────────────────
     const handleApprove = async (record: RegistrationRecord) => {
@@ -599,6 +625,12 @@ export default function RegistrationManagementPage() {
                                                     <AdminViewButton
                                                         tooltip={t('rowActions.viewDetails')}
                                                         onClick={() => openReview(record)}
+                                                    />
+                                                </RoleGuard>
+                                                <RoleGuard privilege="VIEW_MEMBERS">
+                                                    <AdminPrintFormButton
+                                                        tooltip={tCommon('membershipFormPrint.rowTooltip')}
+                                                        onClick={() => openPrintForm(record)}
                                                     />
                                                 </RoleGuard>
                                                 <RoleGuard privilege="MANAGE_MEMBERSHIP_REQUEST">
@@ -1017,6 +1049,17 @@ export default function RegistrationManagementPage() {
 
                     <div className="border-t border-border px-5 py-3 bg-muted/20 shrink-0 flex items-center gap-2">
                         <div className="flex gap-2 ms-auto">
+                            {selectedRecord && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-1.5"
+                                    onClick={() => openPrintForm(selectedRecord)}
+                                >
+                                    <FileText className="w-4 h-4" />
+                                    {t('actions.print')}
+                                </Button>
+                            )}
                             <Button variant="outline" size="sm" onClick={() => setReviewDialogOpen(false)}>
                                 {t('actions.close')}
                             </Button>
@@ -1044,6 +1087,7 @@ export default function RegistrationManagementPage() {
                     )}
                 </DialogContent>
             </Dialog>
+            {membershipFormPrintDialog}
         </div>
         </TooltipProvider>
     );

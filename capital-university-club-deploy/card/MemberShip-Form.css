@@ -1,0 +1,390 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 50px;
+    margin: 0;
+    box-sizing: border-box;
+}
+.form-container {
+    background-color: #ffffff;
+    padding: 50px;
+    max-width: 998px;
+    max-height: 1418px;
+    width: 100%;
+}
+
+.overlay {
+    z-index: 99;
+    background-image: url('/ClubCard/Logos/logo.PNG');
+    background-repeat: no-repeat ;
+    background-position: center;
+    width: 100%;
+    height: 90%;
+    opacity: 0.1;
+    position: absolute;
+    top: -5%;
+
+}
+
+.header-first-part button{
+    border-radius: 20px;
+    display: flex;
+    border: none;
+    cursor: pointer;
+    width: 160px;
+    background-color: transparent;
+}
+
+.header-sec-part {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    justify-content: space-between;
+}
+.header-sec-part .value-input-group {
+    display: flex;
+    text-align: right;
+    align-items: center;
+}
+.header-sec-part .value-input-group img {
+    width: 102px;
+    height: 40px;
+    object-fit: contain ;
+    top: auto ;
+    left: auto ;
+}
+.header-sec-part .value-input-group label{
+    transform: translateY(-5px);
+}
+
+.header-sec-part img {
+    height: 150px;
+    width: 150px;
+}
+.section-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+    padding-bottom: 5px;
+    border-bottom: 2px solid black;
+    display: inline-block;
+}
+.form-section-main {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 32px;
+}
+
+.form-group {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+.form-group label {
+    width: 150px;
+    font-weight: 500;
+    color: #555;
+    flex-shrink: 0;
+    text-align: right;
+    margin-left: 10px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="date"],
+.form-group input[type="number"] {
+    flex-grow: 1;
+    padding: 10px 12px;
+    border: none;
+    border-bottom: 1px dashed #999;
+    font-size: 0.95rem;
+    min-width: 200px;
+    text-align: center;
+    outline: none;
+    transform: translateY(-15px);
+}
+
+.declaration-text .inline-input {
+    border: none;
+    border-bottom: 1px dashed #999;
+    width: 192px;
+    text-align: center;
+    display:inline-block;
+    background-color: transparent;
+    padding: 0 5px;
+    outline: none;
+}
+.form-group.radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: center;
+}
+.form-group.radio-group label {
+    width: auto;
+    margin-right: 0;
+    cursor: pointer;
+}
+.form-group.radio-group input[type="radio"] {
+    margin-right: 8px;
+    transform: scale(1.1);
+}
+.image-placeholder {
+    width: 150px;
+    height: 180px;
+    background-color: #e0e0e0;
+    border: 2px solid #bbb;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #888;
+    font-size: 1rem;
+    margin-right: 30px;
+    flex-shrink: 0;
+}
+.form-inputs-right {
+    flex-grow: 1;
+}
+
+.declaration-section {
+    margin-top: 20px;
+    padding-top: 15px;
+}
+.declaration-section h4 {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+    text-align: center;
+}
+.declaration-text {
+    border-radius: 8px;
+    padding: 20px;
+    line-height: 1.8;
+    color: #444;
+    font-size: 0.95rem;
+    justify-content: right;
+    margin-bottom: 25px;
+}
+.declaration-text .inline-input {
+    border: none;
+    border-bottom: 1px dashed #999;
+    width: 192px;
+    text-align: center;
+    display:inline-block;
+    background-color: transparent;
+    padding: 0 5px;
+    outline: none;
+}
+.cost{
+    opacity: 0.2;
+}
+.declaration-date-right {
+    text-align: right;
+    margin-top: 10px;
+    padding-right: 20px;
+}
+.signature-area {
+    display: flex;
+    gap: 7px;
+    flex-direction: column;
+    width: 250px;
+}
+.signature-item {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: flex-end;
+    flex: 1;
+}
+.signature-item label {
+    width: auto;
+    margin-bottom: 5px;
+    color: #666;
+}
+.signature-item input {
+    width: 100%;
+    border: none;
+    border-bottom: 1px dashed #999;
+    font-size: 1rem;
+    color: #333;
+    background-color: transparent;
+    outline: none;
+    margin-bottom: 4px;
+    transform: translateY(-7px);
+}
+.text-center {
+    text-align: center;
+    margin-bottom: 40px; /* Moved from inline style in HTML */
+}
+
+@media print {
+    body {
+        background-color: #ffffff !important;
+        -webkit-print-color-adjust: exact;
+        color-adjust: exact;
+        padding: 0;
+        margin: 0;
+        min-height: auto;
+    }
+
+    .form-container {
+        padding: 20px !important;
+        margin: 0 auto !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        box-shadow: none !important;
+        border: none !important;
+        max-height: none !important;
+    }
+
+    .header-first-part button {
+        display: none !important;
+    }
+
+    .header-sec-part {
+        justify-content: space-between !important;
+        gap: 0 !important;
+    }
+
+    .header-sec-part .value-input-group {
+        display: flex !important;
+        align-items: center !important;
+        text-align: right !important;
+    }
+
+    .header-sec-part .value-input-group img {
+        width: 102px !important;
+        height: 32px !important;
+        object-fit: contain !important;
+        top: auto !important;
+        left: auto !important;
+    }
+
+    .header-sec-part img {
+        height: 120px !important;
+        width: 120px !important;
+    }
+
+    .section-title {
+        font-size: 1.6rem !important;
+        margin-bottom: 25px !important;
+    }
+
+    .form-section-main {
+        margin-bottom: 20px !important;
+    }
+
+    .form-group {
+        margin-bottom: 10px !important;
+    }
+
+    .form-group label {
+        width: 130px !important;
+        margin-left: 5px !important;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="date"],
+    .form-group input[type="number"] {
+        padding: 5px 8px !important;
+        min-width: 150px !important;
+        font-size: 0.9rem !important;
+        transform: translateY(-5px) !important;
+    }
+
+    .form-group.radio-group {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+        align-items: center !important;
+        margin-bottom: 10px !important;
+    }
+
+    .form-group.radio-group label {
+        width: auto !important;
+        margin-right: 0 !important;
+        font-size: 0.95rem !important;
+        color: #555 !important;
+    }
+
+    .form-group.radio-group input[type="radio"] {
+        margin-right: 5px !important;
+        transform: scale(0.9) !important;
+        vertical-align: middle !important;
+    }
+
+    .declaration-section {
+        margin-top: 20px !important;
+        padding-top: 15px !important;
+    }
+
+    .declaration-section h4 {
+        font-size: 1.2rem !important;
+        margin-bottom: 10px !important;
+        padding-bottom: 3px !important;
+    }
+
+    .declaration-text {
+        padding: 15px !important;
+        margin-bottom: 20px !important;
+        font-size: 0.9rem !important;
+        line-height: 1.6 !important;
+        width: auto !important;
+        max-width: none !important;
+    }
+
+    .declaration-text .inline-input {
+        width: 150px !important;
+        padding: 0 3px !important;
+        transform: none !important;
+        vertical-align: baseline !important;
+    }
+
+    .declaration-date-right {
+        text-align: right !important;
+        margin-top: 5px !important;
+        padding-right: 0 !important;
+    }
+
+    .signature-area {
+        justify-content: flex-end !important;
+        gap: 20px !important;
+        margin-top: 20px !important;
+        padding-right: 0 !important;
+        width: 300px!important;
+    }
+
+    .signature-item {
+        min-width: 200px !important;
+        width: 250px !important;
+        max-width: none !important;
+        flex: none !important;
+    }
+
+    .signature-item label {
+        font-size: 0.95rem !important;
+        margin-bottom: 3px !important;
+    }
+
+    .signature-item input {
+        padding: 4px 0 !important;
+        font-size: 0.9rem !important;
+        transform: translateY(-4px) !important;
+        margin-bottom: 2px !important;
+    }
+
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .declaration-section {
+        page-break-before: auto;
+    }
+}
