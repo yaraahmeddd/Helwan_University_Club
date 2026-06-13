@@ -197,6 +197,8 @@ body {
 
 .right.topPadding { padding-top: 25px; }
 
+.topPadding { padding-top: 25px; }
+
 .info {
     display: grid;
     align-content: center;
@@ -227,9 +229,6 @@ body {
     position: relative;
     left: -125px;
     bottom: -37px;
-    font-weight: 800;
-    font-size: 8pt;
-    color: black;
 }
 
 /* ── Executive-director signature (bottom-right of .right) ── */
@@ -345,7 +344,6 @@ function buildTeamMemberFrontHtml(
           <div class="profession-section field-value">
             <div>${L.validUntil} ${escapeHtml(data.seasonYear)}</div>
           </div>
-          <div class="field-value year">${escapeHtml(data.seasonYear)}</div>
         </div>
         ${buildSignatureHtml(includeFooter)}
       </section>
