@@ -194,6 +194,10 @@ export class PaymobController {
   async redirect(req: Request, res: Response): Promise<void> {
     try {
       const query = req.query as Record<string, string>;
+      console.log('======= PAYMOB REDIRECT DEBUG =======');
+      console.log('Original req.originalUrl:', req.originalUrl);
+      console.log('Parsed req.query:', req.query);
+      console.log('=====================================');
       const paymentReference =
         query.merchant_order_id ||
         query.payment_reference ||

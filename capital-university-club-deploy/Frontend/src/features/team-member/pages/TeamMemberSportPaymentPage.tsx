@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import api from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import bookingService from '@/services/bookingService';
-import { CheckCircle, Copy } from "lucide-react";
+import { Copy } from "lucide-react";
 import { PaymobCheckoutFrame } from '@/components/shared/PaymobCheckoutFrame';
 import {
   isPaymobReturnFailed,
@@ -13,6 +13,7 @@ import {
   getPaymobPaymentStatus,
   waitForPaymobCompletion,
 } from '@/services/paymobService';
+import { PaymentResultView } from '@/components/shared/PaymentResultView';
 
 interface TeamMemberSubscriptionApi {
     id?: number | string;
@@ -313,10 +314,7 @@ const TeamMemberSportPaymentPage: React.FC = () => {
             teamId: paymentData.teamId || undefined,
         });
         setSuccessMessage(t("payment.alerts.success_subscription"));
-        setTimeout(() => {
-            navigate("/team-member/dashboard", { replace: true });
-        }, 1500);
-    }, [navigate, paymentData.sportName, paymentData.teamId, t]);
+    }, [paymentData.sportName, paymentData.teamId, t]);
 
     const handleGatewaySuccess = useCallback(async () => {
         if (paymentData.isBooking) {
@@ -330,7 +328,7 @@ const TeamMemberSportPaymentPage: React.FC = () => {
         const paymentReference = searchParams.get("paymentReference") || paymentData.paymentReference;
         if (!paymentReference) return;
         if (isPaymobReturnFailed(searchParams)) {
-            setErrorMessage(t("payment.alerts.fail"));
+            // Error handled in render
             return;
         }
         if (!isPaymobReturnSuccess(searchParams)) return;
@@ -383,7 +381,7 @@ const TeamMemberSportPaymentPage: React.FC = () => {
                     first_name: user?.first_name_en || user?.first_name_ar || "Player",
                     last_name: user?.last_name_en || user?.last_name_ar || "User",
                     email: user?.email || "player@club.local",
-                    phone_number: user?.phone || "+201000000000",
+                    phone_number: (user as any)?.phone || (user as any)?.phone_number || "+201000000000",
                 },
                 context: {
                     subscription_id: resolved.subscriptionId || paymentData.subscriptionId || undefined,
@@ -409,6 +407,54 @@ const TeamMemberSportPaymentPage: React.FC = () => {
             setProcessing(false);
         }
     };
+
+    if (isPaymobReturnFailed(searchParams) || !!errorMessage) {
+        return (
+            <PaymentResultView 
+                status="failed" 
+                message={errorMessage || `${t("payment.alerts.fail")}${searchParams.get("data.message") ? ` (${searchParams.get("data.message")})` : ""}`}
+                onPrimaryAction={handleBack}
+                primaryActionLabel={t("payment.actions.back")}
+            />
+        );
+    }
+
+    if (isPaymobReturnSuccess(searchParams) || showSuccessModal || successMessage) {
+        if (processing) {
+            return <PaymentResultView status="processing" onPrimaryAction={() => {}} />;
+        }
+        return (
+            <PaymentResultView 
+                status="success" 
+                message={successMessage} 
+                onPrimaryAction={() => navigate("/team-member/dashboard", { replace: true })}
+            >
+                {shareUrl && (
+                    <div className={`space-y-4 ${isRtl ? 'text-right' : 'text-left'}`}>
+                        <label className="block text-xs font-bold text-ds-text-muted mb-1 px-1">
+                            {t("payment.labels.invite_link")}
+                        </label>
+                        <div className="flex items-center gap-2 p-2 bg-gray-50 border border-gray-200 rounded-xl">
+                            <div className="flex-1 overflow-hidden">
+                                <p dir="ltr" className="text-sm font-mono text-gray-600 truncate px-2">
+                                    {shareUrl}
+                                </p>
+                            </div>
+                            <button
+                                id="team-copy-btn"
+                                type="button"
+                                onClick={handleCopyLink}
+                                className="flex items-center gap-2 px-4 py-2 bg-ds-primary text-white text-xs font-bold rounded-lg hover:bg-ds-primary-dark transition-colors shrink-0"
+                            >
+                                <Copy className="w-3 h-3" />
+                                {t("payment.actions.copy")}
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </PaymentResultView>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-[#F4F6F9] flex items-center justify-center p-4">
@@ -457,13 +503,7 @@ const TeamMemberSportPaymentPage: React.FC = () => {
                     </div>
                 </div>
 
-                {successMessage ? (
-                    <div className="rounded-lg border border-green-200 bg-green-50 text-green-700 px-4 py-3 text-sm mb-4">
-                        {successMessage}
-                    </div>
-                ) : null}
-
-                {errorMessage ? (
+                {!isPaymobReturnFailed(searchParams) && errorMessage ? (
                     <div className="rounded-lg border border-red-200 bg-red-50 text-red-700 px-4 py-3 text-sm mb-4">
                         {errorMessage}
                     </div>
@@ -489,62 +529,6 @@ const TeamMemberSportPaymentPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Success Modal for booking with invite link */}
-            {showSuccessModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                    <div dir={isRtl ? "rtl" : "ltr"} className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden">
-                        <div className="p-8 text-center">
-                            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <CheckCircle className="w-12 h-12 text-green-600" />
-                            </div>
-
-                            <h2 className="text-2xl font-black text-ds-text-primary mb-2">
-                                {t("payment.success_modal.title")}
-                            </h2>
-                            <p className="text-ds-text-secondary mb-8">
-                                {t("payment.success_modal.description")}
-                            </p>
-
-                            {shareUrl && (
-                                <div className={`space-y-4 mb-8 ${isRtl ? 'text-right' : 'text-left'}`}>
-                                    <label className="block text-xs font-bold text-ds-text-muted mb-1 px-1">
-                                        {t("payment.labels.invite_link")}
-                                    </label>
-                                    <div className="flex items-center gap-2 p-2 bg-gray-50 border border-gray-200 rounded-xl">
-                                        <div className="flex-1 overflow-hidden">
-                                            <p
-                                                dir="ltr"
-                                                className="text-sm font-mono text-gray-600 truncate px-2"
-                                            >
-                                                {shareUrl}
-                                            </p>
-                                        </div>
-                                        <button
-                                            id="team-copy-btn"
-                                            type="button"
-                                            onClick={handleCopyLink}
-                                            className="flex items-center gap-2 px-4 py-2 bg-ds-primary text-white text-xs font-bold rounded-lg hover:bg-ds-primary-dark transition-colors shrink-0"
-                                        >
-                                            <Copy className="w-3 h-3" />
-                                            {t("payment.actions.copy")}
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="flex flex-col gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => navigate("/team-member/dashboard", { replace: true })}
-                                    className="w-full h-12 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition-colors"
-                                >
-                                    {t("payment.actions.return_home")}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {paymobIframeUrl && (
                 <PaymobCheckoutFrame
