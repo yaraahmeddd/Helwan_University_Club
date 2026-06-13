@@ -42,7 +42,7 @@ export function resolveDisplayLanguage(language?: string | null): DisplayLanguag
 /**
  * Primary localized text.
  * Arabic UI: Arabic first, English fallback.
- * English UI: English only — never falls back to Arabic.
+ * English UI: English first, Arabic fallback (so names always display).
  */
 export function getLocalizedText(
   ar: string | undefined | null,
@@ -52,7 +52,7 @@ export function getLocalizedText(
   const arTrim = (ar ?? '').trim();
   const enTrim = (en ?? '').trim();
   if (language === 'ar') return arTrim || enTrim;
-  return enTrim;
+  return enTrim || arTrim;
 }
 
 /**

@@ -108,6 +108,7 @@ export function RecordViewField({
   ltr = false,
   alignEnd = false,
   fallback = '—',
+  className,
 }: {
   icon: React.ElementType;
   label: string;
@@ -116,6 +117,7 @@ export function RecordViewField({
   /** Right-align LTR values (phone, national ID) in RTL layouts */
   alignEnd?: boolean;
   fallback?: string;
+  className?: string;
 }) {
   const display =
     value === undefined || value === null || value === '' ? (
@@ -125,7 +127,7 @@ export function RecordViewField({
     );
 
   return (
-    <div className="space-y-1">
+    <div className={cn('space-y-1', className)}>
       <p className={cn('text-muted-foreground flex items-center gap-1.5', adminFontClass.label)}>
         <Icon className="w-3.5 h-3.5 shrink-0" />
         {label}
@@ -160,16 +162,16 @@ export function RecordViewProfileHeader({
   badges?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-4 p-4 bg-muted/40 rounded-xl">
+    <div className="flex items-center gap-3 p-3 bg-muted/40 rounded-xl">
       <ProfileAvatar photoUrl={photoUrl} alt={photoAlt} size="xl" rounded="xl" />
       <div className="flex-1 min-w-0 space-y-1">
-        <h3 className={cn('text-xl leading-tight truncate', adminFontClass.heading)}>{name || '—'}</h3>
+        <h3 className={cn('text-[15px] font-semibold leading-tight truncate', adminFontClass.heading)}>{name || '—'}</h3>
         {subtitle && (
-          <p className="text-xs text-muted-foreground truncate" dir="ltr">
+          <p className="text-[11px] text-muted-foreground truncate" dir="ltr">
             {subtitle}
           </p>
         )}
-        {badges && <div className="flex flex-wrap gap-2 mt-1">{badges}</div>}
+        {badges && <div className="flex flex-wrap items-center gap-1.5 mt-0.5">{badges}</div>}
       </div>
     </div>
   );

@@ -105,7 +105,7 @@ type StaffDetailPanelProps = {
   roleName: string;
   onDelete: () => void;
   staffTypeOptions: { id: number; label: string }[];
-  onSave: (data: EditFormData) => Promise<void>;
+  onSave: (data: Partial<EditFormData>) => Promise<void>;
   isSaving: boolean;
   defaultEditing?: boolean;
 };
@@ -246,11 +246,11 @@ export function StaffDetailPanel({
           subtitle={subtitleName}
           badges={
             <>
-              <span className="text-[10px] bg-muted text-muted-foreground rounded-full px-2 py-0.5 font-medium">
+              <span className="text-[11px] bg-muted text-muted-foreground rounded-full px-2.5 py-0.5 font-medium">
                 {roleName}
               </span>
               <span
-                className={`text-[10px] rounded-full px-2 py-0.5 font-medium ${
+                className={`text-[11px] rounded-full px-2.5 py-0.5 font-medium ${
                   isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
                 }`}
               >
@@ -413,20 +413,20 @@ export function StaffDetailPanel({
           </div>
         ) : (
           <div className="p-5 space-y-5">
-            <RecordViewSection icon={CreditCard} title={t('detailPanel.photos.documents', 'Documents')}>
+            <RecordViewSection icon={CreditCard} title={t('detailPanel.photos.documents', { defaultValue: 'Documents' })}>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
-                  { key: 'personal_photo', label: t('detailPanel.photos.personalPhoto', 'Personal Photo'), src: details?.personal_photo },
-                  { key: 'national_id_front', label: t('detailPanel.photos.idFront', 'ID Front'), src: details?.national_id_front },
-                  { key: 'national_id_back', label: t('detailPanel.photos.idBack', 'ID Back'), src: details?.national_id_back },
-                  { key: 'academic_certificate', label: t('detailPanel.photos.academicCert', 'Academic Certificate'), src: details?.academic_certificate },
-                  { key: 'military_service_doc', label: t('detailPanel.photos.military', 'Military Service Doc'), src: details?.military_service_doc },
-                  { key: 'criminal_record', label: t('detailPanel.photos.criminal', 'Criminal Record'), src: details?.criminal_record },
-                  { key: 'employer_approval_letter', label: t('detailPanel.photos.employerApproval', 'Employer Approval Letter'), src: details?.employer_approval_letter },
-                  { key: 'employment_status_statement', label: t('detailPanel.photos.employmentStatus', 'Employment Status Statement'), src: details?.employment_status_statement },
-                  { key: 'good_conduct_certificate', label: t('detailPanel.photos.goodConduct', 'Good Conduct Certificate'), src: details?.good_conduct_certificate },
-                  { key: 'personal_info_form', label: t('detailPanel.photos.personalInfo', 'Personal Info Form'), src: details?.personal_info_form },
-                  { key: 'experience_certificates', label: t('detailPanel.photos.experienceCert', 'Experience Certificates'), src: details?.experience_certificates },
+                  { key: 'personal_photo', label: t('detailPanel.photos.personalPhoto', { defaultValue: 'Personal Photo' }), src: details?.personal_photo },
+                  { key: 'national_id_front', label: t('detailPanel.photos.idFront', { defaultValue: 'ID Front' }), src: details?.national_id_front },
+                  { key: 'national_id_back', label: t('detailPanel.photos.idBack', { defaultValue: 'ID Back' }), src: details?.national_id_back },
+                  { key: 'academic_certificate', label: t('detailPanel.photos.academicCert', { defaultValue: 'Academic Certificate' }), src: details?.academic_certificate },
+                  { key: 'military_service_doc', label: t('detailPanel.photos.military', { defaultValue: 'Military Service Doc' }), src: details?.military_service_doc },
+                  { key: 'criminal_record', label: t('detailPanel.photos.criminal', { defaultValue: 'Criminal Record' }), src: details?.criminal_record },
+                  { key: 'employer_approval_letter', label: t('detailPanel.photos.employerApproval', { defaultValue: 'Employer Approval Letter' }), src: details?.employer_approval_letter },
+                  { key: 'employment_status_statement', label: t('detailPanel.photos.employmentStatus', { defaultValue: 'Employment Status Statement' }), src: details?.employment_status_statement },
+                  { key: 'good_conduct_certificate', label: t('detailPanel.photos.goodConduct', { defaultValue: 'Good Conduct Certificate' }), src: details?.good_conduct_certificate },
+                  { key: 'personal_info_form', label: t('detailPanel.photos.personalInfo', { defaultValue: 'Personal Info Form' }), src: details?.personal_info_form },
+                  { key: 'experience_certificates', label: t('detailPanel.photos.experienceCert', { defaultValue: 'Experience Certificates' }), src: details?.experience_certificates },
                 ]
                   .map((doc) => (
                   <div key={doc.label} className="relative rounded-xl border border-border bg-muted/20 overflow-hidden group">
@@ -435,19 +435,19 @@ export function StaffDetailPanel({
                       {documentFiles[doc.key] ? (
                         <div className="text-center">
                           <p className="text-sm font-medium text-primary">New file selected</p>
-                          <p className="text-xs text-muted-foreground truncate max-w-[150px]">{documentFiles[doc.key].name}</p>
+                          <p className="text-xs text-muted-foreground truncate max-w-[150px]">{documentFiles[doc.key]?.name}</p>
                         </div>
                       ) : getFileUrl(doc.src) ? (
                         <a href={getFileUrl(doc.src)} target="_blank" rel="noreferrer" className="w-full h-full">
                           <img src={getFileUrl(doc.src)} alt={doc.label} className="w-full h-full object-contain" />
                         </a>
                       ) : (
-                        <span className="text-xs text-muted-foreground">{t('detailPanel.photos.notUploaded', 'Not uploaded')}</span>
+                        <span className="text-xs text-muted-foreground">{t('detailPanel.photos.notUploaded', { defaultValue: 'Not uploaded' })}</span>
                       )}
 
                       {isEditing && (
                         <label className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                          <span className="text-sm font-medium">{t('detailPanel.actions.edit', 'Change')}</span>
+                          <span className="text-sm font-medium">{t('detailPanel.actions.edit', { defaultValue: 'Change' })}</span>
                           <input
                             type="file"
                             className="hidden"

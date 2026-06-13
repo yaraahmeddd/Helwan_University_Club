@@ -31,7 +31,7 @@ export function AdminMemberStatusBadge({
         cfg.color,
         cfg.bg,
         cfg.border,
-        compact ? adminTableStatusBadgeClass : 'px-3 py-1 text-[20px] gap-1',
+        compact ? adminTableStatusBadgeClass : 'px-2.5 py-0.5 text-[11px] gap-1',
         !shouldCenter && className,
       )}
     >

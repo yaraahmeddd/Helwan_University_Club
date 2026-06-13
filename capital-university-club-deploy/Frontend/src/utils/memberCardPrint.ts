@@ -507,7 +507,7 @@ async function waitForPrintReady(win: Window): Promise<void> {
         }),
     );
 
-    if (doc.fonts?.ready?.then) {
+    if (doc.fonts?.ready) {
         try { await doc.fonts.ready; } catch { /* ignore */ }
     }
 

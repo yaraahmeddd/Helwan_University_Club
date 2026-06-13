@@ -224,18 +224,22 @@ export default function DashboardPage() {
   // ───────────────────────────────────────────────────────────────────────────
 
   const locale = language === "ar" ? "ar-EG" : "en-US";
+  const _splitName = buildPersonName(
+    {
+      firstNameAr: user?.first_name_ar,
+      lastNameAr: user?.last_name_ar,
+      firstNameEn: user?.first_name_en,
+      lastNameEn: user?.last_name_en,
+    },
+    language,
+  );
   const displayName =
-    buildPersonName(
-      {
-        firstNameAr: user?.first_name_ar,
-        lastNameAr: user?.last_name_ar,
-        firstNameEn: user?.first_name_en,
-        lastNameEn: user?.last_name_en,
-      },
-      language,
-    ).primary ||
+    (language === 'en'
+      ? _splitName.en || (user?.name_en ?? '').trim() || _splitName.ar || (user?.name_ar ?? '').trim()
+      : _splitName.ar || (user?.name_ar ?? '').trim() || _splitName.en || (user?.name_en ?? '').trim()
+    ) ||
     user?.fullName ||
-    t("defaultStaffName");
+    t('defaultStaffName');
 
   const greetingKey = (() => {
     const h = new Date().getHours();
