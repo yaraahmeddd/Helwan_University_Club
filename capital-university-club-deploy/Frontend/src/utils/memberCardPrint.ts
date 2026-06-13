@@ -24,6 +24,7 @@ export type TeamMemberCardPrintData = BaseCardPrintData & {
 
 export type StaffCardPrintData = BaseCardPrintData & {
     cardType: 'staff';
+    jobTitleAr: string;
 };
 
 export type MemberCardPrintData =
@@ -48,10 +49,12 @@ export const CARD_PRINT_LABELS_AR = {
     noCardPresent: 'لا توجد صورة',
 } as const;
 
-/** @deprecated kept for legacy imports */
-export const CARD_FRONT_ASSET = '/assets/card-front.png';
-/** @deprecated kept for legacy imports */
-export const MEMBER_CARD_BACK = '/assets/card-back.png';
+/** CR80 physical dimensions */
+export const CR80_WIDTH_CM = 8.56;
+export const CR80_HEIGHT_CM = 5.4;
+/** Pixel size at 96 DPI (true card size on screen) */
+export const CR80_WIDTH_PX = Math.round((CR80_WIDTH_CM / 2.54) * 96);
+export const CR80_HEIGHT_PX = Math.round((CR80_HEIGHT_CM / 2.54) * 96);
 
 /** Default when no saved preference exists. */
 export const DEFAULT_INCLUDE_FOOTER = true;
@@ -110,6 +113,7 @@ function documentTitleFor(data: MemberCardPrintData): string {
 //  Shared CSS (taken verbatim from card/CardPrint.jsx.txt + PrintStuff.jsx.txt)
 // ─────────────────────────────────────────────
 const SHARED_CSS = `
+
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;600;800&display=swap');
 
 @page {
@@ -136,25 +140,31 @@ body {
     padding: 24px;
 }
 
-/* Card size: CR80  85.6mm × 54mm */
 .card {
     width: 8.56cm;
     height: 5.4cm;
-    background: #fff;
+    background: #fff url('/assets/card-back.png') center/cover no-repeat;
     border: 1px solid #d9dee3;
     box-shadow: 0 6px 24px rgba(2, 8, 20, 0.08);
     overflow: hidden;
-    direction: ltr;          /* lock LTR so columns don't flip in RTL pages */
+    direction: ltr;
     display: grid;
     grid-template-columns: 3.2cm 1fr;
+    position: relative;
 }
 
-/* ── LEFT column ── */
 .left {
     color: #fff;
-    display: grid;
-    grid-template-rows: auto 1fr auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-left: 0;
+    padding-top: 15px;
+    position: relative;
+    left: -15px; /* Shift the entire left column content left to match original layout */
 }
+
 
 .photo {
     width: 26mm;
@@ -164,8 +174,7 @@ body {
     border: 2px solid rgba(255, 255, 255, .65);
     background: #fff;
     position: relative;
-    left: -30px;
-    top: 26px;
+    top: 5px; /* Dropped down 5px as requested */
 }
 
 .photo img {
@@ -188,21 +197,24 @@ body {
     padding: 4px;
 }
 
-/* ── RIGHT column ── */
 .right {
     padding: 10px 12px;
-    background: #ffffff;
+    background: transparent;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
-.right.topPadding { padding-top: 25px; }
-
-.topPadding { padding-top: 25px; }
+.right.topPadding {
+    padding-top: 25px;
+}
 
 .info {
-    display: grid;
-    align-content: center;
-    row-gap: 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
 }
 
 .field-value {
@@ -212,26 +224,12 @@ body {
     line-height: 1.2;
 }
 
-/* ── Member card row positions (CardPrint.jsx.txt) ── */
-.member-name       { position: relative; top: 41px; }
-.id-section        { position: relative; top: 31px; font-weight: bold; }
-.profession-section { position: relative; top: 19px; font-weight: bold; }
-.membership-section { position: relative; top: 8px;  font-weight: bold; }
+/* Specific spacing tweaks for fields */
+.member-name { font-weight: bold; }
+.id-section { font-weight: bold; }
+.profession-section { font-weight: bold; }
+.membership-section { font-weight: bold; }
 
-/* ── Staff card row positions (PrintStuff.jsx.txt) ── */
-.staff .member-name        { top: 50px; }
-.staff .profession-section { top: 40px; }
-
-/* ── Team-member card uses same offsets as member with topPadding ── */
-
-/* Season year — positioned below the photo in the left column */
-.year {
-    position: relative;
-    left: -125px;
-    bottom: -37px;
-}
-
-/* ── Executive-director signature (bottom-right of .right) ── */
 .executive-director-signature {
     position: absolute;
     bottom: 6px;
@@ -258,8 +256,21 @@ body {
 
 @media print {
     .page { background: transparent; padding: 0; }
-    .card { box-shadow: none; margin: 0 auto; }
+    .card { box-shadow: none; margin: 0 auto; background: transparent !important; }
 }
+
+.card-back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+}
+.card-back img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 `;
 
 // ─────────────────────────────────────────────
@@ -299,8 +310,8 @@ function buildMemberFrontHtml(
       </aside>
       <section class="right">
         <div class="info" dir="rtl">
-          <div class="member-name">
-            <div class="field-value">${L.name} : ${escapeHtml(data.nameAr)}</div>
+          <div class="member-name field-value">
+            <div>${L.name} : ${escapeHtml(data.nameAr)}</div>
           </div>
           <div class="id-section field-value">
             <div>رقم العضوية : ${escapeHtml(String(data.memberId ?? '—'))}</div>
@@ -311,7 +322,6 @@ function buildMemberFrontHtml(
           <div class="membership-section field-value">
             <div>${L.validUntil} ${escapeHtml(data.validUntil)}</div>
           </div>
-          <div class="field-value year">${escapeHtml(data.seasonYear)}</div>
         </div>
         ${buildSignatureHtml(includeFooter)}
       </section>
@@ -335,8 +345,8 @@ function buildTeamMemberFrontHtml(
       </aside>
       <section class="right topPadding">
         <div class="info" dir="rtl">
-          <div class="member-name">
-            <div class="field-value">${L.name} : ${escapeHtml(data.nameAr)}</div>
+          <div class="member-name field-value">
+            <div>${L.name} : ${escapeHtml(data.nameAr)}</div>
           </div>
           <div class="id-section field-value">
             <div>${L.sports} : ${escapeHtml(sport)}</div>
@@ -366,8 +376,8 @@ function buildStaffFrontHtml(
       </aside>
       <section class="right">
         <div class="info" dir="rtl">
-          <div class="member-name">
-            <div class="field-value">${L.name} : ${escapeHtml(data.nameAr)}</div>
+          <div class="member-name field-value">
+            <div>${L.name} : ${escapeHtml(data.nameAr)}</div>
           </div>
           <div class="profession-section field-value">
             <div>${L.jobTitle} : ${escapeHtml(data.jobTitleAr ?? '—')}</div>
@@ -407,6 +417,46 @@ function getCardHTML(
   </head>
   <body class="page">
     ${buildFrontHtml(data, photoDataUrl, includeFooter)}
+  </body>
+</html>`;
+}
+
+/** Preview document — same layout/CSS as print, true CR80 size (no page chrome). */
+export function getCardPreviewHtml(
+    data: MemberCardPrintData,
+    photoUrl: string | null,
+    includeFooter: boolean,
+    side: 'front' | 'back' = 'front',
+): string {
+    if (side === 'back') {
+        return `<!DOCTYPE html>
+<html lang="ar">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
+      ${SHARED_CSS}
+    </style>
+  </head>
+  <body>
+    <div class="card card-back">
+        <img src="/assets/card-front.png" alt="Back face" style="width: 100%; height: 100%; object-fit: cover;" />
+    </div>
+  </body>
+</html>`;
+    }
+
+    return `<!DOCTYPE html>
+<html lang="ar">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
+      ${SHARED_CSS}
+    </style>
+  </head>
+  <body>
+    ${buildFrontHtml(data, photoUrl, includeFooter)}
   </body>
 </html>`;
 }

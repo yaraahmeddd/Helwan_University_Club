@@ -158,7 +158,6 @@ export function MemberCardPrintDialog({
                                             icon={Calendar}
                                             label={t("memberCardPrint.fields.seasonYear")}
                                             value={member?.seasonYear}
-                                            ltr
                                         />
 
                                         {cardType === 'member' && member?.cardType === 'member' && (
@@ -172,13 +171,11 @@ export function MemberCardPrintDialog({
                                                     icon={Calendar}
                                                     label={CARD_PRINT_LABELS_AR.validFrom}
                                                     value={member.validFrom}
-                                                    ltr
                                                 />
                                                 <RecordViewField
                                                     icon={Calendar}
                                                     label={CARD_PRINT_LABELS_AR.validUntil}
                                                     value={member.validUntil}
-                                                    ltr
                                                 />
                                             </>
                                         )}
@@ -198,6 +195,16 @@ export function MemberCardPrintDialog({
                                                             ? member.sportsAr.slice(0, 4).join(' — ')
                                                             : '—'
                                                     }
+                                                />
+                                                <RecordViewField
+                                                    icon={Calendar}
+                                                    label={CARD_PRINT_LABELS_AR.validFrom}
+                                                    value={member.validFrom}
+                                                />
+                                                <RecordViewField
+                                                    icon={Calendar}
+                                                    label={CARD_PRINT_LABELS_AR.validUntil}
+                                                    value={member.validUntil}
                                                 />
                                             </>
                                         )}
