@@ -1,6 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SubscriptionController = void 0;
+const data_source_1 = require("../database/data-source");
+const MemberTeam_1 = require("../entities/MemberTeam");
+const TeamMemberTeam_1 = require("../entities/TeamMemberTeam");
 /**
  * SubscriptionController
  * Handles team subscriptions for both Members and Team Members
@@ -138,9 +141,16 @@ class SubscriptionController {
      */
     async getPendingMemberSubscriptions(req, res) {
         try {
-            res.status(501).json({
-                success: false,
-                message: 'Not implemented',
+            const subscriptions = await data_source_1.AppDataSource.getRepository(MemberTeam_1.MemberTeam)
+                .createQueryBuilder('mt')
+                .leftJoinAndSelect('mt.member', 'member')
+                .leftJoinAndSelect('mt.team', 'team')
+                .leftJoinAndSelect('team.sport', 'sport')
+                .orderBy('mt.created_at', 'DESC')
+                .getMany();
+            res.status(200).json({
+                success: true,
+                data: subscriptions,
             });
         }
         catch (error) {
@@ -285,9 +295,16 @@ class SubscriptionController {
      */
     async getPendingTeamMemberSubscriptions(req, res) {
         try {
-            res.status(501).json({
-                success: false,
-                message: 'Not implemented',
+            const subscriptions = await data_source_1.AppDataSource.getRepository(TeamMemberTeam_1.TeamMemberTeam)
+                .createQueryBuilder('tmt')
+                .leftJoinAndSelect('tmt.team_member', 'team_member')
+                .leftJoinAndSelect('tmt.team', 'team')
+                .leftJoinAndSelect('team.sport', 'sport')
+                .orderBy('tmt.created_at', 'DESC')
+                .getMany();
+            res.status(200).json({
+                success: true,
+                data: subscriptions,
             });
         }
         catch (error) {
@@ -306,9 +323,33 @@ class SubscriptionController {
      */
     async getSubscriptionStats(req, res) {
         try {
-            res.status(501).json({
-                success: false,
-                message: 'Not implemented',
+            const memberRepo = data_source_1.AppDataSource.getRepository(MemberTeam_1.MemberTeam);
+            const teamMemberRepo = data_source_1.AppDataSource.getRepository(TeamMemberTeam_1.TeamMemberTeam);
+            const mCounts = await memberRepo.createQueryBuilder('mt')
+                .select('mt.status', 'status')
+                .addSelect('COUNT(*)', 'count')
+                .groupBy('mt.status')
+                .getRawMany();
+            const tmCounts = await teamMemberRepo.createQueryBuilder('tmt')
+                .select('tmt.status', 'status')
+                .addSelect('COUNT(*)', 'count')
+                .groupBy('tmt.status')
+                .getRawMany();
+            const parseCounts = (counts) => {
+                const result = { pending: 0, approved: 0, active: 0, declined: 0, cancelled: 0 };
+                counts.forEach(row => {
+                    if (result[row.status] !== undefined) {
+                        result[row.status] = parseInt(row.count, 10);
+                    }
+                });
+                return result;
+            };
+            res.status(200).json({
+                success: true,
+                data: {
+                    members: parseCounts(mCounts),
+                    teamMembers: parseCounts(tmCounts)
+                }
             });
         }
         catch (error) {

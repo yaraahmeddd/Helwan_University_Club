@@ -9,6 +9,30 @@ const localFileStorage_1 = require("../utils/localFileStorage");
  * Handles participant registration via booking invitation links
  * NO AUTHENTICATION REQUIRED - Anyone with valid share token can register
  */
+function toDate(value) {
+    return value instanceof Date ? value : new Date(value);
+}
+function formatInvitationDate(value) {
+    const d = toDate(value);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+function formatInvitationTime(value) {
+    const d = toDate(value);
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
+}
+function buildPersonNames(person) {
+    if (!person)
+        return { name_ar: "", name_en: "" };
+    return {
+        name_ar: `${person.first_name_ar || ""} ${person.last_name_ar || ""}`.trim(),
+        name_en: `${person.first_name_en || ""} ${person.last_name_en || ""}`.trim(),
+    };
+}
 class ParticipantRegistrationController {
     constructor() {
         this.bookingService = new BookingService_1.BookingService(data_source_1.AppDataSource);
@@ -50,11 +74,15 @@ class ParticipantRegistrationController {
                     sport_name_ar: sport?.name_ar || "Unknown Sport",
                     sport_name_en: sport?.name_en || "Unknown Sport",
                     field_name: fieldName,
+                    field_name_ar: field?.name_ar || fieldName,
+                    field_name_en: field?.name_en || fieldName,
                     start_time: booking.start_time,
                     end_time: booking.end_time,
                     duration_minutes: booking.duration_minutes,
                     location: field?.location || "Helwan Sports Club",
                     expected_participants: booking.expected_participants,
+                    uses_parking: !!booking.uses_parking,
+                    parking_cars_count: booking.uses_parking ? booking.parking_cars_count || 1 : 0,
                     registered_participants: participantCount,
                     is_full: participantCount >= booking.expected_participants,
                     available_slots: Math.max(0, booking.expected_participants - participantCount),
@@ -328,7 +356,9 @@ class ParticipantRegistrationController {
                         price: booking.price,
                         payment_reference: booking.payment_reference,
                         payment_completed_at: booking.payment_completed_at,
-                        share_token: booking.share_token
+                        share_token: booking.share_token,
+                        uses_parking: !!booking.uses_parking,
+                        parking_cars_count: booking.uses_parking ? booking.parking_cars_count || 1 : 0
                     },
                     participants: booking.participants.map(p => ({
                         id: p.id,
@@ -357,7 +387,7 @@ class ParticipantRegistrationController {
         }
     }
     /**
-     * GET /api/admin/bookings/invitations
+     * GET /api/bookings/admin/invitations
      * Get all invitation links with booker and participants info
      * Requires authentication and admin privileges
      */
@@ -373,14 +403,21 @@ class ParticipantRegistrationController {
                 .leftJoin('TeamMember', 'team_member', 'team_member.id = booking.team_member_id')
                 .orderBy('booking.created_at', 'DESC');
             // Filter by status if provided
-            if (status) {
-                queryBuilder.andWhere('booking.status = :status', { status });
+            if (status === "confirmed") {
+                queryBuilder.andWhere("booking.status IN (:...statuses)", {
+                    statuses: ["confirmed", "completed"],
+                });
+            }
+            else if (status) {
+                queryBuilder.andWhere("booking.status = :status", { status });
             }
             // Search by booker name or booking ID
             if (search) {
-                queryBuilder.andWhere('(CAST(booking.id AS TEXT) LIKE :search OR ' +
-                    'member.first_name_ar LIKE :search OR member.last_name_ar LIKE :search OR ' +
-                    'team_member.first_name_ar LIKE :search OR team_member.last_name_ar LIKE :search)', { search: `%${search}%` });
+                queryBuilder.andWhere("(CAST(booking.id AS TEXT) LIKE :search OR " +
+                    "member.first_name_ar LIKE :search OR member.last_name_ar LIKE :search OR " +
+                    "member.first_name_en LIKE :search OR member.last_name_en LIKE :search OR " +
+                    "team_member.first_name_ar LIKE :search OR team_member.last_name_ar LIKE :search OR " +
+                    "team_member.first_name_en LIKE :search OR team_member.last_name_en LIKE :search)", { search: `%${search}%` });
             }
             const [bookings, total] = await queryBuilder
                 .skip(skip)
@@ -388,7 +425,7 @@ class ParticipantRegistrationController {
                 .getManyAndCount();
             // Fetch booker and field details for each booking
             const invitations = await Promise.all(bookings.map(async (booking) => {
-                let bookerName = "Unknown";
+                let bookerNames = { name_ar: "", name_en: "" };
                 let bookerType = null;
                 let bookerPhone = null;
                 let bookerEmail = null;
@@ -400,10 +437,10 @@ class ParticipantRegistrationController {
                 if (booking.member_id) {
                     const member = await data_source_1.AppDataSource.getRepository("Member").findOne({
                         where: { id: booking.member_id },
-                        select: ["id", "first_name_ar", "last_name_ar", "phone"]
+                        select: ["id", "first_name_ar", "last_name_ar", "first_name_en", "last_name_en", "phone"]
                     });
                     if (member) {
-                        bookerName = `${member.first_name_ar || ''} ${member.last_name_ar || ''}`.trim() || 'Unknown';
+                        bookerNames = buildPersonNames(member);
                         bookerType = "member";
                         bookerPhone = member.phone || null;
                         bookerEmail = null;
@@ -412,29 +449,31 @@ class ParticipantRegistrationController {
                 else if (booking.team_member_id) {
                     const teamMember = await data_source_1.AppDataSource.getRepository("TeamMember").findOne({
                         where: { id: booking.team_member_id },
-                        select: ["id", "first_name_ar", "last_name_ar", "phone"]
+                        select: ["id", "first_name_ar", "last_name_ar", "first_name_en", "last_name_en", "phone"]
                     });
                     if (teamMember) {
-                        bookerName = `${teamMember.first_name_ar || ''} ${teamMember.last_name_ar || ''}`.trim() || 'Unknown';
+                        bookerNames = buildPersonNames(teamMember);
                         bookerType = "team_member";
                         bookerPhone = teamMember.phone || null;
                         bookerEmail = null;
                     }
                 }
+                const frontendOrigin = process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
                 return {
                     booking_id: booking.id,
                     share_token: booking.share_token,
-                    share_url: `${req.protocol}://${req.get('host')}/bookings/join/${booking.share_token}`,
+                    share_url: `${frontendOrigin}/bookings/share/${booking.share_token}`,
                     booker: {
-                        name: bookerName,
+                        name_ar: bookerNames.name_ar,
+                        name_en: bookerNames.name_en,
                         type: bookerType,
                         phone: bookerPhone,
                         email: bookerEmail
                     },
-                    booking_date: booking.start_time,
+                    booking_date: formatInvitationDate(booking.start_time),
                     booking_time: {
-                        start: booking.start_time,
-                        end: booking.end_time,
+                        start: formatInvitationTime(booking.start_time),
+                        end: formatInvitationTime(booking.end_time),
                         duration_minutes: booking.duration_minutes
                     },
                     sport: {
@@ -445,19 +484,30 @@ class ParticipantRegistrationController {
                         name_ar: field?.name_ar,
                         name_en: field?.name_en
                     },
-                    participants: booking.participants.map(p => ({
-                        id: p.id,
-                        full_name: p.full_name,
-                        phone_number: p.phone_number,
-                        email: p.email,
-                        is_creator: p.is_creator,
-                        registered_at: p.created_at
-                    })),
+                    participants: booking.participants.map(p => {
+                        const useBookerName = p.is_creator && (bookerNames.name_ar || bookerNames.name_en);
+                        return {
+                            id: p.id,
+                            full_name_ar: useBookerName ? bookerNames.name_ar : p.full_name,
+                            full_name_en: useBookerName ? bookerNames.name_en : p.full_name,
+                            phone_number: p.phone_number,
+                            email: p.email,
+                            national_id: p.national_id,
+                            national_id_front: p.national_id_front,
+                            national_id_back: p.national_id_back,
+                            is_creator: p.is_creator,
+                            registered_at: p.created_at
+                        };
+                    }),
                     stats: {
                         expected_participants: booking.expected_participants,
                         registered_count: booking.participants.length,
                         remaining_slots: Math.max(0, booking.expected_participants - booking.participants.length),
                         is_full: booking.participants.length >= booking.expected_participants
+                    },
+                    parking: {
+                        uses_parking: !!booking.uses_parking,
+                        cars_count: booking.uses_parking ? booking.parking_cars_count || 1 : 0
                     },
                     status: booking.status,
                     payment_status: booking.payment_completed_at ? 'completed' : 'pending',
@@ -558,7 +608,9 @@ class ParticipantRegistrationController {
                         status: booking.status,
                         price: booking.price,
                         payment_reference: booking.payment_reference,
-                        payment_completed_at: booking.payment_completed_at
+                        payment_completed_at: booking.payment_completed_at,
+                        uses_parking: !!booking.uses_parking,
+                        parking_cars_count: booking.uses_parking ? booking.parking_cars_count || 1 : 0
                     },
                     participants: booking.participants.map(p => ({
                         id: p.id,
@@ -576,6 +628,10 @@ class ParticipantRegistrationController {
                         registered_count: booking.participants.length,
                         remaining_slots: Math.max(0, booking.expected_participants - booking.participants.length),
                         is_full: booking.participants.length >= booking.expected_participants
+                    },
+                    parking: {
+                        uses_parking: !!booking.uses_parking,
+                        cars_count: booking.uses_parking ? booking.parking_cars_count || 1 : 0
                     },
                     created_at: booking.created_at,
                     updated_at: booking.updated_at

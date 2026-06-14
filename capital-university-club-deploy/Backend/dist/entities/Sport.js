@@ -84,6 +84,10 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Sport.prototype, "is_active", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ type: 'boolean', default: false }),
+    __metadata("design:type", Boolean)
+], Sport.prototype, "requires_booking", void 0);
+__decorate([
     (0, typeorm_1.OneToMany)(() => Team_1.Team, (team) => team.sport),
     __metadata("design:type", Array)
 ], Sport.prototype, "teams", void 0);

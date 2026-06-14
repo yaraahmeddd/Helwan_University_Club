@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -7,9 +40,9 @@ require("reflect-metadata");
 // Backend Server 
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
-const dotenv_1 = __importDefault(require("dotenv"));
 const path_1 = __importDefault(require("path"));
 const http_1 = require("http");
+const env_1 = require("./config/env");
 const data_source_1 = require("./database/data-source");
 const SocketManager_1 = require("./websocket/SocketManager");
 const RegistrationRoutes_1 = __importDefault(require("./routes/RegistrationRoutes"));
@@ -29,6 +62,7 @@ const MemberBookingRoutes_1 = __importDefault(require("./routes/MemberBookingRou
 const TeamMemberBookingRoutes_1 = __importDefault(require("./routes/TeamMemberBookingRoutes"));
 const MemberAdminRoutes_1 = __importDefault(require("./routes/MemberAdminRoutes"));
 const TeamSubscriptionRoutes_1 = __importDefault(require("./routes/TeamSubscriptionRoutes"));
+const SubscriptionRoutes_1 = __importDefault(require("./routes/SubscriptionRoutes"));
 const TaskRoutes_1 = __importDefault(require("./routes/TaskRoutes"));
 const SeedRoutes_1 = __importDefault(require("./routes/SeedRoutes"));
 const AuditLogRoutes_1 = __importDefault(require("./routes/AuditLogRoutes"));
@@ -37,14 +71,16 @@ const FacultyRoutes_1 = __importDefault(require("./routes/FacultyRoutes"));
 const BranchRoutes_1 = __importDefault(require("./routes/BranchRoutes"));
 const BranchSportRoutes_1 = __importDefault(require("./routes/BranchSportRoutes"));
 const ProfessionRoutes_1 = __importDefault(require("./routes/ProfessionRoutes"));
+const AiRoutes_1 = __importDefault(require("./routes/AiRoutes"));
 const publicRoutes_1 = __importDefault(require("./routes/publicRoutes"));
 const MemberTeamRoutes_1 = require("./routes/MemberTeamRoutes");
 const participantRegistration_1 = __importDefault(require("./routes/participantRegistration"));
 const AttendanceRoutes_1 = __importDefault(require("./routes/AttendanceRoutes"));
 const PaymobRoutes_1 = __importDefault(require("./routes/PaymobRoutes"));
+const PaymentRoutes_1 = __importDefault(require("./routes/PaymentRoutes"));
 const localFileStorage_1 = require("./utils/localFileStorage");
 // Load environment variables
-dotenv_1.default.config();
+(0, env_1.loadBackendEnv)();
 const app = (0, express_1.default)();
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const ensureMediaPostsTable = async () => {
@@ -169,6 +205,7 @@ app.use('/api/team-members', TeamMemberCRUDRoutes_1.default);
 app.use('/api/team-members', TeamMemberSubscriptionRoutes_1.default);
 app.use('/api/team-member-subscriptions', TeamMemberSubscriptionRoutes_1.default);
 app.use('/api/team-subscriptions', TeamSubscriptionRoutes_1.default);
+app.use('/api/subscriptions', SubscriptionRoutes_1.default);
 app.use('/api/member-teams', MemberTeamRoutes_1.memberTeamRouter);
 app.use('/api/memberships', MembershipRoutes_1.default);
 app.use('/api/attendance', AttendanceRoutes_1.default);
@@ -188,26 +225,62 @@ app.use('/api/faculties', FacultyRoutes_1.default);
 app.use('/api/branches', BranchRoutes_1.default);
 app.use('/api', BranchSportRoutes_1.default);
 app.use('/api/professions', ProfessionRoutes_1.default);
+app.use('/api/ai', AiRoutes_1.default);
 app.use('/api/seed', SeedRoutes_1.default);
 app.use('/api/paymob', PaymobRoutes_1.default);
+app.use('/api/payments', PaymentRoutes_1.default);
 // Health check
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', message: 'Club System Backend is running' });
 });
+const ensureSportsRequiresBookingColumn = async () => {
+    await data_source_1.AppDataSource.query(`
+    ALTER TABLE sports
+    ADD COLUMN IF NOT EXISTS requires_booking BOOLEAN NOT NULL DEFAULT FALSE
+  `);
+};
+const seedSportImagesIfMissing = async () => {
+    const imageByName = {
+        Football: 'uploads/sports/default.svg',
+        Basketball: 'uploads/sports/default.svg',
+        Volleyball: 'uploads/sports/default.svg',
+        Tennis: 'uploads/sports/table-tennis.svg',
+        Swimming: 'uploads/sports/swimming.svg',
+        Judo: 'uploads/sports/aikido.svg',
+        Karate: 'uploads/sports/aikido.svg',
+        Squash: 'uploads/sports/table-tennis.svg',
+        Snooker: 'uploads/sports/bowling.svg',
+        Chess: 'uploads/sports/bowling.svg',
+        Athletics: 'uploads/sports/archery.svg',
+        Yoga: 'uploads/sports/aikido.svg',
+    };
+    for (const [nameEn, imagePath] of Object.entries(imageByName)) {
+        await data_source_1.AppDataSource.query(`UPDATE sports SET sport_image = $1
+       WHERE name_en = $2
+         AND (
+           sport_image IS NULL
+           OR TRIM(sport_image) = ''
+           OR sport_image ILIKE '%speed-ball%'
+         )`, [imagePath, nameEn]);
+    }
+    await data_source_1.AppDataSource.query(`UPDATE sports SET sport_image = 'uploads/sports/default.svg' WHERE sport_image IS NULL OR TRIM(sport_image) = ''`);
+};
 // Initialize database and start server
 data_source_1.AppDataSource.initialize()
     .then(async () => {
     console.log('✅ Database connected successfully');
     await ensureMediaPostsTable();
     await ensureAuditLogsTable();
+    await ensureSportsRequiresBookingColumn();
+    await seedSportImagesIfMissing();
     console.log('✅ media_posts table is ready');
     // Initialize upload folder structure
     await (0, localFileStorage_1.initializeFolderStructure)();
     console.log('✅ Upload folder structure initialized');
-    // NOTE: legacy default plans disabled — official plans now come from the seed
-    // (see Backend/src/scripts/full-reseed.ts and the SQL in scripts/update-membership-plans.sql).
-    // const { initializeDefaultPlans } = await import('./utils/initializePlans');
-    // await initializeDefaultPlans();
+    // Auto-seed default membership plans (ANNUAL, STUDENT, DEPENDENT, SEASONAL, FULL_ACCESS)
+    // This is idempotent — it only inserts plans that are missing, so it's safe to run every startup.
+    const { initializeDefaultPlans } = await Promise.resolve().then(() => __importStar(require('./utils/initializePlans')));
+    await initializeDefaultPlans();
     // Create HTTP server with Express app
     const httpServer = (0, http_1.createServer)(app);
     // Initialize WebSocket server

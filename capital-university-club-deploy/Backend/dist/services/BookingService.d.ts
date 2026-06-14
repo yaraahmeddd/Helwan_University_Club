@@ -10,8 +10,11 @@ export interface CreateBookingRequest {
     start_time: Date;
     end_time: Date;
     expected_participants?: number;
+    uses_parking?: boolean;
+    parking_cars_count?: number;
     notes?: string;
     language?: "ar" | "en";
+    skipBookableCheck?: boolean;
 }
 export interface BookingParticipantInput {
     full_name: string;
@@ -45,9 +48,12 @@ export interface BookingDetailsResponse {
     duration_minutes: number;
     price: number;
     status: BookingStatus;
+    payment_reference?: string | null;
     share_token: string;
     share_url: string;
     expected_participants: number;
+    uses_parking: boolean;
+    parking_cars_count: number;
     participants: Array<{
         id: string;
         full_name: string;
@@ -66,6 +72,7 @@ export declare class BookingService {
     private sportRepository;
     private trainingScheduleRepository;
     private fieldRepository;
+    private paymentService;
     constructor(dataSource: DataSource);
     /**
      * Check for booking conflicts
@@ -135,7 +142,8 @@ export declare class BookingService {
     /**
      * Get available booking slots for a specific field and date
      */
-    getAvailableSlots(fieldId: string, date: string): Promise<{
+    getAvailableSlots(fieldId: string, date: string, // YYYY-MM-DD format
+    skipBookableCheck?: boolean): Promise<{
         field_id: string;
         field_name: string;
         date: string;
@@ -157,7 +165,8 @@ export declare class BookingService {
      * Get calendar view for a field (multiple days)
      */
     getCalendarView(fieldId: string, startDate: string, // YYYY-MM-DD
-    endDate: string): Promise<{
+    endDate: string, // YYYY-MM-DD
+    skipBookableCheck?: boolean): Promise<{
         field_id: string;
         field_name: string;
         start_date: string;

@@ -96,6 +96,14 @@ __decorate([
     __metadata("design:type", Number)
 ], Booking.prototype, "expected_participants", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ type: "boolean", default: false, name: "uses_parking" }),
+    __metadata("design:type", Boolean)
+], Booking.prototype, "uses_parking", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: "integer", default: 0, name: "parking_cars_count" }),
+    __metadata("design:type", Number)
+], Booking.prototype, "parking_cars_count", void 0);
+__decorate([
     (0, typeorm_1.Column)({ type: "text", nullable: true, name: "notes" }),
     __metadata("design:type", Object)
 ], Booking.prototype, "notes", void 0);

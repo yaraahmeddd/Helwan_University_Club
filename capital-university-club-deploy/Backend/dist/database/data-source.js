@@ -3,9 +3,6 @@
 // import 'reflect-metadata';
 // import { DataSource } from 'typeorm';
 // import dotenv from 'dotenv';
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.initializeDatabase = exports.AppDataSource = void 0;
 // // Load environment variables
@@ -143,9 +140,9 @@ exports.initializeDatabase = exports.AppDataSource = void 0;
 // src/database/data_source.ts
 require("reflect-metadata");
 const typeorm_1 = require("typeorm");
-const dotenv_1 = __importDefault(require("dotenv"));
+const env_1 = require("../config/env");
 // Load environment variables
-dotenv_1.default.config();
+(0, env_1.loadBackendEnv)();
 // Import all your entities
 const Account_1 = require("../entities/Account");
 const Member_1 = require("../entities/Member");
@@ -196,8 +193,8 @@ exports.AppDataSource = new typeorm_1.DataSource({
     host: process.env.DB_HOST || 'localhost',
     port: Number(process.env.DB_PORT) || 5432,
     username: process.env.DB_USERNAME || 'postgres',
-    password: process.env.DB_PASSWORD || '0000',
-    database: process.env.DB_NAME || 'Helwan_University_Club',
+    password: process.env.DB_PASSWORD || '123',
+    database: process.env.DB_NAME || 'Deploy',
     synchronize: process.env.TYPEORM_SYNCHRONIZE === 'true', // Auto-create tables only when explicitly enabled
     logging: process.env.TYPEORM_LOGGING === 'true',
     entities: [

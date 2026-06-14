@@ -1,9 +1,4 @@
 import { Request, Response } from "express";
-/**
- * Public Participant Registration Controller
- * Handles participant registration via booking invitation links
- * NO AUTHENTICATION REQUIRED - Anyone with valid share token can register
- */
 export declare class ParticipantRegistrationController {
     private bookingService;
     constructor();
@@ -32,7 +27,7 @@ export declare class ParticipantRegistrationController {
      */
     getBookingParticipants(req: Request, res: Response): Promise<void>;
     /**
-     * GET /api/admin/bookings/invitations
+     * GET /api/bookings/admin/invitations
      * Get all invitation links with booker and participants info
      * Requires authentication and admin privileges
      */

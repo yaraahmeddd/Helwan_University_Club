@@ -267,7 +267,7 @@ class AuthController {
                 });
                 return;
             }
-            if (!account || (!staff && !member && !teamMember)) {
+            if (!account || (!staff && !member && !teamMember && account.role !== 'security' && account.role !== 'admin')) {
                 res.status(401).json({
                     success: false,
                     message: 'Authentication failed',
@@ -310,6 +310,9 @@ class AuthController {
             }
             else if (teamMember) {
                 tokenPayload.team_member_id = teamMember.id;
+                tokenPayload.privileges = [];
+            }
+            else if (account.role === 'security' || account.role === 'admin') {
                 tokenPayload.privileges = [];
             }
             const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '24h' });

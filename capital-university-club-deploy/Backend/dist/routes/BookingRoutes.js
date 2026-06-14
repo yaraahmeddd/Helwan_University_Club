@@ -3,6 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const BookingController_1 = require("../controllers/BookingController");
 const ParticipantRegistrationController_1 = require("../controllers/ParticipantRegistrationController");
+const auth_1 = require("../middleware/auth");
+const authorizePrivilege_1 = require("../middleware/authorizePrivilege");
 const router = (0, express_1.Router)();
 const bookingController = new BookingController_1.BookingController();
 const participantController = new ParticipantRegistrationController_1.ParticipantRegistrationController();
@@ -48,19 +50,19 @@ router.get("/security/bookings", bookingController.getSecurityDashboardBookings)
  *   - status: "pending_payment" | "payment_completed" | "in_progress" | "completed" | "cancelled"
  *   - search: string (search by booking ID or booker name)
  */
-router.get("/admin/invitations", participantController.getAllInvitations.bind(participantController));
+router.get("/admin/invitations", auth_1.authenticate, (0, authorizePrivilege_1.authorizePrivilege)("VIEW_SPORTS"), participantController.getAllInvitations.bind(participantController));
 /**
  * GET /api/bookings/:bookingId/participants
  * Get all participants for a specific booking (admin view)
  * Auth: Required (admin/staff)
  */
-router.get("/:bookingId/participants", participantController.getBookingParticipants.bind(participantController));
+router.get("/:bookingId/participants", auth_1.authenticate, (0, authorizePrivilege_1.authorizePrivilege)("VIEW_SPORTS"), participantController.getBookingParticipants.bind(participantController));
 /**
  * GET /api/bookings/:bookingId/invitation
  * Get detailed invitation information for a specific booking
  * Auth: Required (admin/staff)
  */
-router.get("/:bookingId/invitation", participantController.getInvitationDetails.bind(participantController));
+router.get("/:bookingId/invitation", auth_1.authenticate, (0, authorizePrivilege_1.authorizePrivilege)("VIEW_SPORTS"), participantController.getInvitationDetails.bind(participantController));
 /**
  * DELETE /api/bookings/:bookingId/participants/:participantId
  * Remove a participant from a booking
@@ -70,7 +72,7 @@ router.get("/:bookingId/invitation", participantController.getInvitationDetails.
  *   "reason": "Optional removal reason"
  * }
  */
-router.delete("/:bookingId/participants/:participantId", participantController.removeParticipant.bind(participantController));
+router.delete("/:bookingId/participants/:participantId", auth_1.authenticate, (0, authorizePrivilege_1.authorizePrivilege)("VIEW_SPORTS"), participantController.removeParticipant.bind(participantController));
 /**
  * ─────────────────────────────────────────────────────────────────────────────
  * SPECIFIC ROUTES (MUST BE BEFORE GENERIC /:bookingId)

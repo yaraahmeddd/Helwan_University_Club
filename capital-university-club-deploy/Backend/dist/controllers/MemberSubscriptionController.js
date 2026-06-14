@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MemberSubscriptionController = void 0;
 const data_source_1 = require("../database/data-source");
+const typeorm_1 = require("typeorm");
 const MemberTeam_1 = require("../entities/MemberTeam");
 const Member_1 = require("../entities/Member");
 const Team_1 = require("../entities/Team");
@@ -437,7 +438,9 @@ class MemberSubscriptionController {
                 where: {
                     team_id: team_id,
                     member_id: member_id,
+                    status: (0, typeorm_1.Not)((0, typeorm_1.In)(['cancelled', 'declined'])),
                 },
+                order: { created_at: 'DESC' },
             });
             if (existingSubscription) {
                 // If it's waiting for payment, return payment info

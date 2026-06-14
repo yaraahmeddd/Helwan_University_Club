@@ -75,7 +75,7 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)({
         type: "boolean",
-        default: false,
+        default: true,
         name: "is_available_for_booking",
         comment: "Whether this field can be booked by members/team members"
     }),

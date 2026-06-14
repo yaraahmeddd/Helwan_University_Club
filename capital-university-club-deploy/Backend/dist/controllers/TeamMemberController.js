@@ -218,6 +218,9 @@ class TeamMemberController {
                     return;
                 }
                 const data = { ...req.body };
+                delete data.email;
+                delete data.national_id;
+                delete data.birthdate;
                 const files = req.files;
                 if (files) {
                     try {

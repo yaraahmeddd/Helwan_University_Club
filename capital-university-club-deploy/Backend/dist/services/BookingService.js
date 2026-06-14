@@ -11,6 +11,7 @@ const Sport_1 = require("../entities/Sport");
 const TeamTrainingSchedule_1 = require("../entities/TeamTrainingSchedule");
 const Field_1 = require("../entities/Field");
 const crypto_1 = __importDefault(require("crypto"));
+const PaymentService_1 = require("./PaymentService");
 class BookingService {
     constructor(dataSource) {
         this.dataSource = dataSource;
@@ -20,6 +21,7 @@ class BookingService {
         this.sportRepository = dataSource.getRepository(Sport_1.Sport);
         this.trainingScheduleRepository = dataSource.getRepository(TeamTrainingSchedule_1.TeamTrainingSchedule);
         this.fieldRepository = dataSource.getRepository(Field_1.Field);
+        this.paymentService = new PaymentService_1.PaymentService();
     }
     /**
      * Check for booking conflicts
@@ -96,7 +98,9 @@ class BookingService {
         if (!field) {
             throw new Error("Field not found");
         }
-        this.assertFieldBookable(field);
+        if (!request.skipBookableCheck) {
+            this.assertFieldBookable(field);
+        }
         // Check for all conflicts (bookings and training schedules)
         const conflictCheck = await this.checkAllConflicts(request.field_id, request.start_time, request.end_time);
         if (conflictCheck.hasConflict) {
@@ -117,15 +121,46 @@ class BookingService {
         booking.field_id = request.field_id;
         booking.start_time = request.start_time;
         booking.end_time = request.end_time;
-        // duration_minutes is GENERATED in database
-        booking.price = 0; // Should be set from pricing rules or request
-        booking.status = "pending_payment";
+        // Calculate price
+        const durationMinutes = (request.end_time.getTime() - request.start_time.getTime()) / 60000;
+        const hourlyRate = field.hourly_rate ? Number(field.hourly_rate) : 0;
+        const price = (durationMinutes / 60) * hourlyRate;
+        booking.price = price;
+        booking.status = price > 0 ? "pending_payment" : "confirmed";
         booking.share_token = shareToken;
         // ALWAYS use field capacity as expected_participants
         booking.expected_participants = field.capacity || 1;
+        booking.uses_parking = !!request.uses_parking;
+        booking.parking_cars_count = request.uses_parking
+            ? Math.max(1, Math.floor(Number(request.parking_cars_count) || 1))
+            : 0;
         booking.notes = request.notes || null;
         booking.language = request.language || "ar";
         const savedBooking = await this.bookingRepository.save(booking);
+        // Create payment if price > 0
+        if (price > 0 && request.userId) {
+            try {
+                const payment = await this.paymentService.createPayment({
+                    entityType: request.userType,
+                    entityId: request.userId,
+                    paymentType: 'field_booking',
+                    relatedEntityType: 'field_booking',
+                    relatedEntityId: savedBooking.id,
+                    amount: price,
+                    description: `Court booking for ${field.name_en || field.name_ar}`,
+                    metadata: {
+                        booking_id: savedBooking.id,
+                        field_id: field.id,
+                    }
+                });
+                savedBooking.payment_reference = payment.payment_reference;
+                await this.bookingRepository.save(savedBooking);
+            }
+            catch (paymentError) {
+                console.error('[BookingService] Failed to create payment:', paymentError);
+                // Continue, the booking is already saved
+            }
+        }
         // Add creator as first participant (optional - don't fail if this errors)
         try {
             const creatorParticipant = new BookingParticipant_1.BookingParticipant();
@@ -174,9 +209,12 @@ class BookingService {
             duration_minutes: booking.duration_minutes,
             price: booking.price,
             status: booking.status,
+            payment_reference: booking.payment_reference,
             share_token: booking.share_token,
             share_url: `${baseUrl}/bookings/share/${booking.share_token}`,
             expected_participants: booking.expected_participants,
+            uses_parking: !!booking.uses_parking,
+            parking_cars_count: booking.uses_parking ? booking.parking_cars_count || 1 : 0,
             participants: (booking.participants || []).map((p) => ({
                 id: p.id,
                 full_name: p.full_name,
@@ -274,6 +312,13 @@ class BookingService {
         if (["completed", "cancelled"].includes(booking.status)) {
             throw new Error(`Cannot cancel booking with status: ${booking.status}`);
         }
+        if (booking.status === "pending_payment") {
+            // Hard delete if it was just an abandoned checkout
+            await this.bookingRepository.remove(booking);
+            booking.status = "cancelled";
+            booking.id = bookingId; // Restore ID in case typeorm nullifies it
+            return booking;
+        }
         booking.status = "cancelled";
         booking.cancelled_at = new Date();
         if (reason) {
@@ -359,8 +404,8 @@ class BookingService {
     /**
      * Get available booking slots for a specific field and date
      */
-    async getAvailableSlots(fieldId, date // YYYY-MM-DD format
-    ) {
+    async getAvailableSlots(fieldId, date, // YYYY-MM-DD format
+    skipBookableCheck = false) {
         // Get field details
         const field = await this.fieldRepository.findOne({
             where: { id: fieldId },
@@ -368,13 +413,15 @@ class BookingService {
         if (!field) {
             throw new Error("Field not found");
         }
-        this.assertFieldBookable(field);
+        if (!skipBookableCheck) {
+            this.assertFieldBookable(field);
+        }
         // Parse date and get day of week
         const targetDate = new Date(date);
         const dayOfWeek = targetDate.getDay();
-        // Use default operating hours (8:00 AM - 10:00 PM)
-        const openingTime = '08:00:00';
-        const closingTime = '22:00:00';
+        // Use default operating hours (6:00 AM - 11:00 PM) to match frontend calendar
+        const openingTime = '06:00:00';
+        const closingTime = '23:00:00';
         // Generate time slots based on field's slot duration (default to 60 minutes if not set)
         const slots = [];
         const slotDuration = field.booking_slot_duration || 60; // Default 60 minutes
@@ -402,10 +449,14 @@ class BookingService {
         });
         console.log(`[BookingService] getAvailableSlots for field ${fieldId} on ${date}`);
         console.log(`[BookingService] Total bookings for this field: ${bookings.length}`);
-        // Filter bookings by date (compare date strings to avoid timezone issues)
+        // Filter bookings by date (compare local date strings to avoid timezone issues)
         const dayBookings = bookings.filter(b => {
-            // Extract date portion from booking timestamp (YYYY-MM-DD)
-            const bookingDateStr = b.start_time.toISOString().split('T')[0];
+            // Extract local date portion from booking timestamp (YYYY-MM-DD)
+            const bookingDateStr = [
+                b.start_time.getFullYear(),
+                (b.start_time.getMonth() + 1).toString().padStart(2, '0'),
+                b.start_time.getDate().toString().padStart(2, '0')
+            ].join('-');
             console.log(`[BookingService] Comparing booking date ${bookingDateStr} with ${date}`);
             return bookingDateStr === date;
         });
@@ -497,25 +548,27 @@ class BookingService {
      * Get calendar view for a field (multiple days)
      */
     async getCalendarView(fieldId, startDate, // YYYY-MM-DD
-    endDate // YYYY-MM-DD
-    ) {
+    endDate, // YYYY-MM-DD
+    skipBookableCheck = false) {
         const field = await this.fieldRepository.findOne({
             where: { id: fieldId },
         });
         if (!field) {
             throw new Error("Field not found");
         }
-        this.assertFieldBookable(field);
+        if (!skipBookableCheck) {
+            this.assertFieldBookable(field);
+        }
         const start = new Date(startDate);
         const end = new Date(endDate);
         const days = [];
-        // Use default operating hours (8:00 AM - 10:00 PM)
-        const defaultOperatingHours = { opening_time: '08:00:00', closing_time: '22:00:00' };
+        // Use default operating hours (6:00 AM - 11:00 PM) to match frontend calendar
+        const defaultOperatingHours = { opening_time: '06:00:00', closing_time: '23:00:00' };
         // Iterate through each day in the range
         const currentDate = new Date(start);
         while (currentDate <= end) {
             const dateStr = currentDate.toISOString().split('T')[0];
-            const daySlots = await this.getAvailableSlots(fieldId, dateStr);
+            const daySlots = await this.getAvailableSlots(fieldId, dateStr, skipBookableCheck);
             const dayOfWeek = currentDate.getDay();
             days.push({
                 date: dateStr,
@@ -599,20 +652,20 @@ class BookingService {
             // Get booker from member or team_member relationship
             const booker = booking.member || booking.team_member;
             const bookerName = booker
-                ? `${booker.first_name_en || ''} ${booker.last_name_en || ''}`.trim() || `${booker.first_name_ar || ''} ${booker.last_name_ar || ''}`.trim()
+                ? `${booker.first_name_ar || ''} ${booker.last_name_ar || ''}`.trim() || `${booker.first_name_en || ''} ${booker.last_name_en || ''}`.trim()
                 : 'N/A';
             const bookerPhone = booker?.phone || null;
             // Get email from account relationship
             const bookerEmail = booking.member?.account?.email || booking.team_member?.account?.email || null;
             // Get creator participant (is_creator = true)
             const creator = booking.participants?.find(p => p.is_creator) || booking.participants?.[0];
-            // Normalize image URLs
+            // Normalize image URLs to use absolute paths for the frontend proxy
             const normalizeImageUrl = (path) => {
                 if (!path)
                     return null;
                 if (path.startsWith('http'))
                     return path;
-                return `${baseUrl}/${path}`;
+                return path.startsWith('/') ? path : `/${path}`;
             };
             // Format times in Arabic numerals
             const startTime = booking.start_time.toLocaleTimeString('ar-EG', {
@@ -636,6 +689,8 @@ class BookingService {
                     type: booking.member_id ? 'member' : 'team_member',
                     phone: bookerPhone,
                     email: bookerEmail,
+                    national_id_front: normalizeImageUrl(booker?.national_id_front),
+                    national_id_back: normalizeImageUrl(booker?.national_id_back),
                 },
                 booking_date: booking.start_time,
                 booking_time: {
@@ -667,6 +722,10 @@ class BookingService {
                     registered_count: registeredCount,
                     remaining_slots: remainingSlots,
                     is_full: remainingSlots === 0,
+                },
+                parking: {
+                    uses_parking: !!booking.uses_parking,
+                    cars_count: booking.uses_parking ? booking.parking_cars_count || 1 : 0,
                 },
                 status: booking.status,
                 payment_status: booking.status === 'confirmed' || booking.status === 'completed' ? 'completed' : 'pending',

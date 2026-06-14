@@ -637,7 +637,8 @@ class StaffController {
         try {
             const page = Number(req.query.page) || 1;
             const limit = Number(req.query.limit) || 10;
-            const result = await staffService.getAllStaff(page, limit);
+            const role = req.query.role;
+            const result = await staffService.getAllStaff(page, limit, role);
             res.status(200).json({
                 success: true,
                 ...result,
@@ -659,7 +660,49 @@ class StaffController {
     static async updateStaff(req, res) {
         try {
             const { id } = req.params;
-            const updateData = req.body;
+            const updateData = { ...req.body };
+            if (req.files) {
+                const files = req.files;
+                const uploadDoc = async (fieldName, docType) => {
+                    if (files[fieldName] && files[fieldName][0]) {
+                        return await (0, localFileStorage_1.saveToLocalStorage)(files[fieldName][0].buffer, files[fieldName][0].originalname, docType, localFileStorage_1.UserType.STAFF);
+                    }
+                    return undefined;
+                };
+                const academic_certificate = await uploadDoc('academic_certificate', localFileStorage_1.DocumentType.OTHER);
+                if (academic_certificate)
+                    updateData.academic_certificate = academic_certificate;
+                const national_id_front = await uploadDoc('national_id_front', localFileStorage_1.DocumentType.NATIONAL_ID);
+                if (national_id_front)
+                    updateData.national_id_front = national_id_front;
+                const national_id_back = await uploadDoc('national_id_back', localFileStorage_1.DocumentType.NATIONAL_ID);
+                if (national_id_back)
+                    updateData.national_id_back = national_id_back;
+                const military_service_doc = await uploadDoc('military_service_doc', localFileStorage_1.DocumentType.OTHER);
+                if (military_service_doc)
+                    updateData.military_service_doc = military_service_doc;
+                const criminal_record = await uploadDoc('criminal_record', localFileStorage_1.DocumentType.OTHER);
+                if (criminal_record)
+                    updateData.criminal_record = criminal_record;
+                const employer_approval_letter = await uploadDoc('employer_approval_letter', localFileStorage_1.DocumentType.OTHER);
+                if (employer_approval_letter)
+                    updateData.employer_approval_letter = employer_approval_letter;
+                const employment_status_statement = await uploadDoc('employment_status_statement', localFileStorage_1.DocumentType.OTHER);
+                if (employment_status_statement)
+                    updateData.employment_status_statement = employment_status_statement;
+                const good_conduct_certificate = await uploadDoc('good_conduct_certificate', localFileStorage_1.DocumentType.OTHER);
+                if (good_conduct_certificate)
+                    updateData.good_conduct_certificate = good_conduct_certificate;
+                const personal_photo = await uploadDoc('personal_photo', localFileStorage_1.DocumentType.PERSONAL_PHOTO);
+                if (personal_photo)
+                    updateData.personal_photo = personal_photo;
+                const personal_info_form = await uploadDoc('personal_info_form', localFileStorage_1.DocumentType.OTHER);
+                if (personal_info_form)
+                    updateData.personal_info_form = personal_info_form;
+                const experience_certificates = await uploadDoc('experience_certificates', localFileStorage_1.DocumentType.OTHER);
+                if (experience_certificates)
+                    updateData.experience_certificates = experience_certificates;
+            }
             const result = await staffService.updateStaff(Number(id), updateData);
             await StaffController.logAction(req, 'Update', `Updated staff member ID: ${id}`, undefined, updateData);
             res.status(200).json(result);

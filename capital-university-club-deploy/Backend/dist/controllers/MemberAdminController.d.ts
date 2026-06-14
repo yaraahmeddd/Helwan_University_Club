@@ -7,6 +7,11 @@ export declare class MemberController {
     private static memberRepo;
     private static accountRepo;
     private static staffRepo;
+    private static universityStudentRepo;
+    private static employeeDetailRepo;
+    private static retiredEmployeeRepo;
+    private static outsiderDetailRepo;
+    private static loadMemberProfileDetails;
     private static logAction;
     /**
      * VIEW_MEMBERS - Get all members (paginated)

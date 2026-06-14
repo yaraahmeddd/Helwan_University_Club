@@ -33,7 +33,7 @@ class BookingController {
          */
         this.createBooking = async (req, res) => {
             try {
-                const { userType, userId, sport_id, field_id, start_time, end_time, notes, language, } = req.body;
+                const { userType, userId, sport_id, field_id, start_time, end_time, uses_parking, parking_cars_count, notes, language, } = req.body;
                 console.log('[BookingController] Create booking request:', {
                     userType,
                     userId,
@@ -41,6 +41,8 @@ class BookingController {
                     field_id,
                     start_time,
                     end_time,
+                    uses_parking,
+                    parking_cars_count,
                     notes,
                     language,
                 });
@@ -86,8 +88,11 @@ class BookingController {
                     field_id,
                     start_time: startDateTime,
                     end_time: endDateTime,
+                    uses_parking: !!uses_parking,
+                    parking_cars_count: Number(parking_cars_count) || 0,
                     notes: notes || undefined,
                     language: language || "ar",
+                    skipBookableCheck: true, // Staff can book any active field
                 });
                 // Return the booking directly instead of fetching details
                 // (to avoid issues with relations not loading properly)
@@ -102,8 +107,11 @@ class BookingController {
                         duration_minutes: booking.duration_minutes,
                         price: booking.price,
                         status: booking.status,
+                        payment_reference: booking.payment_reference,
                         share_token: booking.share_token,
                         expected_participants: booking.expected_participants,
+                        uses_parking: booking.uses_parking,
+                        parking_cars_count: booking.parking_cars_count,
                         created_at: booking.created_at,
                     },
                     message: "Booking created successfully.",

@@ -14,6 +14,8 @@ router.get('/public', SportController_1.SportController.getActiveSports);
 router.get('/team-members', auth_1.authenticate, SportController_1.SportController.getTeamMembers);
 router.get('/team-members/sport/:sportName', auth_1.authenticate, SportController_1.SportController.getTeamMembersBySport);
 router.get('/team-members/user/:memberId', auth_1.authenticate, SportController_1.SportController.getTeamMemberById);
+// Regular members by sport
+router.get('/members/sport/:sportName', auth_1.authenticate, SportController_1.SportController.getMembersBySport);
 // Create new sport
 router.post('/', auth_1.authenticate, SportController_1.SportController.createSport);
 // Get all sports with optional filters

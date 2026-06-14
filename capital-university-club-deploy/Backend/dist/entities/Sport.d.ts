@@ -18,6 +18,7 @@ export declare class Sport {
     sport_image: string | null;
     max_participants: number;
     is_active: boolean;
+    requires_booking: boolean;
     teams: Team[];
     training_schedules: TeamTrainingSchedule[];
     created_at: Date;

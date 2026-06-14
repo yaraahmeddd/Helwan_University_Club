@@ -53,6 +53,19 @@ router.get('/sport/:sport_id/available', auth_1.authenticate, FieldController_1.
 router.get('/branch/:branch_id', auth_1.authenticate, FieldController_1.FieldController.getFieldsByBranch);
 router.get('/bookable/by-sport/auth', auth_1.authenticate, FieldController_1.FieldController.getBookableFieldsBySport);
 /**
+ * GET /api/fields/bookable
+ * Get all bookable fields (active and available for booking)
+ * Requires authentication only
+ * Query Params: sport_id (optional)
+ */
+router.get('/bookable', auth_1.authenticate, FieldController_1.FieldController.getBookableFields);
+/**
+ * GET /api/fields/bookable/by-sport
+ * Get bookable fields grouped by sport
+ * Requires authentication only
+ */
+router.get('/bookable/by-sport', auth_1.authenticate, FieldController_1.FieldController.getBookableFieldsBySport);
+/**
  * GET /api/fields/:id
  * Get field by ID with full details
  * Requires authentication only
@@ -137,18 +150,5 @@ router.post('/:id/check-availability', auth_1.authenticate, FieldController_1.Fi
  * }
  */
 router.patch('/:id/booking-settings', (0, authorizePrivilege_1.authorizePrivilege)('MANAGE_FIELD_HOURS'), FieldController_1.FieldController.updateBookingSettings);
-/**
- * GET /api/fields/bookable
- * Get all bookable fields (active and available for booking)
- * Requires authentication only
- * Query Params: sport_id (optional)
- */
-router.get('/bookable', auth_1.authenticate, FieldController_1.FieldController.getBookableFields);
-/**
- * GET /api/fields/bookable/by-sport
- * Get bookable fields grouped by sport
- * Requires authentication only
- */
-router.get('/bookable/by-sport', auth_1.authenticate, FieldController_1.FieldController.getBookableFieldsBySport);
 exports.default = router;
 //# sourceMappingURL=FieldRoutes.js.map

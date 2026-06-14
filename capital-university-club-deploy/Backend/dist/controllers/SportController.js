@@ -3,6 +3,36 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SportController = void 0;
 const SportService_1 = require("../services/SportService");
 const sportService = new SportService_1.SportService();
+function mapTeamMemberTeamEntry(tmt) {
+    return {
+        id: tmt.id,
+        team_id: tmt.team_id ?? tmt.team?.id ?? null,
+        team_name: tmt.team?.name_ar || tmt.team?.name_en || '',
+        team_name_en: tmt.team?.name_en || '',
+        status: tmt.status,
+        team: tmt.team
+            ? {
+                id: tmt.team.id,
+                name_ar: tmt.team.name_ar,
+                name_en: tmt.team.name_en,
+            }
+            : null,
+    };
+}
+function mapTeamMemberForResponse(m) {
+    return {
+        id: m.id,
+        first_name_ar: m.first_name_ar,
+        last_name_ar: m.last_name_ar,
+        first_name_en: m.first_name_en,
+        last_name_en: m.last_name_en,
+        phone: m.phone ?? null,
+        national_id: m.national_id,
+        status: m.status,
+        created_at: m.created_at,
+        team_member_teams: (m.team_member_teams ?? []).map(mapTeamMemberTeamEntry),
+    };
+}
 class SportController {
     /**
      * @route   POST /api/sports
@@ -37,7 +67,7 @@ class SportController {
                 return;
             }
             const body = req.body;
-            const { name_en, name_ar, description_en, description_ar, sport_image, price, max_participants, teams, } = body;
+            const { name_en, name_ar, description_en, description_ar, sport_image, price, max_participants, is_active, requires_booking, teams, } = body;
             // Validation
             if (!name_en || !name_ar) {
                 res.status(400).json({
@@ -136,7 +166,9 @@ class SportController {
                     description_ar: description_ar,
                     price: price !== undefined ? parseFloat(price) : undefined,
                     sport_image: sport_image,
-                    max_participants: max_participants !== undefined ? parseInt(max_participants) : undefined,
+                    max_participants: max_participants !== undefined ? parseInt(max_participants, 10) : undefined,
+                    is_active: is_active !== undefined ? Boolean(is_active) : undefined,
+                    requires_booking: requires_booking !== undefined ? Boolean(requires_booking) : undefined,
                 }, user.staff_id, user.staff_type_id);
                 res.status(201).json({
                     success: true,
@@ -260,7 +292,7 @@ class SportController {
                 return;
             }
             const body = req.body;
-            const { name_en, name_ar, description_en, description_ar, price, sport_image, max_participants, } = body;
+            const { name_en, name_ar, description_en, description_ar, price, sport_image, max_participants, is_active, requires_booking, } = body;
             const updateData = {};
             if (name_en)
                 updateData.name_en = name_en;
@@ -272,10 +304,14 @@ class SportController {
                 updateData.description_ar = description_ar;
             if (price !== undefined)
                 updateData.price = parseFloat(price);
-            if (sport_image)
+            if (sport_image !== undefined)
                 updateData.sport_image = sport_image;
             if (max_participants !== undefined)
-                updateData.max_participants = parseInt(max_participants);
+                updateData.max_participants = parseInt(max_participants, 10);
+            if (is_active !== undefined)
+                updateData.is_active = Boolean(is_active);
+            if (requires_booking !== undefined)
+                updateData.requires_booking = Boolean(requires_booking);
             const sport = await sportService.updateSport(sportId, updateData, user.staff_id, user.staff_type_id);
             res.status(200).json({
                 success: true,
@@ -588,7 +624,8 @@ class SportController {
     static async getTeamMembers(req, res) {
         try {
             const members = await sportService.getTeamMembers();
-            res.status(200).json({ success: true, data: members });
+            const mapped = members.map(mapTeamMemberForResponse);
+            res.status(200).json({ success: true, data: mapped });
         }
         catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -605,7 +642,8 @@ class SportController {
             const params = req.params;
             const { sportName } = params;
             const members = await sportService.getTeamMembersBySport(sportName);
-            res.status(200).json({ success: true, data: members });
+            const mapped = members.map(mapTeamMemberForResponse);
+            res.status(200).json({ success: true, data: mapped });
         }
         catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -631,6 +669,19 @@ class SportController {
         catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             console.error('Error fetching team member:', error);
+            res.status(500).json({ error: errorMessage });
+        }
+    }
+    static async getMembersBySport(req, res) {
+        try {
+            const params = req.params;
+            const { sportName } = params;
+            const members = await sportService.getMembersBySport(sportName);
+            res.status(200).json({ success: true, data: members });
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            console.error('Error fetching members by sport:', error);
             res.status(500).json({ error: errorMessage });
         }
     }

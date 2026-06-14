@@ -187,6 +187,9 @@ router.post('/student-dependent-membership', (req, res) => StudentMemberControll
 router.get('/student-status/:member_id', (req, res) => StudentMemberController_1.StudentMemberController.getStudentMemberStatus(req, res));
 // Step 3: Determine membership type based on answers
 router.post('/determine-membership', (req, res) => RegistrationController_1.default.determineMembership(req, res));
+// Rollback: Delete a partially-created registration (called on frontend error)
+// Safety guard: only accounts with status='pending' are deleted
+router.delete('/rollback/:account_id', (req, res) => RegistrationController_1.default.rollbackRegistration(req, res));
 // Step 4: Complete registration with membership
 router.post('/complete', (req, res) => RegistrationController_1.default.completeRegistration(req, res));
 exports.default = router;

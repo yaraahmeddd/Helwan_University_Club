@@ -24,6 +24,8 @@ export declare class Booking {
     payment_completed_at: Date | null;
     share_token: string;
     expected_participants: number;
+    uses_parking: boolean;
+    parking_cars_count: number;
     notes: string | null;
     language: "ar" | "en";
     cancelled_at: Date | null;

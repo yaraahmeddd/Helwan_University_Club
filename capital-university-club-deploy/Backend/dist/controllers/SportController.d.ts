@@ -117,6 +117,7 @@ export declare class SportController {
      * @desc    Get single team member
      */
     static getTeamMemberById(req: Request, res: Response): Promise<void>;
+    static getMembersBySport(req: Request, res: Response): Promise<void>;
     /**
      * @route   GET /api/public/sports
      * @desc    Get all active and approved sports (public endpoint - no authentication required)

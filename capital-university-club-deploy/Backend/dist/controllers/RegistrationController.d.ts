@@ -69,6 +69,15 @@ export declare class RegistrationController {
      * Registers in: accounts → members → university_student_details → membership
      */
     registerCompleteStudentMember(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    /**
+     * ROLLBACK: Delete a partially-created registration
+     * Route: DELETE /register/rollback/:account_id
+     *
+     * Called by the frontend whenever any step after /register/basic fails,
+     * so no orphaned account/member rows are left in the database.
+     * Safety: only accounts with status='pending' can be rolled back.
+     */
+    rollbackRegistration(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
 }
 declare const _default: RegistrationController;
 export default _default;

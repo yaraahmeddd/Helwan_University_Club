@@ -718,19 +718,18 @@ async function main() {
     // ═══════════════════════════ MEDIA POSTS ═══════════════════════════
     console.log('\n=== Seeding media posts ===');
     const mpRepo = data_source_1.AppDataSource.getRepository(MediaPost_1.MediaPost);
+    const mediaPostCategories = ['صور', 'فيديو', 'فعاليات'];
     const mediaPostsCount = 6;
     for (let i = 0; i < mediaPostsCount; i++) {
-        try {
-            await mpRepo.save({
-                title_en: `News Update #${i + 1}`,
-                title_ar: `خبر جديد #${i + 1}`,
-                content_en: `This is the content of news update number ${i + 1}.`,
-                content_ar: `هذا هو محتوى الخبر رقم ${i + 1}.`,
-                status: i < 4 ? 'published' : 'draft',
-                is_featured: i === 0,
-            });
-        }
-        catch { /* schema mismatch — skip */ }
+        await mpRepo.save({
+            title: i < 3 ? `News Update #${i + 1}` : `خبر جديد #${i + 1}`,
+            description: `This is the content of media post number ${i + 1}.`,
+            category: mediaPostCategories[i % mediaPostCategories.length],
+            images: i < 2 ? [`/uploads/media/image-${i + 1}-1.jpg`, `/uploads/media/image-${i + 1}-2.jpg`] : undefined,
+            videoUrl: i === 2 ? 'https://www.youtube.com/embed/example' : undefined,
+            videoDuration: i === 2 ? '02:45' : undefined,
+            date: daysAgo(i),
+        });
     }
     // ═══════════════════════════ TASKS ═══════════════════════════
     console.log('\n=== Seeding tasks ===');
