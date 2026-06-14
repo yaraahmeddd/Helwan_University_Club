@@ -296,20 +296,23 @@ class RegistrationService {
      */
     static getMemberTypeIdForCode(membershipTypeCode) {
         const mappings = {
-            'VISITOR': 4, // Regular/Visitor member → VISITOR (ID 4)
-            'WORKING': 2, // Working member → WORKING (ID 2)
-            'STUDENT': 13, // Student → STUDENT (ID 13)
-            'DEPENDENT': 3, // Dependent → DEPENDENT (ID 3)
-            'FOREIGNER': 12, // Foreigner → FOREIGNER (ID 12)
-            'VISITOR_HONORARY': 5, // Visitor Honorary → VISITOR_HONORARY (ID 5)
-            'VISITOR_ATHLETIC': 6, // Visitor Athletic → VISITOR_ATHLETIC (ID 6)
-            'SEASONAL': 9, // Seasonal → SEASONAL (ID 9)
-            'BRANCH': 8, // Branch → BRANCH (ID 8)
-            'ATHLETE': 10, // Athlete → ATHLETE (ID 10)
-            'HONORARY': 11, // Honorary → HONORARY (ID 11)
-            'GRADUATE': 14 // Graduate → GRADUATE (ID 14)
+            'WORKING': 1, // Working member → WORKING (ID 1)
+            'STUDENT': 2, // Student → STUDENT (ID 2)
+            'RETIRED': 3, // Retired → RETIRED (ID 3)
+            'DEPENDENT': 4, // Dependent → DEPENDENT (ID 4)
+            'FOREIGNER': 5, // Foreigner → FOREIGNER (ID 5)
+            'SEASONAL': 6, // Seasonal → SEASONAL (ID 6)
+            'VISITOR': 7, // Regular/Visitor member → VISITOR (ID 7)
+            'REGULAR': 8, // Regular → REGULAR (ID 8)
+            // Fallbacks for codes that might be sent but don't exist in DB
+            'VISITOR_HONORARY': 7,
+            'VISITOR_ATHLETIC': 7,
+            'BRANCH': 7,
+            'ATHLETE': 7,
+            'HONORARY': 7,
+            'GRADUATE': 2 // Map graduate to student/working or keep as 2
         };
-        const result = mappings[membershipTypeCode] || 4; // Default: VISITOR (ID 4)
+        const result = mappings[membershipTypeCode] || 7; // Default: VISITOR (ID 7)
         console.log(`🔍 getMemberTypeIdForCode: code="${membershipTypeCode}" → ID=${result}`);
         return result;
     }
@@ -332,34 +335,31 @@ class RegistrationService {
         let member_type_code = 'VISITOR';
         let member_type_id = 4;
         let membership_plan_code = 'ANNUAL';
-        // تحديد نوع الميمبر - Using CORRECT database IDs from schema.sql
-        // IDs: 1=FOUNDER, 2=WORKING, 3=DEPENDENT, 4=VISITOR, 5=VISITOR_HONORARY,
-        // 6=VISITOR_ATHLETIC, 7=VISITOR_BRANCH, 8=BRANCH, 9=SEASONAL, 10=ATHLETE,
-        // 11=HONORARY, 12=FOREIGNER, 13=STUDENT, 14=GRADUATE
+        // IDs based on actual DB: 1=WORKING, 2=STUDENT, 3=RETIRED, 4=DEPENDENT, 5=FOREIGNER, 6=SEASONAL, 7=VISITOR, 8=REGULAR
         if (data.is_working) {
             member_type_code = 'WORKING';
-            member_type_id = 2;
+            member_type_id = 1;
             membership_plan_code = 'ANNUAL';
         }
         else if (data.is_retired) {
-            // Retired employees are treated as WORKING members (ID 2) - they have similar benefits
-            member_type_code = 'WORKING';
-            member_type_id = 2;
+            // Retired employees are treated as RETIRED members (ID 3)
+            member_type_code = 'RETIRED';
+            member_type_id = 3;
             membership_plan_code = 'ANNUAL';
         }
         else if (data.is_student) {
             member_type_code = 'STUDENT';
-            member_type_id = 13;
+            member_type_id = 2;
             membership_plan_code = 'STUDENT';
         }
         else if (data.has_relation && data.relation_member_id) {
             member_type_code = 'DEPENDENT';
-            member_type_id = 3;
+            member_type_id = 4;
             membership_plan_code = 'DEPENDENT';
         }
         else if (data.is_foreign) {
             member_type_code = 'FOREIGNER';
-            member_type_id = 12;
+            member_type_id = 5;
             membership_plan_code = 'SEASONAL';
         }
         return {
@@ -448,7 +448,7 @@ class RegistrationService {
                 newMember.nationality = data.nationality || 'Egyptian';
                 newMember.birthdate = data.birthdate || null;
                 newMember.national_id = data.national_id;
-                newMember.member_type_id = 2; // Working member type
+                newMember.member_type_id = 1; // Working member type
                 newMember.is_foreign = false;
                 newMember.status = 'active';
                 const savedMember = await transactionalEntityManager.save(Member_1.Member, newMember);
@@ -526,7 +526,7 @@ class RegistrationService {
                 newMember.nationality = data.nationality || 'Egyptian';
                 newMember.birthdate = data.birthdate || null;
                 newMember.national_id = data.national_id;
-                newMember.member_type_id = 2; // Retired employee type (WORKING - ID 2, retired employees have similar benefits as working)
+                newMember.member_type_id = 3; // Retired employee type (RETIRED - ID 3)
                 newMember.is_foreign = false;
                 newMember.status = 'active';
                 const savedMember = await transactionalEntityManager.save(Member_1.Member, newMember);
@@ -604,7 +604,7 @@ class RegistrationService {
                 newMember.nationality = data.nationality || 'Egyptian';
                 newMember.birthdate = data.birthdate || null;
                 newMember.national_id = data.national_id;
-                newMember.member_type_id = 13; // Student member type (ID 13 from schema)
+                newMember.member_type_id = 2; // Student member type (ID 2 from DB)
                 newMember.is_foreign = false;
                 newMember.status = 'active';
                 // Add file paths
@@ -667,6 +667,53 @@ class RegistrationService {
                 console.error('❌ Error in student registration:', errorMessage);
                 throw new Error(`Registration failed: ${errorMessage}`);
             }
+        });
+    }
+    /**
+     * Rollback a partially-created registration.
+     * Deletes the account identified by account_id and all related records
+     * (members / team_members and their children) atomically inside a transaction.
+     *
+     * Called by DELETE /register/rollback/:account_id whenever any step after
+     * /register/basic fails on the frontend, so no orphaned rows are left in the DB.
+     */
+    static async rollbackRegistration(account_id) {
+        const accountRepository = data_source_1.AppDataSource.getRepository(Account_1.Account);
+        const memberRepository = data_source_1.AppDataSource.getRepository(Member_1.Member);
+        const teamMemberRepository = data_source_1.AppDataSource.getRepository(TeamMember_1.TeamMember);
+        return await data_source_1.AppDataSource.manager.transaction(async (em) => {
+            // Only allow rollback of accounts that are still in 'pending' status
+            // (i.e. registration was never completed / approved).
+            const account = await em.findOne(Account_1.Account, { where: { id: account_id } });
+            if (!account) {
+                return { deleted: false };
+            }
+            if (account.status !== 'pending') {
+                throw new Error('Cannot rollback a registration that has already been completed or approved.');
+            }
+            // Delete related member record (FK: members.account_id → accounts.id)
+            const member = await memberRepository.findOne({ where: { account_id } });
+            if (member) {
+                // Delete child records that don't have DB-level CASCADE
+                await em.query('DELETE FROM member_memberships WHERE member_id = $1', [member.id]);
+                await em.query('DELETE FROM employee_details WHERE member_id = $1', [member.id]);
+                await em.query('DELETE FROM retired_employee_details WHERE member_id = $1', [member.id]);
+                await em.query('DELETE FROM university_student_details WHERE member_id = $1', [member.id]);
+                await em.query('DELETE FROM outsider_details WHERE member_id = $1', [member.id]);
+                await em.query('DELETE FROM member_relationships WHERE member_id = $1 OR related_member_id = $1', [member.id]);
+                await em.remove(Member_1.Member, member);
+            }
+            // Delete related team_member record (FK: team_members.account_id → accounts.id)
+            const teamMember = await teamMemberRepository.findOne({ where: { account_id } });
+            if (teamMember) {
+                await em.query('DELETE FROM team_member_team_subscriptions WHERE team_member_id = $1', [teamMember.id]);
+                await em.query('DELETE FROM team_member_teams WHERE team_member_id = $1', [teamMember.id]);
+                await em.remove(TeamMember_1.TeamMember, teamMember);
+            }
+            // Finally delete the account itself
+            await em.remove(Account_1.Account, account);
+            console.log(`🗑️  Rolled back registration for account_id=${account_id}`);
+            return { deleted: true };
         });
     }
 }

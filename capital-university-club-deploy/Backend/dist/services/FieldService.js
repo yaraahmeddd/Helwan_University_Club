@@ -191,7 +191,6 @@ class FieldService {
             where: {
                 sport_id: sportId,
                 status: 'active',
-                is_available_for_booking: true,
             },
             relations: ['sport', 'branch', 'operating_hours'],
         });
@@ -255,7 +254,6 @@ class FieldService {
             .leftJoinAndSelect('field.branch', 'branch')
             .leftJoinAndSelect('field.operating_hours', 'operating_hours')
             .where('field.status = :status', { status: 'active' })
-            .andWhere('field.is_available_for_booking = :bookable', { bookable: true })
             .orderBy('field.name_en', 'ASC');
         if (sportId) {
             query.andWhere('field.sport_id = :sportId', { sportId });

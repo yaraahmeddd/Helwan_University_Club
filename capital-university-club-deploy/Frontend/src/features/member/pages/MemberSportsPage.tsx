@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import {
     AlertCircle,
     Calendar,
@@ -30,6 +30,7 @@ import {
     getDayNameShort,
     localizeDays
 } from '@/features/member-portal/calendarUtils';
+import { resolveSportImageForSport } from '@/lib/sportImageUrl';
 
 /* â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 interface SportSubscription extends EnrolledSport {
@@ -440,7 +441,7 @@ export default function MemberSportsPage() {
                         nameAr: sportNameAr,
                         nameEn: sportNameEn,
                         icon: getSportIconFromName(displaySportName),
-                        img: s.sport_image || s.sportImage || null,
+                        img: resolveSportImageForSport(s.sport_image || s.sportImage || null, s.sport_name_en || s.nameEn || null) || null,
                         status:
                             s.status === "approved" ||
                             s.status === "active" ||

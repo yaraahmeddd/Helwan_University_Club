@@ -24,6 +24,7 @@ export type PaymobBillingData = {
 };
 export declare class PaymobService {
     private apiBase;
+    private readEnv;
     private getApiKey;
     private getIntegrationId;
     private getIframeId;
@@ -40,6 +41,7 @@ export declare class PaymobService {
         orderId: number;
         billingData: PaymobBillingData;
         currency?: string;
+        redirectionUrl?: string;
     }): Promise<string>;
     buildIframeUrl(paymentKey: string): string;
 }

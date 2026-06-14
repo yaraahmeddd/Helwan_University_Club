@@ -22,6 +22,8 @@ export declare class SportService {
         price?: number;
         sport_image?: string;
         max_participants?: number;
+        is_active?: boolean;
+        requires_booking?: boolean;
     }, staffId: number, staffTypeId: number): Promise<Sport>;
     /**
      * Create a new sport with teams (atomic transaction) - DEPRECATED
@@ -83,6 +85,8 @@ export declare class SportService {
         price?: number;
         sport_image?: string;
         max_participants?: number;
+        is_active?: boolean;
+        requires_booking?: boolean;
     }, staffId: number, staffTypeId: number): Promise<Sport>;
     approveSport(sportId: number, action: 'approve' | 'reject', staffId: number, staffTypeId: number, comments?: string): Promise<Sport>;
     deleteSport(sportId: number, staffTypeId: number, staffId: number): Promise<void>;
@@ -99,6 +103,28 @@ export declare class SportService {
      * Get Single Team Member
      */
     getTeamMemberById(memberId: number): Promise<TeamMember | null>;
+    /**
+     * Get Regular Members by Sport Name
+     * Queries members who have a MemberTeam subscription to a team belonging to the given sport.
+     */
+    getMembersBySport(sportName: string): Promise<{
+        id: any;
+        first_name_ar: any;
+        last_name_ar: any;
+        first_name_en: any;
+        last_name_en: any;
+        phone: any;
+        national_id: any;
+        status: any;
+        created_at: any;
+        member_type: "member";
+        team_member_teams: {
+            id: any;
+            team_name: any;
+            team_name_en: any;
+            status: any;
+        }[];
+    }[]>;
     /**
      * Update sport with all related fields (teams and trainings)
      * This method handles atomic updates to sport, teams, and training schedules

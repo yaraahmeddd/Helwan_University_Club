@@ -123,6 +123,7 @@ export declare class StaffService {
         email: string;
         phone: string;
         address: string;
+        staff_type_id: number;
         staff_type: {
             id: number;
             code: string;
@@ -133,6 +134,17 @@ export declare class StaffService {
         is_active: boolean;
         employment_start_date: Date;
         employment_end_date: Date | null;
+        personal_photo: string | null;
+        national_id_front: string | null;
+        national_id_back: string | null;
+        academic_certificate: string | null;
+        military_service_doc: string | null;
+        criminal_record: string | null;
+        employer_approval_letter: string | null;
+        employment_status_statement: string | null;
+        good_conduct_certificate: string | null;
+        personal_info_form: string | null;
+        experience_certificates: string | null;
         assigned_packages: {
             id: number;
             code: string;
@@ -144,7 +156,7 @@ export declare class StaffService {
     /**
      * Get all staff members
      */
-    getAllStaff(page?: number, limit?: number): Promise<{
+    getAllStaff(page?: number, limit?: number, role?: string): Promise<{
         data: {
             id: number;
             first_name_en: string;

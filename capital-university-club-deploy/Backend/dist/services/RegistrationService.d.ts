@@ -210,6 +210,17 @@ export declare class RegistrationService {
             status: string;
         };
     }>;
+    /**
+     * Rollback a partially-created registration.
+     * Deletes the account identified by account_id and all related records
+     * (members / team_members and their children) atomically inside a transaction.
+     *
+     * Called by DELETE /register/rollback/:account_id whenever any step after
+     * /register/basic fails on the frontend, so no orphaned rows are left in the DB.
+     */
+    static rollbackRegistration(account_id: number): Promise<{
+        deleted: boolean;
+    }>;
 }
 export default RegistrationService;
 //# sourceMappingURL=RegistrationService.d.ts.map

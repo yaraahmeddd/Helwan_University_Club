@@ -29,6 +29,7 @@ const NotificationPanelLazy = lazy(() =>
 import { Toast } from '@/features/member-portal/components/Toast';
 import SportCard from '@/features/member-portal/components/SportCard';
 import { localizeDays } from '@/features/member-portal/calendarUtils';
+import { resolveSportImageForSport } from '@/lib/sportImageUrl';
 
 // ─── Types ──────────────────────────────────────────────────
 interface Member {
@@ -1496,7 +1497,7 @@ export default function TeamMemberDashboard() {
                             name: s.sport_name_ar || s.name_ar || s.sport_name || s.name,
                             nameAr: s.sport_name_ar || s.name_ar || s.sport_name || s.name,
                             icon: getSportIconFromName(s.sport_name_ar || s.sport_name || s.name || ""),
-                            img: s.sport_image || null,
+                            img: resolveSportImageForSport(s.sport_image || null, s.sport_name_en || s.name_en || null) || null,
                             status: s.status === "approved" || s.status === "active"
                                 ? t("sports.status.active")
                                 : (s.status === "pending" || !s.status)

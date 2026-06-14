@@ -207,6 +207,8 @@ export declare class TeamMemberService {
      * Update team member with sports
      */
     updateTeamMemberWithSports(teamMemberId: number, data: {
+        email?: string;
+        national_id?: string;
         first_name_en?: string;
         first_name_ar?: string;
         last_name_en?: string;
@@ -215,7 +217,7 @@ export declare class TeamMemberService {
         address?: string;
         gender?: string;
         nationality?: string;
-        birthdate?: Date;
+        birthdate?: Date | string;
         sport_ids?: number[];
     }): Promise<{
         id: number;
@@ -304,6 +306,9 @@ export declare class TeamMemberService {
         medical_report: string | undefined;
         memberType: "team_member";
         teams: string[];
+        email: string;
+        nationality: string;
+        membership_plan: string;
     }[]>;
     /**
      * Approve a pending team member

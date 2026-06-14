@@ -224,7 +224,7 @@ export const RegisterPage = () => {
         defaultValues: {
             selectedSports: [],
             sportTimeSelections: {},
-            category: 'student',
+            category: '',
             citizenship_type: 'egyptian',
             first_name_ar: '',
             last_name_ar: '',

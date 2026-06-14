@@ -70,6 +70,8 @@ class TeamVisibilityService {
             max_participants: t.max_participants,
             visibility_type: t.visibility_type,
             price: t.price,
+            subscription_price: t.subscription_price,
+            sport_price: t.sport?.price ?? null,
             status: t.status,
             training_schedules: t.training_schedules ?? [],
         }));

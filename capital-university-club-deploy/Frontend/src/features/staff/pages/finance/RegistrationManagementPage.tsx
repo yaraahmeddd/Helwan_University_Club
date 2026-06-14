@@ -16,7 +16,7 @@ import { adminTableStyles, adminHeadClass, adminCellClass, adminDialogStyles, AD
 import { AdminPagination } from '@/components/StaffPagesComponents/shared/AdminPagination';
 import { AdminMemberStatusBadge } from '@/components/StaffPagesComponents/shared/AdminMemberStatusBadge';
 import { AdminSortableHead, type SortDirection } from '@/components/StaffPagesComponents/shared/AdminSortableHead';
-import { formatAdminDate, getAdminLocale } from '@/components/StaffPagesComponents/shared/adminFormatters';
+import { formatAdminDate, formatAdminTime, getAdminLocale } from '@/components/StaffPagesComponents/shared/adminFormatters';
 import { adminFieldIcons } from '@/components/StaffPagesComponents/shared/adminRecordFields';
 import { PersonNameDisplay } from '@/components/StaffPagesComponents/shared/PersonNameDisplay';
 import {

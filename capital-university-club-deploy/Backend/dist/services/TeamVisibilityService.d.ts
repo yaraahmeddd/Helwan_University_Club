@@ -38,6 +38,8 @@ export interface VisibleTeam {
     max_participants: number;
     visibility_type: TeamVisibilityType;
     price: number | null;
+    subscription_price: number | null;
+    sport_price: number | null;
     status: TeamStatus;
     training_schedules: unknown[];
 }

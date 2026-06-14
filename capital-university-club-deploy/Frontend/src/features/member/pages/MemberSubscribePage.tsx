@@ -7,17 +7,14 @@ import type { ExploreSport, TimeSlotOption } from '@/features/member-portal/type
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import i18n from '@/i18n';
+import { resolveSportImageForSport } from '@/lib/sportImageUrl';
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800&q=80";
 const MAX_SPORTS = 4;
 
-function getFullUrl(path?: string | null) {
-    if (!path || path === "null") return null;
-    const cleanPath = path.trim();
-    if (cleanPath.startsWith("http") || cleanPath.startsWith("data:")) return cleanPath;
-    const normalizedPath = cleanPath.replace(/\\/g, "/");
-    const finalPath = normalizedPath.startsWith("/") ? normalizedPath : `/${normalizedPath}`;
-    return `${import.meta.env.VITE_API_BASE_URL || "http://localhost:3000"}${finalPath}`;
+// getSportImageUrl: resolves DB paths like 'uploads/sports/swimming.svg' → '/assets/swimming.svg'
+function getSportImageUrl(path?: string | null, nameEn?: string | null): string | null {
+    return resolveSportImageForSport(path, nameEn) ?? null;
 }
 
 const pickPositiveAmount = (...values: Array<number | string | null | undefined>): number => {
@@ -386,7 +383,7 @@ export default function MemberSubscribePage() {
                     nameEn: sportFromApi.nameEn || "",
                     icon: getIconForSport(sportFromApi.nameAr || sportFromApi.nameEn || ""),
                     img:
-                        getFullUrl(sportFromApi.image) ||
+                        getSportImageUrl(sportFromApi.image, sportFromApi.nameEn) ||
                         FALLBACK_IMAGES[sportFromApi.nameAr || ""] ||
                         FALLBACK_IMAGES[sportFromApi.nameEn || ""] ||
                         DEFAULT_IMAGE,

@@ -577,7 +577,42 @@ export class MemberController {
           const account = await transactionalEntityManager.findOne(Account, { where: { id: member.account_id } });
           if (account) {
             account.status = status;
+            if (status === 'active') account.is_active = true;
+            if (status === 'banned') account.is_active = false;
             await transactionalEntityManager.save(Account, account);
+          }
+        }
+
+        // If approving to active, calculate membership validity based on the plan's duration_months
+        if (status === 'active') {
+          const membershipRepo = transactionalEntityManager.getRepository(MemberMembership);
+          const planRepo = transactionalEntityManager.getRepository(MembershipPlan);
+
+          // Find the member's most recent pending membership
+          const pendingMembership = await membershipRepo.findOne({
+            where: { member_id: member.id, status: 'pending' },
+            order: { created_at: 'DESC' },
+          });
+
+          if (pendingMembership) {
+            // Look up the plan's duration_months
+            const plan = await planRepo.findOne({
+              where: { id: pendingMembership.membership_plan_id },
+            });
+
+            const durationMonths = plan?.duration_months ?? 12; // Default to 12 months if plan not found
+            const startDate = new Date();
+            const endDate = new Date(startDate);
+            endDate.setMonth(endDate.getMonth() + durationMonths);
+
+            pendingMembership.status = 'active';
+            pendingMembership.start_date = startDate;
+            pendingMembership.end_date = endDate;
+            await membershipRepo.save(pendingMembership);
+
+            console.log(
+              `✅ Membership for member ${member.id} activated via status change: ${startDate.toISOString().split('T')[0]} → ${endDate.toISOString().split('T')[0]} (${durationMonths} months)`
+            );
           }
         }
 

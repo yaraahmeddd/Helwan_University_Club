@@ -89,6 +89,8 @@ export class ParticipantRegistrationController {
           sport_name_ar: sport?.name_ar || "Unknown Sport",
           sport_name_en: sport?.name_en || "Unknown Sport",
           field_name: fieldName,
+          field_name_ar: field?.name_ar || fieldName,
+          field_name_en: field?.name_en || fieldName,
           start_time: booking.start_time,
           end_time: booking.end_time,
           duration_minutes: booking.duration_minutes,

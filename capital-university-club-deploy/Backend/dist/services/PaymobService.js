@@ -45,25 +45,25 @@ class PaymobService {
     constructor() {
         this.apiBase = 'https://accept.paymob.com/api';
     }
+    readEnv(name) {
+        const value = process.env[name]?.trim();
+        if (!value) {
+            throw new Error(`Missing ${name}. Add it to Backend/.env, then restart the backend server.`);
+        }
+        return value;
+    }
     getApiKey() {
-        const key = process.env.PAYMOB_API_KEY;
-        if (!key)
-            throw new Error('Missing PAYMOB_API_KEY');
-        return key;
+        return this.readEnv('PAYMOB_API_KEY');
     }
     getIntegrationId() {
-        const v = process.env.PAYMOB_INTEGRATION_ID;
-        if (!v)
-            throw new Error('Missing PAYMOB_INTEGRATION_ID');
+        const v = this.readEnv('PAYMOB_INTEGRATION_ID');
         const n = Number(v);
         if (!Number.isFinite(n))
             throw new Error('Invalid PAYMOB_INTEGRATION_ID');
         return n;
     }
     getIframeId() {
-        const v = process.env.PAYMOB_IFRAME_ID;
-        if (!v)
-            throw new Error('Missing PAYMOB_IFRAME_ID');
+        const v = this.readEnv('PAYMOB_IFRAME_ID');
         const n = Number(v);
         if (!Number.isFinite(n))
             throw new Error('Invalid PAYMOB_IFRAME_ID');
@@ -87,7 +87,7 @@ class PaymobService {
         return res.id;
     }
     async createPaymentKey(params) {
-        const res = await postJson(`${this.apiBase}/acceptance/payment_keys`, {
+        const body = {
             auth_token: params.authToken,
             amount_cents: String(params.amountCents),
             expiration: 3600,
@@ -96,7 +96,11 @@ class PaymobService {
             currency: params.currency || 'EGP',
             integration_id: this.getIntegrationId(),
             lock_order_when_paid: false,
-        });
+        };
+        if (params.redirectionUrl) {
+            body.redirection_url = params.redirectionUrl;
+        }
+        const res = await postJson(`${this.apiBase}/acceptance/payment_keys`, body);
         return res.token;
     }
     buildIframeUrl(paymentKey) {

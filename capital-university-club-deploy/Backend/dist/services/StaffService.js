@@ -392,6 +392,7 @@ class StaffService {
             email: staff.account?.email,
             phone: staff.phone,
             address: staff.address,
+            staff_type_id: staff.staff_type_id,
             staff_type: {
                 id: staff.staff_type?.id,
                 code: staff.staff_type?.code,
@@ -402,6 +403,19 @@ class StaffService {
             is_active: staff.is_active,
             employment_start_date: staff.employment_start_date,
             employment_end_date: staff.employment_end_date,
+            // ── Photos & Documents ──────────────────────────────────
+            personal_photo: staff.personal_photo,
+            national_id_front: staff.national_id_front,
+            national_id_back: staff.national_id_back,
+            academic_certificate: staff.academic_certificate,
+            military_service_doc: staff.military_service_doc,
+            criminal_record: staff.criminal_record,
+            employer_approval_letter: staff.employer_approval_letter,
+            employment_status_statement: staff.employment_status_statement,
+            good_conduct_certificate: staff.good_conduct_certificate,
+            personal_info_form: staff.personal_info_form,
+            experience_certificates: staff.experience_certificates,
+            // ── Packages & Privileges ────────────────────────────────
             assigned_packages: packages.map((p) => ({
                 id: p.package?.id,
                 code: p.package?.code,
@@ -420,8 +434,13 @@ class StaffService {
     /**
      * Get all staff members
      */
-    async getAllStaff(page = 1, limit = 10) {
+    async getAllStaff(page = 1, limit = 10, role) {
+        const whereClause = {};
+        if (role) {
+            whereClause.staff_type = { code: role };
+        }
         const [staff, total] = await this.staffRepository.findAndCount({
+            where: whereClause,
             // Removed is_active filter to show all staff including inactive
             relations: ['staff_type'],
             skip: (page - 1) * limit,
@@ -480,7 +499,10 @@ class StaffService {
             throw new Error('Staff member not found');
         }
         staff.is_active = false;
-        staff.status = 'inactive';
+        staff.status = 'cancelled';
+        if (!staff.employment_end_date) {
+            staff.employment_end_date = new Date();
+        }
         await this.staffRepository.save(staff);
         // Log activity
         console.log(`[STAFF_DEACTIVATED] Staff ${staffId} deactivated by ${deactivatedById}`);

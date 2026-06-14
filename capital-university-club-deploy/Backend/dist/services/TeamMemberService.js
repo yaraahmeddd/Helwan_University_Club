@@ -435,6 +435,13 @@ class TeamMemberService {
         if (!teamMember) {
             throw new Error('Team member not found');
         }
+        if (data.email && teamMember.account_id) {
+            const account = await this.accountRepo.findOne({ where: { id: teamMember.account_id } });
+            if (account) {
+                account.email = String(data.email).trim().toLowerCase();
+                await this.accountRepo.save(account);
+            }
+        }
         // Update basic info
         if (data.first_name_en)
             teamMember.first_name_en = data.first_name_en;
@@ -446,12 +453,16 @@ class TeamMemberService {
             teamMember.last_name_ar = data.last_name_ar;
         if (data.phone)
             teamMember.phone = data.phone;
-        if (data.address)
+        if (data.address !== undefined)
             teamMember.address = data.address;
         if (data.gender)
             teamMember.gender = data.gender;
-        if (data.nationality)
+        if (data.national_id)
+            teamMember.national_id = data.national_id;
+        if (data.nationality) {
             teamMember.nationality = data.nationality;
+            teamMember.is_foreign = data.nationality.toLowerCase() !== 'egyptian';
+        }
         if (data.birthdate)
             teamMember.birthdate = new Date(data.birthdate);
         await this.teamMemberRepo.save(teamMember);
@@ -631,6 +642,7 @@ class TeamMemberService {
     async getPendingTeamMembers() {
         const teamMembers = await this.teamMemberRepo.createQueryBuilder('team_member')
             .leftJoinAndSelect('team_member.team_member_teams', 'teams')
+            .leftJoinAndSelect('teams.team', 'team')
             .leftJoinAndSelect('team_member.account', 'account')
             .where('team_member.status = :status', { status: 'pending' })
             .orderBy('team_member.created_at', 'DESC')
@@ -655,6 +667,9 @@ class TeamMemberService {
             medical_report: tm.medical_report || undefined,
             memberType: 'team_member',
             teams: tm.team_member_teams?.map(t => t.team?.name_en || t.team_id) || [],
+            email: tm.account?.email,
+            nationality: tm.nationality,
+            membership_plan: 'Sports Team Member'
         }));
     }
     /**

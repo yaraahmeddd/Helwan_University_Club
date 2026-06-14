@@ -60,11 +60,12 @@ class SportService {
             price: sportData.price || null,
             sport_image: sportData.sport_image || null,
             max_participants: sportData.max_participants || 0,
+            is_active: sportData.is_active ?? true,
+            requires_booking: sportData.requires_booking ?? false,
             created_by_staff_id: staffId,
             status: (isSportManager || isAdmin) ? 'active' : 'pending',
             approved_by_staff_id: (isSportManager || isAdmin) ? staffId : null,
             approved_at: (isSportManager || isAdmin) ? new Date() : null,
-            is_active: true,
         });
         const createdSport = await this.sportRepository.save(sport);
         // Audit Log
@@ -375,10 +376,14 @@ class SportService {
                 sport.description_en = updateData.description_en;
             if (updateData.description_ar !== undefined)
                 sport.description_ar = updateData.description_ar;
-            if (updateData.sport_image)
+            if (updateData.sport_image !== undefined)
                 sport.sport_image = updateData.sport_image;
             if (updateData.max_participants !== undefined)
                 sport.max_participants = updateData.max_participants;
+            if (updateData.is_active !== undefined)
+                sport.is_active = updateData.is_active;
+            if (updateData.requires_booking !== undefined)
+                sport.requires_booking = updateData.requires_booking;
         }
         if ((isSportManager || isFinancialDirector || isAdmin) && updateData.price !== undefined) {
             sport.price = updateData.price;
@@ -528,26 +533,36 @@ class SportService {
      * Get all Team Members
      */
     async getTeamMembers() {
-        // Get all team members with their teams
+        // Get all team members with their teams (including team name)
         return await this.teamMemberRepository.find({
-            relations: ['account', 'team_member_teams']
+            relations: ['account', 'team_member_teams', 'team_member_teams.team']
         });
     }
     /**
      * Get Team Members by Sport Name
      */
     async getTeamMembersBySport(sportName) {
-        // Join with teams table and filter by sport name (case insensitive)
-        return await this.teamMemberRepository.createQueryBuilder('teamMember')
+        // First find team members who have at least one team in this sport
+        const members = await this.teamMemberRepository.createQueryBuilder('teamMember')
             .innerJoin('teamMember.team_member_teams', 'tmt')
             .innerJoin('tmt.team', 'team')
             .innerJoin('team.sport', 'sport')
-            .leftJoinAndSelect('teamMember.team_member_teams', 'teams')
-            .leftJoinAndSelect('teams.team', 'teamDetails')
-            .leftJoinAndSelect('teamDetails.sport', 'sportDetails')
             .leftJoinAndSelect('teamMember.account', 'account')
             .where('LOWER(sport.name_en) = LOWER(:sportName) OR LOWER(sport.name_ar) = LOWER(:sportName)', { sportName })
             .getMany();
+        if (members.length === 0)
+            return [];
+        // Reload each member's team_member_teams filtered to only this sport's teams
+        const memberIds = members.map(m => m.id);
+        const membersWithFilteredTeams = await this.teamMemberRepository.createQueryBuilder('teamMember')
+            .leftJoinAndSelect('teamMember.account', 'account')
+            .leftJoinAndSelect('teamMember.team_member_teams', 'tmt')
+            .leftJoinAndSelect('tmt.team', 'teamDetails')
+            .leftJoinAndSelect('teamDetails.sport', 'sportDetails')
+            .where('teamMember.id IN (:...memberIds)', { memberIds })
+            .andWhere('(sportDetails.name_en IS NULL OR LOWER(sportDetails.name_en) = LOWER(:sportName) OR LOWER(sportDetails.name_ar) = LOWER(:sportName))', { sportName })
+            .getMany();
+        return membersWithFilteredTeams;
     }
     /**
      * Get Single Team Member
@@ -556,6 +571,53 @@ class SportService {
         return await this.teamMemberRepository.findOne({
             where: { id: memberId },
             relations: ['account', 'team_member_teams']
+        });
+    }
+    /**
+     * Get Regular Members by Sport Name
+     * Queries members who have a MemberTeam subscription to a team belonging to the given sport.
+     */
+    async getMembersBySport(sportName) {
+        // Find member_ids that have at least one team in this sport
+        const memberTeamRepo = data_source_1.AppDataSource.getRepository('MemberTeam');
+        const subs = await memberTeamRepo
+            .createQueryBuilder('mt')
+            .innerJoin('mt.team', 'team')
+            .innerJoin('team.sport', 'sport')
+            .leftJoinAndSelect('mt.team', 'teamData')
+            .leftJoinAndSelect('teamData.sport', 'sportData')
+            .where('LOWER(sport.name_en) = LOWER(:sportName) OR LOWER(sport.name_ar) = LOWER(:sportName)', { sportName })
+            .getMany();
+        if (subs.length === 0)
+            return [];
+        // Group by member_id and collect their teams for this sport
+        const memberRepo = data_source_1.AppDataSource.getRepository('Member');
+        const memberIds = [...new Set(subs.map((s) => s.member_id))];
+        const members = await memberRepo
+            .createQueryBuilder('member')
+            .where('member.id IN (:...memberIds)', { memberIds })
+            .getMany();
+        // Map to the same shape as ApiMember (used by the frontend)
+        return members.map((m) => {
+            const memberSubs = subs.filter((s) => s.member_id === m.id);
+            return {
+                id: m.id,
+                first_name_ar: m.first_name_ar,
+                last_name_ar: m.last_name_ar,
+                first_name_en: m.first_name_en,
+                last_name_en: m.last_name_en,
+                phone: m.phone ?? null,
+                national_id: m.national_id,
+                status: m.status,
+                created_at: m.created_at,
+                member_type: 'member',
+                team_member_teams: memberSubs.map((s) => ({
+                    id: s.id,
+                    team_name: s.team?.name_ar || s.team?.name_en || '',
+                    team_name_en: s.team?.name_en || '',
+                    status: s.status,
+                })),
+            };
         });
     }
     /**

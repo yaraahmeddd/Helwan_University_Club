@@ -476,7 +476,7 @@ export default function SportsPage() {
   // ── Fetch branches ───────────────────────────────────────────────────────────
   const fetchBranches = useCallback(async () => {
     try {
-      const res = await api.get<{ success: boolean; data: ApiBranch[] }>('/branches');
+      const res = await api.get<{ success: boolean; data: ApiBranch[] }>('/branches/public/list');
       setBranches(Array.isArray(res?.data?.data) ? res.data.data : []);
     } catch (err) {
       console.warn('[SportsPage][fetchBranches] فشل تحميل الفروع:', err);

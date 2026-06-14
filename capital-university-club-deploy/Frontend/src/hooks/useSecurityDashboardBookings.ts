@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-
-const BACKEND_URL = 'http://localhost:3000';
+import api from '@/services/axios';
+import { BACKEND_ORIGIN } from '@/config/backend';
 
 export interface BookingParticipant {
   id: string;
@@ -99,13 +99,12 @@ interface UseSecurityDashboardBookingsOptions {
 // Transform API response to component-compatible format
 function transformBookingForDisplay(booking: SecurityBooking): DisplayBooking {
   const creator = booking.participants?.find(p => p.is_creator) || booking.participants?.[0];
-  
-  const getFullUrl = (path: string | null | undefined) => {
-    if (!path) return null;
-    if (path.startsWith('http')) return encodeURI(path);
-    const backendUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || BACKEND_URL;
-    return encodeURI(`${backendUrl}${path.startsWith('/') ? '' : '/'}${path}`);
-  };
+    const getFullUrl = (path: string | null | undefined) => {
+      if (!path) return null;
+      if (path.startsWith('http')) return encodeURI(path);
+      const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+      return encodeURI(`${BACKEND_ORIGIN}/${cleanPath}`);
+    };
 
   // Convert Arabic numerals to English for time parsing
   const convertArabicToEnglish = (text: string): string => {
@@ -187,17 +186,17 @@ export function useSecurityDashboardBookings(
       if (options?.endDate) params.append('end_date', options.endDate);
 
       const queryString = params.toString();
-      const url = `${BACKEND_URL}/api/bookings/security/bookings${queryString ? `?${queryString}` : ''}`;
+      const url = `/bookings/security/bookings${queryString ? `?${queryString}` : ''}`;
 
       console.log('[useSecurityDashboardBookings] Fetching from:', url);
 
-      const response = await fetch(url);
+      const response = await api.get<{ success: boolean; data: SecurityBooking[] }>(url);
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch bookings: ${response.statusText}`);
+      if (!response.data?.success) {
+        throw new Error(`Failed to fetch bookings: server returned success=false`);
       }
 
-      const result = await response.json();
+      const result = response.data;
 
       if (result.success && Array.isArray(result.data)) {
         console.log('[useSecurityDashboardBookings] Successfully fetched bookings:', result.data.length);
