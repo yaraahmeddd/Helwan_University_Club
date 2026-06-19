@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from '@/services/axios';
 import { useTranslation } from "react-i18next";
+import { CopyrightFooter } from '@/components/CopyrightFooter';
 import {
   firstError,
   formatValidationError,
@@ -641,6 +642,7 @@ const JoinBookingPage: React.FC = () => {
           </div>
         </div>
       </div>
+      <CopyrightFooter />
     </div>
   );
 };

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, User, Phone, AlertCircle } from 'lucide-react';
 import { useLocalizedTranslation } from '@/hooks/useLocalizedTranslation';
 import { useTranslation } from 'react-i18next';
+import { CopyrightFooter } from '@/components/CopyrightFooter';
 import {
   formatValidationError,
   validateEmail,
@@ -360,6 +361,7 @@ const SignUp: React.FC = () => {
           </p>
         </div>
       </div>
+      <CopyrightFooter />
     </div>
   );
 };

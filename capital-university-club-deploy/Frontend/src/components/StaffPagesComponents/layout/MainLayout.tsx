@@ -3,6 +3,7 @@ import { Navbar } from "./Navbar";
 import { AppSidebar } from "./AppSidebar";
 import { useLanguage } from "../../../hooks/useLanguage";
 import { useAuth } from "../../../context/AuthContext";
+import { CopyrightFooter } from "../../CopyrightFooter";
 
 export function MainLayout({ children }: { children: ReactNode }) {
   const { isRTL } = useLanguage();
@@ -44,10 +45,11 @@ export function MainLayout({ children }: { children: ReactNode }) {
         className="pt-16 h-screen overflow-hidden transition-[margin-inline-start] duration-[250ms] ease-in-out min-w-0"
         style={isMember ? undefined : { marginInlineStart: "var(--sidebar-width, 256px)" }}
       >
-        <div className={`h-[calc(100vh-4rem)] min-w-0 overflow-y-auto ${isMember ? 'pb-16 md:pb-0' : ''}`}>
+        <div className={`h-[calc(100vh-4rem)] min-w-0 overflow-y-auto ${isMember ? 'pb-16 md:pb-0' : ''}`} style={{ paddingBottom: '48px' }}>
           {children}
         </div>
       </main>
+      <CopyrightFooter />
     </div>
   );
 }

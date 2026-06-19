@@ -2,12 +2,13 @@ import { motion } from "framer-motion";
 import { ShieldX } from "lucide-react";
 import { Button } from '@/components/StaffPagesComponents/ui/button';
 import { useNavigate } from "react-router-dom";
+import { CopyrightFooter } from '@/components/CopyrightFooter';
 
 export default function ForbiddenPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
+    <div className="flex min-h-[60vh] flex-col items-center justify-center text-center" style={{ paddingBottom: '48px' }}>
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -22,6 +23,7 @@ export default function ForbiddenPage() {
           العودة للرئيسية
         </Button>
       </motion.div>
+      <CopyrightFooter />
     </div>
   );
 }

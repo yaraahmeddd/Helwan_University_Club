@@ -15,6 +15,7 @@ import {
   validateLoginNationalId,
   validatePassword,
 } from '@/lib/validation';
+import { CopyrightFooter } from '@/components/CopyrightFooter';
 
 const BG_IMAGES = [HUCPictureFull, HUCFootball];
 
@@ -151,7 +152,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div dir={isRTL ? 'rtl' : 'ltr'} className="h-screen w-full flex bg-white font-['Cairo'] overflow-hidden">
+    <div dir={isRTL ? 'rtl' : 'ltr'} className="h-screen w-full flex bg-white font-['Cairo'] overflow-hidden" style={{ paddingBottom: '38px' }}>
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -306,6 +307,7 @@ const Login: React.FC = () => {
           </p>
         </div>
       </motion.div>
+      <CopyrightFooter />
     </div>
   );
 };

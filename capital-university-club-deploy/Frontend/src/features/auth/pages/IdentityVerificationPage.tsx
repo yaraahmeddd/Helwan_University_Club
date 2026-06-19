@@ -5,6 +5,7 @@ import {
   AlertCircle, CheckCircle2, Lock, Shield, ChevronRight, // ChevronRight is "Back" in RTL visually if pointing Right
   User, Calendar, MapPin, ArrowLeft, FileText, Home
 } from 'lucide-react';
+import { CopyrightFooter } from '@/components/CopyrightFooter';
 
 // Egyptian Governorates
 const GOVERNORATES = [
@@ -460,6 +461,7 @@ const IdentityVerification: React.FC = () => {
           </form>
         </div>
       </div>
+      <CopyrightFooter />
     </div>
   );
 };

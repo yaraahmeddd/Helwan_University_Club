@@ -13,6 +13,7 @@ import MediaGallery from '@/components/LandingPageComponents/MediaGallery';
 import Clubs from '@/components/LandingPageComponents/Clubs';
 import SportDetailedPage from './SportDetailedPage';
 import AIChatbot from '@/components/AIChatbot';
+import { CopyrightFooter } from '@/components/CopyrightFooter';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, EffectCoverflow } from 'swiper/modules';
 const HUCLogo = "/assets/HUC_logo.jpeg";
@@ -215,6 +216,12 @@ const App = () => {
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const { t, i18n } = useTranslation("landing");
   const isArabic = i18n.language?.toLowerCase().startsWith("ar");
+
+  const displayUserName = user
+    ? (isArabic
+        ? (user.name_ar || [user.first_name_ar, user.last_name_ar].filter(Boolean).join(" ") || user.fullName)
+        : (user.name_en || [user.first_name_en, user.last_name_en].filter(Boolean).join(" ") || user.fullName)) || ""
+    : "";
 
   // 1️⃣ State لتخزين خطط العضوية من الباك اند
   const [membershipPlans, setMembershipPlans] = useState<MembershipPlan[]>([]);
@@ -993,7 +1000,7 @@ const App = () => {
               <div className="relative">
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#2596be]/20 via-transparent to-[#f8941c]/20 blur-md  transition-opacity duration-500" />
                 <div className="relative flex w-14 h-14 sm:w-16 sm:h-16 md:w-[68px] md:h-[68px] items-center justify-center rounded-2xl bg-white shadow-md ring-1 ring-gray-200/80 overflow-hidden group-hover:ring-[#2596be]/40 group-hover:shadow-lg transition-all duration-300">
-                  <img src={HUCLogo} alt={t("common.club_name", "نادي جامعة العاصمة")} className="w-full h-full object-contain p-1" />
+                  <img src={HUCLogo} alt="نادي جامعة العاصمة" className="w-full h-full object-contain p-1" />
                 </div>
               </div>
               <div className="hidden md:flex flex-col leading-tight">
@@ -1087,10 +1094,10 @@ const App = () => {
                     >
                       {/* Avatar circle with initials */}
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2596be] to-[#0e1c38] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                        {user.fullName?.charAt(0) ?? <User className="w-4 h-4" />}
+                        {displayUserName.charAt(0) || <User className="w-4 h-4" />}
                       </div>
                       <div className="text-start leading-tight">
-                        <p className="font-bold text-[#0e1c38] text-xs whitespace-nowrap">{user.fullName}</p>
+                        <p className="font-bold text-[#0e1c38] text-xs whitespace-nowrap">{displayUserName}</p>
                         <p className="text-[#2596be] text-[10px] font-semibold whitespace-nowrap">{getRoleLabel(user.role, t)}</p>
                       </div>
                       <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180' : ''}`} />
@@ -1103,7 +1110,7 @@ const App = () => {
                         onMouseLeave={() => setUserDropdownOpen(false)}
                       >
                         <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-                          <p className="font-bold text-[#0e1c38] text-sm truncate">{user.fullName}</p>
+                          <p className="font-bold text-[#0e1c38] text-sm truncate">{displayUserName}</p>
                           <p className="text-[#2596be] text-xs font-semibold">{getRoleLabel(user.role, t)}</p>
                         </div>
                         <button
@@ -1303,7 +1310,14 @@ const App = () => {
           </div>
 
           <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
-            <p className="text-gray-500 text-sm">{t("footer.copyright", { year: new Date().getFullYear(), defaultValue: `© ${new Date().getFullYear()} نادي جامعه العاصمة — جميع الحقوق محفوظة` })}</p>
+            <div className="flex flex-col gap-1 text-center md:text-start">
+              <p className="text-gray-400 text-xs" dir="rtl">
+                جميع حقوق النشر والملكيه الفكريه محفوظة لكلية الحاسبات والذكاء الاصطناعي ومركز الاتصالات وتكنولوجيا المعلومات
+              </p>
+              <p className="text-gray-500 text-xs" dir="ltr">
+                All copyrights, intellectual property rights are reserved by FCAI &amp; CITC.
+              </p>
+            </div>
             <div className="flex gap-4">
               <a href="https://www.facebook.com/share/1ADZY7CcCU/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-[#1877F2] transition-colors"><Facebook className="w-5 h-5" /></a>
               <a href="https://www.instagram.com/helwan.university.club/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-[#E4405F] transition-colors"><Instagram className="w-5 h-5" /></a>
@@ -1313,6 +1327,7 @@ const App = () => {
         </div>
       </footer>
       <AIChatbot />
+      <CopyrightFooter />
     </div>
   );
 };

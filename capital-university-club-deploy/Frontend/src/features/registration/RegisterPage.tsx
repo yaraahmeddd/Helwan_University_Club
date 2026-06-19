@@ -18,6 +18,7 @@ import { Step4Files } from './components/Step4_Files';
 import { ModernToast, type ToastType } from '@/components/ModernToast';
 import { fetchActiveSports, type Sport } from '@/services/sportsApi';
 import SiteNavbar from '@/components/SiteNavbar';
+import { CopyrightFooter } from '@/components/CopyrightFooter';
 
 /**
  * Step Configuration
@@ -680,6 +681,7 @@ export const RegisterPage = () => {
                 isVisible={toast.isVisible}
                 onClose={hideToast}
             />
+            <CopyrightFooter />
         </div>
     );
 };

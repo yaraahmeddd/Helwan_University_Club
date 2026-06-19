@@ -62,6 +62,13 @@ export const SiteNavbar: React.FC<SiteNavbarProps> = ({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const isArabic = i18n.language.startsWith("ar");
+  const displayUserName = user
+    ? (isArabic
+        ? (user.name_ar || [user.first_name_ar, user.last_name_ar].filter(Boolean).join(" ") || user.fullName)
+        : (user.name_en || [user.first_name_en, user.last_name_en].filter(Boolean).join(" ") || user.fullName)) || ""
+    : "";
+
   const handleTab = (key: string) => {
     if (onTabChange) {
       onTabChange(key);
@@ -207,10 +214,10 @@ export const SiteNavbar: React.FC<SiteNavbarProps> = ({
                       className="flex items-center gap-2 bg-white border border-gray-200 hover:border-[#2596be] px-3 py-1.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md"
                     >
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2596be] to-[#0e1c38] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                        {user.fullName?.charAt(0) ?? <User className="w-4 h-4" />}
+                        {displayUserName.charAt(0) || <User className="w-4 h-4" />}
                       </div>
                       <div className="text-start leading-tight">
-                        <p className="font-bold text-[#0e1c38] text-xs whitespace-nowrap">{user.fullName}</p>
+                        <p className="font-bold text-[#0e1c38] text-xs whitespace-nowrap">{displayUserName}</p>
                         <p className="text-[#2596be] text-[10px] font-semibold whitespace-nowrap">{user.role}</p>
                       </div>
                       <ChevronDown
@@ -225,7 +232,7 @@ export const SiteNavbar: React.FC<SiteNavbarProps> = ({
                         onMouseLeave={() => setUserDropdownOpen(false)}
                       >
                         <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-                          <p className="font-bold text-[#0e1c38] text-sm truncate">{user.fullName}</p>
+                          <p className="font-bold text-[#0e1c38] text-sm truncate">{displayUserName}</p>
                           <p className="text-[#2596be] text-xs font-semibold">{user.role}</p>
                         </div>
                         <button

@@ -4,6 +4,7 @@ import { CalendarDays, Clock, LogOut, ShieldCheck } from "lucide-react";
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from "react-router-dom";
 import api from '@/services/axios';
+import { CopyrightFooter } from '@/components/CopyrightFooter';
 const hucLogo = "/assets/HUC_logo.jpeg";
 
 const WEEKDAYS_AR = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
@@ -160,8 +161,9 @@ export default function MemberPendingPage() {
 
             {/* Subtle footer */}
             <p className="mt-6 text-gray-300 text-xs">
-                © {now.getFullYear()} نادي جامعة العاصمة — جميع الحقوق محفوظة
+                جميع حقوق النشر والملكيه الفكريه محفوظة لكلية الحاسبات والذكاء الاصطناعي ومركز الاتصالات وتكنولوجيا المعلومات
             </p>
+            <CopyrightFooter />
         </div>
     );
 }

@@ -3,6 +3,7 @@ import {
   Upload, X, AlertCircle, CheckCircle2, Lock, Shield, ChevronLeft,
   FileText, Camera, ArrowLeft
 } from 'lucide-react';
+import { CopyrightFooter } from '@/components/CopyrightFooter';
 
 interface FileWithPreview {
   file: File | null;
@@ -474,6 +475,7 @@ const DocumentUpload: React.FC = () => {
           </form>
         </div>
       </div>
+      <CopyrightFooter />
     </div>
   );
 };

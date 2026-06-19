@@ -11,6 +11,7 @@ import {
   Phone,
   PlayCircle,
 } from 'lucide-react';
+import { CopyrightFooter } from '@/components/CopyrightFooter';
 
 type BranchRecord = {
   id: string;
@@ -351,6 +352,7 @@ const BranchExplorePage = () => {
           </div>
         </section>
       </div>
+      <CopyrightFooter />
     </div>
   );
 };
